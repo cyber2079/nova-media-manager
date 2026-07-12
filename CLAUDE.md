@@ -91,23 +91,14 @@ npm install
 npm run tauri:dev
 ```
 
-### 拉取代码
+### 拉取代码（公库+私库一次完成）
 ```powershell
-cd D:\nova-media-manager && git pull            # 公库
-cd D:\nova-proprietary && git pull               # 私库
+npm run pull
 ```
 
-### 推送代码
+### 推送代码（add + commit + push 一次完成）
 ```powershell
-cd D:\nova-media-manager
-git add .
-git commit -m "描述改动"
-git push origin master
-
-cd D:\nova-proprietary
-git add .
-git commit -m "描述改动"
-git push origin main
+npm run push "描述改动"
 ```
 
 ### 构建安装包
