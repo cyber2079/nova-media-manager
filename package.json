@@ -13,7 +13,9 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "push": "powershell -ExecutionPolicy Bypass -File scripts/push.ps1 -msg",
+    "pull": "powershell -ExecutionPolicy Bypass -File scripts/pull.ps1"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.16",
