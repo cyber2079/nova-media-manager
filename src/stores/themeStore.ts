@@ -44,7 +44,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       analytics.track("theme_switch", { from: prev, to: t });
       // Auto-apply theme's default palette if user hasn't customized
       const { paletteCustomized, resetPaletteToTheme } = useSettingsStore.getState();
-      if (!paletteCustomized) resetPaletteToTheme(t);
+      if (!paletteCustomized) { resetPaletteToTheme(t); persist(t); }
     }
   },
 

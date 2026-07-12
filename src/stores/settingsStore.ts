@@ -232,8 +232,12 @@ export function applyPalette() {
   root.style.setProperty("--cg-text-color", accent);
   root.style.setProperty("--cg-text-bg", accent);
 
-  // data-theme attribute drives CSS selectors
-  root.setAttribute("data-theme", s.paletteContrast === "light" ? "light" : "");
+  // Light palette contrast: set a dedicated attribute so CSS can adapt without overwriting the theme name
+  if (s.paletteContrast === "light") {
+    root.setAttribute("data-palette", "light");
+  } else {
+    root.removeAttribute("data-palette");
+  }
 }
 
 /** Dynamically set surface CSS vars based on saturation + opacity settings */
@@ -241,8 +245,9 @@ export function applySurface() {
   const { surfaceSaturation: sat, surfaceOpacity: op } = useSettingsStore.getState();
   const root = document.documentElement;
   const theme = root.getAttribute('data-theme');
-  // Light theme keeps its own bright surface colors — don't override
-  if (theme === 'light') {
+  const palette = root.getAttribute('data-palette');
+  // Light theme / light palette keeps its own bright surface colors — don't override
+  if (theme === 'light' || palette === 'light') {
     root.style.removeProperty('--color-surface');
     root.style.removeProperty('--color-surface-light');
     root.style.removeProperty('--color-surface-lighter');

@@ -30,6 +30,8 @@ src-tauri/gen/
 
 # ══ Private/proprietary modules (not in public repo) ══
 src-tauri/src/license/
+src-tauri/license/
+src-tauri/src/theme/crypto.rs
 src-tauri/src/analytics/
 
 # ══ Server ══
