@@ -2,10 +2,10 @@ import { useEffect, useRef } from "react";
 
 const CG_BASE = "/themes/cyber%20girl/pic";
 
-// 16 scenes in order — intro → daily → squad → comm → battle → aftermath → crisis
+// 16 scenes
 const SCENES = [
-  { bg: `${CG_BASE}/start1.webp`,            face: "no face.webp",             skillShow: false },
-  { bg: `${CG_BASE}/start2-listen song.webp`, face: "happy face.webp",         skillShow: true },
+  { bg: `${CG_BASE}/start1.webp`,            face: "no face.webp",            skillShow: false },
+  { bg: `${CG_BASE}/start2-listen song.webp`, face: "happy face.webp",        skillShow: true },
   { bg: `${CG_BASE}/start3.webp`,             face: "no face.webp",            skillShow: false },
   { bg: `${CG_BASE}/bg1.webp`,                face: "communicate face.webp",   skillShow: false },
   { bg: `${CG_BASE}/bg2.webp`,                face: "angry face.webp",         skillShow: false },
@@ -26,7 +26,6 @@ export interface CgScene { bg: string; face: string; skillShow: boolean; }
 export const CG_SCENES: CgScene[] = SCENES;
 
 // ═══════════════════ MODULE-LEVEL STATE ═══════════════════
-// Using module-level state so nothing resets on React re-renders.
 
 const _images = new Map<string, HTMLImageElement>();
 let _sceneIdx = -1;
@@ -36,33 +35,49 @@ let _timerId: ReturnType<typeof setTimeout> | null = null;
 let _rafId = 0;
 let _mode = "fill";
 
-// Particle transition state
-const COLS = 10, ROWS = 7;
-let _particles: { col: number; row: number; x: number; y: number; w: number; h: number; delay: number; progress: number }[] = [];
+// ── Hex dissolve transition state ──
+const HEX_RADIUS = 36;
+const HEX_H_SPACING = HEX_RADIUS * Math.sqrt(3);
+const HEX_V_SPACING = HEX_RADIUS * 1.5;
+
+interface HexCell {
+  col: number; row: number;
+  cx: number; cy: number;
+  delay: number;   // 0..1, when the cell starts dissolving
+  progress: number; // 0..1, 0=solid, 1=gone
+}
+let _hexes: HexCell[] = [];
 let _nextBg = "";
 let _animStart = 0;
-const ANIM_DUR = 1200;
+const DISSOLVE_DUR = 2200;
 
-// Pub/Sub for Home.tsx
+// ── Holographic particle stream state ──
+interface HoloParticle {
+  x: number; y: number;
+  speed: number; width: number; height: number;
+  alpha: number; hue: number;
+}
+let _holoParticles: HoloParticle[] = [];
+const HOLO_COUNT = 45;
+
+// ── Breathing pulse ──
+let _startTime = 0;
+
+// ── Pub/Sub ──
 let _cgSceneIdx = 0;
 const _listeners = new Set<(idx: number) => void>();
 
 export function getCgSceneIdx(): number { return _cgSceneIdx; }
 export function onCgSceneChange(fn: (idx: number) => void): () => void {
-  _listeners.add(fn);
-  fn(_cgSceneIdx);
+  _listeners.add(fn); fn(_cgSceneIdx);
   return () => { _listeners.delete(fn); };
 }
-function notify(idx: number) {
-  _cgSceneIdx = idx;
-  _listeners.forEach((fn) => fn(idx));
-}
+function notify(idx: number) { _cgSceneIdx = idx; _listeners.forEach(fn => fn(idx)); }
 
-// ═══════════════════ HELPERS ═══════════════════
+// ═══════════════ HELPERS ═══════════════
 
-function easeInOutCubic(t: number): number {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-}
+function easeOutExpo(t: number) { return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+function easeInOutCubic(t: number) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
 function computeFit(iw: number, ih: number, cw: number, ch: number, mode: string) {
   if (mode === "stretch") return { dx: 0, dy: 0, dw: cw, dh: ch };
@@ -74,24 +89,56 @@ function computeFit(iw: number, ih: number, cw: number, ch: number, mode: string
   return { dx: (cw - iw * scale) / 2, dy: (ch - ih * scale) / 2, dw: iw * scale, dh: ih * scale };
 }
 
-function buildParticles(w: number, h: number) {
-  const cellW = w / COLS, cellH = h / ROWS;
-  const ps: typeof _particles = [];
-  for (let row = 0; row < ROWS; row++) {
-    for (let col = 0; col < COLS; col++) {
-      ps.push({
-        col, row,
-        x: col * cellW, y: row * cellH,
-        w: cellW + 1, h: cellH + 1,
-        delay: (row + (COLS - 1 - col)) / (ROWS - 1 + COLS - 1),
+function rand(min: number, max: number) { return min + Math.random() * (max - min); }
+
+/** Precompute hexagon vertices once. Flat-top orientation. */
+function hexVertices(cx: number, cy: number, r: number): { x: number; y: number }[] {
+  const pts: { x: number; y: number }[] = [];
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i;
+    pts.push({ x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) });
+  }
+  return pts;
+}
+
+// ═══════════════ PARTICLE INIT ═══════════════
+
+function initHoloParticles(w: number, h: number) {
+  _holoParticles = [];
+  for (let i = 0; i < HOLO_COUNT; i++) {
+    _holoParticles.push({
+      x: rand(0, w),
+      y: rand(h * 0.2, h + 80),
+      speed: rand(0.15, 1.8),
+      width: rand(1.5, 4),
+      height: rand(0.4, 1.6),
+      alpha: rand(0.05, 0.22),
+      hue: rand(195, 310),
+    });
+  }
+}
+
+// ═══════════════ HEX DISSOLVE ═══════════════
+
+function buildHexGrid(w: number, h: number): HexCell[] {
+  const cells: HexCell[] = [];
+  let row = 0;
+  for (let cy = HEX_RADIUS; cy < h + HEX_RADIUS; cy += HEX_V_SPACING) {
+    const offset = (row % 2 === 0) ? 0 : HEX_H_SPACING / 2;
+    for (let cx = offset - HEX_H_SPACING; cx < w + HEX_H_SPACING; cx += HEX_H_SPACING) {
+      cells.push({
+        col: Math.round(cx), row,
+        cx, cy,
+        delay: Math.random() * 0.55,
         progress: 0,
       });
     }
+    row++;
   }
-  return ps;
+  return cells;
 }
 
-// ═══════════════════ CORE ENGINE ═══════════════════
+// ═══════════════ CORE ENGINE ═══════════════
 
 function drawFrame() {
   if (!_canvas) return;
@@ -100,60 +147,130 @@ function drawFrame() {
   const w = _canvas.width, h = _canvas.height;
   const now = performance.now();
   const elapsed = now - _animStart;
-
-  const nextImg = _images.get(_nextBg);
-  const currentImg = _images.get(_currentBg);
+  const breathTime = (now - _startTime) / 1000;
 
   ctx.clearRect(0, 0, w, h);
 
-  // Layer 1: NEW image (full, underneath)
-  if (nextImg?.complete && nextImg.naturalWidth > 0) {
-    const fit = computeFit(nextImg.naturalWidth, nextImg.naturalHeight, w, h, _mode);
-    ctx.drawImage(nextImg, fit.dx, fit.dy, fit.dw, fit.dh);
+  // ── LAYER 0: Deep black background + breathing pulse ──
+  const pulseSize = 0.85 + 0.15 * Math.sin(breathTime * 0.25) * Math.sin(breathTime * 0.13 + 1.7);
+  const pulseX = w / 2 + Math.sin(breathTime * 0.08) * w * 0.06;
+  const pulseY = h * 0.45 + Math.cos(breathTime * 0.06) * h * 0.04;
+  const pulseGrad = ctx.createRadialGradient(pulseX, pulseY, 0, pulseX, pulseY, Math.max(w, h) * pulseSize * 0.6);
+  pulseGrad.addColorStop(0, "rgba(140,85,230,0.025)");
+  pulseGrad.addColorStop(0.5, "rgba(140,15,210,0.008)");
+  pulseGrad.addColorStop(1, "rgba(0,0,0,1)");
+  ctx.fillStyle = pulseGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // ── LAYER 1: Holographic particle stream ──
+  for (const p of _holoParticles) {
+    p.y -= p.speed;
+    if (p.y < -20) {
+      p.y = h + rand(30, 120);
+      p.x = rand(0, w);
+      p.speed = rand(0.15, 1.8);
+      p.hue = rand(195, 310);
+      p.alpha = rand(0.05, 0.22);
+    }
+    // Gentle horizontal drift
+    p.x += Math.sin(p.y * 0.002 + p.hue) * 0.15;
+
+    const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.width * 2.5);
+    glow.addColorStop(0, `hsla(${p.hue}, 85%, 72%, ${p.alpha})`);
+    glow.addColorStop(1, "transparent");
+    ctx.fillStyle = glow;
+    ctx.fillRect(p.x - p.width * 1.5, p.y - p.height * 0.5, p.width * 3, p.height * 2);
+
+    // Core line
+    ctx.fillStyle = `hsla(${p.hue}, 90%, 85%, ${p.alpha * 1.4})`;
+    ctx.fillRect(p.x - p.width * 0.5, p.y, p.width, p.height);
   }
 
-  // Layer 2: OLD image as animated particles
-  if (currentImg?.complete && currentImg.naturalWidth > 0 && _particles.length > 0) {
-    const iw = currentImg.naturalWidth, ih = currentImg.naturalHeight;
-    const fit = computeFit(iw, ih, w, h, _mode);
+  // ── LAYER 2: Scene background image ──
+  const currentImg = _images.get(_currentBg);
+  if (currentImg?.complete && currentImg.naturalWidth > 0) {
+    const fit = computeFit(currentImg.naturalWidth, currentImg.naturalHeight, w, h, _mode);
+    ctx.save();
+    if (_hexes.length === 0) {
+      // No transition — draw full image
+      ctx.globalAlpha = 1;
+      ctx.drawImage(currentImg, fit.dx, fit.dy, fit.dw, fit.dh);
+    }
+    ctx.restore();
+  }
+
+  // ── LAYER 3: Hex dissolve transition ──
+  if (_hexes.length > 0) {
+    const nextImg = _images.get(_nextBg);
+    const prevImg = _images.get(_currentBg);
     let allDone = true;
 
-    for (const p of _particles) {
-      const localElapsed = elapsed - p.delay * ANIM_DUR * 0.7;
-      p.progress = localElapsed <= 0 ? 0 : easeInOutCubic(Math.min(1, localElapsed / (ANIM_DUR * 0.3)));
-      if (p.progress >= 0.999) continue;
-      allDone = false;
+    // Draw NEW image beneath
+    if (nextImg?.complete && nextImg.naturalWidth > 0) {
+      const nFit = computeFit(nextImg.naturalWidth, nextImg.naturalHeight, w, h, _mode);
+      ctx.drawImage(nextImg, nFit.dx, nFit.dy, nFit.dw, nFit.dh);
+    }
 
-      const t = p.progress;
-      const sx = ((p.x - fit.dx) / fit.dw) * iw, sy = ((p.y - fit.dy) / fit.dh) * ih;
-      const sw = (p.w / fit.dw) * iw, sh = (p.h / fit.dh) * ih;
-      if (sx + sw <= 0 || sy + sh <= 0 || sx >= iw || sy >= ih) continue;
+    // Draw OLD image through dissolving hex cells
+    if (prevImg?.complete && prevImg.naturalWidth > 0) {
+      const fit = computeFit(prevImg.naturalWidth, prevImg.naturalHeight, w, h, _mode);
 
-      const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
-      ctx.save();
-      ctx.globalAlpha = 1 - t * t;
-      ctx.translate(cx, cy + t * 8);
-      ctx.scale(1 - t, 1);
-      ctx.translate(-cx, -cy);
-      ctx.drawImage(currentImg, sx, sy, sw, sh, p.x, p.y, p.w, p.h);
-      ctx.restore();
+      for (const cell of _hexes) {
+        const localElapsed = elapsed - cell.delay * DISSOLVE_DUR * 0.65;
+        cell.progress = localElapsed <= 0 ? 0
+          : easeOutExpo(Math.min(1, localElapsed / (DISSOLVE_DUR * 0.35)));
+
+        if (cell.progress < 0.999) {
+          allDone = false;
+
+          const t = cell.progress;
+          const alpha = 1 - t * t;
+          const liftY = t * 12; // subtle upward float
+
+          const verts = hexVertices(cell.cx, cell.cy - liftY, HEX_RADIUS);
+
+          ctx.save();
+          ctx.globalAlpha = alpha;
+
+          // Clip to hexagon
+          ctx.beginPath();
+          ctx.moveTo(verts[0].x, verts[0].y);
+          for (let i = 1; i < 6; i++) ctx.lineTo(verts[i].x, verts[i].y);
+          ctx.closePath();
+          ctx.clip();
+
+          // Draw the old image portion
+          ctx.drawImage(prevImg, fit.dx, fit.dy, fit.dw, fit.dh);
+
+          ctx.restore();
+        }
+      }
     }
 
     if (allDone) {
-      _particles = [];
+      _hexes = [];
       _currentBg = _nextBg;
     }
   }
 
-  if (_particles.length > 0) {
+  // ── Holographic scan line on new scene reveal ──
+  const revealAge = elapsed - DISSOLVE_DUR;
+  if (revealAge > 0 && revealAge < 500) {
+    const scanAlpha = (1 - revealAge / 500) * 0.25;
+    ctx.fillStyle = `rgba(180,130,255,${scanAlpha})`;
+    ctx.fillRect(0, h * 0.65, w, 1);
+    ctx.fillStyle = `rgba(180,130,255,${scanAlpha * 0.6})`;
+    ctx.fillRect(0, h * 0.345, w, 0.5);
+  }
+
+  // ── Continue animation ──
+  if (_hexes.length > 0 || _holoParticles.length > 0) {
     _rafId = requestAnimationFrame(drawFrame);
   }
 }
 
 function doSwitch() {
   if (!_canvas) return;
-
-  // Resize canvas
   _canvas.width = window.innerWidth;
   _canvas.height = window.innerHeight;
 
@@ -161,7 +278,7 @@ function doSwitch() {
   const scene = SCENES[_sceneIdx];
 
   _nextBg = scene.bg;
-  _particles = buildParticles(_canvas.width, _canvas.height);
+  _hexes = buildHexGrid(_canvas.width, _canvas.height);
   _animStart = performance.now();
 
   notify(_sceneIdx);
@@ -175,7 +292,7 @@ function scheduleNext() {
   _timerId = setTimeout(() => { doSwitch(); scheduleNext(); }, 22000 + Math.random() * 8000);
 }
 
-// ═══════════════════ COMPONENT ═══════════════════
+// ═══════════════ COMPONENT ═══════════════
 
 interface Props { mode: string; }
 
@@ -187,8 +304,8 @@ export default function CyberGirlBgSwitcher({ mode }: Props) {
     _canvas = canvasRef.current;
     if (!_canvas) return;
 
-    // Preload images (idempotent)
-    SCENES.forEach((s) => {
+    // Preload images
+    SCENES.forEach(s => {
       if (!_images.has(s.bg)) {
         const img = new Image();
         img.src = s.bg;
@@ -196,7 +313,13 @@ export default function CyberGirlBgSwitcher({ mode }: Props) {
       }
     });
 
-    // ── Resize handler (always re-attach after strict-mode remount) ──
+    // Init holographic particles
+    if (_holoParticles.length === 0) {
+      const w = _canvas?.width || window.innerWidth;
+      const h = _canvas?.height || window.innerHeight;
+      initHoloParticles(w, h);
+    }
+
     const resize = () => {
       if (!_canvas) return;
       _canvas.width = window.innerWidth;
@@ -211,23 +334,23 @@ export default function CyberGirlBgSwitcher({ mode }: Props) {
     window.addEventListener("resize", resize);
     resize();
 
-    // ── One-time init (idempotent: only runs if engine isn't already started) ──
+    // One-time init
     if (_sceneIdx < 0) {
       _sceneIdx = 0;
       _currentBg = SCENES[0].bg;
+      _startTime = performance.now();
       notify(0);
 
       const img = _images.get(_currentBg);
-      if (img?.complete && img.naturalWidth > 0) {
-        resize();
-      } else if (img) {
-        img.onload = resize;
-      }
+      if (img?.complete && img.naturalWidth > 0) resize();
+      else if (img) img.onload = resize;
 
       scheduleNext();
     } else if (_rafId === 0 && _timerId === null) {
-      // Engine was stopped by a previous cleanup (strict-mode). Restart it.
+      // React strict-mode remount: restart engine
       scheduleNext();
+      if (_holoParticles.length === 0) initHoloParticles(window.innerWidth, window.innerHeight);
+      _rafId = requestAnimationFrame(drawFrame);
     }
 
     return () => {

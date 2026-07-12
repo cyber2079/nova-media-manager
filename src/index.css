@@ -1002,6 +1002,7 @@ main[data-route="page"] {
 @keyframes cg-swoop-tr { from { opacity:0; transform:translate(80px,-60px) scale(0.6); }  to { opacity:0.95; transform:translate(0,0) scale(1); } }
 @keyframes cg-swoop-bl { from { opacity:0; transform:translate(-80px,60px) scale(0.6); }  to { opacity:0.95; transform:translate(0,0) scale(1); } }
 @keyframes cg-swoop-br { from { opacity:0; transform:translate(80px,60px) scale(0.6); }   to { opacity:0.95; transform:translate(0,0) scale(1); } }
+@keyframes cg-timer-spin { 0% { transform:rotate(0deg); } 70% { transform:rotate(180deg); } 100% { transform:rotate(180deg); } }
 
 /* ── BW background crossfade (JS-driven) ── */
 .bw-bg-layer {

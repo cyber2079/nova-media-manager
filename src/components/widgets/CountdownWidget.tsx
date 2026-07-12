@@ -4,6 +4,7 @@ import DesktopWidget from "@/components/DesktopWidget";
 import { useWidgetStore, type CountdownConfig } from "@/stores/widgetStore";
 import { Play, Pause, RotateCcw, Settings, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useThemeStore } from "@/stores/themeStore";
 
 function fmtTime(h: number, m: number, s: number): string {
   if (h > 0) return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
@@ -12,8 +13,10 @@ function fmtTime(h: number, m: number, s: number): string {
 
 export default function CountdownWidget({ config }: { config: CountdownConfig }) {
   const { t } = useTranslation();
+  const theme = useThemeStore((s) => s.theme);
   const setCountdown = useWidgetStore((s) => s.setCountdown);
   const isMini = config.displayMode === "mini";
+  const isCG = theme === "cyber-girl";
 
   const [displaySec, setDisplaySec] = useState(config.hours * 3600 + config.minutes * 60 + config.seconds);
   const [floatRemain, setFloatRemain] = useState(config.hours * 3600 + config.minutes * 60 + config.seconds);
@@ -154,22 +157,38 @@ export default function CountdownWidget({ config }: { config: CountdownConfig })
         )}
         {isMini && (
           <div className="relative" style={{ width: 40, height: 40 }}>
-            <svg className="absolute inset-0" width="40" height="40" style={{ transform: "rotate(-90deg)" }}>
-              {/* Track circle */}
-              <circle cx="20" cy="20" r="17" fill="none"
-                stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
-              {/* Progress circle — driven by RAF, no CSS transition */}
-              <circle cx="20" cy="20" r="17" fill="none"
-                stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round"
-                strokeDasharray={106.814}
-                strokeDashoffset={106.814 * (1 - progress * (running ? 1 : 0))}
-                style={{ filter: "drop-shadow(0 0 2px rgba(255,255,255,0.3))" }} />
-            </svg>
-            <button onClick={running ? pause : start} title={running ? t("widget.countdown_pause") : t("widget.countdown_start_title")}
-              className={cn("absolute inset-1 flex items-center justify-center rounded-md transition-all duration-200",
-                running ? "bg-red-500/15 text-white hover:bg-red-500/25" : "bg-primary/15 text-primary-light hover:bg-primary/25")}>
-              {running ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 ml-0.5" />}
-            </button>
+            {isCG ? (
+              <>
+                <img
+                  src="/themes/cyber%20girl/icons/timer.png"
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover rounded-md cursor-pointer"
+                  style={{
+                    opacity: running ? 1 : 0.5,
+                    animation: running ? "cg-timer-spin 1s linear infinite" : "none",
+                  }}
+                  onClick={running ? pause : start}
+                  title={running ? t("widget.countdown_pause") : t("widget.countdown_start_title")}
+                />
+              </>
+            ) : (
+              <>
+                <svg className="absolute inset-0" width="40" height="40" style={{ transform: "rotate(-90deg)" }}>
+                  <circle cx="20" cy="20" r="17" fill="none"
+                    stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
+                  <circle cx="20" cy="20" r="17" fill="none"
+                    stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round"
+                    strokeDasharray={106.814}
+                    strokeDashoffset={106.814 * (1 - progress * (running ? 1 : 0))}
+                    style={{ filter: "drop-shadow(0 0 2px rgba(255,255,255,0.3))" }} />
+                </svg>
+                <button onClick={running ? pause : start} title={running ? t("widget.countdown_pause") : t("widget.countdown_start_title")}
+                  className="absolute bottom-0 right-0 flex items-center justify-center rounded-full transition-all duration-200"
+                  style={{ width: 14, height: 14, background: "rgba(0,0,0,0.5)" }}>
+                  {running ? <Pause className="h-2 w-2 text-white" /> : <Play className="h-2 w-2 ml-0.5 text-white" />}
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

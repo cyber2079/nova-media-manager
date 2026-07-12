@@ -104,9 +104,7 @@ fn find_second_monitor(app: &AppHandle) -> Option<(i32, i32)> {
     };
     let primary_pos = primary.position();
     let primary_size = primary.size();
-
-    let primary_cx = primary_pos.x + (primary_size.width as i32) / 2;
-    let primary_cy = primary_pos.y + (primary_size.height as i32) / 2;
+    let _ = (primary_pos, primary_size); // suppress unused warning
 
     let monitors = match app.available_monitors() {
         Ok(m) => m,
@@ -132,7 +130,7 @@ fn find_second_monitor(app: &AppHandle) -> Option<(i32, i32)> {
 }
 
 /// Emit an event to the secondary window (e.g., now-playing info)
-pub fn emit_to_secondary<T: Serialize + Clone>(app: &AppHandle, event: &str, payload: T) {
+pub fn _emit_to_secondary<T: Serialize + Clone>(app: &AppHandle, event: &str, payload: T) {
     if let Some(w) = app.get_webview_window(SECONDARY_LABEL) {
         let _ = w.emit(event, payload);
     }

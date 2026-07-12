@@ -62,9 +62,8 @@ fn rotate_logs(log_dir: &PathBuf) {
     }
 }
 
-/// Initialize file-based logging for release builds.
-/// In debug builds, tauri-plugin-log handles console output.
-/// This provides a persistent file log for both debug and release.
+/// Initialize file-based logging (release only).
+/// In debug builds, tauri-plugin-log handles console+file output.
 pub fn init_file_logger(data_dir: &std::path::Path) {
     let log_dir = data_dir.join("logs");
     fs::create_dir_all(&log_dir).ok();
@@ -75,27 +74,25 @@ pub fn init_file_logger(data_dir: &std::path::Path) {
     // Rotate if needed
     rotate_logs(&log_dir);
 
-    // Open log file
-    let log_path = log_dir.join("app.log");
-    let file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&log_path)
-        .expect("failed to open log file");
+    // Set up log — only in release (debug uses tauri-plugin-log instead)
+    #[cfg(not(debug_assertions))]
+    {
+        let log_path = log_dir.join("app.log");
+        let file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&log_path)
+            .expect("failed to open log file");
 
-    let logger = FileLogger {
-        file: Mutex::new(file),
-    };
+        let logger = FileLogger {
+            file: Mutex::new(file),
+        };
 
-    // Set up log
-    log::set_boxed_logger(Box::new(logger)).ok();
-    log::set_max_level(if cfg!(debug_assertions) {
-        LevelFilter::Debug
-    } else {
-        LevelFilter::Info
-    });
+        log::set_boxed_logger(Box::new(logger)).ok();
+        log::set_max_level(LevelFilter::Info);
 
-    log::info!("═══ App started (log initialized) ═══");
+        log::info!("═══ App started (log initialized) ═══");
+    }
 }
 
 /// Cleanup crash logs older than 30 days

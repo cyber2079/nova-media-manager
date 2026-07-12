@@ -65,9 +65,11 @@ export default function PrivacyConsent() {
         </ul>
 
         <p className="text-xs text-gray-500 leading-relaxed">
-          {isZh
-            ? "我们<strong>绝不</strong>收集：文件名、文件路径、媒体内容、个人身份信息。您可以随时在设置中更改此选项。"
-            : "We <strong>never</strong> collect: file names, file paths, media content, or personal identifiers. You can change this anytime in settings."}
+          {isZh ? (
+            <>我们<strong>绝不</strong>收集：文件名、文件路径、媒体内容、个人身份信息。您可以随时在设置中更改此选项。</>
+          ) : (
+            <>We <strong>never</strong> collect: file names, file paths, media content, or personal identifiers. You can change this anytime in settings.</>
+          )}
         </p>
 
         <div className="flex gap-3 pt-2">

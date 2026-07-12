@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { kv } from "@/lib/sqliteStore";
-import { applySurface } from "./settingsStore";
+import { applySurface, useSettingsStore } from "./settingsStore";
 import { analytics } from "@/lib/analytics";
 
 export type ThemeName = "default" | "final-fantasy" | "overwatch" | "genshin" | "path-of-exile" | "counter-strike" | "rose" | "light" | "pretty-girl" | "black-white" | "cyber-girl";
@@ -40,7 +40,12 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   setTheme: (t) => {
     const prev = get().theme;
     set({ theme: t }); persist(t); applySurface();
-    if (prev !== t) analytics.track("theme_switch", { from: prev, to: t });
+    if (prev !== t) {
+      analytics.track("theme_switch", { from: prev, to: t });
+      // Auto-apply theme's default palette if user hasn't customized
+      const { paletteCustomized, resetPaletteToTheme } = useSettingsStore.getState();
+      if (!paletteCustomized) resetPaletteToTheme(t);
+    }
   },
 
   toggleTheme: () => {

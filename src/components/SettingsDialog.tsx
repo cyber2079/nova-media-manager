@@ -8,7 +8,9 @@ import { useSettingsStore, applySurface, COLOR_PRESETS, FONT_LIST, type BgVideoM
 import { languages } from "@/i18n";
 import { cn } from "@/lib/utils";
 import ScrollFade from "@/components/ScrollFade";
-import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer } from "lucide-react";
+import ThemeManager from "@/components/ThemeManager";
+import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon } from "lucide-react";
+import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS } from "@/stores/settingsStore";
 import { useWidgetStore, pageKeys } from "@/stores/widgetStore";
 import type { PageKey } from "@/stores/widgetStore";
 
@@ -40,7 +42,7 @@ const tabs: { id: TabId; icon: typeof Settings; labelKey: string }[] = [
 // ── Default values (used by reset) ──
 const DEFAULTS = {
   general: { language: "zh", autoStart: true, startFullscreen: true, autoHideHeader: false, autoHideFooter: false, hideTitleBar: true },
-  appearance: { theme: "path-of-exile" as ThemeName, bgVideoMode: "fill" as BgVideoMode, fontSize: "normal" as FontSize, iconSize: "normal" as IconSize, fontFamily: "system", headerOpacity: 70, footerOpacity: 70, customColor: "#f59e0b", useCustomColor: true, surfaceSaturation: 10, surfaceOpacity: 90, bgOverlayOpacity: 70, fontPrimaryColor: "#ffffff", fontSecondaryColor: "#8899aa", scrollFadeOpacity: 30, cgTextSize: "xs" as const, cgTextColor: "#e0c0ff", cgTextBgColor: "#c74dff", cgTextBgOpacity: 15 },
+  appearance: { theme: "path-of-exile" as ThemeName, bgVideoMode: "fill" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "system", paletteAccent: "#4788f0", paletteVibrancy: 5, paletteContrast: "dark" as const, paletteCustomized: false },
   music: { previewOffset: 0.5, lyricFontSize: "normal" as const, lyricUseCustomColor: false as const, lyricCurrentColor: "#ffffff", lyricOtherColor: "#8899aa", lyricFillColor: "#ffb6c1", playerBgMode: "follow" as const, playerBgColor: "", cyberBgmEnabled: true },
   images: { imageWheelMode: "prevNext" as ImageWheelMode },
   widgets: {
@@ -76,6 +78,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
     playerBgColor, playerBgMode, setPlayerBgColor, setPlayerBgMode,
     cyberBgmEnabled, setCyberBgmEnabled,
     cgTextSize, cgTextColor, cgTextBgColor, cgTextBgOpacity, setCgTextSize, setCgTextColor, setCgTextBgColor, setCgTextBgOpacity,
+    paletteAccent, paletteVibrancy, paletteContrast, paletteCustomized, setPaletteAccent, setPaletteVibrancy, setPaletteContrast, resetPaletteToTheme,
   } = useSettingsStore();
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages, setEnabled, setPosition, setMyComputerMode, setGlobalWidgets, setPageWidget, setCountdown } = useWidgetStore();
   const [autoLoading, setAutoLoading] = useState(false);
@@ -150,22 +153,10 @@ export default function SettingsDialog({ open, onClose }: Props) {
         setTheme(d.theme);
         setBgVideoMode(d.bgVideoMode);
         setFontSize(d.fontSize);
-        setIconSize(d.iconSize);
-        setHeaderOpacity(d.headerOpacity);
-        setFooterOpacity(d.footerOpacity);
-        setCustomColor(d.customColor);
-        setUseCustomColor(d.useCustomColor);
-        setSurfaceSaturation(d.surfaceSaturation);
-        setSurfaceOpacity(d.surfaceOpacity);
-        setBgOverlayOpacity(d.bgOverlayOpacity);
-        setFontPrimaryColor(d.fontPrimaryColor);
-        setScrollFadeOpacity(d.scrollFadeOpacity);
-        setFontSecondaryColor(d.fontSecondaryColor);
         setFontFamily(d.fontFamily);
-        setCgTextSize(d.cgTextSize);
-        setCgTextColor(d.cgTextColor);
-        setCgTextBgColor(d.cgTextBgColor);
-        setCgTextBgOpacity(d.cgTextBgOpacity);
+        setPaletteAccent(d.paletteAccent);
+        setPaletteVibrancy(d.paletteVibrancy);
+        setPaletteContrast(d.paletteContrast);
         setTimeout(() => applySurface(), 0);
         break;
       }
@@ -204,9 +195,8 @@ export default function SettingsDialog({ open, onClose }: Props) {
     }
     setConfirmReset(null);
   }, [setLanguage, i18n, setAutoStart, setStartFullscreen, setAutoHideHeader, setAutoHideFooter,
-      setTheme, setBgVideoMode, setFontSize, setIconSize, setHeaderOpacity, setFooterOpacity,
-      setCustomColor, setUseCustomColor, setSurfaceSaturation, setSurfaceOpacity, setHideTitleBar,
-      setFontPrimaryColor, setFontSecondaryColor, setScrollFadeOpacity, setFontFamily,
+      setTheme, setBgVideoMode, setFontSize, setFontFamily, setHideTitleBar,
+      setPaletteAccent, setPaletteVibrancy, setPaletteContrast,
       setPreviewOffset, setLyricFontSize, setLyricUseCustomColor, setLyricCurrentColor, setLyricOtherColor, setLyricFillColor, setImageWheelMode,
       setGlobalWidgets, setPageWidget, setEnabled, setPosition, setMyComputerMode, setCountdown]);
 
@@ -279,18 +269,74 @@ export default function SettingsDialog({ open, onClose }: Props) {
             {activeTab === "appearance" && (
               <>
                 <ThemeSection {...{ t, theme, themeList, handleTheme }} />
-                <BgModeSection {...{ t, bgVideoMode, setBgVideoMode }} />
-                <FontSection {...{ t, fontSize, setFontSize }} />
-                <IconSection {...{ t, iconSize, setIconSize }} />
-                <FontFamilySection {...{ t, fontFamily, setFontFamily }} />
-                <ScrollFadeSection {...{ t, scrollFadeOpacity, setScrollFadeOpacity }} />
-                <HeaderFooterOpacitySection {...{ t, headerOpacity, setHeaderOpacity, footerOpacity, setFooterOpacity }} />
-                <FontColorSection {...{ t, fontPrimaryColor, fontSecondaryColor, setFontPrimaryColor, setFontSecondaryColor }} />
-                <CgTextSection {...{ t, cgTextSize, cgTextColor, cgTextBgColor, cgTextBgOpacity, setCgTextSize, setCgTextColor, setCgTextBgColor, setCgTextBgOpacity }} />
-                <CustomColorSection {...{ t, useCustomColor, customColor, surfaceSaturation, surfaceOpacity, setCustomColor, handleToggleCustomColor, setSurfaceSaturation, setSurfaceOpacity }} />
-                <div className="border-t border-white/5 pt-4 mt-4">
-                  <SliderSection title={t("settings.bg_overlay_opacity")} value={bgOverlayOpacity} onChange={setBgOverlayOpacity} min={30} max={100} unit="%" />
-                </div>
+
+                {/* ── Palette ── */}
+                <section>
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.palette_title")}</h4>
+                  <div className="space-y-4">
+                    {/* Accent */}
+                    <div>
+                      <p className="text-xs text-gray-400 mb-2">{t("settings.palette_accent")}</p>
+                      <div className="flex gap-2 flex-wrap">
+                        {ACCENT_OPTIONS.map((a) => (
+                          <button key={a.value} onClick={() => setPaletteAccent(a.value)}
+                            className={cn("w-8 h-8 rounded-full border-2 transition-all",
+                              paletteAccent === a.value ? "border-white scale-110 shadow-lg" : "border-transparent hover:scale-105")}
+                            style={{ background: a.value }} title={a.label} />
+                        ))}
+                      </div>
+                    </div>
+                    {/* Vibrancy */}
+                    <SliderSection title={t("settings.palette_vibrancy")} value={paletteVibrancy}
+                      onChange={setPaletteVibrancy} min={1} max={10} />
+                    {/* Contrast */}
+                    <div>
+                      <p className="text-xs text-gray-400 mb-2">{t("settings.palette_contrast")}</p>
+                      <div className="flex gap-2">
+                        <button onClick={() => setPaletteContrast("dark")}
+                          className={cn("flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border transition-colors",
+                            paletteContrast === "dark" ? "bg-white/10 border-white/30 text-white" : "border-white/5 text-gray-400 hover:text-gray-200")}>
+                          <Moon className="h-3 w-3" /> {t("settings.palette_dark")}</button>
+                        <button onClick={() => setPaletteContrast("light")}
+                          className={cn("flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border transition-colors",
+                            paletteContrast === "light" ? "bg-white/10 border-white/30 text-white" : "border-white/5 text-gray-400 hover:text-gray-200")}>
+                          <Sun className="h-3 w-3" /> {t("settings.palette_light")}</button>
+                      </div>
+                    </div>
+                    {/* Reset button */}
+                    <button onClick={() => resetPaletteToTheme(theme)}
+                      className="text-xs text-gray-500 hover:text-primary-light transition-colors">{t("settings.palette_reset")}</button>
+                  </div>
+                </section>
+
+                {/* ── Font ── */}
+                <section>
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.look_font")}</h4>
+                  <div className="space-y-3">
+                    <FontFamilySection {...{ t, fontFamily, setFontFamily }} />
+                    <FontSection {...{ t, fontSize, setFontSize }} />
+                  </div>
+                </section>
+
+                {/* ── Display ── */}
+                <section>
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.look_display")}</h4>
+                  <div className="space-y-3">
+                    <BgModeSection {...{ t, bgVideoMode, setBgVideoMode }} />
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={autoHideHeader} onChange={(e) => setAutoHideHeader(e.target.checked)} className="h-4 w-4 rounded accent-[var(--color-primary)]" />
+                      <span className="text-sm text-gray-300">{t("settings.auto_hide_header")}</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={autoHideFooter} onChange={(e) => setAutoHideFooter(e.target.checked)} className="h-4 w-4 rounded accent-[var(--color-primary)]" />
+                      <span className="text-sm text-gray-300">{t("settings.auto_hide_footer")}</span>
+                    </label>
+                  </div>
+                </section>
+
+                {/* ── Theme Packs ── */}
+                <ThemeManager />
+
                 <ResetButton tab="appearance" t={t} onReset={() => setConfirmReset("appearance")} />
               </>
             )}

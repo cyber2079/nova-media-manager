@@ -27,9 +27,9 @@ export default memo(function MusicCard({ music, onDelete, onPlay, onEditTags, co
         {music.coverPath ? (
           <img src={music.coverPath} alt={music.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-            onError={(e) => { (e.target as HTMLImageElement).src = "/themes/common/music.svg"; }} />
+            onError={(e) => { (e.target as HTMLImageElement).src = "/themes/pretty%20girl/icons/music%20cover.png"; }} />
         ) : (
-          <img src="/themes/common/music.svg" alt={music.name}
+          <img src="/themes/pretty%20girl/icons/music%20cover.png" alt={music.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
         )}
 

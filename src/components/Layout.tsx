@@ -25,8 +25,6 @@ import ActivationDialog from "@/components/ActivationDialog";
 import PrivacyConsent from "@/components/PrivacyConsent";
 import BgVideoTuner from "@/components/BgVideoTuner";
 import CyberGirlBgSwitcher from "@/components/CyberGirlBgSwitcher";
-import CyberParticles from "@/components/CyberParticles";
-import CyberPcbBackground from "@/components/CyberPcbBackground";
 import UpdateChecker from "@/components/UpdateChecker";
 import { useLicenseStore } from "@/stores/licenseStore";
 import { analytics, useAnalyticsPageView } from "@/lib/analytics";
@@ -743,10 +741,8 @@ export default function Layout() {
         <div className="fixed inset-0 z-[1]" style={{ background: "linear-gradient(180deg, rgba(10,10,14,0.55) 0%, rgba(15,15,20,0.3) 50%, rgba(10,10,14,0.6) 100%)", pointerEvents: "none" }} />
       </>}
       {isCG && <>
-        <CyberPcbBackground />
         <CyberGirlBgSwitcher mode={bgVideoMode} />
-        <CyberParticles />
-        <div className="fixed top-0 left-0 right-0 z-[60] h-[2px]" style={{background:"linear-gradient(90deg, #c74dff, #ff4da6, #00bfff, #ff4da6, #c74dff)"}} />
+        <div className="fixed top-0 left-0 right-0 z-[60] h-[1px]" style={{background:"linear-gradient(90deg, transparent, #c74dff, #ff4da6, #00bfff, #ff4da6, #c74dff, transparent)", opacity: 0.5}} />
       </>}
       {isCS2 && <>
         <div className="fixed top-0 left-0 right-0 z-[60] h-[2px]" style={{background:"linear-gradient(90deg, #4a90d9, #de6d1c, #cc4444)"}} />
@@ -942,8 +938,8 @@ function MiniPlayer() {
       <div className="flex items-center gap-1.5">
         {/* Cover */}
         <div className="w-4 h-4 rounded overflow-hidden bg-surface-lighter shrink-0">
-          <img src={track.coverPath || "/themes/common/music.svg"} alt="" className="w-full h-full object-cover"
-            onError={(e) => { (e.target as HTMLImageElement).src = "/themes/common/music.svg"; }} />
+          <img src={track.coverPath || "/themes/pretty%20girl/icons/music%20cover.png"} alt="" className="w-full h-full object-cover"
+            onError={(e) => { (e.target as HTMLImageElement).src = "/themes/pretty%20girl/icons/music%20cover.png"; }} />
         </div>
 
         {/* Title */}

@@ -2,6 +2,7 @@ mod commands;
 mod db;
 mod license;
 mod logger;
+mod theme;
 mod windows;
 
 use db::Database;
@@ -23,22 +24,26 @@ pub fn run() {
             let database = Database::new(app_data_dir.clone())
                 .expect("failed to initialize database");
 
-            // File logging (always on, both debug and release)
-            logger::init_file_logger(&app_data_dir);
-            logger::set_panic_hook(app_data_dir.clone());
-
             let license_state = license::init_license(&database);
             app.manage(database);
             app.manage(license_state);
 
-            // Console logger in debug (supplements file log)
-            if cfg!(debug_assertions) {
+            // Logging: tauri-plugin-log in debug, file logger in release
+            #[cfg(debug_assertions)]
+            {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
                         .level(log::LevelFilter::Debug)
                         .build(),
                 )?;
             }
+            #[cfg(not(debug_assertions))]
+            {
+                logger::init_file_logger(&app_data_dir);
+            }
+
+            // Panic hook always on
+            logger::set_panic_hook(app_data_dir.clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -106,6 +111,11 @@ pub fn run() {
             windows::open_secondary_window,
             windows::close_secondary_window,
             windows::is_secondary_window_open,
+            theme::install_theme_file,
+            theme::install_theme_bytes,
+            theme::list_installed_themes,
+            theme::remove_installed_theme,
+            theme::get_theme_asset_path,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

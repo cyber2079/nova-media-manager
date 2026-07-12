@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { kv } from "@/lib/sqliteStore";
+import type { ThemeName } from "./themeStore";
 
 export type BgVideoMode = "normal" | "fill" | "stretch";
 
@@ -48,6 +49,41 @@ export const FONT_LIST: { value: string; label: string; css: string; google?: st
   { value: "defectica", label: "英文破碎", css: '"Defectica", "PingFang SC", "Microsoft YaHei", sans-serif' },
 ];
 
+// ═══════════════ PER-THEME PALETTE DEFAULTS ═══════════════
+// Each theme pairs with a default accent color, vibrancy level, and dark/light.
+// Switching themes auto-applies these; users can then tweak with the Palette controls.
+
+export interface PaletteConfig {
+  accent: string;     // hex color
+  vibrancy: number;   // 1-10
+  contrast: "dark" | "light";
+}
+
+export const ACCENT_OPTIONS = [
+  { value: "#4788f0", label: "藏蓝" },
+  { value: "#c0394a", label: "酒红" },
+  { value: "#c2861c", label: "深棕" },
+  { value: "#7c6ff0", label: "暗紫" },
+  { value: "#06b6d4", label: "青绿" },
+  { value: "#f59e0b", label: "琥珀" },
+  { value: "#ec4899", label: "玫红" },
+  { value: "#6366f1", label: "靛蓝" },
+];
+
+export const THEME_PALETTE_DEFAULTS: Record<ThemeName, PaletteConfig> = {
+  default:          { accent: "#4788f0", vibrancy: 5, contrast: "dark" },
+  rose:             { accent: "#ec4899", vibrancy: 3, contrast: "dark" },
+  light:            { accent: "#3b82f6", vibrancy: 3, contrast: "light" },
+  "final-fantasy":  { accent: "#4488ff", vibrancy: 6, contrast: "dark" },
+  overwatch:        { accent: "#f99e1a", vibrancy: 7, contrast: "dark" },
+  genshin:          { accent: "#d4a84b", vibrancy: 5, contrast: "dark" },
+  "path-of-exile":  { accent: "#87ceeb", vibrancy: 4, contrast: "dark" },
+  "counter-strike": { accent: "#de6d1c", vibrancy: 6, contrast: "dark" },
+  "pretty-girl":    { accent: "#ff69b4", vibrancy: 6, contrast: "dark" },
+  "black-white":    { accent: "#c8c8d0", vibrancy: 2, contrast: "dark" },
+  "cyber-girl":     { accent: "#8b5cf6", vibrancy: 8, contrast: "dark" },
+};
+
 export type SettingsState = {
   language: string;
   autoStart: boolean;
@@ -87,6 +123,13 @@ export type SettingsState = {
   cgTextBgColor: string;
   cgTextBgOpacity: number;
 
+  // ── New palette system (replaces 13 individual controls) ──
+  paletteAccent: string;
+  paletteVibrancy: number;  // 1-10
+  paletteContrast: "dark" | "light";
+  /** Whether user has manually adjusted palette from theme default */
+  paletteCustomized: boolean;
+
   // Init from persistent store
   init: () => Promise<void>;
   setLanguage: (lang: string) => void;
@@ -124,6 +167,10 @@ export type SettingsState = {
   setCgTextSize: (v: "xs" | "sm" | "base") => void;
   setCgTextColor: (v: string) => void;
   setFontFamily: (v: string) => void;
+  setPaletteAccent: (v: string) => void;
+  setPaletteVibrancy: (v: number) => void;
+  setPaletteContrast: (v: "dark" | "light") => void;
+  resetPaletteToTheme: (theme: ThemeName) => void;
 };
 
 const STORAGE_KEY = "app-settings";
@@ -143,6 +190,51 @@ function readSaved(): Partial<SettingsState> {
 }
 
 function outdate() { _dirty = true; }
+
+/** Derive all --color- CSS vars from the 3-knob palette system */
+export function applyPalette() {
+  const s = useSettingsStore.getState();
+  const v = s.paletteVibrancy; // 1-10
+  const contrast = s.paletteContrast;
+  const accent = s.paletteAccent;
+  const root = document.documentElement;
+
+  const isDark = contrast !== "light";
+  const text = isDark ? "#edeff4" : "#1c1c1e";
+  const muted = isDark ? "#8a99b8" : "#5c5b66";
+  const heading = isDark ? "#fff" : "#111";
+
+  // --color-primary
+  root.style.setProperty("--color-primary", accent);
+  root.style.setProperty("--color-primary-light", accent); // used as accent bright
+  root.style.setProperty("--color-primary-dark", accent);
+
+  // Surface: driven by vibrancy
+  const sat = v * 1.5;
+  const op = 85 + v * 1.5; // 86-100
+  if (isDark) {
+    root.style.setProperty("--color-surface", `color-mix(in srgb, ${accent} ${sat}%, rgba(8,12,20,${op / 100}))`);
+    root.style.setProperty("--color-surface-light", `color-mix(in srgb, ${accent} ${sat * 1.5}%, rgba(16,21,32,${op / 100}))`);
+    root.style.setProperty("--color-surface-lighter", `color-mix(in srgb, ${accent} ${sat * 2}%, rgba(26,31,42,${op / 100}))`);
+  } else {
+    root.style.setProperty("--color-surface", `color-mix(in srgb, ${accent} ${sat * 0.5}%, rgba(255,255,255,${op / 100}))`);
+    root.style.setProperty("--color-surface-light", `color-mix(in srgb, ${accent} ${sat * 0.7}%, rgba(248,248,248,${op / 100}))`);
+    root.style.setProperty("--color-surface-lighter", `color-mix(in srgb, ${accent} ${sat * 0.9}%, rgba(240,240,240,${op / 100}))`);
+  }
+
+  // Font colors
+  root.style.setProperty("--font-primary", text);
+  root.style.setProperty("--font-secondary", muted);
+  root.style.setProperty("--scroll-fade-opacity", String(v / 40));
+  root.style.setProperty("--bg-opacity", String((55 + v * 3) / 100));
+
+  // CG text colors follow accent
+  root.style.setProperty("--cg-text-color", accent);
+  root.style.setProperty("--cg-text-bg", accent);
+
+  // data-theme attribute drives CSS selectors
+  root.setAttribute("data-theme", s.paletteContrast === "light" ? "light" : "");
+}
 
 /** Dynamically set surface CSS vars based on saturation + opacity settings */
 export function applySurface() {
@@ -241,7 +333,7 @@ async function persist(s: SettingsState) {
     visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
     headerOpacity: s.headerOpacity, footerOpacity: s.footerOpacity,
     surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
-    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor,
+    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteVibrancy: s.paletteVibrancy, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized,
   });
   // Write to both: SQLite (primary) + localStorage (fast sync fallback)
   localStorage.setItem(STORAGE_KEY, payload);
@@ -335,6 +427,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     cgTextColor: (saved as any).cgTextColor || "#e0c0ff",
     cgTextBgColor: (saved as any).cgTextBgColor || "#c74dff",
     cgTextBgOpacity: (saved as any).cgTextBgOpacity ?? 15,
+    paletteAccent: (saved as any).paletteAccent || "#4788f0",
+    paletteVibrancy: (saved as any).paletteVibrancy ?? 5,
+    paletteContrast: (saved as any).paletteContrast || "dark",
+    paletteCustomized: (saved as any).paletteCustomized || false,
 
     init: async () => {
       const raw = await kv.get(STORAGE_KEY);
@@ -376,8 +472,14 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             cyberBgmEnabled: (s.cyberBgmEnabled as boolean) ?? get().cyberBgmEnabled,
             cgTextSize: (s.cgTextSize as any) ?? get().cgTextSize,
             cgTextColor: (s.cgTextColor as string) ?? get().cgTextColor,
+            cgTextBgColor: (s.cgTextBgColor as string) ?? get().cgTextBgColor,
+            cgTextBgOpacity: (s.cgTextBgOpacity as number) ?? get().cgTextBgOpacity,
+            paletteAccent: (s.paletteAccent as string) ?? get().paletteAccent,
+            paletteVibrancy: (s.paletteVibrancy as number) ?? get().paletteVibrancy,
+            paletteContrast: (s.paletteContrast as any) ?? get().paletteContrast,
+            paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized,
           });
-          applySurface();
+          applyPalette(); applySurface();
           applyFontColors();
           applyLyricColors();
           applyScrollFade(); applyFontFamily();
@@ -425,5 +527,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setCgTextBgColor(v) { set({ cgTextBgColor: v }); outdate(); persist(get()); },
     setCgTextBgOpacity(v) { set({ cgTextBgOpacity: v }); outdate(); persist(get()); },
     setFontFamily(v) { set({ fontFamily: v }); outdate(); persist(get()); applyFontFamily(v); },
+    setPaletteAccent(v) { set({ paletteAccent: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
+    setPaletteVibrancy(v) { set({ paletteVibrancy: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
+    setPaletteContrast(v) { set({ paletteContrast: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
+    resetPaletteToTheme(theme) {
+      const def = THEME_PALETTE_DEFAULTS[theme] ?? THEME_PALETTE_DEFAULTS.default;
+      set({ paletteAccent: def.accent, paletteVibrancy: def.vibrancy, paletteContrast: def.contrast, paletteCustomized: false });
+      outdate(); persist(get()); applyPalette();
+    },
   };
 });
