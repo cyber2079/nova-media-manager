@@ -106,17 +106,8 @@ export default function QuickLaunchBar() {
 
   // Theme-aware running underline color
   const runningDotColor = (() => {
-    switch (theme) {
-      case "overwatch": return "#f99e1a";
-      case "final-fantasy": return "#00e5a0";
-      case "genshin": return "#d4a84b";
-      case "path-of-exile": return "#87ceeb";
-      case "counter-strike": return "#de6d1c";
-      case "pretty-girl": return "#ff69b4";
-      case "rose": return "#e85078";
-      case "black-white": return "#c8a882";
-      default: return "var(--color-primary-light)";
-    }
+    if (theme === "ice-girl") return "#87ceeb";
+    return "var(--color-primary-light)";
   })();
 
   return (

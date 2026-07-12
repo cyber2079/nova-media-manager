@@ -503,7 +503,7 @@ export default function MusicLibrary() {
                         )}
                         {!isPlBatch && <span className="w-6 text-center text-[11px] text-gray-600 shrink-0">{idx + 1}</span>}
                         <div className="w-9 h-9 rounded overflow-hidden bg-surface-lighter shrink-0">
-                          <img src={m.coverPath || "/themes/pretty%20girl/icons/music%20cover.png"} alt="" className="w-full h-full object-cover object-top scale-125" onError={(e) => { (e.target as HTMLImageElement).src = "/themes/pretty%20girl/icons/music%20cover.png"; }} />
+                          <img src={m.coverPath || "/themes/common/music-cover.png"} alt="" className="w-full h-full object-cover object-top scale-125" onError={(e) => { (e.target as HTMLImageElement).src = "/themes/common/music-cover.png"; }} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={cn("text-sm truncate", playing?.id === m.id ? "text-primary-light font-medium" : "text-gray-200")}>{m.name}</p>
@@ -577,8 +577,8 @@ export default function MusicLibrary() {
                         {selected && <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>}
                       </div>
                       <div className="w-9 h-9 rounded overflow-hidden bg-surface-lighter shrink-0">
-                        <img src={m.coverPath || "/themes/pretty%20girl/icons/music%20cover.png"} alt="" className="w-full h-full object-cover object-top scale-125"
-                          onError={(e) => { (e.target as HTMLImageElement).src = "/themes/pretty%20girl/icons/music%20cover.png"; }} />
+                        <img src={m.coverPath || "/themes/common/music-cover.png"} alt="" className="w-full h-full object-cover object-top scale-125"
+                          onError={(e) => { (e.target as HTMLImageElement).src = "/themes/common/music-cover.png"; }} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-200 truncate">{m.name}</p>
@@ -631,8 +631,8 @@ export default function MusicLibrary() {
                       {batch.showCheckboxes && <BatchCheckbox inline checked={batch.selected.has(m.id)} onToggle={() => batch.toggle(m.id)} />}
                       {!batch.isBatchMode && <span className="w-6 text-center text-[11px] text-gray-600 shrink-0">{idx + 1}</span>}
                       <div className="w-9 h-9 rounded overflow-hidden bg-surface-lighter shrink-0">
-                        <img src={m.coverPath || "/themes/pretty%20girl/icons/music%20cover.png"} alt="" className="w-full h-full object-cover object-top scale-125"
-                          onError={(e) => { (e.target as HTMLImageElement).src = "/themes/pretty%20girl/icons/music%20cover.png"; }} />
+                        <img src={m.coverPath || "/themes/common/music-cover.png"} alt="" className="w-full h-full object-cover object-top scale-125"
+                          onError={(e) => { (e.target as HTMLImageElement).src = "/themes/common/music-cover.png"; }} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={cn("text-sm truncate", playing?.id === m.id ? "text-primary-light font-medium" : "text-gray-200")}>{m.name}</p>
@@ -716,8 +716,8 @@ export default function MusicLibrary() {
         <div className="flex items-stretch gap-4">
           {/* LEFT: cover column — fills full height, no square constraint */}
           <div className="shrink-0 relative rounded overflow-hidden" style={{ width: 72 }}>
-            <img src={playing.coverPath || "/themes/pretty%20girl/icons/music%20cover.png"} alt="" className="absolute inset-0 w-full h-full object-cover object-top scale-125"
-              onError={(e) => { (e.target as HTMLImageElement).src = "/themes/pretty%20girl/icons/music%20cover.png"; }} />
+            <img src={playing.coverPath || "/themes/common/music-cover.png"} alt="" className="absolute inset-0 w-full h-full object-cover object-top scale-125"
+              onError={(e) => { (e.target as HTMLImageElement).src = "/themes/common/music-cover.png"; }} />
           </div>
 
           {/* RIGHT: 3 rows */}

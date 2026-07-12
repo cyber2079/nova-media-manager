@@ -3,9 +3,9 @@ import { kv } from "@/lib/sqliteStore";
 import { applySurface, useSettingsStore } from "./settingsStore";
 import { analytics } from "@/lib/analytics";
 
-export type ThemeName = "default" | "final-fantasy" | "overwatch" | "genshin" | "path-of-exile" | "counter-strike" | "rose" | "light" | "pretty-girl" | "black-white" | "cyber-girl";
+export type ThemeName = "ice-girl" | "cyber-girl";
 
-const cycle: ThemeName[] = ["default", "final-fantasy", "overwatch", "genshin", "path-of-exile", "counter-strike", "rose", "light", "pretty-girl", "black-white", "cyber-girl"];
+const cycle: ThemeName[] = ["ice-girl", "cyber-girl"];
 
 interface ThemeState {
   theme: ThemeName;
@@ -15,12 +15,14 @@ interface ThemeState {
 }
 
 function resolveTheme(raw: string | null): ThemeName {
-  if (raw && (cycle as string[]).includes(raw)) return raw as ThemeName;
-  return "default";
+  if (raw === "cyber-girl") return "cyber-girl";
+  // path-of-exile 旧值兼容 → ice-girl
+  if (raw === "path-of-exile") return "ice-girl";
+  return "ice-girl";
 }
 
 function persist(t: ThemeName) {
-  localStorage.setItem("app-theme", t); // sync fallback
+  localStorage.setItem("app-theme", t);
   document.documentElement.setAttribute("data-theme", t);
   kv.set("app-theme", t).catch(() => {});
 }
@@ -42,7 +44,6 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set({ theme: t }); persist(t); applySurface();
     if (prev !== t) {
       analytics.track("theme_switch", { from: prev, to: t });
-      // Auto-apply theme's default palette if user hasn't customized
       const { paletteCustomized, resetPaletteToTheme } = useSettingsStore.getState();
       if (!paletteCustomized) { resetPaletteToTheme(t); persist(t); }
     }

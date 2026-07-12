@@ -20,10 +20,7 @@ interface Props {
 }
 
 const themeList: { key: ThemeName; labelKey: string; emoji: string; image?: string }[] = [
-  { key: "default", labelKey: "settings.theme_default", emoji: "🏠" },
-  { key: "path-of-exile", labelKey: "settings.theme_poe", emoji: "⛓", image: "/themes/path%20of%20exile/pic/head.webp" },
-  { key: "pretty-girl", labelKey: "settings.theme_pg", emoji: "💖", image: "/themes/pretty%20girl/pic/header.webp" },
-  { key: "black-white", labelKey: "settings.theme_bw", emoji: "🖤", image: "/themes/black%20withe/pic/bg3.webp" },
+  { key: "ice-girl", labelKey: "settings.theme_ice", emoji: "❄️" },
   { key: "cyber-girl", labelKey: "settings.theme_cg", emoji: "💜", image: "/themes/cyber%20girl/pic/bg1.webp" },
 ];
 

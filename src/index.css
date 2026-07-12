@@ -1,89 +1,52 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
 
-/* ═══════════ Cyberpunk local fonts ═══════════ */
+/* ═══════════ Local fonts ═══════════ */
 @font-face {
   font-family: "Maoken Glitch Sans";
   src: url("/fonts/maoken-glitch-sans.otf") format("opentype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
+  font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: "Defectica";
   src: url("/fonts/defectica.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
+  font-weight: 400; font-style: normal; font-display: swap;
 }
 
-:root, [data-theme="default"] {
-  --color-primary: #7cb8e4; --color-primary-light: #a8d8f0; --color-primary-dark: #5a9cc8;
-  --color-accent: #6cb4ee; --font-display: "Inter", system-ui, sans-serif;
-}
-[data-theme="final-fantasy"] {
-  --color-primary: #00e5a0; --color-primary-light: #34ffc2; --color-primary-dark: #0a8f65;
-  --color-accent: #e6b422; --font-display: "Cinzel", serif;
-}
-[data-theme="overwatch"] {
-  --color-primary: #f99e1a; --color-primary-light: #ffb84d; --color-primary-dark: #d67e0a;
-  --color-accent: #218ffe; --font-display: "Rajdhani", "Inter", sans-serif;
-}
-[data-theme="genshin"] {
-  --color-primary: #d4a84b; --color-primary-light: #e8c97a; --color-primary-dark: #a07828;
-  --color-accent: #5b8c5a; --font-display: "Cinzel", "Inter", serif;
-}
-[data-theme="path-of-exile"] {
-  --color-primary: #af6025; --color-primary-light: #e09050; --color-primary-dark: #7a3a10;
-  --color-accent: #c87830; --font-display: "Cinzel", serif;
-}
-[data-theme="counter-strike"] {
-  --color-primary: #de6d1c; --color-primary-light: #e8983c; --color-primary-dark: #b45014;
-  --color-accent: #4a90d9; --font-display: "Rajdhani", "Inter", sans-serif;
-}
-[data-theme="rose"] {
-  --color-primary: #e85078; --color-primary-light: #ff7aa0; --color-primary-dark: #c03058;
-  --color-accent: #ff88cc; --font-display: "Inter", system-ui, sans-serif;
-}
-[data-theme="pretty-girl"] {
-  --color-primary: #d870a0; --color-primary-light: #f0a0c8; --color-primary-dark: #b05888;
-  --color-accent: #e898c8; --font-display: "Inter", system-ui, sans-serif;
-}
-[data-theme="black-white"] {
-  --color-primary: #a8a8b0; --color-primary-light: #d0d0d8; --color-primary-dark: #707078;
-  --color-accent: #c8a882; --font-display: "Inter", system-ui, sans-serif;
+/* ═══════════ Theme tokens ═══════════ */
+[data-theme="ice-girl"] {
+  --color-primary: #87ceeb; --color-primary-light: #b0e0ff; --color-primary-dark: #5b9bd5;
+  --color-accent: #4488ff; --font-display: "Cinzel", serif;
 }
 [data-theme="cyber-girl"] {
   --color-primary: #c74dff; --color-primary-light: #e890ff; --color-primary-dark: #8b30cc;
   --color-accent: #ff4da6; --font-display: "Rajdhani", "Inter", sans-serif;
 }
-/* ── Surface colors derived from --color-primary (dark, low saturation) ── */
+
+/* ── Surface colors ── */
 :root {
   --color-surface:        color-mix(in srgb, var(--color-primary) 4%, #080c14);
   --color-surface-light:  color-mix(in srgb, var(--color-primary) 6%, #101520);
   --color-surface-lighter:color-mix(in srgb, var(--color-primary) 8%, #1a1f2a);
 }
 
-[data-theme="light"], [data-palette="light"] {
-  --color-primary: #a8c8e8; --color-primary-light: #cde0f5; --color-primary-dark: #7aa8d0;
+/* Light palette support */
+[data-palette="light"] {
   --color-surface: #e8edf2; --color-surface-light: #d8dfe6; --color-surface-lighter: #c4cfd8;
-  --color-accent: #88aacc; --font-display: "Inter", system-ui, sans-serif;
   --color-text: #2a3040;
 }
-[data-theme="light"] body, [data-palette="light"] body { color: var(--color-text, #2a3040); }
-[data-theme="light"] .text-white, [data-palette="light"] .text-white { color: #2a3040 !important; }
-/* ── Font primary/secondary color — overrides Tailwind text-* in dark themes ── */
-[data-theme]:not([data-theme="light"]):not([data-palette="light"]) .text-white { color: var(--font-primary) !important; }
-[data-theme]:not([data-theme="light"]):not([data-palette="light"]) .text-gray-400,
-[data-theme]:not([data-theme="light"]):not([data-palette="light"]) .text-gray-500,
-[data-theme]:not([data-theme="light"]):not([data-palette="light"]) .text-gray-600 { color: var(--font-secondary) !important; }
-
-[data-theme="light"] .text-gray-400, [data-palette="light"] .text-gray-400 { color: #556070 !important; }
-[data-theme="light"] .text-gray-500, [data-palette="light"] .text-gray-500 { color: #667686 !important; }
-[data-theme="light"] .text-gray-300, [data-palette="light"] .text-gray-300 { color: #3a4458 !important; }
-[data-theme="light"] .text-gray-600, [data-palette="light"] .text-gray-600 { color: #8898a8 !important; }
-[data-theme="light"] .text-primary-light\/70, [data-palette="light"] .text-primary-light\/70 { color: #5a7898 !important; }
-[data-theme="light"] .text-primary-light\/60, [data-palette="light"] .text-primary-light\/60 { color: #5a7898 !important; }
+[data-palette="light"] body { color: var(--color-text, #2a3040); }
+[data-palette="light"] .text-white { color: #2a3040 !important; }
+[data-theme]:not([data-palette="light"]) .text-white { color: var(--font-primary) !important; }
+[data-theme]:not([data-palette="light"]) .text-gray-400,
+[data-theme]:not([data-palette="light"]) .text-gray-500,
+[data-theme]:not([data-palette="light"]) .text-gray-600 { color: var(--font-secondary) !important; }
+[data-palette="light"] .text-gray-400 { color: #556070 !important; }
+[data-palette="light"] .text-gray-500 { color: #667686 !important; }
+[data-palette="light"] .text-gray-300 { color: #3a4458 !important; }
+[data-palette="light"] .text-gray-600 { color: #8898a8 !important; }
+[data-palette="light"] .text-primary-light\/70 { color: #5a7898 !important; }
+[data-palette="light"] .text-primary-light\/60 { color: #5a7898 !important; }
 
 @theme {
   --color-primary: var(--color-primary); --color-primary-light: var(--color-primary-light);
@@ -92,12 +55,8 @@
   --color-accent: var(--color-accent);
 }
 
-html, body {
-  height: 100%;
-  overflow: hidden;
-}
-
-/* ── Font color defaults (overridden by JS when user customizes) ── */
+/* ═══════════ Base ═══════════ */
+html, body { height: 100%; overflow: hidden; }
 :root { --font-primary: #ffffff; --font-secondary: #8899aa; --scroll-fade-opacity: 0.3; }
 
 body {
@@ -111,13 +70,11 @@ body {
   -webkit-user-drag: none;
 }
 
-/* Global icon scaling via CSS custom property */
 svg.lucide, [class*="lucide"] {
   transform: scale(var(--app-icon-scale, 1));
   transform-origin: center;
 }
 
-/* ── Sub-page glass panel ── */
 main[data-route="page"] {
   position: relative; z-index: 10;
   border-radius: 12px;
@@ -125,610 +82,135 @@ main[data-route="page"] {
   border: 1px solid rgba(255,255,255,0.04);
 }
 
-
-/* ═══════════════════════════════════════════════════════
-   FF7 THEME — Midgar Terminal
-   ═══════════════════════════════════════════════════════ */
-
-/* 🌐 All background layers respect --bg-opacity CSS variable */
-[data-theme="final-fantasy"] body::before,
-[data-theme="overwatch"] body::before,
-[data-theme="genshin"] body::before {
-  opacity: var(--bg-opacity, 0.7) !important;
+/* ═══════════ ICE GIRL THEME ═══════════ */
+[data-theme="ice-girl"] .ice-title { font-family: var(--font-display); letter-spacing: 0.15em; text-transform: uppercase; color: #b0e0ff; }
+[data-theme="ice-girl"] .ice-text-glow { text-shadow: 0 0 15px rgba(135,206,250,0.5), 0 0 30px rgba(135,206,250,0.2); }
+[data-theme="ice-girl"] .ice-scroll {
+  border: 1px solid rgba(135,206,235,0.2);
+  background: var(--color-surface-light);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-
-/* Default / Rose / Light — base gradient controlled by --bg-opacity
-   Slider direction: higher → background more visible (matches expectation) */
-[data-theme="default"] body::before,
-[data-theme="rose"] body::before,
-[data-theme="light"] body::before {
-  content: "";
-  position: fixed; inset: 0; z-index: -2;
-  opacity: var(--bg-opacity, 0.7);
+[data-theme="ice-girl"] .ice-scroll p {
+  color: #b0e0ff !important;
+  text-shadow: 0 0 8px rgba(135,206,250,0.15);
 }
-[data-theme="default"] body::before {
-  background: linear-gradient(180deg, #0f172a 0%, #1a2740 50%, #0f172a 100%);
-}
-[data-theme="rose"] body::before {
-  background: linear-gradient(180deg, #1a0f14 0%, #2a1520 50%, #1a0f14 100%);
-}
-[data-theme="light"] body::before {
-  background: linear-gradient(180deg, #e8edf2 0%, #d8dfe6 50%, #e8edf2 100%);
-}
-
-/* 城市全景 + Mako 色调叠加 */
-[data-theme="final-fantasy"] body::before {
-  content: "";
-  position: fixed; inset: 0; z-index: -2;
-  background:
-    linear-gradient(135deg, rgba(0,229,160,0.08) 0%, rgba(10,10,20,0.6) 100%),
-    url("/themes/final%20fantasy/pic/Midgar-FFVII-Remake.webp") center/cover no-repeat fixed;
-}
-
-/* ── FF7 装饰 ── */
-
-/* 窄屏（<1100px）隐藏侧面图 */
-@media (max-width: 1099px) {
-  [data-theme="final-fantasy"] .ff7-chara-left,
-  [data-theme="final-fantasy"] .ff7-chara-full,
-  .ff7-chara-left,
-  .ff7-chara-full { display: none !important; }
-}
-
-[data-theme="final-fantasy"] .ff7-chara-left {
-  position: fixed; left: 0; top: 12%;
-  transform: scale(0.3);
-  transform-origin: left top; z-index: 0;
-  opacity: 0.5; pointer-events: none;
-}
-
-[data-theme="final-fantasy"] .ff7-chara-full {
-  position: fixed; right: 0; top: 52%;
-  transform: translateY(-50%) scale(0.34);
-  transform-origin: right center; z-index: 0;
-  opacity: 0.38; pointer-events: none;
-}
-
-[data-theme="final-fantasy"] .ff7-banner {
-  background:
-    linear-gradient(180deg, rgba(10,10,20,0.25) 0%, rgba(0,229,160,0.06) 40%, rgba(0,229,160,0.06) 60%, rgba(10,10,20,0.25) 100%),
-    url("/themes/final%20fantasy/pic/landscape-hupmx9u6t.webp") center 25%/cover;
-  height: 220px;
-  border-radius: 8px;
-  border: 1px solid rgba(0,229,160,0.15);
-}
-
-@media (min-width: 1100px) {
-  [data-theme="final-fantasy"] main {
-    padding-left: clamp(24px, 8vw, 160px) !important;
-    padding-right: clamp(24px, 6vw, 140px) !important;
-  }
-}
-
-/* Nav 区 — 风景底纹 */
-[data-theme="final-fantasy"] .ff7-nav-bg {
-  background:
-    url("/themes/final%20fantasy/pic/landscape-hupmx9u6t.webp") right 30%/auto 100% no-repeat;
-}
-
-[data-theme="final-fantasy"] .ff7-glow {
-  box-shadow: 0 0 20px rgba(0,229,160,0.3), 0 0 60px rgba(0,229,160,0.1);
-}
-[data-theme="final-fantasy"] .ff7-card {
-  border: 1px solid rgba(0,229,160,0.2);
-  background: #0a0a14;
-}
-[data-theme="final-fantasy"] .ff7-text-glow {
-  animation: mako-pulse 2s ease-in-out infinite;
-}
-@keyframes mako-pulse {
-  0%,100% { text-shadow: 0 0 8px rgba(0,229,160,0.4); }
-  50%    { text-shadow: 0 0 20px rgba(0,229,160,0.8), 0 0 40px rgba(0,229,160,0.4); }
-}
-[data-theme="final-fantasy"] ::-webkit-scrollbar-thumb {
-  background: rgba(0,229,160,0.3); border-radius: 9999px;
-}
-[data-theme="final-fantasy"] .skeleton {
-  background: linear-gradient(90deg, #0a3320 0%, #0f5a3a 50%, #0a3320 100%);
-  background-size: 200% 100%;
-}
-
-
-/* ═══════════════════════════════════════════════════════
-   OVERWATCH THEME — Command Center HUD
-   ═══════════════════════════════════════════════════════ */
-
-/* 英雄壁纸全景背景 + 极轻扫描线 */
-[data-theme="overwatch"] body::before {
-  content: "";
-  position: fixed; inset: 0; z-index: -2;
-  background:
-    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.02) 3px),
-    linear-gradient(180deg, rgba(13,17,23,0.35) 0%, rgba(13,17,23,0.15) 50%, rgba(13,17,23,0.45) 100%),
-    url("/themes/over%20watch/pic/【哲风壁纸】ow-守望先锋.webp") center/cover no-repeat fixed;
-}
-
-/* 旧 ow-footer-wall 已移除，footer 用 Layout 统一控制 */
-
-/* 斜切角卡片 */
-[data-theme="overwatch"] .ow-card {
-  position: relative; clip-path: polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);
-  background: linear-gradient(145deg, rgba(249,158,26,0.06), rgba(33,143,254,0.04)); border: none;
-}
-[data-theme="overwatch"] .ow-card::before {
-  content: ""; position: absolute; inset: 0;
-  clip-path: polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);
-  border: 1px solid rgba(249,158,26,0.3); pointer-events: none; z-index: 1;
-}
-[data-theme="overwatch"] .ow-card > * { position: relative; z-index: 2; }
-
-/* 六边形 */
-[data-theme="overwatch"] .ow-hex {
-  clip-path: polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);
+[data-theme="ice-girl"] .ice-orb {
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 2px solid rgba(135,206,235,0.4);
+  background: linear-gradient(135deg, rgba(10,14,24,0.9), rgba(5,8,14,0.95));
+  box-shadow: 0 0 20px rgba(135,206,235,0.15);
   display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
 }
-
-/* 能量条动画 */
-[data-theme="overwatch"] .ow-energy-bar {
-  background: linear-gradient(90deg, #f99e1a 0%, #f99e1a 30%, #218ffe 70%, #218ffe 100%);
-  animation: ow-bar-scan 3s ease-in-out infinite;
-}
-@keyframes ow-bar-scan { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
-
-/* Ultimate 闪烁 */
-[data-theme="overwatch"] .ow-ult-text {
-  animation: ow-ult-flash 1.2s ease-in-out infinite;
-}
-@keyframes ow-ult-flash {
-  0%,100% { color: #f99e1a; text-shadow: 0 0 6px rgba(249,158,26,0.4); }
-  50%    { color: #fff; text-shadow: 0 0 16px rgba(249,158,26,0.9),0 0 32px rgba(33,143,254,0.5); }
-}
-
-/* ── OW 装饰 ── */
-
-@media (max-width: 1099px) {
-  [data-theme="overwatch"] .ow-corner-tl,
-  [data-theme="overwatch"] .ow-corner-br,
-  .ow-corner-tl,
-  .ow-corner-br { display: none !important; }
-}
-
-[data-theme="overwatch"] .ow-banner {
-  background:
-    linear-gradient(0deg, rgba(13,17,23,0.3) 0%, rgba(13,17,23,0.02) 45%, rgba(13,17,23,0.3) 100%),
-    url("/themes/over%20watch/pic/守望先锋美女英雄高清壁纸_彼岸壁纸.webp") center 30%/cover;
-  height: 220px;
-  border-radius: 8px;
-  border: 1px solid rgba(249,158,26,0.15);
-}
-
-[data-theme="overwatch"] .ow-corner-tl {
-  position: fixed; left: 0; top: 40%;
-  transform: translateY(-50%);
-  transform-origin: left center; z-index: 0;
-  max-height: 50vh;
-  width: auto; height: auto;
-  opacity: 0.5; pointer-events: none;
-}
-
-[data-theme="overwatch"] .ow-corner-br {
-  position: fixed; right: 0; top: 60%;
-  transform: translateY(-50%);
-  transform-origin: right center; z-index: 0;
-  max-height: 50vh;
-  width: auto; height: auto;
-  opacity: 0.5; pointer-events: none;
-}
-
-@media (min-width: 1100px) {
-  [data-theme="overwatch"] main {
-    padding-left: clamp(24px, 7vw, 120px) !important;
-    padding-right: clamp(24px, 7vw, 120px) !important;
-  }
-}
-
-/* Pachimari 彩蛋 */
-[data-theme="overwatch"] .ow-pachimari {
-  background: url("/themes/over%20watch/icons/PI_Pachimari.webp") center/contain no-repeat;
-  filter: drop-shadow(0 0 10px rgba(249,158,26,0.5));
-}
-
-[data-theme="overwatch"] { letter-spacing: 0.05em; }
-[data-theme="overwatch"] h1,[data-theme="overwatch"] h2,[data-theme="overwatch"] h3 {
-  text-transform: uppercase; font-style: italic;
-}
-[data-theme="overwatch"] ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #f99e1a, #d67e0a); border-radius: 9999px;
-}
-[data-theme="overwatch"] .skeleton {
-  background: linear-gradient(90deg, #1a1f2e 0%, #252e42 50%, #1a1f2e 100%);
-  background-size: 200% 100%;
-  clip-path: polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
-}
-[data-theme="genshin"] .skeleton {
-  background: linear-gradient(90deg, #2a2018 0%, #4a3828 50%, #2a2018 100%);
-  background-size: 200% 100%;
-}
-[data-theme="path-of-exile"] .skeleton {
+[data-theme="ice-girl"] .skeleton {
   background: linear-gradient(90deg, #0a141e 0%, #162838 50%, #0a141e 100%);
   background-size: 200% 100%;
 }
-[data-theme="counter-strike"] .skeleton {
-  background: linear-gradient(90deg, #1a1a2e 0%, #2a2a4e 50%, #1a1a2e 100%);
-  background-size: 200% 100%;
+
+/* Ice Girl: push skill icons to bottom */
+[data-theme="ice-girl"] main[data-route="home"] .animate-fade-in-up {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: calc(100vh - 130px) !important;
 }
-[data-theme="rose"] .skeleton {
-  background: linear-gradient(90deg, #2a1520 0%, #4a2540 50%, #2a1520 100%);
-  background-size: 200% 100%;
+[data-theme="ice-girl"] [data-hero] {
+  margin-top: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+  padding-bottom: 0 !important;
 }
-[data-theme="light"] .skeleton, [data-palette="light"] .skeleton {
-  background: linear-gradient(90deg, #d0d8e0 0%, #e0e8f0 50%, #d0d8e0 100%);
-  background-size: 200% 100%;
+[data-theme="ice-girl"] [data-hero] .flex.justify-center.gap-8 { margin-top: 0; }
+[data-theme="ice-girl"] [data-hero] .flex.justify-center.gap-8 > div > .text-center { background: transparent !important; }
+
+/* Ice Girl header */
+[data-theme="ice-girl"] header nav a:not([class*="text-primary-light"]) { color: color-mix(in srgb, var(--color-primary-light) 60%, #a0c0d8); }
+[data-theme="ice-girl"] header button svg { color: color-mix(in srgb, var(--color-primary-light) 50%, #a0c0d8); }
+
+/* ═══════════ CYBER GIRL THEME ═══════════ */
+[data-theme="cyber-girl"] body::after {
+  content: "";
+  position: fixed; inset: 0; z-index: 2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 30% at 50% 100%, rgba(199,77,255,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 25% at 50% 100%, rgba(0,180,255,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 100% at 50% 50%, transparent 50%, rgba(5,0,15,0.45) 100%);
 }
-[data-theme="pretty-girl"] .skeleton {
-  background: linear-gradient(90deg, #1a0a15 0%, #2a1530 50%, #1a0a15 100%);
-  background-size: 200% 100%;
+[data-theme="cyber-girl"] .cg-title { font-family: var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-primary-light); text-shadow: 0 0 12px color-mix(in srgb, var(--color-primary-light) 70%, transparent), 0 0 30px color-mix(in srgb, var(--color-primary) 50%, transparent), 0 0 55px color-mix(in srgb, var(--color-accent) 30%, transparent); }
+[data-theme="cyber-girl"] .cg-text-glow { text-shadow: 0 0 15px color-mix(in srgb, var(--color-primary) 50%, transparent), 0 0 30px color-mix(in srgb, var(--color-accent) 30%, transparent); }
+[data-theme="cyber-girl"] .cg-scroll {
+  border: 1px solid rgba(199,77,255,0.2);
+  background: var(--color-surface-light);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-[data-theme="black-white"] .skeleton {
-  background: linear-gradient(90deg, #18181c 0%, #282830 50%, #18181c 100%);
-  background-size: 200% 100%;
+[data-theme="cyber-girl"] .cg-scroll p {
+  color: #e0c0ff !important;
+  text-shadow: 0 0 8px rgba(199,77,255,0.2);
 }
 [data-theme="cyber-girl"] .skeleton {
   background: linear-gradient(90deg, #1a0a2e 0%, #2a1050 50%, #1a0a2e 100%);
   background-size: 200% 100%;
 }
-[data-theme="overwatch"] .ow-divider {
-  height: 2px;
-  background: linear-gradient(90deg, transparent,#f99e1a,#218ffe,transparent);
-}
 
-
-/* ═══════════════════════════════════════════════════════
-   GENSHIN IMPACT THEME — Teyvat
-   ═══════════════════════════════════════════════════════ */
-
-[data-theme="genshin"] body::before {
-  content: "";
-  position: fixed; inset: 0; z-index: -2;
-  background:
-    linear-gradient(180deg, rgba(26,20,16,0.4) 0%, rgba(26,20,16,0.2) 50%, rgba(26,20,16,0.55) 100%),
-    url("/themes/Genshin%20impact/pic/news_bg.29770c4.webp") center/cover no-repeat fixed;
-  opacity: 0.85;
+/* Cyber Girl: push skill icons to bottom */
+[data-theme="cyber-girl"] main[data-route="home"] .animate-fade-in-up {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: calc(100vh - 130px) !important;
 }
+[data-theme="cyber-girl"] [data-hero] {
+  margin-top: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+  padding-bottom: 0 !important;
+}
+[data-theme="cyber-girl"] [data-hero] .flex.justify-center.gap-8 { margin-top: 0; }
+[data-theme="cyber-girl"] [data-hero] .flex.justify-center.gap-8 > div > .text-center { background: transparent !important; }
 
-[data-theme="genshin"] header,
-[data-theme="genshin"] .bg-surface\/80 {
-  background-color: rgba(26,20,16,0.92) !important;
-}
-
-/* Gold glow for active nav */
-[data-theme="genshin"] a[class*="bg-primary\\/20"] {
-  background: rgba(212,168,75,0.15) !important;
-}
-
-/* Card: golden border */
-[data-theme="genshin"] .gi-card {
-  border: 1px solid rgba(212,168,75,0.25);
-  background: linear-gradient(145deg, rgba(212,168,75,0.06), rgba(26,20,16,0.92));
-  box-shadow: 0 0 20px rgba(212,168,75,0.08);
-}
-
-/* Side decorations — large character images, centered */
-[data-theme="genshin"] .gi-left {
-  position: fixed; left: -10px; top: 50%; transform: translateY(-50%);
-  max-height: 55vh; width: auto; z-index: 0;
-  opacity: 0.65; pointer-events: none;
-}
-[data-theme="genshin"] .gi-right {
-  position: fixed; right: -10px; top: 50%; transform: translateY(-50%);
-  max-height: 55vh; width: auto; z-index: 0;
-  opacity: 0.65; pointer-events: none;
-}
-
-/* Top bar — gold gradient */
-[data-theme="genshin"] .gi-top-bar {
-  background: linear-gradient(90deg, #a07828, #d4a84b, #e8c97a, #d4a84b, #a07828);
-  height: 3px;
-  opacity: 0.9;
-}
-
-/* Banner on home page */
-[data-theme="genshin"] .gi-banner {
-  background:
-    linear-gradient(0deg, rgba(26,20,16,0.5) 0%, rgba(26,20,16,0.05) 50%, rgba(26,20,16,0.5) 100%),
-    url("/themes/Genshin%20impact/pic/2020021114213984258.webp") center 30%/cover;
-  height: 200px;
-  border-radius: 8px;
-  border: 1px solid rgba(212,168,75,0.2);
-}
-
-/* Golden text glow */
-[data-theme="genshin"] .gi-text-glow {
-  text-shadow: 0 0 12px rgba(212,168,75,0.5), 0 0 30px rgba(212,168,75,0.2);
-}
-
-/* Avatar circles with golden ring */
-[data-theme="genshin"] .gi-avatar-ring {
-  border: 2px solid rgba(212,168,75,0.5);
-  box-shadow: 0 0 12px rgba(212,168,75,0.3);
-}
-[data-theme="genshin"] .gi-avatar-ring:hover {
-  border-color: #e8c97a;
-  box-shadow: 0 0 20px rgba(212,168,75,0.6);
-}
-
-/* Scrollbar gold */
-[data-theme="genshin"] ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #d4a84b, #a07828);
+/* Cyber Girl header */
+[data-theme="cyber-girl"] header nav img { filter: brightness(1.25) saturate(1.15) drop-shadow(0 0 6px rgba(199,77,255,0.4)); }
+[data-theme="cyber-girl"] header nav a:not([class*="text-primary-light"]) { color: color-mix(in srgb, var(--color-primary-light) 70%, #d0c0e8); }
+[data-theme="cyber-girl"] header button svg { color: color-mix(in srgb, var(--color-primary-light) 55%, #c0b0d8); }
+[data-theme="cyber-girl"] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
   border-radius: 9999px;
 }
 
-/* Footer — Teyvat motto */
-[data-theme="genshin"] .gi-footer {
-  font-family: var(--font-display);
-  letter-spacing: 0.2em;
-  font-size: 11px;
-  color: rgba(212,168,75,0.45);
-}
+/* Cyber Girl scene swoop-in keyframes */
+@keyframes cg-swoop-tl { from { opacity:0; transform:translate(-80px,-60px) scale(0.6); } to { opacity:0.95; transform:translate(0,0) scale(1); } }
+@keyframes cg-swoop-tr { from { opacity:0; transform:translate(80px,-60px) scale(0.6); }  to { opacity:0.95; transform:translate(0,0) scale(1); } }
+@keyframes cg-swoop-bl { from { opacity:0; transform:translate(-80px,60px) scale(0.6); }  to { opacity:0.95; transform:translate(0,0) scale(1); } }
+@keyframes cg-swoop-br { from { opacity:0; transform:translate(80px,60px) scale(0.6); }   to { opacity:0.95; transform:translate(0,0) scale(1); } }
 
-@media (max-width: 1099px) {
-  [data-theme="genshin"] .gi-left,
-  [data-theme="genshin"] .gi-right,
-  .gi-left,
-  .gi-right { display: none !important; }
-}
-@media (min-width: 1100px) {
-  [data-theme="genshin"] main {
-    padding-left: clamp(24px, 7vw, 140px) !important;
-    padding-right: clamp(24px, 7vw, 140px) !important;
-  }
-}
+/* ═══════════ THEME ENTRANCE ANIMATIONS ═══════════ */
 
-/* ═══════════════════════════════════════════════════════
-   THEME ENTRANCE ANIMATIONS
-   ═══════════════════════════════════════════════════════ */
-
-/* Default — cards slide up with staggered delay, title fades in */
-[data-theme="default"] .theme-enter-title {
-  animation: default-title-in 0.6s ease-out;
+/* Ice Girl: frost bloom */
+[data-theme="ice-girl"] .theme-enter-title {
+  animation: ice-frost-in 0.8s ease-out;
 }
-[data-theme="default"] .theme-enter-card {
+[data-theme="ice-girl"] .theme-enter-card {
   opacity: 0;
-  animation: default-card-up 0.5s ease-out forwards;
+  animation: ice-card-emerge 0.6s ease-out forwards;
 }
-[data-theme="default"] .theme-enter-card:nth-child(1) { animation-delay: 0.1s; }
-[data-theme="default"] .theme-enter-card:nth-child(2) { animation-delay: 0.2s; }
-[data-theme="default"] .theme-enter-card:nth-child(3) { animation-delay: 0.3s; }
-[data-theme="default"] .theme-enter-card:nth-child(4) { animation-delay: 0.4s; }
-[data-theme="default"] .theme-enter-card:nth-child(5) { animation-delay: 0.5s; }
-@keyframes default-title-in {
-  from { opacity: 0; transform: translateY(-20px); filter: blur(4px); }
-  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
-}
-@keyframes default-card-up {
-  from { opacity: 0; transform: translateY(30px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* FF7 — mako green fade-in with glow pulse, side elements slide from edges */
-[data-theme="final-fantasy"] .theme-enter-title {
-  animation: ff7-glow-in 0.8s ease-out;
-}
-[data-theme="final-fantasy"] .theme-enter-card {
-  opacity: 0;
-  animation: ff7-card-rise 0.6s ease-out forwards;
-}
-[data-theme="final-fantasy"] .theme-enter-card:nth-child(1) { animation-delay: 0.15s; }
-[data-theme="final-fantasy"] .theme-enter-card:nth-child(2) { animation-delay: 0.3s; }
-[data-theme="final-fantasy"] .theme-enter-card:nth-child(3) { animation-delay: 0.45s; }
-[data-theme="final-fantasy"] .theme-enter-card:nth-child(4) { animation-delay: 0.6s; }
-[data-theme="final-fantasy"] .ff7-chara-left { animation: ff7-slide-left 1s ease-out; }
-[data-theme="final-fantasy"] .ff7-chara-full { animation: ff7-slide-right 1s ease-out; }
-@keyframes ff7-glow-in {
-  from { opacity: 0; text-shadow: 0 0 40px rgba(0,229,160,0.8); transform: scale(1.05); }
-  to   { opacity: 1; text-shadow: 0 0 12px rgba(0,229,160,0.4); transform: scale(1); }
-}
-@keyframes ff7-card-rise {
-  from { opacity: 0; transform: translateY(24px); filter: brightness(0.4); }
-  to   { opacity: 1; transform: translateY(0); filter: brightness(1); }
-}
-@keyframes ff7-slide-left {
-  from { opacity: 0; transform: translateX(-60px); }
-  to   { opacity: 0.5; transform: translateX(0); }
-}
-@keyframes ff7-slide-right {
-  from { opacity: 0; transform: translateX(60px); }
-  to   { opacity: 0.38; transform: translateX(0); }
-}
-
-/* OW — hex-pulse stagger, energy bar sweep in, side tech slides in */
-[data-theme="overwatch"] .theme-enter-title {
-  animation: ow-hud-flicker 0.5s steps(2) 2, ow-title-settle 0.3s ease-out 0.6s both;
-}
-[data-theme="overwatch"] .theme-enter-card {
-  opacity: 0;
-  animation: ow-card-hex 0.5s ease-out forwards;
-}
-[data-theme="overwatch"] .theme-enter-card:nth-child(1) { animation-delay: 0.1s; }
-[data-theme="overwatch"] .theme-enter-card:nth-child(2) { animation-delay: 0.2s; }
-[data-theme="overwatch"] .theme-enter-card:nth-child(3) { animation-delay: 0.3s; }
-[data-theme="overwatch"] .ow-corner-tl { animation: ow-corner-in 0.7s ease-out; }
-[data-theme="overwatch"] .ow-corner-br { animation: ow-corner-in 0.7s ease-out 0.15s both; }
-@keyframes ow-hud-flicker {
-  from, to { opacity: 1; } 50% { opacity: 0.3; }
-}
-@keyframes ow-title-settle {
-  from { opacity: 0; transform: scale(1.08); } to { opacity: 1; transform: scale(1); }
-}
-@keyframes ow-card-hex {
-  from { opacity: 0; clip-path: polygon(50% 50%,50% 50%,50% 50%,50% 50%,50% 50%,50% 50%); }
-  to   { opacity: 1; clip-path: polygon(0% 0%,100% 0%,100% 100%,0% 100%); }
-}
-@keyframes ow-corner-in {
-  from { opacity: 0; transform: scale(0.7); }
-  to   { opacity: 0.5; transform: scale(1); }
-}
-
-/* Genshin — constellation lines draw, golden sparkles, soft float */
-[data-theme="genshin"] .theme-enter-title {
-  animation: gi-star-bloom 0.8s ease-out;
-}
-[data-theme="genshin"] .theme-enter-card {
-  opacity: 0;
-  animation: gi-float-up 0.7s ease-out forwards;
-}
-[data-theme="genshin"] .theme-enter-card:nth-child(1) { animation-delay: 0s; }
-[data-theme="genshin"] .theme-enter-card:nth-child(2) { animation-delay: 0.12s; }
-[data-theme="genshin"] .theme-enter-card:nth-child(3) { animation-delay: 0.24s; }
-[data-theme="genshin"] .theme-enter-card:nth-child(4) { animation-delay: 0.36s; }
-[data-theme="genshin"] .gi-left { animation: gi-mist-in 1s ease-out; }
-[data-theme="genshin"] .gi-right { animation: gi-mist-in 1s ease-out 0.1s both; }
-@keyframes gi-star-bloom {
-  from { opacity: 0; transform: scale(0.8) rotate(-3deg); filter: blur(2px); }
-  to   { opacity: 1; transform: scale(1) rotate(0); filter: blur(0); }
-}
-@keyframes gi-float-up {
-  from { opacity: 0; transform: translateY(28px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes gi-mist-in {
-  from { opacity: 0; filter: blur(6px) brightness(1.3); }
-  to   { opacity: 0.65; filter: blur(0) brightness(1); }
-}
-
-/* ── PoE entrance: frost bloom + cards emerge from mist ── */
-[data-theme="path-of-exile"] .theme-enter-title {
-  animation: poe-frost-in 0.8s ease-out;
-}
-[data-theme="path-of-exile"] .theme-enter-card {
-  opacity: 0;
-  animation: poe-card-emerge 0.6s ease-out forwards;
-}
-[data-theme="path-of-exile"] .theme-enter-card:nth-child(1) { animation-delay: 0.10s; }
-[data-theme="path-of-exile"] .theme-enter-card:nth-child(2) { animation-delay: 0.20s; }
-[data-theme="path-of-exile"] .theme-enter-card:nth-child(3) { animation-delay: 0.30s; }
-[data-theme="path-of-exile"] .theme-enter-card:nth-child(4) { animation-delay: 0.40s; }
-[data-theme="path-of-exile"] .theme-enter-card:nth-child(5) { animation-delay: 0.50s; }
-@keyframes poe-frost-in {
+[data-theme="ice-girl"] .theme-enter-card:nth-child(1) { animation-delay: 0.10s; }
+[data-theme="ice-girl"] .theme-enter-card:nth-child(2) { animation-delay: 0.20s; }
+[data-theme="ice-girl"] .theme-enter-card:nth-child(3) { animation-delay: 0.30s; }
+[data-theme="ice-girl"] .theme-enter-card:nth-child(4) { animation-delay: 0.40s; }
+[data-theme="ice-girl"] .theme-enter-card:nth-child(5) { animation-delay: 0.50s; }
+@keyframes ice-frost-in {
   from { opacity: 0; transform: scale(0.9); filter: blur(6px) brightness(1.5); }
   to   { opacity: 1; transform: scale(1); filter: blur(0) brightness(1); }
 }
-@keyframes poe-card-emerge {
+@keyframes ice-card-emerge {
   from { opacity: 0; transform: translateY(20px); filter: blur(3px) brightness(0.6); }
   to   { opacity: 1; transform: translateY(0); filter: blur(0) brightness(1); }
 }
 
-/* ── CS2 entrance: tactical lock-on ── */
-[data-theme="counter-strike"] .theme-enter-title {
-  animation: cs2-title-lock 0.5s ease-out;
-}
-[data-theme="counter-strike"] .theme-enter-card {
-  opacity: 0;
-  animation: cs2-card-lock 0.45s ease-out forwards;
-}
-[data-theme="counter-strike"] .theme-enter-card:nth-child(1) { animation-delay: 0.05s; }
-[data-theme="counter-strike"] .theme-enter-card:nth-child(2) { animation-delay: 0.12s; }
-[data-theme="counter-strike"] .theme-enter-card:nth-child(3) { animation-delay: 0.19s; }
-[data-theme="counter-strike"] .theme-enter-card:nth-child(4) { animation-delay: 0.26s; }
-[data-theme="counter-strike"] .theme-enter-card:nth-child(5) { animation-delay: 0.33s; }
-@keyframes cs2-title-lock {
-  from { opacity: 0; transform: translateY(-10px); letter-spacing: 0.5em; }
-  to   { opacity: 1; transform: translateY(0); letter-spacing: 0.15em; }
-}
-@keyframes cs2-card-lock {
-  from { opacity: 0; transform: translateY(16px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* ── Rose entrance: soft bloom ── */
-[data-theme="rose"] .theme-enter-title {
-  animation: rose-bloom 0.7s ease-out;
-}
-[data-theme="rose"] .theme-enter-card {
-  opacity: 0;
-  animation: rose-petal-up 0.5s ease-out forwards;
-}
-[data-theme="rose"] .theme-enter-card:nth-child(1) { animation-delay: 0.08s; }
-[data-theme="rose"] .theme-enter-card:nth-child(2) { animation-delay: 0.18s; }
-[data-theme="rose"] .theme-enter-card:nth-child(3) { animation-delay: 0.28s; }
-[data-theme="rose"] .theme-enter-card:nth-child(4) { animation-delay: 0.38s; }
-[data-theme="rose"] .theme-enter-card:nth-child(5) { animation-delay: 0.48s; }
-@keyframes rose-bloom {
-  from { opacity: 0; transform: scale(0.9); filter: blur(2px); }
-  to   { opacity: 1; transform: scale(1); filter: blur(0); }
-}
-@keyframes rose-petal-up {
-  from { opacity: 0; transform: translateY(24px) rotate(-2deg); }
-  to   { opacity: 1; transform: translateY(0) rotate(0); }
-}
-
-/* ── Light entrance: clean fade ── */
-[data-theme="light"] .theme-enter-title {
-  animation: light-fade-down 0.5s ease-out;
-}
-[data-theme="light"] .theme-enter-card {
-  opacity: 0;
-  animation: light-rise 0.4s ease-out forwards;
-}
-[data-theme="light"] .theme-enter-card:nth-child(1) { animation-delay: 0.06s; }
-[data-theme="light"] .theme-enter-card:nth-child(2) { animation-delay: 0.14s; }
-[data-theme="light"] .theme-enter-card:nth-child(3) { animation-delay: 0.22s; }
-[data-theme="light"] .theme-enter-card:nth-child(4) { animation-delay: 0.30s; }
-[data-theme="light"] .theme-enter-card:nth-child(5) { animation-delay: 0.38s; }
-@keyframes light-fade-down {
-  from { opacity: 0; transform: translateY(-16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes light-rise {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ── Pretty Girl entrance: sparkle float ── */
-[data-theme="pretty-girl"] .theme-enter-title {
-  animation: pg-sparkle-in 0.7s ease-out;
-}
-[data-theme="pretty-girl"] .theme-enter-card {
-  opacity: 0;
-  animation: pg-float-up 0.55s ease-out forwards;
-}
-[data-theme="pretty-girl"] .theme-enter-card:nth-child(1) { animation-delay: 0.08s; }
-[data-theme="pretty-girl"] .theme-enter-card:nth-child(2) { animation-delay: 0.18s; }
-[data-theme="pretty-girl"] .theme-enter-card:nth-child(3) { animation-delay: 0.28s; }
-[data-theme="pretty-girl"] .theme-enter-card:nth-child(4) { animation-delay: 0.38s; }
-[data-theme="pretty-girl"] .theme-enter-card:nth-child(5) { animation-delay: 0.48s; }
-@keyframes pg-sparkle-in {
-  from { opacity: 0; transform: scale(0.85); filter: blur(3px) brightness(1.3); }
-  to   { opacity: 1; transform: scale(1); filter: blur(0) brightness(1); }
-}
-@keyframes pg-float-up {
-  from { opacity: 0; transform: translateY(22px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* ── Black White entrance: cinematic fade ── */
-[data-theme="black-white"] .theme-enter-title {
-  animation: bw-title-in 0.7s ease-out;
-}
-[data-theme="black-white"] .theme-enter-card {
-  opacity: 0;
-  animation: bw-card-emerge 0.5s ease-out forwards;
-}
-[data-theme="black-white"] .theme-enter-card:nth-child(1) { animation-delay: 0.06s; }
-[data-theme="black-white"] .theme-enter-card:nth-child(2) { animation-delay: 0.14s; }
-[data-theme="black-white"] .theme-enter-card:nth-child(3) { animation-delay: 0.22s; }
-[data-theme="black-white"] .theme-enter-card:nth-child(4) { animation-delay: 0.30s; }
-[data-theme="black-white"] .theme-enter-card:nth-child(5) { animation-delay: 0.38s; }
-@keyframes bw-title-in {
-  from { opacity: 0; transform: translateY(-12px); filter: blur(2px) brightness(0.5); }
-  to   { opacity: 1; transform: translateY(0); filter: blur(0) brightness(1); }
-}
-@keyframes bw-card-emerge {
-  from { opacity: 0; transform: translateY(18px); filter: brightness(0.6) saturate(0.3); }
-  to   { opacity: 1; transform: translateY(0); filter: brightness(1) saturate(0.8); }
-}
-
-/* ── Cyber Girl entrance: neon glitch bloom ── */
+/* Cyber Girl: neon glitch bloom */
 [data-theme="cyber-girl"] .theme-enter-title {
   animation: cg-neon-in 0.7s ease-out;
 }
@@ -750,11 +232,7 @@ main[data-route="page"] {
   to   { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1) saturate(1); }
 }
 
-/* ═══════════════════════════════════════════════════════
-   SHARED ENTRANCE HELPERS
-   ═══════════════════════════════════════════════════════ */
-
-/* Cards get entrance class on mount */
+/* ═══════════ SHARED ═══════════ */
 .card-hover-glow {
   transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
@@ -762,19 +240,9 @@ main[data-route="page"] {
   box-shadow: 0 0 30px rgba(99,102,241,0.15), 0 8px 32px rgba(0,0,0,0.3) !important;
   transform: translateY(-2px) scale(1.02);
 }
+.tag-badge { transition: all 0.2s ease; }
+.tag-badge:hover { transform: scale(1.1); filter: brightness(1.2); }
 
-/* Tag hover scale */
-.tag-badge {
-  transition: all 0.2s ease;
-}
-.tag-badge:hover {
-  transform: scale(1.1);
-  filter: brightness(1.2);
-}
-
-/* ═══════════════════════════════════════════════════════
-   SHARED ANIMATIONS
-   ═══════════════════════════════════════════════════════ */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -784,7 +252,6 @@ main[data-route="page"] {
   from { opacity: 1; transform: translateY(0); }
   to   { opacity: 0; transform: translateY(12px); }
 }
-/* View-transition cross-fade for page navigation (Chromium / Tauri webview) */
 ::view-transition-old(root) { animation: fadeOutDown 0.2s ease-in forwards; }
 ::view-transition-new(root) { animation: fadeInUp 0.3s ease-out 0.05s forwards; }
 
@@ -804,247 +271,23 @@ main[data-route="page"] {
   to { height: 14px; opacity: 0.8; }
 }
 
-/* ── 隐藏滚动条 ── */
+/* Hide scrollbar */
 * { scrollbar-width: none !important; }
 *::-webkit-scrollbar { display: none !important; }
 
-/* ═══════════════════════════════════════════════════════
-   CUSTOM THEME COLOR
-   ═══════════════════════════════════════════════════════ */
-[data-custom-theme="true"] .ff7-glow { box-shadow: 0 0 20px color-mix(in srgb, var(--color-primary) 40%, transparent), 0 0 60px color-mix(in srgb, var(--color-primary) 15%, transparent) !important; }
-[data-custom-theme="true"] .ff7-text-glow { text-shadow: 0 0 12px color-mix(in srgb, var(--color-primary-light) 50%, transparent), 0 0 30px color-mix(in srgb, var(--color-primary-light) 25%, transparent) !important; }
-[data-custom-theme="true"] .ow-energy-bar { background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary), var(--color-primary-light)) !important; }
-[data-custom-theme="true"] .ow-ult-text { text-shadow: 0 0 15px var(--color-primary-light), 0 0 40px color-mix(in srgb, var(--color-primary-light) 25%, transparent) !important; }
-[data-custom-theme="true"] .gi-top-bar { background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary), var(--color-primary-light), var(--color-primary), var(--color-primary-dark)) !important; }
-[data-custom-theme="true"] .gi-text-glow { text-shadow: 0 0 12px color-mix(in srgb, var(--color-primary-light) 50%, transparent), 0 0 30px color-mix(in srgb, var(--color-primary-light) 25%, transparent) !important; }
-[data-custom-theme="true"] .poe-title { color: var(--color-primary-light) !important; }
-
-/* ── PoE 元素样式（恢复） ── */
-[data-theme="path-of-exile"] .poe-logo-icon {
-  width: 32px; height: 32px; border: 1px solid rgba(175,96,37,0.4);
-  box-shadow: 0 0 12px rgba(175,96,37,0.2);
-}
-[data-theme="path-of-exile"] .poe-title { font-family: var(--font-display); letter-spacing: 0.15em; text-transform: uppercase; color: #d4a84b; }
-[data-theme="path-of-exile"] .poe-text-glow { text-shadow: 0 0 15px rgba(212,168,75,0.5), 0 0 30px rgba(212,168,75,0.2); }
-[data-theme="path-of-exile"] .poe-scroll {
-  border: 1px solid rgba(135,206,235,0.2);
-  background: var(--color-surface-light);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-[data-theme="path-of-exile"] .poe-scroll p {
-  color: #b0e0ff !important;
-  text-shadow: 0 0 8px rgba(135,206,250,0.15);
-}
-[data-theme="path-of-exile"] .poe-hero-img { z-index: 10; width: 320px; height: 128px; margin: 0 auto 16px; }
-[data-theme="path-of-exile"] .poe-hero-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
-[data-theme="path-of-exile"] .poe-exile-orb {
-  width: 56px; height: 56px; border-radius: 50%;
-  border: 2px solid rgba(175,96,37,0.4);
-  background: linear-gradient(135deg, rgba(22,18,14,0.9), rgba(10,8,6,0.95));
-  box-shadow: 0 0 20px rgba(175,96,37,0.15);
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-}
-/* PoE hero section — push skill icons toward bottom, aligned with desktop widgets */
-[data-theme="path-of-exile"] main[data-route="home"] .animate-fade-in-up {
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: calc(100vh - 130px) !important;
-}
-[data-theme="path-of-exile"] [data-hero] {
-  margin-top: auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: flex-end !important;
-  padding-bottom: 0 !important;
-}
-[data-theme="path-of-exile"] [data-hero] .flex.justify-center.gap-8 {
-  margin-top: 0;
-}
-[data-theme="path-of-exile"] [data-hero] .flex.justify-center.gap-8 > div > .text-center {
-  background: transparent !important;
-}
-[data-custom-theme="true"] .poe-text-glow { text-shadow: 0 0 15px color-mix(in srgb, var(--color-primary) 50%, transparent), 0 0 30px color-mix(in srgb, var(--color-primary) 25%, transparent) !important; }
-
-/* ── Pretty Girl 主题样式 ── */
-[data-theme="pretty-girl"] .pg-title { font-family: var(--font-display); letter-spacing: 0.12em; color: var(--color-primary-light); text-shadow: 0 0 10px color-mix(in srgb, var(--color-primary-light) 70%, transparent), 0 0 25px color-mix(in srgb, var(--color-primary) 50%, transparent), 0 0 50px color-mix(in srgb, var(--color-primary) 25%, transparent); }
-[data-theme="pretty-girl"] .pg-text-glow { text-shadow: 0 0 15px color-mix(in srgb, var(--color-primary) 50%, transparent), 0 0 30px color-mix(in srgb, var(--color-primary) 25%, transparent); }
-[data-theme="pretty-girl"] .pg-scroll {
-  border: 1px solid rgba(255,105,180,0.2);
-  background: var(--color-surface-light);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-[data-theme="pretty-girl"] .pg-scroll p {
-  color: #ffb6c1 !important;
-  text-shadow: 0 0 8px rgba(255,105,180,0.15);
-}
-[data-theme="pretty-girl"] .pg-orb {
-  width: 56px; height: 56px; border-radius: 50%;
-  border: 2px solid rgba(255,105,180,0.4);
-  background: linear-gradient(135deg, rgba(25,10,20,0.9), rgba(15,5,10,0.95));
-  box-shadow: 0 0 20px rgba(255,105,180,0.15);
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-}
-/* Pretty Girl hero section — push skill icons toward bottom */
-[data-theme="pretty-girl"] main[data-route="home"] .animate-fade-in-up {
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: calc(100vh - 130px) !important;
-}
-[data-theme="pretty-girl"] [data-hero] {
-  margin-top: auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: flex-end !important;
-  padding-bottom: 0 !important;
-}
-[data-custom-theme="true"] .pg-title { color: var(--color-primary-light) !important; }
-[data-custom-theme="true"] .pg-text-glow { text-shadow: 0 0 15px color-mix(in srgb, var(--color-primary) 50%, transparent), 0 0 30px color-mix(in srgb, var(--color-primary) 25%, transparent) !important; }
-/* Pretty Girl header 亮度提升 */
-[data-theme="pretty-girl"] header nav img { filter: brightness(1.2) saturate(1.1); }
-[data-theme="pretty-girl"] header nav a:not([class*="text-primary-light"]) { color: color-mix(in srgb, var(--color-primary-light) 65%, #e0d8e0); }
-[data-theme="pretty-girl"] header button svg { color: color-mix(in srgb, var(--color-primary-light) 50%, #c8c0c8); }
-
-/* ── Black White 主题样式 ── */
-[data-theme="black-white"] .bw-title { font-family: var(--font-display); letter-spacing: 0.15em; color: var(--color-primary-light); text-shadow: 0 0 8px rgba(200,200,210,0.15), 0 0 20px rgba(200,200,210,0.05); }
-[data-theme="black-white"] .bw-text-glow { text-shadow: 0 0 10px color-mix(in srgb, var(--color-primary-light) 30%, transparent); }
-[data-theme="black-white"] .bw-card {
-  border: 1px solid rgba(255,255,255,0.08);
-  background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(0,0,0,0.3));
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-/* Black White hero section — push skill icons toward bottom */
-[data-theme="black-white"] main[data-route="home"] .animate-fade-in-up {
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: calc(100vh - 130px) !important;
-}
-[data-theme="black-white"] [data-hero] {
-  margin-top: auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: flex-end !important;
-  padding-bottom: 0 !important;
-}
-[data-theme="black-white"] .bw-orb {
-  width: 56px; height: 56px; border-radius: 50%;
-  border: 2px solid rgba(200,168,130,0.35);
-  background: linear-gradient(135deg, rgba(20,20,24,0.9), rgba(10,10,12,0.95));
-  box-shadow: 0 0 20px rgba(200,168,130,0.1);
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-}
-/* Black White header — desaturated icons */
-[data-theme="black-white"] header nav img { filter: brightness(1.1) saturate(0.4) contrast(1.1); }
-[data-theme="black-white"] header nav a:not([class*="text-primary-light"]) { color: color-mix(in srgb, var(--color-primary-light) 60%, #888); }
-[data-theme="black-white"] header button svg { color: color-mix(in srgb, var(--color-primary-light) 45%, #999); }
-[data-theme="black-white"] ::-webkit-scrollbar-thumb {
-  background: rgba(200,168,130,0.25); border-radius: 9999px;
-}
-
-/* ── Cyber Girl 主题样式 ── */
-[data-theme="cyber-girl"] .cg-title { font-family: var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-primary-light); text-shadow: 0 0 12px color-mix(in srgb, var(--color-primary-light) 70%, transparent), 0 0 30px color-mix(in srgb, var(--color-primary) 50%, transparent), 0 0 55px color-mix(in srgb, var(--color-accent) 30%, transparent); }
-[data-theme="cyber-girl"] .cg-text-glow { text-shadow: 0 0 15px color-mix(in srgb, var(--color-primary) 50%, transparent), 0 0 30px color-mix(in srgb, var(--color-accent) 30%, transparent); }
-[data-theme="cyber-girl"] .cg-scroll {
-  border: 1px solid rgba(199,77,255,0.2);
-  background: var(--color-surface-light);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-[data-theme="cyber-girl"] .cg-scroll p {
-  color: #e0c0ff !important;
-  text-shadow: 0 0 8px rgba(199,77,255,0.2);
-}
-[data-theme="cyber-girl"] .cg-orb {
-  width: 56px; height: 56px; border-radius: 50%;
-  border: 2px solid rgba(199,77,255,0.45);
-  background: linear-gradient(135deg, rgba(15,5,25,0.9), rgba(8,2,15,0.95));
-  box-shadow: 0 0 20px rgba(199,77,255,0.2), 0 0 40px rgba(255,77,166,0.08);
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-}
-/* Cyber Girl hero section — push skill icons toward bottom */
-[data-theme="cyber-girl"] main[data-route="home"] .animate-fade-in-up {
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: calc(100vh - 130px) !important;
-}
-[data-theme="cyber-girl"] [data-hero] {
-  margin-top: auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: flex-end !important;
-  padding-bottom: 0 !important;
-}
-[data-theme="cyber-girl"] [data-hero] .flex.justify-center.gap-8 {
-  margin-top: 0;
-}
-[data-theme="cyber-girl"] [data-hero] .flex.justify-center.gap-8 > div > .text-center {
-  background: transparent !important;
-}
+/* ═══════════ CUSTOM THEME OVERRIDES ═══════════ */
+[data-custom-theme="true"] .ice-title { color: var(--color-primary-light) !important; }
+[data-custom-theme="true"] .ice-text-glow { text-shadow: 0 0 15px color-mix(in srgb, var(--color-primary) 50%, transparent), 0 0 30px color-mix(in srgb, var(--color-primary) 25%, transparent) !important; }
 [data-custom-theme="true"] .cg-title { color: var(--color-primary-light) !important; }
 [data-custom-theme="true"] .cg-text-glow { text-shadow: 0 0 15px color-mix(in srgb, var(--color-primary) 50%, transparent), 0 0 30px color-mix(in srgb, var(--color-primary) 25%, transparent) !important; }
-/* Cyber Girl header 霓虹亮度 */
-[data-theme="cyber-girl"] header nav img { filter: brightness(1.25) saturate(1.15) drop-shadow(0 0 6px rgba(199,77,255,0.4)); }
-[data-theme="cyber-girl"] header nav a:not([class*="text-primary-light"]) { color: color-mix(in srgb, var(--color-primary-light) 70%, #d0c0e8); }
-[data-theme="cyber-girl"] header button svg { color: color-mix(in srgb, var(--color-primary-light) 55%, #c0b0d8); }
-[data-theme="cyber-girl"] ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
-  border-radius: 9999px;
-}
-
-/* ── CG scene 2 swoop-in keyframes ── */
-@keyframes cg-swoop-tl { from { opacity:0; transform:translate(-80px,-60px) scale(0.6); } to { opacity:0.95; transform:translate(0,0) scale(1); } }
-@keyframes cg-swoop-tr { from { opacity:0; transform:translate(80px,-60px) scale(0.6); }  to { opacity:0.95; transform:translate(0,0) scale(1); } }
-@keyframes cg-swoop-bl { from { opacity:0; transform:translate(-80px,60px) scale(0.6); }  to { opacity:0.95; transform:translate(0,0) scale(1); } }
-@keyframes cg-swoop-br { from { opacity:0; transform:translate(80px,60px) scale(0.6); }   to { opacity:0.95; transform:translate(0,0) scale(1); } }
-@keyframes cg-timer-spin { 0% { transform:rotate(0deg); } 70% { transform:rotate(180deg); } 100% { transform:rotate(180deg); } }
-
-/* ── BW background crossfade (JS-driven) ── */
-.bw-bg-layer {
-  position: fixed; inset: 0; z-index: 0;
-  transition: opacity var(--bw-transition-dur, 1.5s) var(--bw-transition-ease, ease), filter var(--bw-transition-dur, 1.5s) var(--bw-transition-ease, ease);
-  will-change: opacity, filter;
-}
-
-/* ── Cyber Girl atmospheric overlay ── */
-[data-theme="cyber-girl"] body::after {
-  content: "";
-  position: fixed; inset: 0; z-index: 2;
-  pointer-events: none;
-  background:
-    /* bottom city glow */
-    radial-gradient(ellipse 80% 30% at 50% 100%, rgba(199,77,255,0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 25% at 50% 100%, rgba(0,180,255,0.06) 0%, transparent 55%),
-    /* vignette */
-    radial-gradient(ellipse 70% 100% at 50% 50%, transparent 50%, rgba(5,0,15,0.45) 100%);
-}
-
-[data-custom-theme="true"] .cs2-title { color: var(--color-primary-light) !important; }
-[data-custom-theme="true"] .cs2-logo-badge { background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)) !important; }
-/* Hide hero divider lines when custom theme colors make them visible */
 [data-custom-theme="true"] .animate-fade-in-up .h-px,
-[data-custom-theme="true"] .animate-fade-in-up .ow-divider,
-[data-custom-theme="true"] .animate-fade-in-up .cs2-divider,
+[data-custom-theme="true"] .animate-fade-in-up .cs2-divider { display: none !important; }
 
-/* Homepage: reset margin-top (sub-page glass panel uses mt-20) */
 main[data-route="home"] { margin-top: 4rem !important; }
 
-/* ── Range input thumb: smaller dot ── */
-input[type="range"]::-webkit-slider-thumb {
-  width: 10px;
-  height: 10px;
-}
-input[type="range"]::-moz-range-thumb {
-  width: 10px;
-  height: 10px;
-}
+input[type="range"]::-webkit-slider-thumb { width: 10px; height: 10px; }
+input[type="range"]::-moz-range-thumb { width: 10px; height: 10px; }
 
-/* ── Prefers-reduced-motion: disable all animations ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

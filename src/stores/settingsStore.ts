@@ -71,17 +71,8 @@ export const ACCENT_OPTIONS = [
 ];
 
 export const THEME_PALETTE_DEFAULTS: Record<ThemeName, PaletteConfig> = {
-  default:          { accent: "#4788f0", vibrancy: 5, contrast: "dark" },
-  rose:             { accent: "#ec4899", vibrancy: 3, contrast: "dark" },
-  light:            { accent: "#3b82f6", vibrancy: 3, contrast: "light" },
-  "final-fantasy":  { accent: "#4488ff", vibrancy: 6, contrast: "dark" },
-  overwatch:        { accent: "#f99e1a", vibrancy: 7, contrast: "dark" },
-  genshin:          { accent: "#d4a84b", vibrancy: 5, contrast: "dark" },
-  "path-of-exile":  { accent: "#87ceeb", vibrancy: 4, contrast: "dark" },
-  "counter-strike": { accent: "#de6d1c", vibrancy: 6, contrast: "dark" },
-  "pretty-girl":    { accent: "#ff69b4", vibrancy: 6, contrast: "dark" },
-  "black-white":    { accent: "#c8c8d0", vibrancy: 2, contrast: "dark" },
-  "cyber-girl":     { accent: "#8b5cf6", vibrancy: 8, contrast: "dark" },
+  "ice-girl":   { accent: "#87ceeb", vibrancy: 4, contrast: "dark" },
+  "cyber-girl": { accent: "#8b5cf6", vibrancy: 8, contrast: "dark" },
 };
 
 export type SettingsState = {
@@ -536,7 +527,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setPaletteVibrancy(v) { set({ paletteVibrancy: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
     setPaletteContrast(v) { set({ paletteContrast: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
     resetPaletteToTheme(theme) {
-      const def = THEME_PALETTE_DEFAULTS[theme] ?? THEME_PALETTE_DEFAULTS.default;
+      const def = THEME_PALETTE_DEFAULTS[theme] ?? THEME_PALETTE_DEFAULTS["ice-girl"];
       set({ paletteAccent: def.accent, paletteVibrancy: def.vibrancy, paletteContrast: def.contrast, paletteCustomized: false });
       outdate(); persist(get()); applyPalette();
     },
