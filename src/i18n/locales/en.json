@@ -342,6 +342,7 @@
     "font_family": "Font Family",
     "font_size": "Font Size",
     "icon_size": "Icon Size",
+    "theme_default": "Default",
     "theme_ice": "Frost Queen",
     "theme_cg": "Code Ghost",
     "reset_defaults": "Reset Defaults",

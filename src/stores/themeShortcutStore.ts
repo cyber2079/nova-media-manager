@@ -36,11 +36,13 @@ export interface ThemeCharacter {
 // ── Default character data (extracted from Home.tsx) ──
 
 const themeBases: Record<ThemeName, string> = {
+  default: "",
   "ice-girl": "/themes/ice%20girl",
   "cyber-girl": "/themes/cyber%20girl",
 };
 
 const DEFAULT_CHARACTERS: Record<ThemeName, DefaultChar[]> = {
+  default: [],
   "ice-girl": [
     { id: "ice_icestorm",     name: "home.ice_icestorm_name",     fileName: "1.webp", subtitle: "home.ice_icestorm_subtitle",     color: "#87ceeb" },
     { id: "ice_arcticarmour", name: "home.ice_arcticarmour_name", fileName: "2.webp", subtitle: "home.ice_arcticarmour_subtitle", color: "#b0e0e6" },

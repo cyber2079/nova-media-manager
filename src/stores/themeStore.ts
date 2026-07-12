@@ -3,22 +3,33 @@ import { kv } from "@/lib/sqliteStore";
 import { applySurface, useSettingsStore } from "./settingsStore";
 import { analytics } from "@/lib/analytics";
 
-export type ThemeName = "ice-girl" | "cyber-girl";
+/**
+ * Theme system:
+ * - "default" is the only built-in theme — always available, no license required.
+ * - Premium themes (ice-girl, cyber-girl, …) are downloaded as .nvtp packages
+ *   from the server and only available to Pro+ subscribers.
+ * - This store holds the *selected* theme; premium themes listed here are
+ *   resolved at runtime via the license gate in useAvailableThemes().
+ */
+export type ThemeName = "default" | "ice-girl" | "cyber-girl";
 
-const cycle: ThemeName[] = ["ice-girl", "cyber-girl"];
+/** All known theme IDs. Only "default" is guaranteed; others require license + download. */
+const allThemes: ThemeName[] = ["default", "ice-girl", "cyber-girl"];
 
 interface ThemeState {
   theme: ThemeName;
   init: () => Promise<void>;
   setTheme: (t: ThemeName) => void;
+  /** Cycle through themes the user is entitled to use */
   toggleTheme: () => void;
 }
 
 function resolveTheme(raw: string | null): ThemeName {
-  if (raw === "cyber-girl") return "cyber-girl";
-  // path-of-exile 旧值兼容 → ice-girl
+  if (!raw) return "default";
+  // legacy migration
   if (raw === "path-of-exile") return "ice-girl";
-  return "ice-girl";
+  if ((allThemes as string[]).includes(raw)) return raw as ThemeName;
+  return "default";
 }
 
 function persist(t: ThemeName) {
@@ -50,8 +61,8 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   },
 
   toggleTheme: () => {
-    const idx = cycle.indexOf(get().theme);
-    const next = cycle[(idx + 1) % cycle.length];
+    const idx = allThemes.indexOf(get().theme);
+    const next = allThemes[(idx + 1) % allThemes.length];
     get().setTheme(next);
   },
 }));

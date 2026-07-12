@@ -14,6 +14,18 @@
 }
 
 /* ═══════════ Theme tokens ═══════════ */
+:root, [data-theme="default"] {
+  --color-primary: #4788f0; --color-primary-light: #7aafff; --color-primary-dark: #3366cc;
+  --color-accent: #6366f1; --font-display: "Inter", system-ui, sans-serif;
+}
+/* Default: subtle gradient background */
+[data-theme="default"] body::before {
+  content: "";
+  position: fixed; inset: 0; z-index: -2;
+  background: linear-gradient(180deg, #0f172a 0%, #1a2740 50%, #0f172a 100%);
+  opacity: var(--bg-opacity, 0.7);
+}
+
 [data-theme="ice-girl"] {
   --color-primary: #87ceeb; --color-primary-light: #b0e0ff; --color-primary-dark: #5b9bd5;
   --color-accent: #4488ff; --font-display: "Cinzel", serif;
@@ -187,6 +199,13 @@ main[data-route="page"] {
 @keyframes cg-swoop-br { from { opacity:0; transform:translate(80px,60px) scale(0.6); }   to { opacity:0.95; transform:translate(0,0) scale(1); } }
 
 /* ═══════════ THEME ENTRANCE ANIMATIONS ═══════════ */
+
+/* Default: clean fade */
+[data-theme="default"] .theme-enter-title { animation: default-fade-in 0.6s ease-out; }
+@keyframes default-fade-in {
+  from { opacity: 0; transform: translateY(-12px); filter: blur(2px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
 
 /* Ice Girl: frost bloom */
 [data-theme="ice-girl"] .theme-enter-title {

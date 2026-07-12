@@ -51,7 +51,9 @@ const cgNames: Record<string, string> = { "/": "home.cg_skill1_name", "/movies":
 const cgColors: Record<string, string> = { "/": "#ff69b4", "/movies": "#da70d6", "/images": "#ff1493", "/music": "#00bfff", "/games": "#ff6347" };
 const cgLabels: Record<string, string> = { "/": "home.cg_skill1_name", "/movies": "home.cg_skill2_name", "/images": "home.cg_skill3_name", "/music": "home.cg_skill4_name", "/games": "home.cg_skill5_name" };
 
+const noIcons: Record<string,string> = {};
 const themeMeta: Record<ThemeName, { base: string; heroIcons: Record<string,string>; heroNames: Record<string,string>; heroColors: Record<string,string>; heroLabels: Record<string,string> }> = {
+  default: { base: "", heroIcons: noIcons, heroNames: noIcons, heroColors: noIcons, heroLabels: noIcons },
   "ice-girl": { base: "/themes/ice%20girl", heroIcons: iceIcons, heroNames: iceNames, heroColors: iceColors, heroLabels: iceLabels },
   "cyber-girl": { base: "/themes/cyber%20girl", heroIcons: cgIcons, heroNames: cgNames, heroColors: cgColors, heroLabels: cgLabels },
 };
@@ -69,6 +71,7 @@ export default function Layout() {
   const { theme } = useThemeStore();
   const { t, i18n } = useTranslation();
   const meta = themeMeta[theme];
+  const isDefault = theme === "default";
   const isIce = theme === "ice-girl";
   const isCG = theme === "cyber-girl";
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();

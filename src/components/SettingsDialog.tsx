@@ -20,7 +20,8 @@ interface Props {
 }
 
 const themeList: { key: ThemeName; labelKey: string; emoji: string; image?: string }[] = [
-  { key: "ice-girl", labelKey: "settings.theme_ice", emoji: "❄️" },
+  { key: "default", labelKey: "settings.theme_default", emoji: "🏠" },
+  { key: "ice-girl", labelKey: "settings.theme_ice", emoji: "❄️", image: "/themes/ice%20girl/pic/head.webp" },
   { key: "cyber-girl", labelKey: "settings.theme_cg", emoji: "💜", image: "/themes/cyber%20girl/pic/bg1.webp" },
 ];
 

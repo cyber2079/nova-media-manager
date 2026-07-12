@@ -205,12 +205,13 @@ function ThemeTitle() {
   const { theme } = useThemeStore();
   const isIce = theme === "ice-girl";
   const isCG = theme === "cyber-girl";
-  const k = isIce ? "home.ice" : isCG ? "home.cg" : "home.ice";
+  const k = isCG ? "home.cg" : isIce ? "home.ice" : "home.default";
   const title = t(`${k}_title`);
   const subtitle = t(`${k}_subtitle`);
+  const isDefault = theme === "default";
   return (<>
-    {title && <h1 className={cn("font-bold theme-enter-title", isIce && "text-6xl font-black tracking-[0.1em] ice-text-glow text-[#b0e0ff] uppercase", isCG && "text-5xl font-black tracking-[0.1em] cg-text-glow text-[#e890ff] uppercase")}>{title}</h1>}
-    {subtitle && <p className={cn(title && "mt-3", isIce && "text-xl font-semibold tracking-[0.25em] text-[#87ceeb]/70 uppercase", isCG && "text-xl font-semibold tracking-[0.2em] text-[#ff4da6]/70 uppercase")}>{subtitle}</p>}
+    {title && <h1 className={cn("font-bold theme-enter-title", isDefault && "text-4xl font-bold tracking-tight text-white", isIce && "text-6xl font-black tracking-[0.1em] ice-text-glow text-[#b0e0ff] uppercase", isCG && "text-5xl font-black tracking-[0.1em] cg-text-glow text-[#e890ff] uppercase")}>{title}</h1>}
+    {subtitle && <p className={cn(title && "mt-3", isDefault && "text-lg text-gray-400", isIce && "text-xl font-semibold tracking-[0.25em] text-[#87ceeb]/70 uppercase", isCG && "text-xl font-semibold tracking-[0.2em] text-[#ff4da6]/70 uppercase")}>{subtitle}</p>}
   </>);
 }
 
@@ -268,6 +269,7 @@ export default function Home() {
   const { theme } = useThemeStore();
   const { t } = useTranslation();
   const { getCharacters, saveOverride, resetCharacter } = useThemeShortcutStore();
+  const isDefault = theme === "default";
   const isIce = theme === "ice-girl";
   const isCG = theme === "cyber-girl";
   const [editingChar, setEditingChar] = useState<ThemeCharacter | null>(null);
@@ -302,6 +304,10 @@ export default function Home() {
     <div className="space-y-8 animate-fade-in-up">
       {/* Theme Title */}
       <div className="text-center"><ThemeTitle /></div>
+      {isDefault && <div className="h-px w-48 mx-auto bg-gradient-to-r from-transparent via-primary/40 to-transparent" />}
+
+      {/* ── Default Dashboard ── */}
+      {isDefault && <DashBoard />}
 
       {/* ── Ice Girl Section ── */}
       {isIce && (

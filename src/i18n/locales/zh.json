@@ -385,6 +385,7 @@
     "font_family": "字体库",
     "font_size": "字体大小",
     "icon_size": "图标大小",
+    "theme_default": "默认",
     "theme_ice": "冰霜女皇",
     "theme_cg": "代码幽灵",
     "reset_defaults": "重置默认值",

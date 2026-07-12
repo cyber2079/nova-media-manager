@@ -71,6 +71,7 @@ export const ACCENT_OPTIONS = [
 ];
 
 export const THEME_PALETTE_DEFAULTS: Record<ThemeName, PaletteConfig> = {
+  default:     { accent: "#4788f0", vibrancy: 5, contrast: "dark" },
   "ice-girl":   { accent: "#87ceeb", vibrancy: 4, contrast: "dark" },
   "cyber-girl": { accent: "#8b5cf6", vibrancy: 8, contrast: "dark" },
 };
@@ -527,7 +528,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setPaletteVibrancy(v) { set({ paletteVibrancy: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
     setPaletteContrast(v) { set({ paletteContrast: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
     resetPaletteToTheme(theme) {
-      const def = THEME_PALETTE_DEFAULTS[theme] ?? THEME_PALETTE_DEFAULTS["ice-girl"];
+      const def = THEME_PALETTE_DEFAULTS[theme] ?? THEME_PALETTE_DEFAULTS.default;
       set({ paletteAccent: def.accent, paletteVibrancy: def.vibrancy, paletteContrast: def.contrast, paletteCustomized: false });
       outdate(); persist(get()); applyPalette();
     },
