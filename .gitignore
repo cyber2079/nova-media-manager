@@ -44,5 +44,8 @@ public/fonts/maoken-glitch-sans.otf
 *.key
 updater-private.key
 
+# ══ Private scripts ══
+scripts/setup-git-remote.ps1
+
 # ══ Claude ══
 .claude/worktrees/

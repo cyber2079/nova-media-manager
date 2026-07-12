@@ -4,7 +4,7 @@ use std::sync::Mutex;
 use tauri::State;
 
 // ═══════════════════ CONFIG ═══════════════════
-const SERVER_URL: &str = "https://your-domain.com";
+const SERVER_URL: &str = "https://scm-think.cn";
 const LICENSE_TOKEN_KEY: &str = "license_token";
 const DEVICE_ID_KEY: &str = "device_id";
 

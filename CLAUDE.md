@@ -1,4 +1,4 @@
-# Nova Media Manager — 项目开发指南
+# Nova Media Manager — 项目开发指南123
 
 ## 项目定位
 
@@ -26,7 +26,7 @@
 D:\nova-media-manager\      ← GitHub 公库
 ├── src/                    # React 前端
 ├── src-tauri/src/          # Rust 后端
-│   ├── license/            # → 软链接到 D:\nova-proprietary\license\
+│   ├── license/            # 公库副本；私库 D:\nova-proprietary\license\ 有独立拷贝
 │   └── theme/              # .nvtp 主题包系统
 ├── public/themes/          # 主题资源（CDN，不在 Git 中）
 ├── server/                 # ECS 服务端（不在 Git 中）
@@ -94,11 +94,19 @@ npm run tauri:dev
 ### 拉取代码（公库+私库一次完成）
 ```powershell
 npm run pull
+# 背后调用 scripts/pull.ps1 → 依次拉取公库(master)和私库(main)
 ```
 
 ### 推送代码（add + commit + push 一次完成）
 ```powershell
 npm run push "描述改动"
+# 背后调用 scripts/push.ps1 → git add -A → commit → push origin master
+# 私库需单独: cd D:\nova-proprietary && git add -A && git commit -m "xxx" && git push origin main
+```
+
+### 首次配置（换机器必做）
+```powershell
+.\scripts\setup-git-remote.ps1  # 向项目维护者索要此脚本（含 PAT，不在公库中）
 ```
 
 ### 构建安装包
