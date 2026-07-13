@@ -276,6 +276,92 @@ App.tsx 新增路由:
 
 ---
 
+## 十、数据校验与命名规范
+
+**原则：Theme Studio 不让脏数据进仓库。** 所有表单输入 → 即时校验 → 保存时再次校验 → Rust 写文件前终验。
+
+### 10.1 三层校验
+
+| 层 | 位置 | 做什么 |
+|---|---|---|
+| UI 层 | React 组件 | 输入框即时高亮错误，阻止提交（如 ID 格式不对、名称含中文空格） |
+| Store 层 | themeStudioStore | `writeManifest()` 前跑 JSON Schema 校验（对照 manifest.schema.json） |
+| Rust 层 | theme_studio.rs | `update_manifest` 保存前再次校验 JSON + 文件路径安全性 |
+
+### 10.2 字段校验规则
+
+| 字段 | 规则 | 错误提示 |
+|---|---|---|
+| `id` | `com.nova.{a-z0-9-}+`，全小写，连字符分隔 | "ID 格式：com.nova.my-theme" |
+| `name` | 2-20 字，中文/英文/数字 | "名称 2-20 个字符" |
+| `version` | `x.y.z` 语义化版本 | "版本格式：1.0.0" |
+| `type` | 枚举值 `story|dynamic|static|hybrid` | 下拉选择，不会出错 |
+| `requiresLicense` | 枚举值 `free|pro|ultra` | 下拉选择 |
+| `scenes[].id` | `{a-z0-9-}+`，全小写连字符 | "场景 ID 格式：scene-01" |
+| `scenes[].promptKey` | 必须在 prompts.json 中存在 | "未找到对应提示词" |
+| `characters[].fileName` | `{a-z0-9-}+.webp` | "文件名格式：skill-01.webp" |
+
+### 10.3 智能 ID → 文件名映射
+
+场景 ID 和素材文件名自动对应，减少手误：
+
+```
+场景 ID: face-angry  →  素材文件: face-angry.webp  (图片)
+场景 ID: scene-01   →  素材文件: scene-01.webp   (图片) 或 scene-01.mp4 (视频)
+场景 ID: bg-loop    →  素材文件: bg-loop.mp4     (视频)
+```
+
+**编辑场景时**，修改 `type: image → video`，输入框自动替换后缀。
+
+### 10.4 新建项目的默认骨架
+
+```
+用户输入: ID=com.nova.fox-spirit, type=dynamic
+
+自动生成:
+  themes/fox-spirit/
+  ├── manifest.json     ← 从模板填充，scenes 按 type 预设
+  └── prompts.json      ← 按 type 预设结构（global + faces + background）
+```
+
+| type | manifest.scenes 预设 | prompts 预设 |
+|---|---|---|
+| `dynamic` | 6 个表情 + bg-video + head | `global` + `faces{}` + `background` |
+| `story` | 16 个 scene-01~16，全 todo | `global` + `scenes{}` |
+| `static` | 无 | 无 prompts |
+| `hybrid` | 16 scene + 6 face | 两者都有 |
+
+新建后用户只需**填提示词内容**，结构已经对。
+
+### 10.5 素材导入时自动重命名
+
+用户可能从即梦/网站下载了一堆 `jimeng-2026-07-03-1074-....webp` 格式的文件。拖入场景卡片时：
+
+```
+1. 检测原始文件名
+2. 如果匹配场景 ID 规则 → 保持
+3. 如果是 AI 生成哈希名 → 自动重命名为 scene-id.webp
+4. 复制到 D:\nova-themes-assets\{theme-id}\
+5. 更新 manifest 中对应 scene 的 assetPath + status=done
+```
+
+### 10.6 打包前完整性检查
+
+点"打包发布"时：
+
+- [ ] 所有非 skip 的 scene 状态必须是 `done`
+- [ ] 每个 `done` 的 scene 都有对应的素材文件存在
+- [ ] 素材文件大小 > 0
+- [ ] 图片文件是有效的 WebP/PNG/JPG（Magic bytes 检查）
+- [ ] `preview.webp` 存在
+- [ ] `theme.css` 存在且非空
+- [ ] manifest.json 通过 JSON Schema
+- [ ] prompts.json 通过 JSON Schema
+
+任一项不通过 → 拒绝打包，红字提示具体哪个文件有问题。
+
+---
+
 ## 十一、与现有代码的关系
 
 - `theme-generate.mjs` — 保留，Theme Studio 调它
