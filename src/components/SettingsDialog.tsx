@@ -37,7 +37,8 @@ const tabs: { id: TabId; icon: typeof Settings; labelKey: string }[] = [
   { id: "movies", icon: Film, labelKey: "settings.tab_movies" },
   { id: "games", icon: Gamepad2, labelKey: "settings.tab_games" },
   { id: "widgets", icon: Monitor, labelKey: "settings.tab_widgets" },
-  { id: "themes", icon: Sparkles, labelKey: "settings.tab_themes" },
+  // Theme Studio — dev only, never shown to end users
+  ...(import.meta.env?.VITE_LICENSE_TIER ? [{ id: "themes" as TabId, icon: Sparkles, labelKey: "settings.tab_themes" }] : []),
 ];
 
 // ── Default values (used by reset) ──
