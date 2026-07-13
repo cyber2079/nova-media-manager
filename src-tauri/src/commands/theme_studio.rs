@@ -201,6 +201,16 @@ pub fn theme_studio_validate(theme_id: String) -> Result<ValidateResult, String>
     Ok(ValidateResult { ok: errs.is_empty(), errors: errs, warnings: vec![] })
 }
 
+/// Update the script array, re-serialize to manifest.json
+#[tauri::command]
+pub fn theme_studio_update_script(theme_id: String, script: Vec<serde_json::Value>) -> Result<(), String> {
+    let proj_dir = Path::new(THEMES_DIR).join(&theme_id);
+    let path = proj_dir.join("manifest.json");
+    let mut manifest: serde_json::Value = read_json(&path);
+    manifest["script"] = serde_json::json!(script);
+    fs::write(&path, serde_json::to_string_pretty(&manifest).map_err(|e| e.to_string())?).map_err(|e| e.to_string())
+}
+
 /// Runtime command — used by Home.tsx to drive rendering from manifest.script
 #[tauri::command]
 pub fn theme_get_script(theme_id: String) -> Result<Vec<ScriptNode>, String> {

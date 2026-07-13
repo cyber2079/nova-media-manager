@@ -125,6 +125,7 @@ pub fn run() {
             commands::theme_studio::theme_studio_validate,
             commands::theme_studio::theme_studio_generate,
             commands::theme_studio::theme_get_script,
+            commands::theme_studio::theme_studio_update_script,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
