@@ -117,6 +117,10 @@ pub fn run() {
             theme::list_installed_themes,
             theme::remove_installed_theme,
             theme::get_theme_asset_path,
+            commands::theme_studio::theme_studio_list_projects,
+            commands::theme_studio::theme_studio_get_project,
+            commands::theme_studio::theme_studio_update_manifest,
+            commands::theme_studio::theme_studio_generate,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
