@@ -50,12 +50,12 @@ export const FONT_LIST: { value: string; label: string; css: string; google?: st
 ];
 
 // ═══════════════ PER-THEME PALETTE DEFAULTS ═══════════════
-// Each theme pairs with a default accent color, vibrancy level, and dark/light.
+// Each theme pairs with a default accent color, saturation level, and dark/light.
 // Switching themes auto-applies these; users can then tweak with the Palette controls.
 
 export interface PaletteConfig {
   accent: string;     // hex color
-  vibrancy: number;   // 1-10
+  saturation: number; // 0-100
   contrast: "dark" | "light";
 }
 
@@ -71,9 +71,9 @@ export const ACCENT_OPTIONS = [
 ];
 
 export const THEME_PALETTE_DEFAULTS: Record<ThemeName, PaletteConfig> = {
-  default:     { accent: "#4788f0", vibrancy: 5, contrast: "dark" },
-  "ice-girl":   { accent: "#87ceeb", vibrancy: 4, contrast: "dark" },
-  "cyber-girl": { accent: "#8b5cf6", vibrancy: 8, contrast: "dark" },
+  default:     { accent: "#4788f0", saturation: 50, contrast: "dark" },
+  "ice-girl":   { accent: "#87ceeb", saturation: 40, contrast: "dark" },
+  "cyber-girl": { accent: "#8b5cf6", saturation: 80, contrast: "dark" },
 };
 
 export type SettingsState = {
@@ -117,7 +117,7 @@ export type SettingsState = {
 
   // ── New palette system (replaces 13 individual controls) ──
   paletteAccent: string;
-  paletteVibrancy: number;  // 1-10
+  paletteSaturation: number;  // 0-100
   paletteContrast: "dark" | "light";
   /** Whether user has manually adjusted palette from theme default */
   paletteCustomized: boolean;
@@ -160,7 +160,7 @@ export type SettingsState = {
   setCgTextColor: (v: string) => void;
   setFontFamily: (v: string) => void;
   setPaletteAccent: (v: string) => void;
-  setPaletteVibrancy: (v: number) => void;
+  setPaletteSaturation: (v: number) => void;
   setPaletteContrast: (v: "dark" | "light") => void;
   resetPaletteToTheme: (theme: ThemeName) => void;
 };
@@ -183,10 +183,19 @@ function readSaved(): Partial<SettingsState> {
 
 function outdate() { _dirty = true; }
 
-/** Derive all --color- CSS vars from the 3-knob palette system */
+/** Derive all --color- CSS vars from the 3-knob palette system.
+ *
+ *  Saturation (0-100) directly controls the HSL saturation of --color-primary:
+ *    0   → nearly grayscale (HSL S ≈ 5%)
+ *    50  → base accent color unchanged
+ *    100 → fully saturated (HSL S = 100%)
+ *
+ *  Because nearly every UI element references --color-primary via
+ *  var() / color-mix() / Tailwind, the change is immediately visible
+ *  without any CSS filter or stacking-context side-effects. */
 export function applyPalette() {
   const s = useSettingsStore.getState();
-  const v = s.paletteVibrancy; // 1-10
+  const v = s.paletteSaturation; // 0-100
   const contrast = s.paletteContrast;
   const accent = s.paletteAccent;
   const root = document.documentElement;
@@ -194,60 +203,47 @@ export function applyPalette() {
   const isDark = contrast !== "light";
   const text = isDark ? "#edeff4" : "#1c1c1e";
   const muted = isDark ? "#8a99b8" : "#5c5b66";
-  const heading = isDark ? "#fff" : "#111";
 
-  // --color-primary
-  root.style.setProperty("--color-primary", accent);
-  root.style.setProperty("--color-primary-light", accent); // used as accent bright
-  root.style.setProperty("--color-primary-dark", accent);
+  // ── HSL-saturate the accent colour ──
+  const [h, baseS, l] = hexToHSL(accent);
+  const sFactor = v / 50;                         // 0 → 2×
+  const newS = Math.min(100, Math.max(5, baseS * sFactor));
+  const primary = hslToHex(h, newS, l);
+  const primaryLight = hslToHex(h, newS, Math.min(94, l + 20));
+  const primaryDark = hslToHex(h, Math.min(100, newS * 1.05), Math.max(6, l - 18));
 
-  // Surface: driven by vibrancy
-  const sat = v * 1.5;
-  const op = 85 + v * 1.5; // 86-100
-  if (isDark) {
-    root.style.setProperty("--color-surface", `color-mix(in srgb, ${accent} ${sat}%, rgba(8,12,20,${op / 100}))`);
-    root.style.setProperty("--color-surface-light", `color-mix(in srgb, ${accent} ${sat * 1.5}%, rgba(16,21,32,${op / 100}))`);
-    root.style.setProperty("--color-surface-lighter", `color-mix(in srgb, ${accent} ${sat * 2}%, rgba(26,31,42,${op / 100}))`);
-  } else {
-    root.style.setProperty("--color-surface", `color-mix(in srgb, ${accent} ${sat * 0.5}%, rgba(255,255,255,${op / 100}))`);
-    root.style.setProperty("--color-surface-light", `color-mix(in srgb, ${accent} ${sat * 0.7}%, rgba(248,248,248,${op / 100}))`);
-    root.style.setProperty("--color-surface-lighter", `color-mix(in srgb, ${accent} ${sat * 0.9}%, rgba(240,240,240,${op / 100}))`);
-  }
+  root.style.setProperty("--color-primary", primary);
+  root.style.setProperty("--color-primary-light", primaryLight);
+  root.style.setProperty("--color-primary-dark", primaryDark);
 
-  // Font colors
+  // ── Surface: let CSS :root rules handle it (they use var(--color-primary)) ──
+  // Remove stale inline overrides so the cascade picks up the saturated primary
+  root.style.removeProperty("--color-surface");
+  root.style.removeProperty("--color-surface-light");
+  root.style.removeProperty("--color-surface-lighter");
+
+  // ── Typography ──
   root.style.setProperty("--font-primary", text);
   root.style.setProperty("--font-secondary", muted);
-  root.style.setProperty("--scroll-fade-opacity", String(v / 40));
-  root.style.setProperty("--bg-opacity", String((55 + v * 3) / 100));
+  root.style.setProperty("--scroll-fade-opacity", String(v / 400));
+  root.style.setProperty("--bg-opacity", String((55 + v * 0.3) / 100));
 
-  // CG text colors follow accent
-  root.style.setProperty("--cg-text-color", accent);
-  root.style.setProperty("--cg-text-bg", accent);
+  // ── CG text colors follow accent ──
+  root.style.setProperty("--cg-text-color", primary);
+  root.style.setProperty("--cg-text-bg", primary);
 
-  // Light palette contrast: set a dedicated attribute so CSS can adapt without overwriting the theme name
-  if (s.paletteContrast === "light") {
+  // ── Light palette contrast ──
+  if (contrast === "light") {
     root.setAttribute("data-palette", "light");
   } else {
     root.removeAttribute("data-palette");
   }
 }
 
-/** Dynamically set surface CSS vars based on saturation + opacity settings */
+/** Re-apply the palette (called by legacy setters like headerOpacity).
+ *  Surface colours are now entirely CSS-driven via var(--color-primary). */
 export function applySurface() {
-  const { surfaceSaturation: sat, surfaceOpacity: op } = useSettingsStore.getState();
-  const root = document.documentElement;
-  const theme = root.getAttribute('data-theme');
-  const palette = root.getAttribute('data-palette');
-  // Light theme / light palette keeps its own bright surface colors — don't override
-  if (theme === 'light' || palette === 'light') {
-    root.style.removeProperty('--color-surface');
-    root.style.removeProperty('--color-surface-light');
-    root.style.removeProperty('--color-surface-lighter');
-    return;
-  }
-  root.style.setProperty('--color-surface', `color-mix(in srgb, var(--color-primary) ${sat}%, rgba(8,12,20,${op/100}))`);
-  root.style.setProperty('--color-surface-light', `color-mix(in srgb, var(--color-primary) ${sat*1.5}%, rgba(16,21,32,${op/100}))`);
-  root.style.setProperty('--color-surface-lighter', `color-mix(in srgb, var(--color-primary) ${sat*2}%, rgba(26,31,42,${op/100}))`);
+  applyPalette();
 }
 
 /** Apply font primary/secondary colors as CSS custom properties */
@@ -330,7 +326,7 @@ async function persist(s: SettingsState) {
     visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
     headerOpacity: s.headerOpacity, footerOpacity: s.footerOpacity,
     surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
-    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteVibrancy: s.paletteVibrancy, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized,
+    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized,
   });
   // Write to both: SQLite (primary) + localStorage (fast sync fallback)
   localStorage.setItem(STORAGE_KEY, payload);
@@ -425,7 +421,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     cgTextBgColor: (saved as any).cgTextBgColor || "#c74dff",
     cgTextBgOpacity: (saved as any).cgTextBgOpacity ?? 15,
     paletteAccent: (saved as any).paletteAccent || "#4788f0",
-    paletteVibrancy: (saved as any).paletteVibrancy ?? 5,
+    paletteSaturation: (saved as any).paletteSaturation ?? ((saved as any).paletteVibrancy != null ? (saved as any).paletteVibrancy * 10 : 50),
     paletteContrast: (saved as any).paletteContrast || "dark",
     paletteCustomized: (saved as any).paletteCustomized || false,
 
@@ -472,7 +468,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             cgTextBgColor: (s.cgTextBgColor as string) ?? get().cgTextBgColor,
             cgTextBgOpacity: (s.cgTextBgOpacity as number) ?? get().cgTextBgOpacity,
             paletteAccent: (s.paletteAccent as string) ?? get().paletteAccent,
-            paletteVibrancy: (s.paletteVibrancy as number) ?? get().paletteVibrancy,
+            paletteSaturation: (s.paletteSaturation as number) ?? ((s as any).paletteVibrancy != null ? (s as any).paletteVibrancy * 10 : get().paletteSaturation),
             paletteContrast: (s.paletteContrast as any) ?? get().paletteContrast,
             paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized,
           });
@@ -525,11 +521,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setCgTextBgOpacity(v) { set({ cgTextBgOpacity: v }); outdate(); persist(get()); },
     setFontFamily(v) { set({ fontFamily: v }); outdate(); persist(get()); applyFontFamily(v); },
     setPaletteAccent(v) { set({ paletteAccent: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
-    setPaletteVibrancy(v) { set({ paletteVibrancy: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
+    setPaletteSaturation(v) { set({ paletteSaturation: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
     setPaletteContrast(v) { set({ paletteContrast: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
     resetPaletteToTheme(theme) {
       const def = THEME_PALETTE_DEFAULTS[theme] ?? THEME_PALETTE_DEFAULTS.default;
-      set({ paletteAccent: def.accent, paletteVibrancy: def.vibrancy, paletteContrast: def.contrast, paletteCustomized: false });
+      set({ paletteAccent: def.accent, paletteSaturation: def.saturation, paletteContrast: def.contrast, paletteCustomized: false });
       outdate(); persist(get()); applyPalette();
     },
   };

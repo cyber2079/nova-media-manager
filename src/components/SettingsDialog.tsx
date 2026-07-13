@@ -2,14 +2,15 @@ import { useState, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
-import { useThemeStore, type ThemeName } from "@/stores/themeStore";
+import { useThemeStore, useAvailableThemes, type ThemeName } from "@/stores/themeStore";
 import { kv } from "@/lib/sqliteStore";
-import { useSettingsStore, applySurface, COLOR_PRESETS, FONT_LIST, type BgVideoMode, type FontSize, type IconSize, type ImageWheelMode } from "@/stores/settingsStore";
+import { useSettingsStore, applySurface, FONT_LIST, type BgVideoMode, type FontSize, type IconSize, type ImageWheelMode } from "@/stores/settingsStore";
 import { languages } from "@/i18n";
 import { cn } from "@/lib/utils";
 import ScrollFade from "@/components/ScrollFade";
 import ThemeManager from "@/components/ThemeManager";
-import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon } from "lucide-react";
+import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown } from "lucide-react";
+import { useLicenseStore, isPro, isUltra } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS } from "@/stores/settingsStore";
 import { useWidgetStore, pageKeys } from "@/stores/widgetStore";
 import type { PageKey } from "@/stores/widgetStore";
@@ -40,7 +41,7 @@ const tabs: { id: TabId; icon: typeof Settings; labelKey: string }[] = [
 // ── Default values (used by reset) ──
 const DEFAULTS = {
   general: { language: "zh", autoStart: true, startFullscreen: true, autoHideHeader: false, autoHideFooter: false, hideTitleBar: true },
-  appearance: { theme: "path-of-exile" as ThemeName, bgVideoMode: "fill" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "system", paletteAccent: "#4788f0", paletteVibrancy: 5, paletteContrast: "dark" as const, paletteCustomized: false },
+  appearance: { theme: "path-of-exile" as ThemeName, bgVideoMode: "fill" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "system", paletteAccent: "#4788f0", paletteSaturation: 50, paletteContrast: "dark" as const, paletteCustomized: false },
   music: { previewOffset: 0.5, lyricFontSize: "normal" as const, lyricUseCustomColor: false as const, lyricCurrentColor: "#ffffff", lyricOtherColor: "#8899aa", lyricFillColor: "#ffb6c1", playerBgMode: "follow" as const, playerBgColor: "", cyberBgmEnabled: true },
   images: { imageWheelMode: "prevNext" as ImageWheelMode },
   widgets: {
@@ -58,25 +59,27 @@ const DEFAULTS = {
 export default function SettingsDialog({ open, onClose }: Props) {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useThemeStore();
+  const availableThemes = useAvailableThemes();
+  const filteredThemeList = themeList.filter(t => availableThemes.includes(t.key));
   const {
     language, autoStart, startFullscreen, autoHideHeader, autoHideFooter,
-    customColor, useCustomColor, bgVideoMode,
+    bgVideoMode,
     setLanguage, setAutoStart, setStartFullscreen,
-    setAutoHideHeader, setAutoHideFooter, setCustomColor, setUseCustomColor, setBgVideoMode,
+    setAutoHideHeader, setAutoHideFooter, setBgVideoMode,
     previewOffset, setPreviewOffset, lyricFontSize, setLyricFontSize,
     lyricUseCustomColor, setLyricUseCustomColor, lyricCurrentColor, setLyricCurrentColor,
     lyricOtherColor, setLyricOtherColor, lyricFillColor, setLyricFillColor,
     fontSize, iconSize, setFontSize, setIconSize, fontFamily, setFontFamily,
     imageWheelMode, setImageWheelMode,
     headerOpacity, footerOpacity, setHeaderOpacity, setFooterOpacity,
-    surfaceSaturation, surfaceOpacity, bgOverlayOpacity, setSurfaceSaturation, setSurfaceOpacity, setBgOverlayOpacity,
+    bgOverlayOpacity, setBgOverlayOpacity,
     hideTitleBar, setHideTitleBar,
     fontPrimaryColor, fontSecondaryColor, setFontPrimaryColor, setFontSecondaryColor,
     scrollFadeOpacity, setScrollFadeOpacity,
     playerBgColor, playerBgMode, setPlayerBgColor, setPlayerBgMode,
     cyberBgmEnabled, setCyberBgmEnabled,
-    cgTextSize, cgTextColor, cgTextBgColor, cgTextBgOpacity, setCgTextSize, setCgTextColor, setCgTextBgColor, setCgTextBgOpacity,
-    paletteAccent, paletteVibrancy, paletteContrast, paletteCustomized, setPaletteAccent, setPaletteVibrancy, setPaletteContrast, resetPaletteToTheme,
+    cgTextSize, cgTextColor, setCgTextSize, setCgTextColor,
+    paletteAccent, paletteSaturation, paletteContrast, paletteCustomized, setPaletteAccent, setPaletteSaturation, setPaletteContrast, resetPaletteToTheme,
   } = useSettingsStore();
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages, setEnabled, setPosition, setMyComputerMode, setGlobalWidgets, setPageWidget, setCountdown } = useWidgetStore();
   const [autoLoading, setAutoLoading] = useState(false);
@@ -115,21 +118,6 @@ export default function SettingsDialog({ open, onClose }: Props) {
     setTheme(t);
   };
 
-  const handleToggleCustomColor = useCallback(() => {
-    if (useCustomColor) {
-      // Turning OFF → reset to CSS defaults (rely on theme vars)
-      setUseCustomColor(false);
-      document.documentElement.removeAttribute('data-custom-theme');
-      // Reset surface to defaults and re-apply
-      setSurfaceSaturation(4);
-      setSurfaceOpacity(92);
-      setTimeout(() => applySurface(), 0);
-    } else {
-      setUseCustomColor(true);
-      setCustomColor(COLOR_PRESETS[0]);
-    }
-  }, [useCustomColor, setUseCustomColor, setCustomColor, setSurfaceSaturation, setSurfaceOpacity]);
-
   // ── Reset logic ──
   const doResetTab = useCallback((tab: TabId) => {
     switch (tab) {
@@ -153,7 +141,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
         setFontSize(d.fontSize);
         setFontFamily(d.fontFamily);
         setPaletteAccent(d.paletteAccent);
-        setPaletteVibrancy(d.paletteVibrancy);
+        setPaletteSaturation(d.paletteSaturation);
         setPaletteContrast(d.paletteContrast);
         setTimeout(() => applySurface(), 0);
         break;
@@ -194,7 +182,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
     setConfirmReset(null);
   }, [setLanguage, i18n, setAutoStart, setStartFullscreen, setAutoHideHeader, setAutoHideFooter,
       setTheme, setBgVideoMode, setFontSize, setFontFamily, setHideTitleBar,
-      setPaletteAccent, setPaletteVibrancy, setPaletteContrast,
+      setPaletteAccent, setPaletteSaturation, setPaletteContrast,
       setPreviewOffset, setLyricFontSize, setLyricUseCustomColor, setLyricCurrentColor, setLyricOtherColor, setLyricFillColor, setImageWheelMode,
       setGlobalWidgets, setPageWidget, setEnabled, setPosition, setMyComputerMode, setCountdown]);
 
@@ -255,6 +243,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
             {/* ═══ General Tab ═══ */}
             {activeTab === "general" && (
               <>
+                <LicenseSection t={t} i18n={i18n} />
                 <LanguageSection {...{ t, language, handleLanguage, languages }} />
                 <StartupSection {...{ t, autoStart, autoLoading, handleAutoStart, startFullscreen, setStartFullscreen, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, hideTitleBar, setHideTitleBar }} />
                 <DataSection t={t} />
@@ -266,7 +255,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
             {/* ═══ Appearance Tab ═══ */}
             {activeTab === "appearance" && (
               <>
-                <ThemeSection {...{ t, theme, themeList, handleTheme }} />
+                <ThemeSection {...{ t, theme, themeList: filteredThemeList, handleTheme }} />
 
                 {/* ── Palette ── */}
                 <section>
@@ -284,9 +273,9 @@ export default function SettingsDialog({ open, onClose }: Props) {
                         ))}
                       </div>
                     </div>
-                    {/* Vibrancy */}
-                    <SliderSection title={t("settings.palette_vibrancy")} value={paletteVibrancy}
-                      onChange={setPaletteVibrancy} min={1} max={10} />
+                    {/* Saturation */}
+                    <SliderSection title={t("settings.palette_saturation")} value={paletteSaturation}
+                      onChange={setPaletteSaturation} min={0} max={100} />
                     {/* Contrast */}
                     <div>
                       <p className="text-xs text-gray-400 mb-2">{t("settings.palette_contrast")}</p>
@@ -437,6 +426,97 @@ function ResetButton({ tab, t, onReset }: { tab: string; t: (k: string) => strin
         <RotateCcw className="h-3 w-3" />{t("settings.reset_tab", { tab: t(`settings.tab_${tab}`) })}
       </Button>
     </div>
+  );
+}
+
+function LicenseSection({ t, i18n }: { t: any; i18n: any }) {
+  const isZh = i18n.language?.startsWith("zh");
+  const { license, openActivation, unbind } = useLicenseStore();
+  const tier = license.tier;
+
+  const tierLabel = (t: string) => {
+    if (t === "free") return isZh ? "社区版" : "Community";
+    if (t === "pro") return "Pro";
+    if (t === "ultra") return "Ultra";
+    if (t === "custom") return isZh ? "定制版" : "Custom";
+    return t;
+  };
+
+  const durLabel = (d: string) => {
+    if (d === "permanent") return isZh ? "永久" : "Permanent";
+    if (d === "monthly") return isZh ? "月付" : "Monthly";
+    if (d === "yearly") return isZh ? "年付" : "Yearly";
+    return d;
+  };
+
+  // Countdown: "剩余 15 天" or HH:MM:SS when < 24h
+  const expiryDisplay = (exp: string): string => {
+    const diff = new Date(exp).getTime() - Date.now();
+    if (diff <= 0) return isZh ? "已过期" : "Expired";
+    const days = Math.floor(diff / (24 * 60 * 60 * 1000));
+    if (days > 1) return `${isZh ? "剩余" : ""} ${days} ${isZh ? "天" : "d"}`;
+    const h = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+    const m = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
+    const s = Math.floor((diff % (60 * 1000)) / 1000);
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
+  return (
+    <section>
+      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+        {isZh ? "许可证" : "License"}
+      </h4>
+      <div className="flex items-center justify-between p-4 rounded-xl border border-white/5"
+        style={{ background: "color-mix(in srgb, var(--color-primary) 4%, transparent)" }}>
+        <div className="flex items-center gap-3">
+          {tier === "free" ? (
+            <Key className="h-5 w-5 text-gray-500" />
+          ) : (
+            <Crown className="h-5 w-5 text-primary-light" />
+          )}
+          <div>
+            <p className="text-sm font-medium text-white">
+              {tierLabel(tier)}
+              {tier !== "free" && (
+                <span className="ml-1.5 text-[11px] text-gray-400 font-normal">
+                  {durLabel(license.duration)}
+                </span>
+              )}
+            </p>
+            {tier !== "free" && license.expiresAt && (
+              <p className="text-[11px] text-gray-500 mt-0.5 font-mono">
+                {expiryDisplay(license.expiresAt)}
+              </p>
+            )}
+          </div>
+        </div>
+        {tier === "free" ? (
+          <button
+            onClick={openActivation}
+            className="px-3 py-1.5 rounded-lg border border-primary/40 text-primary-light text-xs font-medium hover:bg-primary/10 transition-colors"
+          >
+            {isZh ? "输入激活码" : "Enter Code"}
+          </button>
+        ) : (
+          <button
+            onClick={async () => {
+              if (!confirm(isZh
+                ? "确定要解除此设备的绑定吗？\n激活码将被释放，可在其他设备上使用。"
+                : "Unbind this device?\nThe activation code will be released for use on another device."
+              )) return;
+              try {
+                await unbind();
+              } catch (e) {
+                alert(isZh ? `解绑失败: ${e}` : `Unbind failed: ${e}`);
+              }
+            }}
+            className="px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-xs font-medium hover:bg-white/5 transition-colors"
+          >
+            {isZh ? "解除绑定" : "Unbind"}
+          </button>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -675,95 +755,6 @@ function FontColorSection({ t, fontPrimaryColor, fontSecondaryColor, setFontPrim
           </div>
         </div>
       </div>
-    </section>
-  );
-}
-
-function CgTextSection({ t, cgTextSize, cgTextColor, cgTextBgColor, cgTextBgOpacity, setCgTextSize, setCgTextColor, setCgTextBgColor, setCgTextBgOpacity }: any) {
-  const sizeOpts = [
-    { value: "xs", label: t("settings.cg_text_xs") },
-    { value: "sm", label: t("settings.cg_text_sm") },
-    { value: "base", label: t("settings.cg_text_base") },
-  ];
-  return (
-    <section>
-      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.cg_text_title")}</h4>
-      <div className="space-y-4">
-        <div>
-          <p className="text-xs text-gray-400 mb-2">{t("settings.cg_text_size")}</p>
-          <div className="flex gap-2">
-            {sizeOpts.map((o) => (
-              <button key={o.value}
-                onClick={() => setCgTextSize(o.value)}
-                className={cn("px-3 py-1.5 text-xs rounded-md border transition-colors",
-                  cgTextSize === o.value
-                    ? "bg-primary/20 border-primary/40 text-primary-light"
-                    : "border-white/5 text-gray-400 hover:text-gray-200 hover:border-white/15")}
-              >{o.label}</button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="text-xs text-gray-400 mb-2">{t("settings.cg_text_color")}</p>
-          <div className="flex items-center gap-3">
-            <input type="color" value={cgTextColor} onChange={(e) => setCgTextColor(e.target.value)}
-              className="h-8 w-12 rounded border border-white/5 cursor-pointer bg-transparent p-0.5" />
-            <span className="text-xs text-gray-400 font-mono">{cgTextColor}</span>
-          </div>
-        </div>
-        <div>
-          <p className="text-xs text-gray-400 mb-2">{t("settings.cg_text_bg_color")}</p>
-          <div className="flex items-center gap-3">
-            <input type="color" value={cgTextBgColor} onChange={(e) => setCgTextBgColor(e.target.value)}
-              className="h-8 w-12 rounded border border-white/5 cursor-pointer bg-transparent p-0.5" />
-            <span className="text-xs text-gray-400 font-mono">{cgTextBgColor}</span>
-          </div>
-        </div>
-        <SliderSection title={t("settings.cg_text_bg_opacity")} value={cgTextBgOpacity}
-          onChange={setCgTextBgOpacity} min={5} max={80} unit="%" />
-      </div>
-    </section>
-  );
-}
-
-function CustomColorSection({ t, useCustomColor, customColor, surfaceSaturation, surfaceOpacity, setCustomColor, handleToggleCustomColor, setSurfaceSaturation, setSurfaceOpacity }: any) {
-  return (
-    <section>
-      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-        <Palette className="h-3.5 w-3.5" />
-        {t("settings.custom_color")}
-      </h4>
-      <label className="flex items-center justify-between cursor-pointer group mb-4">
-        <span className="text-sm text-gray-300">{t("settings.use_custom_color")}</span>
-        <Toggle active={useCustomColor} onToggle={handleToggleCustomColor} />
-      </label>
-      {useCustomColor && (
-        <div className="space-y-4">
-          <div>
-            <p className="text-xs text-gray-400 mb-2">{t("settings.custom_color_label")}</p>
-            <div className="flex items-center gap-4">
-              <input type="color" value={customColor} onChange={(e) => setCustomColor(e.target.value)}
-                className="h-10 w-16 rounded-lg border border-white/5 cursor-pointer bg-transparent p-1" />
-              <span className="text-sm text-gray-400 font-mono">{customColor}</span>
-            </div>
-          </div>
-          <div>
-            <p className="text-xs text-gray-400 mb-2">{t("settings.custom_color_preset")}</p>
-            <div className="grid grid-cols-4 gap-3">
-            {COLOR_PRESETS.map((c: string) => (
-              <button key={c} onClick={() => setCustomColor(c)}
-                className={cn("h-10 rounded-lg border transition-all duration-200",
-                  customColor === c ? "border-white scale-110 ring-2 ring-white/20" : "border-transparent hover:scale-105")}
-                style={{ backgroundColor: c }} />
-            ))}
-            </div>
-          </div>
-          <div className="border-t border-white/5 pt-4 space-y-4">
-            <SliderSection title={t("settings.surface_saturation")} value={surfaceSaturation} onChange={setSurfaceSaturation} min={1} max={20} />
-            <SliderSection title={t("settings.surface_opacity")} value={surfaceOpacity} onChange={setSurfaceOpacity} min={50} max={100} unit="%" />
-          </div>
-        </div>
-      )}
     </section>
   );
 }

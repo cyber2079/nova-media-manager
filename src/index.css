@@ -42,6 +42,14 @@
   --color-surface-lighter:color-mix(in srgb, var(--color-primary) 8%, #1a1f2a);
 }
 
+/* ── Unified glass card (overlays on background images/videos) ── */
+.theme-card {
+  background: rgba(8, 12, 20, 0.72);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 /* Light palette support */
 [data-palette="light"] {
   --color-surface: #e8edf2; --color-surface-light: #d8dfe6; --color-surface-lighter: #c4cfd8;
@@ -98,10 +106,7 @@ main[data-route="page"] {
 [data-theme="ice-girl"] .ice-title { font-family: var(--font-display); letter-spacing: 0.15em; text-transform: uppercase; color: #b0e0ff; }
 [data-theme="ice-girl"] .ice-text-glow { text-shadow: 0 0 15px rgba(135,206,250,0.5), 0 0 30px rgba(135,206,250,0.2); }
 [data-theme="ice-girl"] .ice-scroll {
-  border: 1px solid rgba(135,206,235,0.2);
-  background: var(--color-surface-light);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(135,206,235,0.18);
 }
 [data-theme="ice-girl"] .ice-scroll p {
   color: #b0e0ff !important;
@@ -153,10 +158,7 @@ main[data-route="page"] {
 [data-theme="cyber-girl"] .cg-title { font-family: var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-primary-light); text-shadow: 0 0 12px color-mix(in srgb, var(--color-primary-light) 70%, transparent), 0 0 30px color-mix(in srgb, var(--color-primary) 50%, transparent), 0 0 55px color-mix(in srgb, var(--color-accent) 30%, transparent); }
 [data-theme="cyber-girl"] .cg-text-glow { text-shadow: 0 0 15px color-mix(in srgb, var(--color-primary) 50%, transparent), 0 0 30px color-mix(in srgb, var(--color-accent) 30%, transparent); }
 [data-theme="cyber-girl"] .cg-scroll {
-  border: 1px solid rgba(199,77,255,0.2);
-  background: var(--color-surface-light);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(199,77,255,0.18);
 }
 [data-theme="cyber-girl"] .cg-scroll p {
   color: #e0c0ff !important;

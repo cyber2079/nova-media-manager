@@ -215,7 +215,7 @@ function ThemeTitle() {
   </>);
 }
 
-function CgSkillShowcase({ cgBase, t, cgSceneIdx, textClass, textColor, bgStyle }: { cgBase: string; t: any; cgSceneIdx: number; textClass: string; textColor: string; bgStyle: React.CSSProperties }) {
+function CgSkillShowcase({ cgBase, t, cgSceneIdx, textClass, textColor }: { cgBase: string; t: any; cgSceneIdx: number; textClass: string; textColor: string }) {
   const skills = [
     { src: "start2-listen song.webp", corner: "tl" as const, labelKey: "nav.music" },
     { src: "start2-watch movie.webp", corner: "tr" as const, labelKey: "nav.movies" },
@@ -228,7 +228,7 @@ function CgSkillShowcase({ cgBase, t, cgSceneIdx, textClass, textColor, bgStyle 
         <div className="rounded-2xl overflow-hidden shrink-0" style={{ width: 100, height: 100, boxShadow: "0 0 25px rgba(199,77,255,0.25), 0 0 50px rgba(255,77,166,0.1)" }}>
           <img src={`${cgBase}/pic/happy face.webp`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
-        <div className="cg-scroll rounded-lg px-5 py-3 mt-4" style={{ maxWidth: "520px", width: "fit-content", minWidth: "220px", ...bgStyle }}>
+        <div className="cg-scroll theme-card rounded-lg px-5 py-3 mt-4" style={{ maxWidth: "520px", width: "fit-content", minWidth: "220px" }}>
           <CgTypewriter key={`cg-skill-${cgSceneIdx}`} text={t(`home.cg_scene${cgSceneIdx + 1}_text`)} speed={50} className={cn(textClass, "text-center")} style={{ color: textColor }} />
         </div>
       </div>
@@ -285,10 +285,7 @@ export default function Home() {
   const cyberBgmEnabled = useSettingsStore((s) => s.cyberBgmEnabled);
   const cgTextSize = useSettingsStore((s) => s.cgTextSize);
   const cgTextColor = useSettingsStore((s) => s.cgTextColor);
-  const cgTextBgColor = useSettingsStore((s) => s.cgTextBgColor);
-  const cgTextBgOpacity = useSettingsStore((s) => s.cgTextBgOpacity);
   const cgTextClass = `text-${cgTextSize} tracking-wide leading-relaxed`;
-  const cgScrollBgStyle = { background: `color-mix(in srgb, ${cgTextBgColor} ${cgTextBgOpacity}%, transparent)` };
 
   useEffect(() => {
     if (!isCG || !cyberBgmEnabled) { stopBgm(); return; }
@@ -323,7 +320,7 @@ export default function Home() {
                 )}
               </div>
             )}
-            <div className="ice-scroll rounded-lg p-5 text-center max-w-xl">
+            <div className="ice-scroll theme-card rounded-lg p-5 text-center max-w-xl">
               <TypewriterText quotes={[
                 { text: t("home.ice_ascendancy_text"), face: "lofty" },
                 { text: t("home.ice_quote_1"), face: "happy" },
@@ -347,7 +344,7 @@ export default function Home() {
             </div>
           </div>
           {/* Skill icons */}
-          <div className="mx-auto inline-flex rounded-2xl px-5 py-3.5" style={{ background: "color-mix(in srgb, #87ceeb 8%, transparent)", border: "1px solid color-mix(in srgb, #87ceeb 18%, transparent)" }}>
+          <div className="theme-card mx-auto inline-flex rounded-2xl px-5 py-3.5">
           <div className="flex justify-center gap-8 flex-wrap">
             {getCharacters("ice-girl").map((exile) => (
               <div key={exile.id} className="flex flex-col items-center gap-2 group cursor-pointer" onClick={() => handleCharClick(exile)} onContextMenu={(e) => handleCharContext(e, exile)}>
@@ -366,7 +363,7 @@ export default function Home() {
       {isCG && (
         <div className="mt-12 pt-8" data-hero>
           {CG_SCENES[cgSceneIdx]?.skillShow ? (
-            <CgSkillShowcase key={cgSceneIdx} cgBase={cgBase} t={t} cgSceneIdx={cgSceneIdx} textClass={cgTextClass} textColor={cgTextColor} bgStyle={cgScrollBgStyle} />
+            <CgSkillShowcase key={cgSceneIdx} cgBase={cgBase} t={t} cgSceneIdx={cgSceneIdx} textClass={cgTextClass} textColor={cgTextColor} />
           ) : (
             <div className="flex items-end justify-center gap-4 mb-8">
               {CG_SCENES[cgSceneIdx] && (
@@ -374,13 +371,13 @@ export default function Home() {
                   <img src={`${cgBase}/pic/${CG_SCENES[cgSceneIdx].face}`} alt="" style={{ width: "144px", height: "144px", objectFit: "cover" }} />
                 </div>
               )}
-              <div className="cg-scroll rounded-lg p-5 text-center max-w-xl" style={cgScrollBgStyle}>
+              <div className="cg-scroll theme-card rounded-lg p-5 text-center max-w-xl">
                 <CgTypewriter key={cgSceneIdx} text={t(`home.cg_scene${cgSceneIdx + 1}_text`)} speed={55} className={cgTextClass} style={{ color: cgTextColor }} />
               </div>
             </div>
           )}
           {/* Skill icons */}
-          <div className="mx-auto inline-flex rounded-2xl px-5 py-3.5" style={{ background: "color-mix(in srgb, #c74dff 8%, transparent)", border: "1px solid color-mix(in srgb, #c74dff 18%, transparent)" }}>
+          <div className="theme-card mx-auto inline-flex rounded-2xl px-5 py-3.5">
           <div className="flex justify-center gap-8 flex-wrap">
             {getCharacters("cyber-girl").map((c) => (
               <div key={c.id} className="flex flex-col items-center gap-2 group cursor-pointer" onClick={() => handleCharClick(c)} onContextMenu={(e) => handleCharContext(e, c)}>

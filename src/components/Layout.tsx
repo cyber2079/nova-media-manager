@@ -22,12 +22,16 @@ import CountdownWidget from "@/components/widgets/CountdownWidget";
 import ScrollFade from "@/components/ScrollFade";
 import CountdownAlert from "@/components/CountdownAlert";
 import ActivationDialog from "@/components/ActivationDialog";
+import OnboardingDialog from "@/components/OnboardingDialog";
 import PrivacyConsent from "@/components/PrivacyConsent";
 import BgVideoTuner from "@/components/BgVideoTuner";
 import CyberGirlBgSwitcher from "@/components/CyberGirlBgSwitcher";
 import UpdateChecker from "@/components/UpdateChecker";
-import { useLicenseStore } from "@/stores/licenseStore";
+import { useLicenseStore, isPro } from "@/stores/licenseStore";
+import { useThemePackStore } from "@/stores/themePackStore";
 import { analytics, useAnalyticsPageView } from "@/lib/analytics";
+import { getMusicCoverFallback } from "@/lib/musicCoverFallback";
+import { compareVersions } from "@/lib/compareVersions";
 
 const navItems = [
   { to: "/", key: "home", icon: Home },
@@ -36,8 +40,6 @@ const navItems = [
   { to: "/music", key: "music", icon: Music },
   { to: "/games", key: "games", icon: Gamepad2 },
 ];
-
-const defaultIcons: Record<string, string> = { "/": "home.svg", "/movies": "movie.svg", "/images": "pic.svg", "/music": "music.svg", "/games": "game.svg" };
 
 // Ice Girl nav icons
 const iceIcons: Record<string, string> = { "/": "home.webp", "/movies": "movie.webp", "/images": "pic.webp", "/music": "music.webp", "/games": "game.webp" };
@@ -90,6 +92,41 @@ export default function Layout() {
   const appRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { useLicenseStore.getState().init(); }, []);
+
+  // Resume: Pro+ but premium themes not yet downloaded (e.g. app closed mid-download)
+  // Uses version comparison: server list vs local registry
+  useEffect(() => {
+    const checkAndResume = async () => {
+      const license = useLicenseStore.getState().license;
+      if (!isPro(license.tier)) return;
+
+      const { fetchAvailable, installFromServer, refresh } = useThemePackStore.getState();
+      await refresh();
+
+      try {
+        await fetchAvailable();
+      } catch {
+        return; // Server unreachable — retry next launch
+      }
+
+      const available = useThemePackStore.getState().availableThemes;
+      const installed = useThemePackStore.getState().installedThemes;
+      const premium = available.filter(t => t.requires_license !== "free");
+
+      const missing = premium.filter(t => {
+        const local = installed.find(i => i.id === t.id);
+        if (!local) return true;                     // Not installed at all
+        return compareVersions(local.version, t.version) < 0; // Outdated
+      });
+
+      for (const theme of missing) {
+        try { await installFromServer(theme.id); } catch { /* skip, retry next launch */ }
+      }
+    };
+
+    const t = setTimeout(checkAndResume, 1500);
+    return () => clearTimeout(t);
+  }, []);
 
   const pageName = isHome ? "home" : location.pathname.replace("/", "");
   useAnalyticsPageView(pageName);
@@ -526,7 +563,11 @@ export default function Layout() {
                   isActive ? "bg-primary/15 text-primary-light " : "text-[#b8d0e8] hover:bg-primary/10 hover:text-primary-light ",
                 )}>
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full overflow-hidden">
-                    <img src={charIcon ? `${meta.base}/icons/${charIcon}` : `/themes/common/${defaultIcons[item.to]}`} alt="" className="h-full w-full object-cover" />
+                    {charIcon ? (
+                      <img src={`${meta.base}/icons/${charIcon}`} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <item.icon className="h-5 w-5" />
+                    )}
                   </div>
                   <span className={cn(isIce && "tracking-wider", isCG && "tracking-[0.1em]")}>{t(`nav.${item.key}`)}</span>
                 </NavLink>
@@ -598,6 +639,7 @@ export default function Layout() {
       {calendar.enabled && showWidgets && <CalendarWidget config={calendar} />}
       {countdown.enabled && showWidgets && <CountdownWidget config={countdown} />}
       <CountdownAlert />
+      <OnboardingDialog />
       <ActivationDialog />
       <PrivacyConsent />
       <UpdateChecker />
@@ -660,8 +702,8 @@ function MiniPlayer() {
     <div className="flex flex-col gap-0.5 shrink-0" style={{ width: "170px" }}>
       <div className="flex items-center gap-1.5">
         <div className="w-4 h-4 rounded overflow-hidden bg-surface-lighter shrink-0">
-          <img src={track.coverPath || "/themes/common/music-cover.png"} alt="" className="w-full h-full object-cover"
-            onError={(e) => { (e.target as HTMLImageElement).src = "/themes/common/music-cover.png"; }} />
+          <img src={track.coverPath || getMusicCoverFallback()} alt="" className="w-full h-full object-cover"
+            onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
         </div>
         <span className="text-[10px] text-white truncate flex-1 leading-none">{track.name}</span>
         <button onClick={() => vol === 0 ? doSetVol(1) : doSetVol(0)} className="h-4 w-4 flex items-center justify-center rounded text-gray-200 hover:text-white hover:bg-surface-lighter transition-colors shrink-0" title={`音量 ${Math.round(vol * 100)}%`}>

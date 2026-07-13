@@ -1,10 +1,13 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
 
+const SERVER_URL = "https://scm-think.cn";
+
 export interface LicenseInfo {
   tier: "free" | "pro" | "ultra" | "custom";
-  duration: "yearly" | "permanent";
+  duration: "monthly" | "yearly" | "permanent";
   expiresAt: string | null;
+  activatedAt?: string;
   maxDevices: number;
   deviceName?: string;
 }
@@ -21,6 +24,7 @@ interface LicenseState {
   init: () => Promise<void>;
   activate: (code: string, deviceName?: string) => Promise<LicenseInfo>;
   check: () => Promise<LicenseInfo>;
+  unbind: () => Promise<void>;
   openActivation: () => void;
   closeActivation: () => void;
 }
@@ -61,6 +65,13 @@ export const useLicenseStore = create<LicenseState>((set, get) => ({
       console.warn("[license] check failed:", err);
       return get().license;
     }
+  },
+
+  unbind: async () => {
+    await invoke("unbind_license");
+    set({
+      license: { ...FREE_LICENSE },
+    });
   },
 
   openActivation: () => set({ activationOpen: true }),

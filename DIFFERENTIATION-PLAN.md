@@ -119,7 +119,7 @@
 | | 社区版 Free | 标准版 Pro | 旗舰版 Ultra |
 |---|---|---|---|
 | 价格 | 免费 | ¥22/月 ¥168/年 ¥899/永久 | ¥39/月 ¥328/年 ¥1599/永久 |
-| 定位 | 基础影音管理 | 全套沉浸体验 | 多设备 + 定制 |
+| 定位 | 全功能免费 | 沉浸主题体验 | 云同步 + 副屏 |
 
 ### 3.2 完整功能对照表
 
@@ -153,9 +153,9 @@
 | 基本播放（播放/暂停/上下曲/音量）| ✅ | ✅ | ✅ |
 | 播放列表 | ✅ | ✅ | ✅ |
 | 后台播放 | ✅ | ✅ | ✅ |
-| LRC 歌词显示 | ❌ | ✅ | ✅ |
-| 可视化频谱 | ❌ | ✅ | ✅ |
-| 自定义歌词颜色 | ❌ | ✅ | ✅ |
+| LRC 歌词显示 | ✅ | ✅ | ✅ |
+| 可视化频谱 | ✅ | ✅ | ✅ |
+| 自定义歌词颜色 | ✅ | ✅ | ✅ |
 
 #### 🧩 桌面小部件
 
@@ -163,9 +163,9 @@
 |------|:---:|:---:|:----:|
 | 时钟 | ✅ | ✅ | ✅ |
 | 日历 | ✅ | ✅ | ✅ |
-| 我的电脑 | ❌ | ✅ | ✅ |
-| 系统监控 | ❌ | ✅ | ✅ |
-| 倒计时 | ❌ | ✅ | ✅ |
+| 我的电脑 | ✅ | ✅ | ✅ |
+| 系统监控 | ✅ | ✅ | ✅ |
+| 倒计时 | ✅ | ✅ | ✅ |
 
 #### ⚙️ 系统
 
@@ -177,16 +177,21 @@
 | 隐私分析（可选）| ✅ | ✅ | ✅ |
 | 多显示器副屏 | ❌ | ❌ | ✅ |
 | 云端数据同步 | ❌ | ❌ | ✅ |
-| 设备绑定数 | 1 台 | 1 台 | 3 台 |
+| 设备绑定 | 一码一机 | 一码一机 | 一码一机 |
 
 ### 3.3 实施优先级
 
-| P0 - 立刻 | P1 - 本阶段 | P2 - 下一阶段 |
-|-----------|-------------|---------------|
-| 🎨 主题门控（default only for free）| 🎧 可视化器门控 | ☁️ 云端同步 |
-| 🔒 许可证检查 hook | 🧩 小部件门控 | 🖥️ 副屏完善 |
-| 📦 .nvtp 自动下载流程 | 🎵 歌词门控 | 📊 使用数据看板 |
-| 📋 主题列表 API 完善 | 🔄 自动更新分级推送 | 💬 主题剧情补完 |
+| P0 · 许可证 + 主题安全 | P1 · 更新 + 内容 | P2 · 云 + 副屏 |
+|---|---|---|
+| 🔒 `useGate()` hook ✅ | 🔄 自动更新分级推送 | ☁️ 云端数据同步 |
+| 🚪 首次启动引导框 | 📋 主题列表 API 完善 | 🖥️ 副屏完善 |
+| 🎨 主题选择器门控 | 📦 主题打包脚本修通 | 📊 使用数据看板 |
+| 📦 .nvtp 自动下载（首次进度条） | 🔐 Tauri custom protocol | 💬 主题剧情补完 |
+| 🔐 主题安全架构（AES + 内存解密） | 🤖 AI 素材批量补全 | 🌐 Landing Page `/recover` |
+| 📱 一机一码 + 解绑规则 | 🛡️ 异常检测 | |
+| 🎫 爱发电卡密系统 | 🖥️ 管理后台基础版 | |
+| ⏱️ 30天/365天精确倒计时 | 🎨 新主题开发 | |
+| 🔄 7天联网校验 + 30天宽限 | | |
 
 ---
 
@@ -195,24 +200,23 @@
 ### 4.1 前端许可证 hook
 
 ```ts
-// src/lib/useLicense.ts (新增)
+// src/lib/useGate.ts (新增)
+// Gating philosophy: Free = complete media manager.
+// Pro/Ultra = premium content + infrastructure. Never gate basic tools.
 import { useLicenseStore } from "@/stores/licenseStore";
 
 export type FeatureFlag = 
-  | "premium-theme"   // 非 default 主题
-  | "lyrics"          // LRC 歌词
-  | "visualizer"      // 可视化频谱
-  | "widget-advanced" // 系统监控/我的电脑/倒计时
-  | "secondary-screen"
-  | "cloud-sync";
+  | "premium-theme"    // 非 default 主题
+  | "auto-update"      // 自动更新分级推送
+  | "secondary-screen" // 多显示器副屏
+  | "cloud-sync";      // 云端数据同步
 
 export function useGate(feature: FeatureFlag): boolean {
-  const tier = useLicenseStore((s) => s.tier); // "free" | "pro" | "ultra" | "custom"
+  const tier = useLicenseStore((s) => s.license.tier);
+
   switch (feature) {
     case "premium-theme":
-    case "lyrics":
-    case "visualizer":
-    case "widget-advanced":
+    case "auto-update":
       return tier !== "free";
     case "secondary-screen":
     case "cloud-sync":
@@ -251,6 +255,59 @@ App 启动
            └→ 新版本覆盖旧版本
         NO → 跳过，仅 default 可用
 ```
+
+### 4.4 一机一码 + 解绑规则
+
+**核心规则**：一个激活码同一时刻只绑定一台设备。
+
+| 规则 | 值 |
+|---|---|
+| 绑定上限 | 1 台设备 |
+| 激活后锁定期 | 30 天内不可解绑 |
+| 滚动解绑上限 | 每 365 天最多 3 次 |
+| 月付时长 | 激活时刻 + **30 天**（精确到秒） |
+| 年付时长 | 激活时刻 + **365 天**（精确到秒） |
+| 最后 24h | 前端实时倒计时 HH:MM:SS |
+| 强制解绑 | Landing Page `/recover` — 需激活码 + 爱发电订单号 |
+
+**解绑流程**：
+
+```
+App 内解绑（正常换设备）：
+  设置 → 许可证 → 解除绑定 → 确认 → 码立即释放 → 30 天锁定期 → 新设备立即可激活
+
+Landing Page 强制解绑（旧设备丢失）：
+  /recover → 激活码 + 订单号 → 验证 → 立即释放 → 无冷却
+  限制：每 90 天最多 1 次
+```
+
+### 4.5 主题安全架构
+
+**设计目标**：Premium 主题图片/视频防提取，反破解。
+
+```
+.nvtp 包 = 加密 ZIP（AES-256-GCM）
+  ├── manifest.json
+  ├── theme.css
+  ├── icons/*.webp       ← 加密存储，绝不落地明文
+  ├── pic/*.webp
+  └── video/*.mp4
+
+渲染链路：
+  <img src="nova://theme/ice-girl/icons/home.webp">
+    → Tauri custom protocol 拦截
+    → 从本地加密缓存读取 Vec<u8>
+    → AES-256-GCM 内存解密
+    → 返回给 WebView
+    → 明文文件从不落地
+```
+
+| 层 | 措施 |
+|---|---|
+| 传输 | HTTPS + .nvtp 二进制格式 |
+| 存储 | AES-256-GCM，密钥由 Rust 端持有 |
+| 渲染 | `nova://` custom protocol，内存解密 |
+| 反篡改 | CSS 中 url() 必须走 `nova://`，本地替换文件无效 |
 
 ---
 
@@ -326,11 +383,11 @@ D:\nova-proprietary\themes\  ← Git 私库（元数据 + 提示词）
 - [ ] 补全 ice-girl 的 zh.json 台词
 
 ### 下次
-- [ ] 可视化频谱门控
-- [ ] 小部件门控
 - [ ] 自动更新 Pro+ 专属推送
+- [ ] 主题列表 API 完善
+- [ ] ice-girl + cyber-girl 素材用 AI 批量补全
 
 ### 以后
 - [ ] 云同步
 - [ ] 副屏完善
-- [ ] ice-girl + cyber-girl 素材用 AI 批量补全
+- [ ] 使用数据看板

@@ -5,6 +5,7 @@ import type { Music } from "@/types/music";
 import { Trash2, Tag, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { tagColor } from "@/lib/tagColor";
+import { getMusicCoverFallback } from "@/lib/musicCoverFallback";
 import FavoriteStar from "@/components/FavoriteStar";
 
 interface MusicCardProps {
@@ -27,9 +28,9 @@ export default memo(function MusicCard({ music, onDelete, onPlay, onEditTags, co
         {music.coverPath ? (
           <img src={music.coverPath} alt={music.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-            onError={(e) => { (e.target as HTMLImageElement).src = "/themes/common/music-cover.png"; }} />
+            onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
         ) : (
-          <img src="/themes/common/music-cover.png" alt={music.name}
+          <img src={getMusicCoverFallback()} alt={music.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
         )}
 
