@@ -360,20 +360,26 @@ export default function ThemeStudioPage() {
                             </div>
                           )}
                         </div>
-                        {/* Text (i18n key or free text) */}
+                        {/* Scene text */}
                         <div>
-                          <label className="block text-[10px] text-gray-500 mb-1">文本 (i18n key 或直接输入)</label>
-                          <input value={String(editData.text || "")} onChange={e => setField("text", e.target.value)}
-                            list="i18n-datalist"
-                            className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-mono outline-none focus:border-primary/50" />
-                          <datalist id="i18n-datalist">
-                            {i18nKeys.map(k => <option key={k} value={k} />)}
-                          </datalist>
-                          {editData.text && (
-                            <div className="mt-1 p-2 rounded-lg bg-white/[0.02] border border-white/5 text-[10px] text-gray-400 italic line-clamp-3">
-                              💬 {t(String(editData.text), "")}
-                            </div>
-                          )}
+                          <label className="block text-[10px] text-gray-500 mb-1">
+                            场景文本
+                            {editData.text && editData.text.startsWith("home.") && (
+                              <span className="text-primary-light/60 ml-1">(i18n: {String(editData.text)})</span>
+                            )}
+                          </label>
+                          <textarea value={editData.text && editData.text.startsWith("home.") ? t(String(editData.text), "") : String(editData.text || "")}
+                            onChange={e => setField("text", e.target.value)}
+                            rows={6}
+                            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs leading-relaxed outline-none focus:border-primary/50 resize-vertical" />
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[9px] text-gray-600">快捷填入:</span>
+                            <select onChange={e => { if (e.target.value) setField("text", e.target.value); }}
+                              className="flex-1 px-2 py-1 rounded bg-white/5 border border-white/5 text-gray-300 text-[10px] font-mono outline-none">
+                              <option value="">— i18n key —</option>
+                              {i18nKeys.map(k => <option key={k} value={k}>{k}</option>)}
+                            </select>
+                          </div>
                         </div>
                         {/* BGM */}
                         <div>
