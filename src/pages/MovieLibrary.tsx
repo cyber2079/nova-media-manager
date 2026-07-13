@@ -16,7 +16,6 @@ import PaginationBar from "@/components/PaginationBar";
 import { usePagination } from "@/lib/usePagination";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { useThemeStore } from "@/stores/themeStore";
 import type { Movie } from "@/types/movie";
 import { useFavoritesStore } from "@/stores/favoritesStore";
 import { tagColor } from "@/lib/tagColor";
@@ -28,9 +27,6 @@ import BatchBar from "@/components/BatchBar";
 
 export default function MovieLibrary() {
   const { t } = useTranslation();
-  const { theme } = useThemeStore();
-  const isOW = theme === "overwatch";
-  const isFF7 = theme === "final-fantasy";
   const {
     movies, isLoading, searchQuery, activeTags, sortConfig,
     loadMovies, addMovies, deleteMovie, setSearchQuery, toggleTag, setSortConfig, updateMovie, updateMovieTags,
@@ -149,15 +145,8 @@ export default function MovieLibrary() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-4">
-        <h1 className={cn(
-          "font-bold transition-all duration-500",
-          isOW
-            ? "text-5xl italic uppercase tracking-[0.15em] ow-ult-text"
-            : isFF7
-              ? "text-3xl tracking-wider ff7-text-glow text-primary-light"
-              : "text-2xl"
-        )}>
-          {isOW ? t("movie.title") : isFF7 ? t("movie.title") : t("movie.title")}
+        <h1 className="font-bold text-2xl transition-all duration-500">
+          {t("movie.title")}
         </h1>
         <div className="flex-1" />
         <div className="relative w-64">
@@ -168,7 +157,7 @@ export default function MovieLibrary() {
             </button>
           )}
         </div>
-        <Button onClick={handleAddMovies} className={cn("gap-2", isOW && "ow-card text-[#f99e1a] border-[#f99e1a]/20")}><Upload className="h-4 w-4" />{t("movie.add")}</Button>
+        <Button onClick={handleAddMovies} className="gap-2"><Upload className="h-4 w-4" />{t("movie.add")}</Button>
         {!batch.showCheckboxes ? (
           <Button variant="outline" size="sm" onClick={batch.enterBatchMode} className="gap-1.5 text-xs">
             <CheckSquare className="h-3.5 w-3.5" />

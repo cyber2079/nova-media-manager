@@ -4,8 +4,8 @@
 //! Rotation: single file, max 5 MB, keeps 3 backup files
 //! Panics: captured and written to crash-{timestamp}.log
 
-use log::{LevelFilter, Log, Metadata, Record};
-use std::fs::{self, File, OpenOptions};
+use log::{Log, Metadata, Record};
+use std::fs::{self, File};
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Mutex;

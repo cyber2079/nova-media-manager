@@ -36,37 +36,34 @@ const FREE_LICENSE: LicenseInfo = {
   maxDevices: 1,
 };
 
-/** Local dev override: set VITE_LICENSE_TIER=pro in .env to skip activation. */
-const DEV_LICENSE: LicenseInfo = {
-  tier: "pro",
-  duration: "permanent",
-  expiresAt: null,
-  maxDevices: 1,
-};
-
-const isDevPro = import.meta.env.VITE_LICENSE_TIER === "pro";
+/** Dev mode override — set VITE_LICENSE_TIER in .env to bypass activation */
+function devLicense(): LicenseInfo | null {
+  const tier = import.meta.env?.VITE_LICENSE_TIER as string | undefined;
+  if (!tier || tier === "free") return null;
+  return {
+    tier: tier as "pro" | "ultra" | "custom",
+    duration: "permanent",
+    expiresAt: null,
+    maxDevices: 99,
+    deviceName: "dev-machine",
+  };
+}
 
 export const useLicenseStore = create<LicenseState>((set, get) => ({
-  license: isDevPro ? { ...DEV_LICENSE } : { ...FREE_LICENSE },
+  license: devLicense() ?? { ...FREE_LICENSE },
   loaded: false,
   activationOpen: false,
 
   init: async () => {
+    // Dev override wins — no backend call needed
+    const dev = devLicense();
+    if (dev) { set({ license: dev, loaded: true }); return; }
+
     try {
       const info = await invoke<LicenseInfo>("get_license");
-      // Dev mode: if no license activated, auto-grant Pro for theme development
-      if (info.tier === "free" && isDevPro) {
-        set({ license: { ...DEV_LICENSE }, loaded: true });
-        return;
-      }
       set({ license: info, loaded: true });
     } catch {
-      // Dev mode fallback
-      if (isDevPro) {
-        set({ license: { ...DEV_LICENSE }, loaded: true });
-      } else {
-        set({ license: { ...FREE_LICENSE }, loaded: true });
-      }
+      set({ license: { ...FREE_LICENSE }, loaded: true });
     }
   },
 

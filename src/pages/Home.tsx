@@ -13,6 +13,7 @@ import { readFileSafe } from "@/lib/readFileSafe";
 import ThemeShortcutEditDialog from "@/components/ThemeShortcutEditDialog";
 import TypewriterText from "@/components/TypewriterText";
 import { onCgSceneChange, CG_SCENES } from "@/components/CyberGirlBgSwitcher";
+import { invoke } from "@tauri-apps/api/core";
 
 // Module-level BGM singleton
 let _bgmAudio: HTMLAudioElement | null = null;
@@ -198,18 +199,29 @@ function tagCssColor(str: string): string {
   return vars[Math.abs(h) % vars.length];
 }
 
+/** Theme metadata — maps ThemeName to rendering strategy.
+ *  Future premium themes register here once downloaded + installed. */
+type ThemeType = "story" | "dynamic" | "static" | "hybrid";
+
+const THEME_META: Record<string, { type: ThemeType; i18nKey: string; titleClass: string; subtitleClass: string }> = {
+  default:     { type: "static",  i18nKey: "home.default", titleClass: "text-4xl font-bold tracking-tight text-white", subtitleClass: "text-lg text-gray-400" },
+  "ice-girl":  { type: "dynamic", i18nKey: "home.ice",   titleClass: "text-6xl font-black tracking-[0.1em] ice-text-glow text-[#b0e0ff] uppercase", subtitleClass: "text-xl font-semibold tracking-[0.25em] text-[#87ceeb]/70 uppercase" },
+  "cyber-girl":{ type: "story",   i18nKey: "home.cg",     titleClass: "text-5xl font-black tracking-[0.1em] cg-text-glow text-[#e890ff] uppercase", subtitleClass: "text-xl font-semibold tracking-[0.2em] text-[#ff4da6]/70 uppercase" },
+};
+
+function getThemeMeta(theme: string) {
+  return THEME_META[theme] ?? THEME_META.default;
+}
+
 function ThemeTitle() {
   const { t } = useTranslation();
   const { theme } = useThemeStore();
-  const isIce = theme === "ice-girl";
-  const isCG = theme === "cyber-girl";
-  const k = isCG ? "home.cg" : isIce ? "home.ice" : "home.default";
-  const title = t(`${k}_title`);
-  const subtitle = t(`${k}_subtitle`);
-  const isDefault = theme === "default";
+  const meta = getThemeMeta(theme);
+  const title = t(`${meta.i18nKey}_title`);
+  const subtitle = t(`${meta.i18nKey}_subtitle`);
   return (<>
-    {title && <h1 className={cn("font-bold theme-enter-title", isDefault && "text-4xl font-bold tracking-tight text-white", isIce && "text-6xl font-black tracking-[0.1em] ice-text-glow text-[#b0e0ff] uppercase", isCG && "text-5xl font-black tracking-[0.1em] cg-text-glow text-[#e890ff] uppercase")}>{title}</h1>}
-    {subtitle && <p className={cn(title && "mt-3", isDefault && "text-lg text-gray-400", isIce && "text-xl font-semibold tracking-[0.25em] text-[#87ceeb]/70 uppercase", isCG && "text-xl font-semibold tracking-[0.2em] text-[#ff4da6]/70 uppercase")}>{subtitle}</p>}
+    {title && <h1 className={cn("font-bold theme-enter-title", meta.titleClass)}>{title}</h1>}
+    {subtitle && <p className={cn(title && "mt-3", meta.subtitleClass)}>{subtitle}</p>}
   </>);
 }
 
@@ -263,34 +275,60 @@ function CgTypewriter({ text, speed = 55, delay = 0, className }: { text: string
   return <p className={className}>{displayed || " "}{typing && <span className="inline-block w-0.5 h-3.5 bg-[#e890ff]/60 ml-0.5 align-middle animate-pulse" />}</p>;
 }
 
+/** Load manifest.script from Rust for premium themes */
+interface RuntimeScriptNode { id: string; label: string; background: string; face: string; text: string; bgm: string; skillShow: boolean; thumbOk: boolean; thumbUrl: string; faceOk: boolean; faceUrl: string; i18nPreview: string; }
+function useThemeScript(theme: string) {
+  const [script, setScript] = useState<RuntimeScriptNode[]>([]);
+  useEffect(() => {
+    if (theme === "default") { setScript([]); return; }
+    let cancelled = false;
+    invoke<RuntimeScriptNode[]>("theme_get_script", { themeId: theme })
+      .then(s => { if (!cancelled) setScript(s); })
+      .catch(() => { if (!cancelled) setScript([]); });
+    return () => { cancelled = true; };
+  }, [theme]);
+  return script;
+}
+
 export default function Home() {
   const { theme } = useThemeStore();
   const { t } = useTranslation();
   const { getCharacters, saveOverride, resetCharacter } = useThemeShortcutStore();
-  const isDefault = theme === "default";
-  const isIce = theme === "ice-girl";
-  const isCG = theme === "cyber-girl";
+  const themeType = getThemeMeta(theme).type;
+  const script = useThemeScript(theme);
   const [editingChar, setEditingChar] = useState<ThemeCharacter | null>(null);
   const [iceBgVisible, setIceBgVisible] = useState(false);
   const [iceFace, setIceFace] = useState("");
   const [cgSceneIdx, setCgSceneIdx] = useState(0);
 
+  // Build dynamic quotes from script
+  const dynamicQuotes = useMemo(() => (themeType === "dynamic" ? script.map(node => ({
+    text: node.text.startsWith("home.") ? t(node.text) : node.text,
+    face: node.face,
+  })) : []), [script, themeType, t]);
+
   useEffect(() => {
-    if (!isCG) return;
+    if (themeType !== "story") return;
     return onCgSceneChange(setCgSceneIdx);
-  }, [isCG]);
+  }, [themeType]);
 
   const cyberBgmEnabled = useSettingsStore((s) => s.cyberBgmEnabled);
   const cgTextSize = useSettingsStore((s) => s.cgTextSize);
   const cgTextColor = useSettingsStore((s) => s.cgTextColor);
+  const cgTextBgColor = useSettingsStore((s) => s.cgTextBgColor);
+  const cgTextBgOpacity = useSettingsStore((s) => s.cgTextBgOpacity);
   const cgTextClass = `text-${cgTextSize} tracking-wide leading-relaxed`;
+  const cgScrollBgStyle = { background: `color-mix(in srgb, ${cgTextBgColor} ${cgTextBgOpacity}%, transparent)` };
 
+  // BGM driven by script node bgm field
   useEffect(() => {
-    if (!isCG || !cyberBgmEnabled) { stopBgm(); return; }
-    if (cgSceneIdx <= 4) switchBgm("start");
+    if (themeType !== "story" || !cyberBgmEnabled) { stopBgm(); return; }
+    const node = script[cgSceneIdx];
+    if (node?.bgm) switchBgm(node.bgm as "start" | "main");
+    else if (cgSceneIdx <= 4) switchBgm("start");
     else switchBgm("main");
-  }, [isCG, cgSceneIdx, cyberBgmEnabled]);
-  useEffect(() => { return () => { stopBgm(); }; }, [isCG]);
+  }, [themeType, cgSceneIdx, cyberBgmEnabled, script]);
+  useEffect(() => { return () => { stopBgm(); }; }, [themeType]);
 
   const handleCharClick = (c: ThemeCharacter) => { if (c.appPath) launchApp(c.appPath); };
   const handleCharContext = (e: React.MouseEvent, c: ThemeCharacter) => { e.preventDefault(); setEditingChar(c); };
@@ -299,13 +337,13 @@ export default function Home() {
     <div className="space-y-8 animate-fade-in-up">
       {/* Theme Title */}
       <div className="text-center"><ThemeTitle /></div>
-      {isDefault && <div className="h-px w-48 mx-auto bg-gradient-to-r from-transparent via-primary/40 to-transparent" />}
+      {themeType === "static" && <div className="h-px w-48 mx-auto bg-gradient-to-r from-transparent via-primary/40 to-transparent" />}
 
-      {/* ── Default Dashboard ── */}
-      {isDefault && <DashBoard />}
+      {/* ── Static Dashboard ── */}
+      {themeType === "static" && <DashBoard />}
 
-      {/* ── Ice Girl Section ── */}
-      {isIce && (
+      {/* ── Dynamic: script-driven typewriter + skill icons ── */}
+      {themeType === "dynamic" && dynamicQuotes.length > 0 && (
         <div className="mt-12 pt-8" data-hero>
           {/* Typewriter lore */}
           <div className="flex items-end justify-center gap-4 mb-6" style={{ opacity: iceBgVisible ? 1 : 0, transition: "opacity 0.6s ease" }}>
@@ -319,25 +357,7 @@ export default function Home() {
               </div>
             )}
             <div className="ice-scroll theme-card rounded-lg p-5 text-center max-w-xl">
-              <TypewriterText quotes={[
-                { text: t("home.ice_ascendancy_text"), face: "lofty" },
-                { text: t("home.ice_quote_1"), face: "happy" },
-                { text: t("home.ice_quote_2"), face: "angry" },
-                { text: t("home.ice_quote_3"), face: "lofty" },
-                { text: t("home.ice_quote_4"), face: "angry" },
-                { text: t("home.ice_quote_5"), face: "happy" },
-                { text: t("home.ice_quote_7"), face: "lofty" },
-                { text: t("home.ice_quote_8"), face: "angry" },
-                { text: t("home.ice_quote_9"), face: "angry" },
-                { text: t("home.ice_quote_10"), face: "angry" },
-                { text: t("home.ice_quote_11"), face: "happy" },
-                { text: t("home.ice_quote_12"), face: "angry" },
-                { text: t("home.ice_quote_13"), face: "angry" },
-                { text: t("home.ice_quote_14"), face: "cry" },
-                { text: t("home.ice_quote_15"), face: "angry" },
-                { text: t("home.ice_quote_16"), face: "naughty" },
-                { text: t("home.ice_quote_17"), face: "video:secretary" },
-              ]} speed={70} pause={1000} onVisibilityChange={setIceBgVisible} onFaceChange={setIceFace}
+              <TypewriterText quotes={dynamicQuotes} speed={70} pause={1000} onVisibilityChange={setIceBgVisible} onFaceChange={setIceFace}
                 className="text-xs text-[#b0e0ff] tracking-wide leading-relaxed" />
             </div>
           </div>
@@ -357,23 +377,36 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Cyber Girl Section ── */}
-      {isCG && (
+      {/* ── Story: script-driven scene progression ── */}
+      {themeType === "story" && (
         <div className="mt-12 pt-8" data-hero>
-          {CG_SCENES[cgSceneIdx]?.skillShow ? (
-            <CgSkillShowcase key={cgSceneIdx} t={t} cgSceneIdx={cgSceneIdx} textClass={cgTextClass} textColor={cgTextColor} />
-          ) : (
-            <div className="flex items-end justify-center gap-4 mb-8">
-              {CG_SCENES[cgSceneIdx] && (
-                <div className="shrink-0 rounded-2xl overflow-hidden" style={{ boxShadow: "0 0 20px rgba(199,77,255,0.2), 0 0 45px rgba(255,77,166,0.08)" }}>
-                  <img src={ThemeAssets.cg.face(CG_SCENES[cgSceneIdx].face)} alt="" style={{ width: "144px", height: "144px", objectFit: "cover" }} />
+          {(() => {
+            const node = script[cgSceneIdx];
+            if (!node) return null;
+            const faceUrl = node.face && node.faceOk ? node.faceUrl : undefined;
+            const displayText = node.text.startsWith("home.") ? t(node.text) : node.text;
+
+            if (node.skillShow) {
+              return <CgSkillShowcase key={cgSceneIdx} t={t} cgSceneIdx={cgSceneIdx} textClass={cgTextClass} textColor={cgTextColor} />;
+            }
+
+            return (
+              <div className="flex items-end justify-center gap-4 mb-8">
+                {faceUrl && (
+                  <div className="shrink-0 rounded-2xl overflow-hidden" style={{ boxShadow: "0 0 20px rgba(199,77,255,0.2), 0 0 45px rgba(255,77,166,0.08)" }}>
+                    <img src={faceUrl} alt="" style={{ width: "144px", height: "144px", objectFit: "cover" }} />
+                  </div>
+                )}
+                <div className="cg-scroll theme-card rounded-lg p-5 text-center max-w-xl">
+                  <CgTypewriter key={cgSceneIdx} text={displayText} speed={55} className={cgTextClass} style={{ color: cgTextColor }} />
                 </div>
-              )}
-              <div className="cg-scroll theme-card rounded-lg p-5 text-center max-w-xl">
-                <CgTypewriter key={cgSceneIdx} text={t(`home.cg_scene${cgSceneIdx + 1}_text`)} speed={55} className={cgTextClass} style={{ color: cgTextColor }} />
               </div>
-            </div>
-          )}
+            );
+          })()}
+                </div>
+              </div>
+            );
+          })()}
           {/* Skill icons */}
           <div className="theme-card mx-auto inline-flex rounded-2xl px-5 py-3.5">
           <div className="flex justify-center gap-8 flex-wrap">

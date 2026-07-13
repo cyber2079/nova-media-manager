@@ -6,7 +6,6 @@ import {
   RefreshCw, Trash2, Copy, Scissors, ClipboardPaste, Pencil, FolderPlus,
   CheckSquare, Square,
 } from "lucide-react";
-import { useThemeStore } from "@/stores/themeStore";
 
 // region Types
 interface DriveInfo { name: string; path: string; }
@@ -20,9 +19,6 @@ async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T
 
 export default function FileExplorer({ open, onClose }: { open: boolean; onClose: () => void }) {
   // region State
-  const { theme } = useThemeStore();
-  const isPoE = theme === "path-of-exile";
-  const isPG = theme === "pretty-girl";
   const [drives, setDrives] = useState<DriveInfo[]>([]);
   const [currentPath, setCurrentPath] = useState("");
   const [entries, setEntries] = useState<DirEntry[]>([]);
@@ -158,7 +154,7 @@ export default function FileExplorer({ open, onClose }: { open: boolean; onClose
 
         {/* Toolbar */}
         <div className="flex items-center gap-1 px-3 py-1.5 border-b border-primary shrink-0 flex-wrap"
-          style={{ background: (isPoE || isPG) ? (isPG ? "rgba(25,10,20,0.95)" : "rgba(15,23,42,0.95)") : "var(--color-surface)" }}>
+          style={{ background: "var(--color-surface)" }}>
           <button onClick={goBack} disabled={!canGoBack} className="text-gray-400 hover:text-white disabled:opacity-25 p-1.5" title="后退"><ChevronLeft className="h-4 w-4" /></button>
           <button onClick={goForward} disabled={!canGoForward} className="text-gray-400 hover:text-white disabled:opacity-25 p-1.5" title="前进"><ChevronRight className="h-4 w-4" /></button>
           <button onClick={goUp} className="text-gray-400 hover:text-white p-1.5" title="上级目录"><FolderOpen className="h-4 w-4" /></button>
@@ -198,7 +194,7 @@ export default function FileExplorer({ open, onClose }: { open: boolean; onClose
         <div className="flex flex-1 min-h-0">
           {/* Sidebar: pinned + drives */}
           <div className="w-40 shrink-0 border-r border-primary py-2 px-2 space-y-0.5 overflow-y-auto"
-            style={{ background: (isPoE || isPG) ? (isPG ? "rgba(20,10,18,0.6)" : "rgba(10,15,25,0.6)") : "var(--color-surface-light)" }}>
+            style={{ background: "var(--color-surface-light)" }}>
             {/* Pinned folders */}
             {pinned.length > 0 && (
               <>

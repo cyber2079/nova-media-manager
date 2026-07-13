@@ -186,13 +186,17 @@ export default function Layout() {
   const isMusicPage = location.pathname === "/music";
   const prevPath = useRef(location.pathname);
 
-  // Drag titlebar
-  const headerRef = useRef<HTMLDivElement>(null);
+  // Drag titlebar — only in windowed mode, full header width
+  const headerRef = useRef<HTMLElement>(null);
+  const isFSRef = useRef(isFS);
+  isFSRef.current = isFS;
   useEffect(() => {
     const el = headerRef.current;
     if (!el) return;
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return;
+      // Don't drag in fullscreen — there's no window to move
+      if (isFSRef.current) return;
       const target = e.target as HTMLElement;
       if (target.closest("button, a, input, [role=button]")) return;
       getCurrentWindow().startDragging().catch(() => {});
@@ -541,8 +545,8 @@ export default function Layout() {
       </>}
 
       {/* ── Header ── */}
-      <header className={cn(headerClass, !headerVisible && "hidden")} style={headerOpacityStyle}>
-        <div ref={headerRef} className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden")} style={headerOpacityStyle}>
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
             {isIce ? (
               <div className="flex flex-col leading-none"><span className="ice-title text-sm font-bold">{t("app.title")}</span></div>
@@ -582,6 +586,11 @@ export default function Layout() {
             <button onClick={() => setSearchOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={`${t("search.placeholder")} (Ctrl+K)`}>
               <Search className="h-4 w-4 text-gray-400" />
             </button>
+            {import.meta.env?.VITE_LICENSE_TIER && (
+              <button onClick={() => navigate("/studio")} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title="主题创作">
+                <Sparkles className="h-4 w-4 text-purple-400" />
+              </button>
+            )}
             <button onClick={() => setSettingsOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={t("settings.title")}>
               <Settings className="h-4 w-4 text-gray-400" />
             </button>

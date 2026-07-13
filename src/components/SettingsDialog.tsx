@@ -27,7 +27,7 @@ const themeList: { key: ThemeName; labelKey: string; emoji: string; image?: stri
   { key: "cyber-girl", labelKey: "settings.theme_cg", emoji: "💜", image: ThemeAssets.cg.bg },
 ];
 
-type TabId = "general" | "appearance" | "music" | "images" | "movies" | "games" | "widgets";
+type TabId = "general" | "appearance" | "music" | "images" | "movies" | "games" | "widgets" | "themes";
 
 const tabs: { id: TabId; icon: typeof Settings; labelKey: string }[] = [
   { id: "general", icon: SlidersHorizontal, labelKey: "settings.tab_general" },

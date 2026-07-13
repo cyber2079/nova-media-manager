@@ -10,5 +10,6 @@ pub mod convert;
 pub mod ffmpeg_helper;
 pub mod system;
 pub mod file_explorer;
-pub mod user_data;
 pub mod steam_scanner;
+pub mod theme_studio;
+pub mod user_data;

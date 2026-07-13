@@ -10,6 +10,7 @@ const MovieRandom = lazy(() => import("@/pages/MovieRandom"));
 const ImageLibrary = lazy(() => import("@/pages/ImageLibrary"));
 const MusicLibrary = lazy(() => import("@/pages/MusicLibrary"));
 const GameLibrary = lazy(() => import("@/pages/GameLibrary"));
+const ThemeStudioPage = lazy(() => import("@/pages/ThemeStudio"));
 
 function PageFallback() {
   return (
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/images" element={<Page><ImageLibrary /></Page>} />
           <Route path="/music" element={<Page><MusicLibrary /></Page>} />
           <Route path="/games" element={<Page><GameLibrary /></Page>} />
+          {import.meta.env?.VITE_LICENSE_TIER ? <Route path="/studio" element={<ThemeStudioPage />} /> : null}
         </Route>
       </Routes>
     </BrowserRouter>

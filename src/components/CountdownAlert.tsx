@@ -12,20 +12,10 @@ interface AlertConfig {
 
 // ── Theme voice/text mapping ──
 const themeVoice: Record<string, { prefix: string; zh: string; en: string }> = {
-  "pretty-girl": {
-    prefix: "loli",
-    zh: "主人主人，看看时钟～时间已经到了哦。您有重要的事情要处理吧？再不去的话，我会担心得睡不着的。快去吧，我在这里等您回来～",
-    en: "Master, the hand's passed this mark. You remember that important matter, don't you? I won't rush you, but time won't wait. Please go now, and I'll be here praying for you.",
-  },
-  "path-of-exile": {
+  "ice-girl": {
     prefix: "ice",
     zh: "看到窗外的雪了吗？每一片都在提醒你——时间不等人。趁我还没把这条路冰封，去做你该做的事。",
     en: "See the snow outside the window? Each flake is reminding you — time waits for no one. Before I freeze this path over with ice, go do what you're meant to do.",
-  },
-  "black-white": {
-    prefix: "lady",
-    zh: "你的时间，我已经接管了。\n看够了吗？现在，立刻，去完成你该做的事。\n专注一点，别让我等太久。",
-    en: "I've taken over your time now.\nHad your look? Now, right now, go do what you need to do.\nStay focused… don't keep me waiting too long.",
   },
   "cyber-girl": {
     prefix: "ling",
@@ -35,7 +25,7 @@ const themeVoice: Record<string, { prefix: string; zh: string; en: string }> = {
 };
 
 function getVoiceInfo(theme: ThemeName, isZh: boolean) {
-  const v = themeVoice[theme] ?? themeVoice["path-of-exile"]!;
+  const v = themeVoice[theme] ?? themeVoice["ice-girl"]!;
   const lang = isZh ? "zh" : "en";
   const text = isZh ? v.zh : v.en;
   const src = `/sound/${v.prefix}-${isZh ? "cn" : "en"}.mp3`;

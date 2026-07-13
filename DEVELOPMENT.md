@@ -126,7 +126,29 @@
 | **cyber-girl** | ⚠️ 部分对齐 | 技能图标 skill1~6 需改成 skill-01~06；表情同理；pic 目录需要分拆 |
 | **新主题** | ✅ 从 day 1 按此规范 | AI 生成素材时必须输出到此结构 |
 
-### 3.4 创建新主题 — 7 步
+### 3.4 主题类型（type 字段）
+
+每个主题的 `manifest.json` 必须声明 `type` 字段，决定 Home 页渲染模式：
+
+| type | 渲染模式 | Home.tsx 行为 | 必备素材 | 现有示例 |
+|---|---|---|---|---|
+| `story` | 线性剧情 | scene 编号推进 → 背景图切换 → BGM 分区切换 | scenes/*.webp + video/*.mp4（可选） + faces/*.webp | cyber-girl |
+| `dynamic` | 背景视频 + 打字机轮播 | 视频画布渲染（A/B roll）→ 打字机随机轮播 → 表情随机切换 | video/bg-loop.mp4 + faces/*.webp + bg.webp | ice-girl |
+| `static` | 纯壁纸/渐变，无剧情 | 显示默认 Dashboard（媒体统计 + 最近 + 标签云） | 无（CSS 渐变即可） | default |
+| `hybrid` | story + dynamic 组合 | 剧情线 + 可选交互模式切换 | scenes + video + faces | 预留 |
+
+**prompts.json 按类型适配**：
+
+| type | prompts 结构 |
+|---|---|
+| `story` | `global` + `scenes.{key}` → AI 生成按 scene 编号推进的场景 |
+| `dynamic` | `global` + `faces.{key}` + `background` → AI 生成表情 + 背景视频 |
+| `static` | 不需要 prompts（无 AI 素材） |
+| `hybrid` | 两者都有 |
+
+**Home.tsx 路由**：见 `THEME_META` 常量 — `getThemeMeta(theme).type` 自动选择 `static` / `dynamic` / `story` 分支，不硬编码主题名。
+
+### 3.5 创建新主题 — 7 步
 
 ```
 STEP 1  写 prompts.json
@@ -134,7 +156,8 @@ STEP 1  写 prompts.json
         参考: D:\nova-proprietary\themes\ice-girl\prompts.json
 
 STEP 2  写 manifest.json
-        声明主题 id / name / 角色 / 场景清单
+        声明主题 id / name / type / 角色 / 场景清单
+        type 必须选 story | dynamic | static | hybrid
         所有场景初始 status: "todo"
         参考: D:\nova-proprietary\themes\ice-girl\manifest.json
 
@@ -142,6 +165,28 @@ STEP 3  生成素材
         node scripts/theme-generate.mjs {theme-id}
         需要: ARK_API_KEY 环境变量
         输出: D:\nova-themes-assets\{theme-id}\
+
+### 3.6 AI 生成前置条件
+
+```bash
+# 1. 获取 API Key (新用户送 ¥15 试用金)
+#    https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey
+
+# 2. 设置环境变量
+$env:ARK_API_KEY = "your-api-key-here"     # PowerShell
+export ARK_API_KEY="your-api-key-here"     # Git Bash
+
+# 3. 验证
+node scripts/theme-generate.mjs ice-girl --dry-run
+```
+
+**模型速查**：
+
+| 用途 | 模型 ID | 单价 |
+|---|---|---|
+| 图片生成（默认） | `doubao-seedream-4-5-251128` | ~¥0.02/张 |
+| 视频生成（默认） | `doubao-seedance-1-0-pro-fast-251015` | ~¥1/秒 |
+| 视频生成（旗舰） | `doubao-seedance-1-5-pro-251215` | ¥1.5/秒 |
 
 STEP 4  手动筛选
         删除不满意的图片/视频

@@ -2,12 +2,33 @@ use rusqlite::{Connection, Result as SqlResult};
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-pub struct Database { pub conn: Mutex<Connection>, data_dir: PathBuf }
+pub struct Database { pub conn: Mutex<Connection>, data_dir: PathBuf, app_data_dir: PathBuf }
 
 impl Database {
+    /// Database + covers + themes live in `app_data_dir/data/` to separate
+    /// persistent user data from cache/logs/config in the parent directory.
+    /// Old DB is auto-migrated on first start.
     pub fn new(app_data_dir: PathBuf) -> SqlResult<Self> {
-        std::fs::create_dir_all(&app_data_dir).ok();
-        let db_path = app_data_dir.join("media_library.db");
+        let data_dir = app_data_dir.join("data");
+        std::fs::create_dir_all(&data_dir).ok();
+        // Migrate old DB if it exists in the parent directory
+        let old_path = app_data_dir.join("media_library.db");
+        let db_path = data_dir.join("media_library.db");
+        if old_path.exists() && !db_path.exists() {
+            std::fs::rename(&old_path, &db_path).ok();
+        }
+        // Migrate old covers too
+        let old_covers = app_data_dir.join("covers");
+        let new_covers = data_dir.join("covers");
+        if old_covers.exists() && !new_covers.exists() {
+            std::fs::rename(&old_covers, &new_covers).ok();
+        }
+        // Migrate old themes
+        let old_themes = app_data_dir.join("themes");
+        let new_themes = data_dir.join("themes");
+        if old_themes.exists() && !new_themes.exists() {
+            std::fs::rename(&old_themes, &new_themes).ok();
+        }
         let conn = Connection::open(db_path)?;
         conn.execute_batch(
             "CREATE TABLE IF NOT EXISTS movies (
@@ -69,14 +90,20 @@ impl Database {
                 tags TEXT DEFAULT '[]', add_time TEXT NOT NULL
             );"
         )?;
-        Ok(Database { conn: Mutex::new(conn), data_dir: app_data_dir })
+        Ok(Database { conn: Mutex::new(conn), data_dir, app_data_dir })
     }
 
     pub fn conn(&self) -> std::sync::MutexGuard<'_, Connection> {
         self.conn.lock().unwrap()
     }
 
+    /// Persistent user data directory (DB, covers, themes) — safe from cache cleanup.
     pub fn data_dir(&self) -> &PathBuf {
         &self.data_dir
+    }
+
+    /// App-wide directory (logs, config) — may be cleared by system cleanup.
+    pub fn app_data_dir(&self) -> &PathBuf {
+        &self.app_data_dir
     }
 }

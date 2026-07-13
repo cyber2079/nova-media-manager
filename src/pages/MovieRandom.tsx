@@ -5,17 +5,12 @@ import SafeImage from "@/components/SafeImage";
 import { Button } from "@/components/ui/button";
 import { Shuffle, Library, Swords } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useThemeStore } from "@/stores/themeStore";
-import { cn } from "@/lib/utils";
 
 export default function MovieRandom() {
   const { t } = useTranslation();
   const { movies, loadMovies } = useMovieStore();
   const [displayMovies, setDisplayMovies] = useState<typeof movies>([]);
   const navigate = useNavigate();
-  const { theme } = useThemeStore();
-  const isFF7 = theme === "final-fantasy";
-  const isOW = theme === "overwatch";
 
   useEffect(() => {
     loadMovies();
@@ -45,17 +40,10 @@ export default function MovieRandom() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className={cn(
-          "font-bold transition-all duration-500",
-          isOW
-            ? "text-5xl italic uppercase tracking-[0.15em] ow-ult-text"
-            : isFF7
-              ? "text-3xl tracking-wider ff7-text-glow text-primary-light"
-              : "text-2xl"
-        )}>
+        <h1 className="font-bold text-2xl transition-all duration-500">
           {t("movie.discover")}
         </h1>
-        <Button variant="outline" onClick={refresh} className={cn("gap-2", isOW && "ow-card text-[#f99e1a] border-[#f99e1a]/20")}>
+        <Button variant="outline" onClick={refresh} className="gap-2">
           <Shuffle className="h-4 w-4" /> Random
         </Button>
       </div>

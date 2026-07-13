@@ -77,7 +77,14 @@
 
 /* ═══════════ Base ═══════════ */
 html, body { height: 100%; overflow: hidden; }
+html { color-scheme: dark; }
 :root { --font-primary: #ffffff; --font-secondary: #8899aa; --scroll-fade-opacity: 0.3; }
+
+/* Fix select dropdowns: dark bg + light text across all browsers */
+select, select option {
+  background: #111827 !important;
+  color: #e2e8f0 !important;
+}
 
 body {
   @apply bg-surface antialiased;

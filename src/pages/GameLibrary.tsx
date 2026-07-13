@@ -1,7 +1,6 @@
 import { useEffect, useCallback, useState, useMemo, useRef } from "react";
 import { useGameStore } from "@/stores/gameStore";
 import { useTranslation } from "react-i18next";
-import { useThemeStore } from "@/stores/themeStore";
 import GameCard from "@/components/GameCard";
 import { Button } from "@/components/ui/button";
 import TagFilterBar from "@/components/TagFilterBar";
@@ -36,9 +35,6 @@ export default function GameLibrary() {
   const [tagEditItem, setTagEditItem] = useState<Game | null>(null);
   const [layoutMode, setLayoutMode] = useLayoutMode("layout-games", "list");
   const { onContext, menu } = useContextMenu();
-  const { theme } = useThemeStore();
-  const isOW = theme === "overwatch";
-  const isFF7 = theme === "final-fantasy";
 
   useEffect(() => { loadGames(); }, []);
 
@@ -121,7 +117,7 @@ export default function GameLibrary() {
     <DropZone onDrop={handleDropImport} accept={".exe,.lnk,.app,.sh,.desktop,.bat,.cmd,.com"}>
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex items-center gap-4">
-        <h1 className={cn("font-bold transition-all duration-500", isOW ? "text-5xl italic uppercase tracking-[0.15em] ow-ult-text" : isFF7 ? "text-3xl tracking-wider ff7-text-glow text-primary-light" : "text-2xl")}>{t("game.title")}</h1>
+        <h1 className="font-bold text-2xl transition-all duration-500">{t("game.title")}</h1>
         <div className="flex-1" />
         {scanResult && (
           <span className="text-xs text-primary-light/80">{scanResult}</span>
@@ -133,7 +129,7 @@ export default function GameLibrary() {
           扫描 Steam
         </button>
         <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
-        <Button onClick={handleAddGame} className={cn("gap-2", isOW && "ow-card text-[#f99e1a] border-[#f99e1a]/20")}><Upload className="h-4 w-4" />{t("game.add")}</Button>
+        <Button onClick={handleAddGame} className="gap-2"><Upload className="h-4 w-4" />{t("game.add")}</Button>
         {!batch.showCheckboxes ? (
           <Button variant="outline" size="sm" onClick={batch.enterBatchMode} className="gap-1.5 text-xs">
             <CheckSquare className="h-3.5 w-3.5" />
@@ -151,29 +147,14 @@ export default function GameLibrary() {
 
       {/* Scan diagnostic log */}
       {scanDiagnostic.length > 0 && (
-        <div className={cn(
-          "rounded-lg border p-3 text-xs font-mono space-y-0.5 max-h-48 overflow-y-auto relative",
-          isOW && "border-[#f99e1a]/30 bg-[#f99e1a]/5 text-[#f99e1a]/80",
-          isFF7 && "border-primary-light/30 bg-primary-light/5 text-primary-light/80",
-          !isOW && !isFF7 && "border-blue-500/20 bg-blue-500/5 text-blue-300"
-        )}>
+        <div className="rounded-lg border p-3 text-xs font-mono space-y-0.5 max-h-48 overflow-y-auto relative border-primary/20 bg-primary/5 text-primary-light/80">
           <div className="absolute top-2 right-2 flex items-center gap-2">
-            <span className={cn(
-              "text-xs font-bold tabular-nums",
-              isOW && "text-[#f99e1a]",
-              isFF7 && "text-primary-light",
-              !isOW && !isFF7 && "text-blue-400"
-            )}>
+            <span className="text-xs font-bold tabular-nums text-primary-light">
               {diagCountdown > 0 ? `${diagCountdown}s` : ""}
             </span>
             <button
               onClick={dismissDiag}
-              className={cn(
-                "h-5 w-5 flex items-center justify-center rounded transition-colors",
-                isOW && "text-[#f99e1a]/60 hover:text-[#f99e1a] hover:bg-[#f99e1a]/20",
-                isFF7 && "text-primary-light/60 hover:text-primary-light hover:bg-primary-light/20",
-                !isOW && !isFF7 && "text-blue-400/60 hover:text-blue-300 hover:bg-blue-500/20"
-              )}
+              className="h-5 w-5 flex items-center justify-center rounded transition-colors text-primary-light/60 hover:text-primary-light hover:bg-primary-light/20"
               title="关闭"
             >
               <X className="h-3 w-3" />
