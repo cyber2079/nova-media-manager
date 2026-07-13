@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { X, Save, Play, Loader2 } from "lucide-react";
-import { convertFileSrc } from "@tauri-apps/api/core";
-
 interface SceneData {
   id: string; status: string; sceneType: string;
   promptKey: string; description: string; promptText: string;
-  thumbnailPath: string; thumbnailExists: boolean; assetSize: number; i18nKey: string;
+  thumbnailUrl: string; thumbnailExists: boolean; assetSize: number; i18nKey: string;
 }
 
 interface Props {
@@ -102,13 +100,13 @@ export default function SceneEditor({ open, scene, prompts, globalStyle, onClose
         {scene.thumbnailExists && (
           <div className="mb-5 rounded-xl overflow-hidden border border-green-400/10">
             <img
-              src={convertFileSrc(scene.thumbnailPath)}
+              src={`/${scene.thumbnailUrl}`}
               alt={scene.description}
               className="w-full aspect-video object-cover"
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
             <div className="p-2 bg-green-400/5 text-[10px] text-green-400/70 flex items-center justify-between">
-              <span className="font-mono truncate">{(scene.thumbnailPath || "").split("\\").pop()}</span>
+              <span className="font-mono truncate">{(scene.thumbnailUrl || "").split("/").pop()}</span>
               <span>{(scene.assetSize / 1024).toFixed(0)} KB</span>
             </div>
           </div>

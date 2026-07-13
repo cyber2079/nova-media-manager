@@ -35,8 +35,8 @@ pub struct ThemeProject {
 pub struct ThemeScene {
     pub id: String, pub status: String, pub scene_type: String,
     pub prompt_key: String, pub description: String,
-    /// Absolute path to actual thumbnail file (for convertFileSrc)
-    pub thumbnail_path: String,
+    /// Relative URL under /themes/ for direct <img src>
+    pub thumbnail_url: String,
     pub thumbnail_exists: bool,
     pub asset_size: u64,
     /// AI prompt text
@@ -145,7 +145,7 @@ pub fn theme_studio_get_project(theme_id: String) -> Result<ThemeDetail, String>
             scenes.push(ThemeScene {
                 id: sid, status: actual_status, scene_type: stype,
                 prompt_key: pkey, description: desc,
-                thumbnail_path: real_path,
+                thumbnail_url: format!("themes/{}/{}", pd, real_path),
                 thumbnail_exists: exists,
                 asset_size: size,
                 prompt_text,
@@ -316,44 +316,40 @@ fn walk_list(dir: &Path, prefix: &str, out: &mut Vec<String>) {
 }
 
 /// Map scene ID to actual file in public/themes/{dir}/
+/// Returns (relative_url, exists, size_bytes)
 fn resolve_scene_file(pub_dir: &Path, scene_id: &str, scene_type: &str) -> (String, bool, u64) {
-    // Try multiple naming conventions
-    use std::path::PathBuf;
-    let candidates: Vec<PathBuf> = if scene_id.starts_with("face-") {
+    let ext = if scene_type == "video" { "mp4" } else { "webp" };
+    type C = (String, String); // (fs_path, url_path)
+    let candidates: Vec<C> = if scene_id.starts_with("face-") {
         let name = scene_id.strip_prefix("face-").unwrap();
         vec![
-            pub_dir.join("faces").join(format!("{}.webp", name)),
-            pub_dir.join("faces").join(format!("{} face.webp", name)),
+            (format!("faces/{}.webp", name), format!("faces/{}.webp", name)),
+            (format!("faces/{} face.webp", name), format!("faces/{} face.webp", name)),
         ]
     } else if scene_id == "head" {
-        vec![pub_dir.join("head.webp")]
+        vec![("head.webp".into(), "head.webp".into())]
     } else if scene_id == "bg-video" || scene_id == "bg-loop" {
-        vec![
-            pub_dir.join("video").join("bg-loop.mp4"),
-            pub_dir.join("video").join("bg-loop.webm"),
-        ]
+        vec![("video/bg-loop.mp4".into(), "video/bg-loop.mp4".into())]
     } else if scene_id == "video-secretary" {
-        vec![pub_dir.join("video").join("secretary.mp4")]
+        vec![("video/secretary.mp4".into(), "video/secretary.mp4".into())]
     } else if scene_id.starts_with("scene") {
         let num: String = scene_id.chars().filter(|c| c.is_ascii_digit()).collect();
-        let ext = if scene_type == "video" { "mp4" } else { "webp" };
         vec![
-            pub_dir.join("scenes").join(format!("scene-{:0>2}.{}", num, ext)),
-            pub_dir.join("pic").join(format!("{}.{}", scene_id, ext)),
+            (format!("scenes/scene-{:0>2}.{}", num, ext), format!("scenes/scene-{:0>2}.{}", num, ext)),
+            (format!("pic/{}.{}", scene_id, ext), format!("pic/{}.{}", scene_id, ext)),
         ]
     } else {
-        let ext = if scene_type == "video" { "mp4" } else { "webp" };
-        vec![pub_dir.join(format!("{}.{}", scene_id, ext))]
+        vec![(format!("{}.{}", scene_id, ext), format!("{}.{}", scene_id, ext))]
     };
 
-    for p in &candidates {
-        if p.exists() {
-            let size = p.metadata().map(|m| m.len()).unwrap_or(0);
-            return (p.to_string_lossy().to_string(), true, size);
+    for (rel, url) in &candidates {
+        let fs_path = pub_dir.join(rel);
+        if fs_path.exists() {
+            let size = fs_path.metadata().map(|m| m.len()).unwrap_or(0);
+            return (url.clone(), true, size);
         }
     }
-
-    let dflt = candidates.first().map(|p| p.to_string_lossy().to_string()).unwrap_or_default();
+    let dflt = candidates.first().map(|(_, u)| u.clone()).unwrap_or_default();
     (dflt, false, 0)
 }
 

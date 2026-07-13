@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { convertFileSrc } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -19,7 +18,7 @@ interface ThemeProject {
 
 interface ThemeScene {
   id: string; status: string; sceneType: string; promptKey: string;
-  description: string; thumbnailPath: string; thumbnailExists: boolean;
+  description: string; thumbnailUrl: string; thumbnailExists: boolean;
   assetSize: number; promptText: string; i18nKey: string;
 }
 
@@ -103,10 +102,7 @@ export default function ThemeStudioPage() {
     setValidating(false);
   };
 
-  function thumbUrl(p: string): string {
-    if (!p) return "";
-    try { return convertFileSrc(p); } catch { return ""; }
-  }
+  function thumbUrl(p: string): string { return p ? `/${p}` : ""; }
 
   function imgError(id: string) { setImgErrors(prev => { const n = new Set(prev); n.add(id); return n; }); }
 
@@ -233,7 +229,7 @@ export default function ThemeStudioPage() {
                 <div className="grid grid-cols-4 gap-3">
                   {detail.scenes.map(scene => {
                     const exists = scene.thumbnailExists;
-                    const url = exists ? thumbUrl(scene.thumbnailPath) : "";
+                    const url = exists ? thumbUrl(scene.thumbnailUrl) : "";
                     const hasImgErr = imgErrors.has(scene.id);
                     const showImg = exists && url && !hasImgErr;
                     // i18n text for this scene
