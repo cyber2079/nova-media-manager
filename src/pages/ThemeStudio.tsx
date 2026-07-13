@@ -375,7 +375,6 @@ export default function ThemeStudioPage() {
                             </div>
                           )}
                         </div>
-                        </div>
                         {/* BGM */}
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-1">BGM 分区</label>
