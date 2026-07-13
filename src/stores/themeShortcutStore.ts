@@ -35,11 +35,7 @@ export interface ThemeCharacter {
 
 // ── Default character data (extracted from Home.tsx) ──
 
-const themeBases: Record<ThemeName, string> = {
-  default: "",
-  "ice-girl": "/themes/ice%20girl",
-  "cyber-girl": "/themes/cyber%20girl",
-};
+import { themeUrl } from "@/lib/themeBase";
 
 const DEFAULT_CHARACTERS: Record<ThemeName, DefaultChar[]> = {
   default: [],
@@ -68,10 +64,9 @@ function resolveIconPath(
   fileName: string,
   customIconPath: string | undefined
 ): string {
-  if (customIconPath && customIconPath.length > 0) {
-    return customIconPath;
-  }
-  return `${themeBases[theme] || ""}/icons/${fileName}`;
+  if (customIconPath && customIconPath.length > 0) return customIconPath;
+  if (theme === "default") return "";
+  return themeUrl(theme, `icons/${fileName}`);
 }
 
 // ── Store ──

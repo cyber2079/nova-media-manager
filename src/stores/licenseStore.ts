@@ -36,17 +36,37 @@ const FREE_LICENSE: LicenseInfo = {
   maxDevices: 1,
 };
 
+/** Local dev override: set VITE_LICENSE_TIER=pro in .env to skip activation. */
+const DEV_LICENSE: LicenseInfo = {
+  tier: "pro",
+  duration: "permanent",
+  expiresAt: null,
+  maxDevices: 1,
+};
+
+const isDevPro = import.meta.env.VITE_LICENSE_TIER === "pro";
+
 export const useLicenseStore = create<LicenseState>((set, get) => ({
-  license: { ...FREE_LICENSE },
+  license: isDevPro ? { ...DEV_LICENSE } : { ...FREE_LICENSE },
   loaded: false,
   activationOpen: false,
 
   init: async () => {
     try {
       const info = await invoke<LicenseInfo>("get_license");
+      // Dev mode: if no license activated, auto-grant Pro for theme development
+      if (info.tier === "free" && isDevPro) {
+        set({ license: { ...DEV_LICENSE }, loaded: true });
+        return;
+      }
       set({ license: info, loaded: true });
     } catch {
-      set({ license: { ...FREE_LICENSE }, loaded: true });
+      // Dev mode fallback
+      if (isDevPro) {
+        set({ license: { ...DEV_LICENSE }, loaded: true });
+      } else {
+        set({ license: { ...FREE_LICENSE }, loaded: true });
+      }
     }
   },
 

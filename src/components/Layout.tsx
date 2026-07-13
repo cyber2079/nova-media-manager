@@ -32,6 +32,7 @@ import { useThemePackStore } from "@/stores/themePackStore";
 import { analytics, useAnalyticsPageView } from "@/lib/analytics";
 import { getMusicCoverFallback } from "@/lib/musicCoverFallback";
 import { compareVersions } from "@/lib/compareVersions";
+import { ThemeAssets, themeUrl } from "@/lib/themeBase";
 
 const navItems = [
   { to: "/", key: "home", icon: Home },
@@ -54,10 +55,10 @@ const cgColors: Record<string, string> = { "/": "#ff69b4", "/movies": "#da70d6",
 const cgLabels: Record<string, string> = { "/": "home.cg_skill1_name", "/movies": "home.cg_skill2_name", "/images": "home.cg_skill3_name", "/music": "home.cg_skill4_name", "/games": "home.cg_skill5_name" };
 
 const noIcons: Record<string,string> = {};
-const themeMeta: Record<ThemeName, { base: string; heroIcons: Record<string,string>; heroNames: Record<string,string>; heroColors: Record<string,string>; heroLabels: Record<string,string> }> = {
-  default: { base: "", heroIcons: noIcons, heroNames: noIcons, heroColors: noIcons, heroLabels: noIcons },
-  "ice-girl": { base: "/themes/ice%20girl", heroIcons: iceIcons, heroNames: iceNames, heroColors: iceColors, heroLabels: iceLabels },
-  "cyber-girl": { base: "/themes/cyber%20girl", heroIcons: cgIcons, heroNames: cgNames, heroColors: cgColors, heroLabels: cgLabels },
+const themeMeta: Record<ThemeName, { heroIcons: Record<string,string>; heroNames: Record<string,string>; heroColors: Record<string,string>; heroLabels: Record<string,string> }> = {
+  default: { heroIcons: noIcons, heroNames: noIcons, heroColors: noIcons, heroLabels: noIcons },
+  "ice-girl": { heroIcons: iceIcons, heroNames: iceNames, heroColors: iceColors, heroLabels: iceLabels },
+  "cyber-girl": { heroIcons: cgIcons, heroNames: cgNames, heroColors: cgColors, heroLabels: cgLabels },
 };
 
 function layoutBandHue(theme: string, idx: number, total: number): number {
@@ -73,7 +74,6 @@ export default function Layout() {
   const { theme } = useThemeStore();
   const { t, i18n } = useTranslation();
   const meta = themeMeta[theme];
-  const isDefault = theme === "default";
   const isIce = theme === "ice-girl";
   const isCG = theme === "cyber-girl";
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();
@@ -530,8 +530,8 @@ export default function Layout() {
     <div className="min-h-screen bg-surface" id="app" ref={appRef}>
       {/* ── Ice Girl background ── */}
       {isIce && <>
-        <video ref={iceVidRef} className="ice-bg-video fixed inset-0 object-cover w-full h-full" autoPlay muted playsInline poster="/themes/ice%20girl/bg.webp" src="/themes/ice%20girl/video/bg-loop.mp4" />
-        <video ref={iceVidBRef} className="hidden" muted playsInline preload="auto" src="/themes/ice%20girl/video/bg-loop.mp4" />
+        <video ref={iceVidRef} className="ice-bg-video fixed inset-0 object-cover w-full h-full" autoPlay muted playsInline poster={ThemeAssets.ice.bg} src={ThemeAssets.ice.bgVideo} />
+        <video ref={iceVidBRef} className="hidden" muted playsInline preload="auto" src={ThemeAssets.ice.bgVideo} />
       </>}
 
       {/* ── Cyber Girl background ── */}
@@ -564,7 +564,7 @@ export default function Layout() {
                 )}>
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full overflow-hidden">
                     {charIcon ? (
-                      <img src={`${meta.base}/icons/${charIcon}`} alt="" className="h-full w-full object-cover" />
+                      <img src={themeUrl(theme, `icons/${charIcon}`)} alt="" className="h-full w-full object-cover" />
                     ) : (
                       <item.icon className="h-5 w-5" />
                     )}

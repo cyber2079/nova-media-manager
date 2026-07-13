@@ -1,13 +1,16 @@
-//! Theme loader — manages installed .nvtp themes on disk.
+//! Theme loader — manages .nvtp themes as encrypted blobs on disk.
 //!
-//! Themes are extracted to: {app_data_dir}/themes/{theme_id}/
-//! Metadata is stored in a JSON registry: {app_data_dir}/themes/registry.json
+//! .nvtp files are stored at: {app_data_dir}/themes/nvtp/{theme_id}.nvtp
+//! Metadata registry:        {app_data_dir}/themes/registry.json
+//!
+//! Theme assets are NEVER extracted to disk. Instead, the custom protocol
+//! (nova://) decrypts ZIP contents in memory on-demand.
 
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::packer::{self, ThemeManifest, unpack_theme};
+use super::packer::{self, unpack_theme};
 
 // ═══════════════ REGISTRY ═══════════════
 
@@ -33,36 +36,29 @@ pub struct ThemeRegistry {
 
 // ═══════════════ PUBLIC API ═══════════════
 
-/// Install a .nvtp file to the themes directory.
-/// Returns the installed theme info.
+/// Install a .nvtp: store encrypted blob on disk + update registry.
+/// No extraction. Protocol handles decryption on demand.
 pub fn install_theme(data_dir: &Path, nvtp_data: &[u8]) -> Result<InstalledTheme, String> {
-    let (header, manifest, assets) = unpack_theme(nvtp_data)?;
+    let (header, manifest, _assets) = unpack_theme(nvtp_data)?;
     let theme_id = header.theme_id;
 
-    // Check license requirement
-    // (On the client side, we only check here. Server-side auth is separate.)
-    // For now, allow installation regardless — the ThemeStore checks on selection.
-
     let themes_dir = data_dir.join("themes");
+    let nvtp_dir = themes_dir.join("nvtp");
     let registry_path = themes_dir.join("registry.json");
 
-    // Load registry
-    let mut registry = load_registry(&registry_path);
+    // Ensure directories exist
+    fs::create_dir_all(&nvtp_dir)
+        .map_err(|e| format!("Failed to create nvtp dir: {e}"))?;
 
-    // Check if already installed — replace if so
+    // Store the encrypted .nvtp blob on disk
+    let nvtp_path = nvtp_dir.join(format!("{}.nvtp", &theme_id));
+    fs::write(&nvtp_path, nvtp_data)
+        .map_err(|e| format!("Failed to write theme blob: {e}"))?;
+
+    // Update registry
+    let mut registry = load_registry(&registry_path);
     registry.themes.retain(|t| t.id != theme_id);
 
-    // Extract theme assets
-    let theme_dir = themes_dir.join(&theme_id);
-    if theme_dir.exists() {
-        fs::remove_dir_all(&theme_dir).ok();
-    }
-    fs::create_dir_all(&theme_dir)
-        .map_err(|e| format!("Failed to create theme dir: {e}"))?;
-
-    packer::extract_theme(&assets, &theme_dir)?;
-
-    // Add to registry
     let installed = InstalledTheme {
         id: theme_id.clone(),
         name: manifest.name,
@@ -76,26 +72,32 @@ pub fn install_theme(data_dir: &Path, nvtp_data: &[u8]) -> Result<InstalledTheme
     };
     registry.themes.push(installed.clone());
 
-    // Save registry
-    fs::create_dir_all(&themes_dir).ok();
     let json = serde_json::to_string_pretty(&registry)
         .map_err(|e| format!("Registry JSON error: {e}"))?;
-    fs::write(&registry_path, json).map_err(|e| format!("Failed to write registry: {e}"))?;
+    fs::write(&registry_path, json)
+        .map_err(|e| format!("Failed to write registry: {e}"))?;
+
+    // Clean up old plaintext extraction from previous versions (migration)
+    let old_extraction = themes_dir.join(&theme_id);
+    if old_extraction.exists() && old_extraction.is_dir() {
+        let _ = fs::remove_dir_all(&old_extraction);
+    }
 
     Ok(installed)
 }
 
-/// List all installed themes.
+/// List all installed themes from the registry.
 pub fn list_themes(data_dir: &Path) -> Vec<InstalledTheme> {
     let registry_path = data_dir.join("themes").join("registry.json");
     let registry = load_registry(&registry_path);
     registry.themes
 }
 
-/// Remove a theme by ID.
+/// Remove a theme by ID — deletes the .nvtp blob and registry entry.
 pub fn remove_theme(data_dir: &Path, theme_id: &str) -> Result<(), String> {
     let themes_dir = data_dir.join("themes");
     let registry_path = themes_dir.join("registry.json");
+    let nvtp_path = themes_dir.join("nvtp").join(format!("{}.nvtp", theme_id));
 
     let mut registry = load_registry(&registry_path);
     let before = registry.themes.len();
@@ -104,23 +106,18 @@ pub fn remove_theme(data_dir: &Path, theme_id: &str) -> Result<(), String> {
         return Err(format!("Theme '{theme_id}' is not installed"));
     }
 
-    // Remove files
-    let theme_dir = themes_dir.join(theme_id);
-    if theme_dir.exists() {
-        fs::remove_dir_all(&theme_dir).ok();
+    // Remove .nvtp blob
+    if nvtp_path.exists() {
+        fs::remove_file(&nvtp_path).ok();
     }
 
     // Save registry
     let json = serde_json::to_string_pretty(&registry)
         .map_err(|e| format!("Registry JSON error: {e}"))?;
-    fs::write(&registry_path, json).map_err(|e| format!("Failed to write registry: {e}"))?;
+    fs::write(&registry_path, json)
+        .map_err(|e| format!("Failed to write registry: {e}"))?;
 
     Ok(())
-}
-
-/// Get the filesystem path to an installed theme's directory.
-pub fn theme_dir(data_dir: &Path, theme_id: &str) -> PathBuf {
-    data_dir.join("themes").join(theme_id)
 }
 
 /// Check if a theme is installed.
@@ -128,6 +125,11 @@ pub fn is_installed(data_dir: &Path, theme_id: &str) -> bool {
     let registry_path = data_dir.join("themes").join("registry.json");
     let registry = load_registry(&registry_path);
     registry.themes.iter().any(|t| t.id == theme_id)
+}
+
+/// Path to the nvtp storage directory (NOT extraction dir anymore).
+pub fn nvtp_dir(data_dir: &Path) -> PathBuf {
+    data_dir.join("themes").join("nvtp")
 }
 
 // ═══════════════ INTERNAL ═══════════════

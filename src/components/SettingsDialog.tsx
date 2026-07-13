@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import ScrollFade from "@/components/ScrollFade";
 import ThemeManager from "@/components/ThemeManager";
 import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown } from "lucide-react";
+import { ThemeAssets } from "@/lib/themeBase";
 import { useLicenseStore, isPro, isUltra } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS } from "@/stores/settingsStore";
 import { useWidgetStore, pageKeys } from "@/stores/widgetStore";
@@ -22,8 +23,8 @@ interface Props {
 
 const themeList: { key: ThemeName; labelKey: string; emoji: string; image?: string }[] = [
   { key: "default", labelKey: "settings.theme_default", emoji: "🏠" },
-  { key: "ice-girl", labelKey: "settings.theme_ice", emoji: "❄️", image: "/themes/ice%20girl/head.webp" },
-  { key: "cyber-girl", labelKey: "settings.theme_cg", emoji: "💜", image: "/themes/cyber%20girl/bg.webp" },
+  { key: "ice-girl", labelKey: "settings.theme_ice", emoji: "❄️", image: ThemeAssets.ice.head },
+  { key: "cyber-girl", labelKey: "settings.theme_cg", emoji: "💜", image: ThemeAssets.cg.bg },
 ];
 
 type TabId = "general" | "appearance" | "music" | "images" | "movies" | "games" | "widgets";

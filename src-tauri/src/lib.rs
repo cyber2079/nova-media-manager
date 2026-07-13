@@ -25,6 +25,18 @@ pub fn run() {
                 .expect("failed to initialize database");
 
             let license_state = license::init_license(&database);
+
+            // Theme protocol state — nvtp blobs stored in {app_data}/themes/nvtp/
+            let nvtp_dir = app_data_dir.join("themes").join("nvtp");
+            theme::protocol::init_protocol(nvtp_dir);
+
+            // Preload installed themes into memory on startup
+            let installed = theme::loader::list_themes(&app_data_dir);
+            let proto = theme::protocol::global();
+            for t in &installed {
+                let _ = proto.lock().map(|s| s.ensure_loaded(&t.id));
+            }
+
             app.manage(database);
             app.manage(license_state);
 
@@ -45,6 +57,12 @@ pub fn run() {
             // Panic hook always on
             logger::set_panic_hook(app_data_dir.clone());
             Ok(())
+        })
+        .register_uri_scheme_protocol("nova", |_ctx, request| {
+            // Access managed state through the app handle attached to context
+            // Tauri 2.x: UriSchemeContext doesn't expose state() directly,
+            // so we use a module-level static to hold the protocol state.
+            theme::protocol::handle_request(&request)
         })
         .invoke_handler(tauri::generate_handler![
             commands::movie::get_all_movies,
@@ -116,7 +134,6 @@ pub fn run() {
             theme::install_theme_bytes,
             theme::list_installed_themes,
             theme::remove_installed_theme,
-            theme::get_theme_asset_path,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

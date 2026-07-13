@@ -11,8 +11,6 @@ interface Props {
   onFaceChange?: (face: string) => void;
 }
 
-const iceBase = "/themes/ice%20girl/pic";
-
 export default function TypewriterText({ quotes, speed = 70, pause = 1000, className, onVisibilityChange, onFaceChange }: Props) {
   const [displayed, setDisplayed] = useState("");
   const [face, setFace] = useState("");

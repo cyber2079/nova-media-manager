@@ -46,12 +46,20 @@ interface ThemeState {
   toggleTheme: () => void;
 }
 
+/** Check if a theme is allowed for the current license tier. */
+function isThemeAllowed(t: ThemeName): boolean {
+  if (t === "default") return true;
+  const license = useLicenseStore.getState().license;
+  return license.tier !== "free";
+}
+
 function resolveTheme(raw: string | null): ThemeName {
   if (!raw) return "default";
-  // legacy migration
   if (raw === "path-of-exile") return "ice-girl";
-  if ((allThemes as string[]).includes(raw)) return raw as ThemeName;
-  return "default";
+  if (!(allThemes as string[]).includes(raw)) return "default";
+  const theme = raw as ThemeName;
+  if (!isThemeAllowed(theme)) return "default";
+  return theme;
 }
 
 function persist(t: ThemeName) {

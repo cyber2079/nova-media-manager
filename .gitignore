@@ -41,6 +41,10 @@ server/
 public/themes/
 public/fonts/maoken-glitch-sans.otf
 
+# ══ Local env (dev-only license override, theme asset paths) ══
+.env
+.env.local
+
 # ══ Secrets ══
 *.pem
 *.key

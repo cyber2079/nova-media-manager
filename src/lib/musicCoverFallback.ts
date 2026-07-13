@@ -1,9 +1,5 @@
 import { useThemeStore } from "@/stores/themeStore";
-
-const BASES: Record<string, string> = {
-  "ice-girl": "/themes/ice%20girl",
-  "cyber-girl": "/themes/cyber%20girl",
-};
+import { themeUrl } from "@/lib/themeBase";
 
 // Inline SVG music-note icon (lucide-react Music equivalent) for default theme
 const DEFAULT_SVG = [
@@ -22,7 +18,6 @@ const DEFAULT_SVG = [
  */
 export function getMusicCoverFallback(): string {
   const theme = useThemeStore.getState().theme;
-  const base = BASES[theme];
-  if (base) return `${base}/icons/music.webp`;
+  if (theme === "ice-girl" || theme === "cyber-girl") return themeUrl(theme, "music-cover.webp");
   return DEFAULT_SVG;
 }

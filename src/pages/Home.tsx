@@ -37,6 +37,7 @@ function stopBgm() {
   _bgmZone = "";
 }
 
+import { ThemeAssets, themeUrl } from "@/lib/themeBase";
 import { useMovieStore } from "@/stores/movieStore";
 import { useImageStore } from "@/stores/imageStore";
 import { useGameStore } from "@/stores/gameStore";
@@ -45,9 +46,6 @@ import { usePlayHistoryStore } from "@/stores/playHistoryStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { Film, Image, Gamepad2, Tag, Clock, Music } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const iceBase = "/themes/ice%20girl";
-const cgBase = "/themes/cyber%20girl";
 
 // Shared lazy-loaded convertFileSrc
 let _cs: ((p: string) => string) | null = null;
@@ -72,7 +70,7 @@ function CharImg({ iconPath, fallbackSrc, className }: { iconPath: string; fallb
   function release() { if (blobRef.current) { URL.revokeObjectURL(blobRef.current); blobRef.current = null; } }
   useEffect(() => () => release(), []);
   useEffect(() => {
-    if (!iconPath || iconPath.startsWith("/themes/") || iconPath.startsWith("http") || iconPath.startsWith("blob:")) { release(); setBlobSrc(null); return; }
+    if (!iconPath || iconPath.startsWith("https://nova.localhost/") || iconPath.startsWith("http") || iconPath.startsWith("blob:") || iconPath.startsWith("/themes/")) { release(); setBlobSrc(null); return; }
     let cancelled = false;
     (async () => {
       try {
@@ -85,7 +83,7 @@ function CharImg({ iconPath, fallbackSrc, className }: { iconPath: string; fallb
     })();
     return () => { cancelled = true; };
   }, [iconPath]);
-  const display = blobSrc || (iconPath && iconPath.startsWith("/themes/") ? iconPath : null) || fallbackSrc;
+  const display = blobSrc || (iconPath && (iconPath.startsWith("/themes/") || iconPath.startsWith("https://nova.localhost/")) ? iconPath : null) || fallbackSrc;
   return <img src={display} alt="" className={className} onError={(e) => { const el = e.target as HTMLImageElement; if (el.src !== fallbackSrc) el.src = fallbackSrc; }} />;
 }
 
@@ -215,18 +213,18 @@ function ThemeTitle() {
   </>);
 }
 
-function CgSkillShowcase({ cgBase, t, cgSceneIdx, textClass, textColor }: { cgBase: string; t: any; cgSceneIdx: number; textClass: string; textColor: string }) {
+function CgSkillShowcase({ t, cgSceneIdx, textClass, textColor }: { t: any; cgSceneIdx: number; textClass: string; textColor: string }) {
   const skills = [
-    { src: "skill-show-music.webp", corner: "tl" as const, labelKey: "nav.music" },
-    { src: "skill-show-movie.webp", corner: "tr" as const, labelKey: "nav.movies" },
-    { src: "skill-show-image.webp", corner: "bl" as const, labelKey: "nav.images" },
-    { src: "skill-show-game.webp",  corner: "br" as const, labelKey: "nav.games" },
+    { src: ThemeAssets.cg.scene("skill-show-music.webp"), corner: "tl" as const, labelKey: "nav.music" },
+    { src: ThemeAssets.cg.scene("skill-show-movie.webp"), corner: "tr" as const, labelKey: "nav.movies" },
+    { src: ThemeAssets.cg.scene("skill-show-image.webp"), corner: "bl" as const, labelKey: "nav.images" },
+    { src: ThemeAssets.cg.scene("skill-show-game.webp"),  corner: "br" as const, labelKey: "nav.games" },
   ];
   return (
     <div className="relative w-full" style={{ height: "min(58vh, 520px)", minHeight: "360px" }}>
       <div className="absolute inset-0 flex flex-col items-center justify-center z-10" style={{ pointerEvents: "none" }}>
         <div className="rounded-2xl overflow-hidden shrink-0" style={{ width: 100, height: 100, boxShadow: "0 0 25px rgba(199,77,255,0.25), 0 0 50px rgba(255,77,166,0.1)" }}>
-          <img src={`${cgBase}/faces/happy.webp`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img src={ThemeAssets.cg.face("happy")} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
         <div className="cg-scroll theme-card rounded-lg px-5 py-3 mt-4" style={{ maxWidth: "520px", width: "fit-content", minWidth: "220px" }}>
           <CgTypewriter key={`cg-skill-${cgSceneIdx}`} text={t(`home.cg_scene${cgSceneIdx + 1}_text`)} speed={50} className={cn(textClass, "text-center")} style={{ color: textColor }} />
@@ -238,7 +236,7 @@ function CgSkillShowcase({ cgBase, t, cgSceneIdx, textClass, textColor }: { cgBa
           width: "clamp(200px, 30%, 300px)",
           boxShadow: "0 0 20px rgba(199,77,255,0.2), 0 0 40px rgba(255,77,166,0.08)",
           animation: `cg-swoop-${sk.corner} 0.5s cubic-bezier(0.22,0.61,0.36,1) ${i * 0.08 + 0.2}s both`,
-        }}><img src={`${cgBase}/pic/${sk.src}`} alt="" className="w-full h-auto block" /></div>
+        }}><img src={sk.src} alt="" className="w-full h-auto block" /></div>
       ))}
     </div>
   );
@@ -314,9 +312,9 @@ export default function Home() {
             {iceFace && (
               <div className="shrink-0 rounded-2xl overflow-hidden" style={{ boxShadow: "0 0 18px rgba(176,224,255,0.18), 0 0 45px rgba(176,224,255,0.06)" }}>
                 {iceFace.startsWith("video:") ? (
-                  <video src={`/themes/ice%20girl/video/${iceFace.slice(6)}.mp4`} autoPlay muted playsInline onEnded={(e) => e.currentTarget.pause()} style={{ width: "240px", height: "auto" }} />
+                  <video src={ThemeAssets.ice.video(iceFace.slice(6))} autoPlay muted playsInline onEnded={(e) => e.currentTarget.pause()} style={{ width: "240px", height: "auto" }} />
                 ) : (
-                  <img src={`/themes/ice%20girl/faces/${iceFace}.webp`} alt="" style={{ width: "144px", height: "144px", imageRendering: "auto" }} />
+                  <img src={ThemeAssets.ice.face(iceFace)} alt="" style={{ width: "144px", height: "144px", imageRendering: "auto" }} />
                 )}
               </div>
             )}
@@ -349,7 +347,7 @@ export default function Home() {
             {getCharacters("ice-girl").map((exile) => (
               <div key={exile.id} className="flex flex-col items-center gap-2 group cursor-pointer" onClick={() => handleCharClick(exile)} onContextMenu={(e) => handleCharContext(e, exile)}>
                 <div className="flex h-14 w-14 rounded-full border-2 overflow-hidden transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(176,224,255,0.3)]" style={{borderColor:`${exile.color}60`,boxShadow:`0 0 10px ${exile.color}30`}}>
-                  <CharImg iconPath={exile.iconPath} fallbackSrc={`${iceBase}/icons/${exile.fileName}`} className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
+                  <CharImg iconPath={exile.iconPath} fallbackSrc={themeUrl("ice-girl", `icons/${exile.fileName}`)} className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
                 </div>
                 <div className="text-center"><span className="text-xs tracking-[0.12em] uppercase font-semibold group-hover:text-[#b0e0ff] transition-colors" style={{color:"#c8e6ff"}}>{t(exile.name)}</span><p className="text-[10px] tracking-[0.15em] uppercase group-hover:text-white transition-colors mt-0.5" style={{color:"#b0e0ff"}}>{t(exile.subtitle)}</p></div>
               </div>
@@ -363,12 +361,12 @@ export default function Home() {
       {isCG && (
         <div className="mt-12 pt-8" data-hero>
           {CG_SCENES[cgSceneIdx]?.skillShow ? (
-            <CgSkillShowcase key={cgSceneIdx} cgBase={cgBase} t={t} cgSceneIdx={cgSceneIdx} textClass={cgTextClass} textColor={cgTextColor} />
+            <CgSkillShowcase key={cgSceneIdx} t={t} cgSceneIdx={cgSceneIdx} textClass={cgTextClass} textColor={cgTextColor} />
           ) : (
             <div className="flex items-end justify-center gap-4 mb-8">
               {CG_SCENES[cgSceneIdx] && (
                 <div className="shrink-0 rounded-2xl overflow-hidden" style={{ boxShadow: "0 0 20px rgba(199,77,255,0.2), 0 0 45px rgba(255,77,166,0.08)" }}>
-                  <img src={`${cgBase}/faces/${CG_SCENES[cgSceneIdx].face}.webp`} alt="" style={{ width: "144px", height: "144px", objectFit: "cover" }} />
+                  <img src={ThemeAssets.cg.face(CG_SCENES[cgSceneIdx].face)} alt="" style={{ width: "144px", height: "144px", objectFit: "cover" }} />
                 </div>
               )}
               <div className="cg-scroll theme-card rounded-lg p-5 text-center max-w-xl">
@@ -382,7 +380,7 @@ export default function Home() {
             {getCharacters("cyber-girl").map((c) => (
               <div key={c.id} className="flex flex-col items-center gap-2 group cursor-pointer" onClick={() => handleCharClick(c)} onContextMenu={(e) => handleCharContext(e, c)}>
                 <div className="flex h-14 w-14 rounded-full border-2 overflow-hidden transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(199,77,255,0.35),0_0_40px_rgba(255,77,166,0.15)]" style={{borderColor:`${c.color}60`,boxShadow:`0 0 10px ${c.color}30`}}>
-                  <CharImg iconPath={c.iconPath} fallbackSrc={`${cgBase}/icons/${c.fileName}`} className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
+                  <CharImg iconPath={c.iconPath} fallbackSrc={themeUrl("cyber-girl", `icons/${c.fileName}`)} className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
                 </div>
                 <div className="text-center"><span className="text-xs tracking-[0.12em] uppercase font-semibold group-hover:text-[#e890ff] transition-colors" style={{color:"#e0c0ff"}}>{t(c.name)}</span><p className="text-[10px] tracking-[0.15em] uppercase group-hover:text-[#00bfff] transition-colors mt-0.5" style={{color:"#c0a0e0"}}>{t(c.subtitle)}</p></div>
               </div>

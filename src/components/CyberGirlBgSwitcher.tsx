@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-const CG = "/themes/cyber%20girl";
+const CG = import.meta.env.VITE_LICENSE_TIER === "pro" ? "/themes/cyber%20girl" : "https://nova.localhost/cyber-girl";
 
 // 16 scenes — bg from scenes/, face from faces/
 const SCENES = [
