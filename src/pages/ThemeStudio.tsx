@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft, Plus, Play, Package, Eye, RefreshCw,
   CheckCircle, Clock, XCircle, AlertCircle, Loader2,
-  Image, Video, Music, FolderOpen,
+  Image, Video, Music,
 } from "lucide-react";
 import NewProjectDialog from "@/components/studio/NewProjectDialog";
 import SceneEditor from "@/components/studio/SceneEditor";
@@ -17,25 +19,24 @@ interface ThemeProject {
 
 interface ThemeScene {
   id: string; status: string; sceneType: string; promptKey: string;
-  description?: string; assetPath?: string; thumbnailExists: boolean;
-  assetSize: number; promptPreview: string;
+  description: string; thumbnailPath: string; thumbnailExists: boolean;
+  assetSize: number; promptText: string; i18nKey: string;
 }
 
 interface ThemeDetail {
-  manifest: any;
-  prompts: any;
-  scenes: ThemeScene[];
-  assets: string[];
+  manifest: any; prompts: any; scenes: ThemeScene[];
+  assets: string[]; typeDescription: string;
 }
 
-const STATUS: Record<string, { icon: typeof CheckCircle; color: string; label: string }> = {
-  done: { icon: CheckCircle, color: "text-green-400", label: "完成" },
-  todo: { icon: Clock, color: "text-gray-500", label: "待生成" },
-  skip: { icon: XCircle, color: "text-gray-600", label: "跳过" },
+const TYPEL: Record<string, { emoji: string; label: string }> = {
+  story: { emoji: "🎬", label: "剧情" },
+  dynamic: { emoji: "❄️", label: "动态" },
+  static: { emoji: "🏠", label: "静态" },
+  hybrid: { emoji: "🔀", label: "混合" },
 };
-const TYPEL: Record<string, string> = { story: "🎬 剧情", dynamic: "❄️ 动态", static: "🏠 静态", hybrid: "🔀 混合" };
 
 export default function ThemeStudioPage() {
+  const { t } = useTranslation();
   const nav = useNavigate();
   const [projects, setProjects] = useState<ThemeProject[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -48,13 +49,14 @@ export default function ThemeStudioPage() {
   const [editingScene, setEditingScene] = useState<ThemeScene | null>(null);
   const [validating, setValidating] = useState(false);
   const [valResult, setValResult] = useState<{ ok: boolean; errors: string[]; warnings: string[] } | null>(null);
+  const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
 
   const loadProjects = useCallback(async () => {
     try { setProjects(await invoke<ThemeProject[]>("theme_studio_list_projects")); } catch {}
   }, []);
 
   const loadDetail = useCallback(async (id: string) => {
-    setLoading(true);
+    setLoading(true); setImgErrors(new Set());
     try { setDetail(await invoke<ThemeDetail>("theme_studio_get_project", { themeId: id })); setSelected(id); } catch {}
     setLoading(false);
   }, []);
@@ -63,19 +65,18 @@ export default function ThemeStudioPage() {
   useEffect(() => {
     if (projects.length > 0 && !selected) loadDetail(projects[0].id);
     else if (projects.length === 0) { setSelected(null); setDetail(null); }
-  }, [projects, selected, loadDetail]);
+  }, [projects]);
 
-  const pct = detail?.scenes.length
-    ? Math.round((detail.scenes.filter(s => s.status === "done").length / detail.scenes.length) * 100) : 0;
+  const pct = detail?.scenes.length ? Math.round((detail.scenes.filter(s => s.status === "done" || s.thumbnailExists).length / detail.scenes.length) * 100) : 0;
+  const doneCount = detail?.scenes.filter(s => s.status === "done" || s.thumbnailExists).length ?? 0;
 
   const handleGenerate = async () => {
     if (!selected) return;
-    setGenRunning(true); setGenLog("");
-    try { setGenLog(await invoke<string>("theme_studio_generate", { themeId: selected })); }
-    catch (e: any) { setGenLog(e.toString()); }
+    setGenRunning(true); setGenLog("⚡ 启动生成器...\n");
+    try { const out = await invoke<string>("theme_studio_generate", { themeId: selected }); setGenLog(out); }
+    catch (e: any) { setGenLog(`${genLog}\n❌ ${e.toString()}`); }
     setGenRunning(false);
-    loadDetail(selected);
-    loadProjects();
+    loadDetail(selected); loadProjects();
   };
 
   const handleSaveScene = async (sceneId: string, data: any, promptUpdate?: any) => {
@@ -85,7 +86,6 @@ export default function ThemeStudioPage() {
     const idx = scenes.findIndex((s: any) => s.id === sceneId);
     if (idx >= 0) scenes[idx] = { ...scenes[idx], ...data };
     m.scenes = scenes;
-
     let prompts = detail.prompts;
     if (promptUpdate) {
       prompts = { ...prompts };
@@ -93,11 +93,7 @@ export default function ThemeStudioPage() {
       if (prompts.scenes?.[pk]) prompts.scenes[pk] = { ...prompts.scenes[pk], ...promptUpdate };
       else if (prompts.faces?.[pk.replace("face-", "")]) prompts.faces[pk.replace("face-", "")] = { ...prompts.faces[pk.replace("face-", "")], ...promptUpdate };
     }
-
-    try {
-      await invoke("theme_studio_update_manifest", { themeId: selected, manifest: m, prompts });
-      loadDetail(selected);
-    } catch (e: any) { alert(e.toString()); }
+    try { await invoke("theme_studio_update_manifest", { themeId: selected, manifest: m, prompts }); loadDetail(selected); } catch (e: any) { alert(e); }
   };
 
   const handleValidate = async () => {
@@ -107,6 +103,15 @@ export default function ThemeStudioPage() {
     setValidating(false);
   };
 
+  function thumbUrl(p: string): string {
+    if (!p) return "";
+    try { return convertFileSrc(p); } catch { return ""; }
+  }
+
+  function imgError(id: string) { setImgErrors(prev => { const n = new Set(prev); n.add(id); return n; }); }
+
+  const themeTypeName = detail?.manifest.type ? TYPEL[detail.manifest.type]?.label ?? detail.manifest.type : "";
+
   return (
     <div className="h-screen bg-[#080c14] flex flex-col text-white select-none">
       {/* ── Top Bar ── */}
@@ -114,33 +119,36 @@ export default function ThemeStudioPage() {
         <button onClick={() => nav("/")} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors">
           <ArrowLeft className="h-4 w-4" /> 返回
         </button>
-        <div className="w-px h-5 bg-white/10" />
         {detail ? (
           <>
+            <div className="w-px h-5 bg-white/10" />
             <span className="text-sm font-bold text-white">{detail.manifest.name}</span>
             <span className="text-[10px] text-gray-500 font-mono bg-white/5 px-1.5 py-0.5 rounded">v{detail.manifest.version}</span>
-            <span className="text-[10px] text-gray-400">{TYPEL[detail.manifest.type]}</span>
+            <span className="text-[11px] text-gray-400">{TYPEL[detail.manifest.type]?.emoji} {themeTypeName}</span>
             <span className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded ${
               detail.manifest.status === "packaged" ? "bg-green-400/15 text-green-400"
                 : detail.manifest.status === "draft" ? "bg-yellow-400/15 text-yellow-400"
                 : "bg-blue-400/15 text-blue-400"}`}>{detail.manifest.status}</span>
             <div className="flex-1" />
+            <span className="hidden sm:inline text-[11px] text-gray-600 italic max-w-xs truncate">{detail.typeDescription}</span>
+            <div className="flex-1" />
             <button onClick={handleValidate} disabled={validating}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
-              {validating ? <Loader2 className="h-3 w-3 animate-spin" /> : <AlertCircle className="h-3 w-3" />}
-              检查
+              {validating ? <Loader2 className="h-3 w-3 animate-spin" /> : <AlertCircle className="h-3 w-3" />}检查
             </button>
             <button onClick={() => setShowPreview(true)}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
               <Eye className="h-3 w-3" /> 预览
             </button>
-            <button disabled={genRunning}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-accent/20 text-accent text-xs font-medium hover:bg-accent/30 transition-colors disabled:opacity-50">
+            <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-accent/20 text-accent text-xs font-medium hover:bg-accent/30 transition-colors">
               <Package className="h-3 w-3" /> 打包
             </button>
           </>
         ) : (
-          <div className="flex-1 text-sm text-gray-500">选择一个主题项目，或创建新的</div>
+          <div className="flex-1 text-sm text-gray-500 flex items-center gap-2">
+            选择一个主题项目，或
+            <button onClick={() => setShowNew(true)} className="text-primary-light hover:underline">创建新的</button>
+          </div>
         )}
       </div>
 
@@ -158,10 +166,18 @@ export default function ThemeStudioPage() {
                 className={`w-full text-left px-3 py-2.5 transition-colors flex items-center gap-2 text-sm ${
                   selected === p.id ? "bg-primary/10 text-primary-light border-l-2 border-primary-light" : "text-gray-400 hover:text-white border-l-2 border-transparent"
                 }`}>
-                <span className="text-base shrink-0">{p.themeType === "story" ? "🎬" : p.themeType === "dynamic" ? "❄️" : p.themeType === "static" ? "🏠" : "🔀"}</span>
+                <span className="text-base shrink-0">{TYPEL[p.themeType]?.emoji ?? "📦"}</span>
                 <div className="flex-1 min-w-0">
                   <div className="truncate text-xs font-medium">{p.name}</div>
-                  <div className="text-[10px] text-gray-600">{p.doneCount}/{p.sceneCount} done · v{p.version}</div>
+                  <div className="text-[10px] text-gray-600">
+                    {TYPEL[p.themeType]?.label ?? p.themeType} · v{p.version}
+                  </div>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full" style={{ width: `${p.sceneCount > 0 ? (p.doneCount / p.sceneCount) * 100 : 0}%` }} />
+                    </div>
+                    <span className="text-[9px] text-gray-600 font-mono">{p.doneCount}/{p.sceneCount}</span>
+                  </div>
                 </div>
               </button>
             ))}
@@ -174,132 +190,163 @@ export default function ThemeStudioPage() {
           </div>
           {selected && (
             <div className="px-3 py-2 border-t border-white/5 text-[10px] text-gray-600">
-              素材: {detail?.assets.length || 0} 文件
-              {detail?.manifest.assetsDir && <div className="truncate mt-0.5">{detail.manifest.assetsDir}</div>}
+              {detail?.assets.length ?? 0} 个素材文件 · {(detail?.scenes.filter(s => s.thumbnailExists).length ?? 0)} 已有
             </div>
           )}
         </div>
 
         {/* Right: Content */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 bg-[#060b14]">
           {!detail ? (
             <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "选择左侧主题项目"}
             </div>
           ) : (
             <>
-              {/* Progress */}
+              {/* Progress bar */}
               <div className="px-5 py-3 border-b border-white/5 shrink-0">
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
-                  <span>素材进度</span>
-                  <span>{detail.scenes.filter(s => s.status === "done").length}/{detail.scenes.length} · {pct}%</span>
-                </div>
-                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
+                      <span>素材进度</span>
+                      <span>{doneCount}/{detail.scenes.length} · {pct}%</span>
+                    </div>
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                  <span className="text-[11px] text-gray-400 italic max-w-md truncate hidden xl:inline">{detail.typeDescription}</span>
                 </div>
               </div>
 
-              {/* Validation result */}
+              {/* Validation */}
               {valResult && (
                 <div className={`mx-5 mt-3 p-3 rounded-lg text-xs shrink-0 ${valResult.ok ? "bg-green-400/5 border border-green-400/10 text-green-400/80" : "bg-red-400/5 border border-red-400/10 text-red-400/80"}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold">{valResult.ok ? "✅ 一切正常" : `❌ ${valResult.errors.length} 个错误`}</span>
-                    <button onClick={() => setValResult(null)} className="text-gray-500 hover:text-white">✕</button>
-                  </div>
+                  <div className="flex items-center justify-between mb-1"><span className="font-semibold">{valResult.ok ? "✅ 一切正常" : `❌ ${valResult.errors.length} 个错误`}</span><button onClick={() => setValResult(null)} className="text-gray-500 hover:text-white">✕</button></div>
                   {valResult.errors.map((e, i) => <div key={i} className="text-red-400/70">· {e}</div>)}
                   {valResult.warnings.map((w, i) => <div key={i} className="text-yellow-400/70">⚠ {w}</div>)}
                 </div>
               )}
 
               {/* Scene Grid */}
-              <div className="flex-1 overflow-y-auto p-5">
+              <div className="flex-1 overflow-y-auto p-4">
                 <div className="grid grid-cols-4 gap-3">
                   {detail.scenes.map(scene => {
-                    const info = STATUS[scene.status] || STATUS.todo;
-                    const Icon = info.icon;
-                    const isDone = scene.status === "done";
+                    const exists = scene.thumbnailExists;
+                    const url = exists ? thumbUrl(scene.thumbnailPath) : "";
+                    const hasImgErr = imgErrors.has(scene.id);
+                    const showImg = exists && url && !hasImgErr;
+                    // i18n text for this scene
+                    const i18nText = scene.i18nKey ? t(scene.i18nKey, "").slice(0, 80) : "";
+                    const isStoryScene = detail.manifest.type === "story" && scene.id.startsWith("scene");
+
                     return (
                       <div
                         key={scene.id}
                         onClick={() => setEditingScene(scene)}
-                        onDoubleClick={() => setEditingScene(scene)}
                         className={`relative rounded-xl border overflow-hidden cursor-pointer transition-all hover:scale-[1.02] group ${
-                          isDone ? "border-green-400/20 bg-green-400/3" : "border-white/5 bg-white/[0.02]"
+                          exists ? "border-green-400/20" : "border-white/5"
                         }`}
                       >
-                        {/* Thumbnail area */}
-                        <div className={`aspect-video flex items-center justify-center text-3xl ${
-                          isDone ? "bg-black/30" : "bg-black/20"
+                        {/* Thumbnail */}
+                        <div className={`aspect-video flex items-center justify-center relative ${
+                          exists ? "bg-black/30" : "bg-black/20"
                         }`}>
-                          {scene.sceneType === "video" ? <Video className={`h-6 w-6 ${isDone ? "text-green-400/40" : "text-gray-700"}`} />
-                            : scene.sceneType === "audio" ? <Music className={`h-6 w-6 ${isDone ? "text-green-400/40" : "text-gray-700"}`} />
-                            : <Image className={`h-6 w-6 ${isDone ? "text-green-400/40" : "text-gray-700"}`} />}
+                          {showImg ? (
+                            <img src={url} alt={scene.description}
+                              className="absolute inset-0 w-full h-full object-cover"
+                              onError={() => imgError(scene.id)} />
+                          ) : exists && hasImgErr ? (
+                            <Image className="h-6 w-6 text-green-400/40" />
+                          ) : (
+                            <>
+                              {scene.sceneType === "video" ? <Video className="h-6 w-6 text-gray-700" />
+                                : scene.sceneType === "audio" ? <Music className="h-6 w-6 text-gray-700" />
+                                : <Image className="h-6 w-6 text-gray-700" />}
+                            </>
+                          )}
+                          {/* Status dot */}
+                          <div className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full border border-black/20 ${
+                            exists ? "bg-green-400" : scene.status === "todo" ? "bg-gray-600" : scene.status === "skip" ? "bg-gray-700" : "bg-gray-600"
+                          }`} />
+                          {/* Type badge */}
+                          <span className="absolute top-1.5 left-1.5 text-[9px] bg-black/60 px-1.5 py-0.5 rounded">
+                            {scene.sceneType === "video" ? "🎥" : scene.sceneType === "audio" ? "🔊" : "🖼️"}
+                          </span>
                         </div>
 
-                        {/* Hover overlay */}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                          <span className="text-[10px] text-white font-medium">双击编辑</span>
-                        </div>
-
-                        {/* Info bar */}
-                        <div className="px-2.5 py-2 flex items-center gap-1.5">
-                          <Icon className={`h-3 w-3 shrink-0 ${info.color}`} />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[11px] font-medium text-white truncate">{scene.description || scene.id}</div>
-                            <div className="text-[9px] text-gray-600 font-mono truncate">{scene.promptKey}</div>
+                        {/* Info */}
+                        <div className={`px-2.5 py-2 ${exists ? "bg-green-400/5" : ""}`}>
+                          <div className="text-[11px] font-medium text-white truncate">
+                            {scene.description || scene.id}
                           </div>
-                          {isDone && scene.assetSize > 0 && (
-                            <span className="text-[9px] text-gray-600 shrink-0">{(scene.assetSize / 1024).toFixed(0)}K</span>
+                          <div className="text-[9px] text-gray-500 font-mono truncate">
+                            {scene.promptKey}
+                            {exists && scene.assetSize > 0 && ` · ${(scene.assetSize / 1024).toFixed(0)}K`}
+                          </div>
+                          {/* i18n text preview */}
+                          {i18nText && (
+                            <div className="text-[9px] text-gray-500 mt-1 leading-relaxed line-clamp-2 italic">
+                              💬 "{i18nText}"
+                            </div>
+                          )}
+                          {/* Prompt preview */}
+                          {scene.promptText && !i18nText && (
+                            <div className="text-[9px] text-gray-600 mt-1 leading-relaxed line-clamp-2 font-mono">
+                              🤖 {scene.promptText.slice(0, 100)}
+                            </div>
                           )}
                         </div>
 
-                        {/* Status dot */}
-                        <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${isDone ? "bg-green-400" : scene.status === "todo" ? "bg-gray-600" : "bg-gray-700"}`} />
+                        {/* Hover overlay */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="text-[10px] text-white font-medium">双击编辑</span>
+                        </div>
                       </div>
                     );
                   })}
-                  {detail.scenes.length === 0 && (
-                    <div className="col-span-4 py-20 text-center text-sm text-gray-600">
-                      暂无场景定义 · 在 manifest.json 中设置 scenes 数组
-                    </div>
-                  )}
                 </div>
               </div>
 
               {/* Generation log */}
               {genLog && (
-                <div className="mx-5 mb-3 p-3 rounded-lg bg-black/40 border border-white/5 max-h-32 overflow-y-auto shrink-0">
+                <div className="mx-4 mb-3 p-3 rounded-lg bg-black/40 border border-white/5 max-h-32 overflow-y-auto shrink-0">
                   <pre className="text-[10px] text-gray-400 font-mono whitespace-pre-wrap">{genLog}</pre>
                 </div>
               )}
 
               {/* Bottom bar */}
-              <div className="h-12 shrink-0 flex items-center gap-2 px-5 border-t border-white/5 bg-[#0a0f18]">
+              <div className="h-13 shrink-0 flex items-center gap-2 px-5 py-2 border-t border-white/5 bg-[#0a0f18]">
                 <button onClick={handleGenerate} disabled={genRunning}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/15 text-primary-light text-sm font-medium hover:bg-primary/25 transition-colors disabled:opacity-50">
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary/15 text-primary-light text-sm font-medium hover:bg-primary/25 transition-colors disabled:opacity-50">
                   {genRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
                   AI 生成素材
                 </button>
+                <button onClick={async () => { if (selected) { loadDetail(selected); loadProjects(); } }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                  <RefreshCw className="h-3 w-3" /> 刷新
+                </button>
                 <div className="flex-1" />
-                <span className="text-[10px] text-gray-600 font-mono">D:\nova-themes-assets\{selected}</span>
+                <span className="text-[10px] text-gray-600 font-mono hidden lg:inline">
+                  public/themes/{selected ? (selected === "ice-girl" ? "ice girl" : selected === "cyber-girl" ? "cyber girl" : selected) : ""}
+                </span>
               </div>
             </>
           )}
         </div>
       </div>
 
-      {/* ── Modals ── */}
-      <NewProjectDialog open={showNew} onClose={() => setShowNew(false)} onCreated={() => { loadProjects(); if (!selected) loadDetail(projects[0]?.id); }} />
-      <SceneEditor
-        open={!!editingScene}
-        scene={editingScene}
+      {/* Modals */}
+      <NewProjectDialog open={showNew} onClose={() => setShowNew(false)}
+        onCreated={() => { loadProjects(); if (selected) loadDetail(selected); }} />
+      <SceneEditor open={!!editingScene} scene={editingScene}
         prompts={detail?.prompts}
         globalStyle={detail?.prompts?.global?.style || ""}
         onClose={() => setEditingScene(null)}
         onSave={handleSaveScene}
-        onGenerateOne={async (pk) => { setGenLog(`正在生成 ${pk}...`); handleGenerate(); }}
-      />
-      {/* Preview overlay — minimal */}
+        onGenerateOne={async () => { handleGenerate(); setEditingScene(null); }} />
+
+      {/* Preview overlay */}
       {showPreview && detail && (
         <div className="fixed inset-0 z-[400] bg-[#080c14] flex flex-col">
           <div className="h-12 flex items-center px-4 border-b border-white/5">
@@ -308,8 +355,12 @@ export default function ThemeStudioPage() {
             </button>
             <div className="flex-1 text-center text-sm font-bold text-white">{detail.manifest.name} · 预览</div>
           </div>
-          <div className="flex-1 flex items-center justify-center text-gray-500 text-6xl">
-            预览模式将在主题运行时生效
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🚧</div>
+              <p className="text-sm">预览模式将在主题运行时生效</p>
+              <p className="text-xs text-gray-600 mt-1">场景数: {detail.scenes.length} · 已完成: {doneCount}</p>
+            </div>
           </div>
         </div>
       )}
