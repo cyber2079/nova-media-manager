@@ -9,8 +9,7 @@ import { languages } from "@/i18n";
 import { cn } from "@/lib/utils";
 import ScrollFade from "@/components/ScrollFade";
 import ThemeManager from "@/components/ThemeManager";
-import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown, Sparkles } from "lucide-react";
-import ThemeStudio from "@/components/ThemeStudio";
+import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown } from "lucide-react";
 import { useLicenseStore, isPro, isUltra } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS } from "@/stores/settingsStore";
 import { useWidgetStore, pageKeys } from "@/stores/widgetStore";
@@ -37,8 +36,6 @@ const tabs: { id: TabId; icon: typeof Settings; labelKey: string }[] = [
   { id: "movies", icon: Film, labelKey: "settings.tab_movies" },
   { id: "games", icon: Gamepad2, labelKey: "settings.tab_games" },
   { id: "widgets", icon: Monitor, labelKey: "settings.tab_widgets" },
-  // Theme Studio — dev only, never shown to end users
-  ...(import.meta.env?.VITE_LICENSE_TIER ? [{ id: "themes" as TabId, icon: Sparkles, labelKey: "settings.tab_themes" }] : []),
 ];
 
 // ── Default values (used by reset) ──
@@ -376,8 +373,6 @@ export default function SettingsDialog({ open, onClose }: Props) {
                 <ResetButton tab="widgets" t={t} onReset={() => setConfirmReset("widgets")} />
               </WidgetsSection>
             )}
-            {/* ═══ Themes Tab ═══ */}
-            {activeTab === "themes" && <ThemeStudio />}
             <ScrollFade height={48} />
           </div>
         </div>

@@ -586,6 +586,11 @@ export default function Layout() {
             <button onClick={() => setSearchOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={`${t("search.placeholder")} (Ctrl+K)`}>
               <Search className="h-4 w-4 text-gray-400" />
             </button>
+            {import.meta.env?.VITE_LICENSE_TIER && (
+              <button onClick={() => navigate("/studio")} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title="主题创作">
+                <Sparkles className="h-4 w-4 text-purple-400" />
+              </button>
+            )}
             <button onClick={() => setSettingsOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={t("settings.title")}>
               <Settings className="h-4 w-4 text-gray-400" />
             </button>
