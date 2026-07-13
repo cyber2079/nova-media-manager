@@ -9,11 +9,11 @@ const ASSETS_DIR: &str = r"D:\nova-themes-assets";
 const PUBLIC_THEMES: &str = r"D:\nova-media-manager\public\themes";
 
 /// theme-id → public/themes directory name
-fn public_dir(theme_id: &str) -> &'static str {
+fn public_dir(theme_id: &str) -> String {
     match theme_id {
-        "ice-girl" => "ice girl",
-        "cyber-girl" => "cyber girl",
-        _ => theme_id,
+        "ice-girl" => "ice girl".into(),
+        "cyber-girl" => "cyber girl".into(),
+        _ => theme_id.to_string(),
     }
 }
 
@@ -319,11 +319,12 @@ fn walk_list(dir: &Path, prefix: &str, out: &mut Vec<String>) {
 /// Map scene ID to actual file in public/themes/{dir}/
 fn resolve_scene_file(pub_dir: &Path, scene_id: &str, scene_type: &str) -> (String, bool, u64) {
     // Try multiple naming conventions
-    let candidates: Vec<String> = if scene_id.starts_with("face-") {
+    use std::path::PathBuf;
+    let candidates: Vec<PathBuf> = if scene_id.starts_with("face-") {
         let name = scene_id.strip_prefix("face-").unwrap();
         vec![
             pub_dir.join("faces").join(format!("{}.webp", name)),
-            pub_dir.join("faces").join(format!("{} face.webp", name)), // legacy
+            pub_dir.join("faces").join(format!("{} face.webp", name)),
         ]
     } else if scene_id == "head" {
         vec![pub_dir.join("head.webp")]
@@ -338,8 +339,8 @@ fn resolve_scene_file(pub_dir: &Path, scene_id: &str, scene_type: &str) -> (Stri
         let num: String = scene_id.chars().filter(|c| c.is_ascii_digit()).collect();
         let ext = if scene_type == "video" { "mp4" } else { "webp" };
         vec![
-            pub_dir.join("scenes").join(format!("scene-{:0>2}.{}", num, ext)), // scene-01.webp
-            pub_dir.join("pic").join(format!("{}.{}", scene_id, ext)),          // legacy scene1.webp
+            pub_dir.join("scenes").join(format!("scene-{:0>2}.{}", num, ext)),
+            pub_dir.join("pic").join(format!("{}.{}", scene_id, ext)),
         ]
     } else {
         let ext = if scene_type == "video" { "mp4" } else { "webp" };
@@ -353,7 +354,8 @@ fn resolve_scene_file(pub_dir: &Path, scene_id: &str, scene_type: &str) -> (Stri
         }
     }
 
-    (candidates.first().map(|p| p.to_string_lossy().to_string()).unwrap_or_default(), false, 0)
+    let dflt = candidates.first().map(|p| p.to_string_lossy().to_string()).unwrap_or_default();
+    (dflt, false, 0)
 }
 
 fn find_prompt_text(prompts: &serde_json::Value, theme_type: &str, prompt_key: &str) -> String {
