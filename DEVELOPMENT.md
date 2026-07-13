@@ -166,6 +166,28 @@ STEP 3  生成素材
         需要: ARK_API_KEY 环境变量
         输出: D:\nova-themes-assets\{theme-id}\
 
+### 3.6 AI 生成前置条件
+
+```bash
+# 1. 获取 API Key (新用户送 ¥15 试用金)
+#    https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey
+
+# 2. 设置环境变量
+$env:ARK_API_KEY = "your-api-key-here"     # PowerShell
+export ARK_API_KEY="your-api-key-here"     # Git Bash
+
+# 3. 验证
+node scripts/theme-generate.mjs ice-girl --dry-run
+```
+
+**模型速查**：
+
+| 用途 | 模型 ID | 单价 |
+|---|---|---|
+| 图片生成（默认） | `doubao-seedream-4-5-251128` | ~¥0.02/张 |
+| 视频生成（默认） | `doubao-seedance-1-0-pro-fast-251015` | ~¥1/秒 |
+| 视频生成（旗舰） | `doubao-seedance-1-5-pro-251215` | ¥1.5/秒 |
+
 STEP 4  手动筛选
         删除不满意的图片/视频
         重新生成: node scripts/theme-generate.mjs {theme-id} --scene {key}
