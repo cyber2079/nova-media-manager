@@ -112,7 +112,7 @@ pub fn theme_studio_get_project(theme_id: String) -> Result<ThemeDetail, String>
     let prompts: serde_json::Value = read_json(&proj_dir.join("prompts.json"));
     let theme_type = manifest["type"].as_str().unwrap_or("static").to_string();
     let pd = public_dir(&theme_id);
-    let pub_dir = Path::new(PUBLIC_THEMES).join(pd);
+    let pub_dir = Path::new(PUBLIC_THEMES).join(&pd);
 
     // Build scenes with actual file mapping
     let mut scenes = Vec::new();
@@ -249,7 +249,7 @@ pub fn theme_studio_validate(theme_id: String) -> Result<ValidateResult, String>
         if m[*k].is_null() || m[*k].as_str().map(|s| s.is_empty()).unwrap_or(true) { errs.push(format!("manifest.{} is required", k)); }
     }
     let pd = public_dir(&theme_id);
-    let pub_dir = Path::new(PUBLIC_THEMES).join(pd);
+    let pub_dir = Path::new(PUBLIC_THEMES).join(&pd);
     if let Some(arr) = m["scenes"].as_array() {
         for s in arr {
             let sid = s["id"].as_str().unwrap_or("?");
