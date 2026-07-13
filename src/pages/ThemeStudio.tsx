@@ -232,8 +232,9 @@ export default function ThemeStudioPage() {
                     const url = exists ? thumbUrl(scene.thumbnailUrl) : "";
                     const hasImgErr = imgErrors.has(scene.id);
                     const showImg = exists && url && !hasImgErr;
-                    // i18n text for this scene
-                    const i18nText = scene.i18nKey ? t(scene.i18nKey, "").slice(0, 80) : "";
+                    // i18n text: story → translated scene text; dynamic → quote labels
+                    const i18nRaw = scene.i18nKey || "";
+                    const i18nText = i18nRaw.startsWith("home.") ? t(i18nRaw, "").slice(0, 120) : i18nRaw;
                     const isStoryScene = detail.manifest.type === "story" && scene.id.startsWith("scene");
 
                     return (
@@ -280,14 +281,19 @@ export default function ThemeStudioPage() {
                             {scene.promptKey}
                             {exists && scene.assetSize > 0 && ` · ${(scene.assetSize / 1024).toFixed(0)}K`}
                           </div>
-                          {/* i18n text preview */}
-                          {i18nText && (
-                            <div className="text-[9px] text-gray-500 mt-1 leading-relaxed line-clamp-2 italic">
+                          {/* Typing text or quote labels */}
+                          {isStoryScene && i18nText && (
+                            <div className="text-[9px] text-primary-light/60 mt-1 leading-relaxed line-clamp-2 italic">
                               💬 "{i18nText}"
                             </div>
                           )}
-                          {/* Prompt preview */}
-                          {scene.promptText && !i18nText && (
+                          {!isStoryScene && i18nText && (
+                            <div className="text-[9px] text-accent/60 mt-1 leading-relaxed line-clamp-1">
+                              🏷️ {i18nText}
+                            </div>
+                          )}
+                          {/* Prompt preview for todo scenes */}
+                          {scene.promptText && !i18nText && !isStoryScene && (
                             <div className="text-[9px] text-gray-600 mt-1 leading-relaxed line-clamp-2 font-mono">
                               🤖 {scene.promptText.slice(0, 100)}
                             </div>

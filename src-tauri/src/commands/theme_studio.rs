@@ -130,14 +130,14 @@ pub fn theme_studio_get_project(theme_id: String) -> Result<ThemeDetail, String>
             // Prompt text from prompts.json
             let prompt_text = find_prompt_text(&prompts, &theme_type, &pkey);
 
-            // i18n key for typewriter/story text
-            let i18n_key = if theme_type == "dynamic" && sid.starts_with("face-") {
-                // dynamic faces don't have individual i18n keys; the text is in quotes
-                format!("home.ice_quote_{}", sid.strip_prefix("face-").unwrap_or("1"))
-            } else if theme_type == "story" {
-                // story scenes: e.g. scene1 → home.cg_scene1_text
+            // i18n text: story → scene text; dynamic → quotes referencing this face
+            let i18n_key = if theme_type == "story" {
                 let num: String = sid.chars().filter(|c| c.is_ascii_digit()).collect();
-                format!("home.cg_scene{}_text", num)
+                if num.is_empty() { String::new() }
+                else { format!("home.cg_scene{}_text", num) }
+            } else if theme_type == "dynamic" {
+                // For faces: show which typing quotes reference this face
+                face_quote_labels(&manifest, sid.strip_prefix("face-").unwrap_or(&sid)).join(" | ")
             } else { String::new() };
 
             let actual_status = if exists { "done".to_string() } else { status };
@@ -197,7 +197,7 @@ pub fn theme_studio_create_project(input: CreateProjectInput) -> Result<ThemePro
 
     let scenes: Vec<serde_json::Value> = match input.theme_type.as_str() {
         "dynamic" => {
-            let faces = ["lofty","happy","angry","cry","naughty","head"];
+            let faces = ["smug","happy","angry","cry","naughty","head"];
             let mut s: Vec<_> = faces.iter().map(|f| serde_json::json!({"id":format!("face-{}",f),"status":"todo","type":"image","promptKey":format!("face-{}",f),"description":format!("表情: {}",f)})).collect();
             s.push(serde_json::json!({"id":"bg-video","status":"todo","type":"video","promptKey":"bg-video","description":"背景视频"}));
             s
@@ -207,7 +207,7 @@ pub fn theme_studio_create_project(input: CreateProjectInput) -> Result<ThemePro
         }).collect(),
         "hybrid" => {
             let mut s: Vec<_> = (1..=16).map(|i| serde_json::json!({"id":format!("scene{}",i),"status":"todo","type":"image","promptKey":format!("scene{}",i)})).collect();
-            for f in &["lofty","happy","angry","cry","naughty"] { s.push(serde_json::json!({"id":format!("face-{}",f),"status":"todo","type":"image","promptKey":format!("face-{}",f)})); }
+            for f in &["smug","happy","angry","cry","naughty"] { s.push(serde_json::json!({"id":format!("face-{}",f),"status":"todo","type":"image","promptKey":format!("face-{}",f)})); }
             s
         }
         _ => vec![],
@@ -221,7 +221,7 @@ pub fn theme_studio_create_project(input: CreateProjectInput) -> Result<ThemePro
     });
 
     let prompts = match input.theme_type.as_str() {
-        "dynamic" => serde_json::json!({"type":"dynamic","model":"doubao-seedream-4-5-251128","global":{"style":"","ratio":"16:9","negativePrompt":"模糊、低画质、水印、文字、logo"},"background":{"type":"video","model":"doubao-seedance-1-0-pro-fast-251015","prompt":"","duration":10},"faces":{"lofty":{"type":"image","prompt":"","ratio":"1:1"},"happy":{"type":"image","prompt":"","ratio":"1:1"},"angry":{"type":"image","prompt":"","ratio":"1:1"},"cry":{"type":"image","prompt":"","ratio":"1:1"},"naughty":{"type":"image","prompt":"","ratio":"1:1"},"head":{"type":"image","prompt":"","ratio":"1:1"}}}),
+        "dynamic" => serde_json::json!({"type":"dynamic","model":"doubao-seedream-4-5-251128","global":{"style":"","ratio":"16:9","negativePrompt":"模糊、低画质、水印、文字、logo"},"background":{"type":"video","model":"doubao-seedance-1-0-pro-fast-251015","prompt":"","duration":10},"faces":{"smug":{"type":"image","prompt":"","ratio":"1:1"},"happy":{"type":"image","prompt":"","ratio":"1:1"},"angry":{"type":"image","prompt":"","ratio":"1:1"},"cry":{"type":"image","prompt":"","ratio":"1:1"},"naughty":{"type":"image","prompt":"","ratio":"1:1"},"head":{"type":"image","prompt":"","ratio":"1:1"}}}),
         "story" => serde_json::json!({"type":"story","model":"doubao-seedream-4-5-251128","global":{"style":"","ratio":"16:9","negativePrompt":"模糊、低画质、水印、文字、logo"},"scenes":{}}),
         _ => serde_json::json!({"type":"static"}),
     };
@@ -351,6 +351,16 @@ fn resolve_scene_file(pub_dir: &Path, scene_id: &str, scene_type: &str) -> (Stri
     }
     let dflt = candidates.first().map(|(_, u)| u.clone()).unwrap_or_default();
     (dflt, false, 0)
+}
+
+/// For dynamic type: find which typing quotes use this face.
+fn face_quote_labels(manifest: &serde_json::Value, face_name: &str) -> Vec<String> {
+    manifest["typingQuotes"].as_array()
+        .map(|qs| qs.iter()
+            .filter(|q| q["face"].as_str().unwrap_or("") == face_name)
+            .filter_map(|q| q["label"].as_str().map(|s| s.to_string()))
+            .collect())
+        .unwrap_or_default()
 }
 
 fn find_prompt_text(prompts: &serde_json::Value, theme_type: &str, prompt_key: &str) -> String {
