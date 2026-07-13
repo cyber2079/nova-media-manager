@@ -51,3 +51,6 @@ scripts/setup-git-remote.ps1
 
 # ══ Claude ══
 .claude/worktrees/
+
+# ══ Dev overrides (local only) ══
+.env
