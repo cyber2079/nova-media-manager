@@ -17,7 +17,7 @@
 //! └────────────┴─────────────────────────────────────┘
 
 use serde::{Deserialize, Serialize};
-use std::io::{Read, Write, Cursor};
+use std::io::{Write, Cursor};
 use std::path::Path;
 
 use super::crypto;

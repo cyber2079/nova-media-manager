@@ -20,7 +20,6 @@ import { tagColor } from "@/lib/tagColor";
 import { useFavoritesStore } from "@/stores/favoritesStore";
 import { usePlayHistoryStore } from "@/stores/playHistoryStore";
 import { useTranslation } from "react-i18next";
-import { useThemeStore } from "@/stores/themeStore";
 import EmptyState from "@/components/EmptyState";
 import Lyrics from "@/components/Lyrics";
 import LayoutSwitch, { type LayoutMode } from "@/components/LayoutSwitch";
@@ -40,9 +39,6 @@ let _motionInited = false;
 export default function MusicLibrary() {
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { theme } = useThemeStore();
-  const isOW = theme === "overwatch";
-  const isFF7 = theme === "final-fantasy";
   const { music, isLoading, searchQuery, activeTags, loadMusic, addMusic, deleteMusic, setSearchQuery, toggleTag, setActiveTags, updateTags } = useMusicStore();
   const { getByType, toggleFavorite, isFavorite } = useFavoritesStore();
   const { playlists, create, remove, addSong, addSongs, removeSong, removeSongs } = usePlaylistStore();
@@ -323,7 +319,7 @@ export default function MusicLibrary() {
     <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-4">
-        <h1 className={cn("font-bold transition-all duration-500", isOW ? "text-5xl italic uppercase tracking-[0.15em] ow-ult-text" : isFF7 ? "text-3xl tracking-wider ff7-text-glow text-primary-light" : "text-2xl")}>
+        <h1 className="font-bold text-2xl transition-all duration-500">
           {showPlaylists ? t("music.playlists") : t("music.title")}
         </h1>
         <div className="flex-1" />
@@ -343,7 +339,7 @@ export default function MusicLibrary() {
             </div>
             <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
             <button onClick={() => { setShowPlaylists(true); setSelectedPlaylist(playlists[0]?.id ?? null); }} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", "border-primary text-gray-500 hover:border-primary-light/30 hover:text-primary-light")} title={t("music.show_playlists")}><ListMusic className="h-4 w-4" /></button>
-            <Button onClick={handleAdd} className={cn("gap-2", isOW && "ow-card text-[#f99e1a] border-[#f99e1a]/20")}><Upload className="h-4 w-4" />{t("music.add")}</Button>
+            <Button onClick={handleAdd} className="gap-2"><Upload className="h-4 w-4" />{t("music.add")}</Button>
             {!batch.showCheckboxes ? (
               <Button variant="outline" size="sm" onClick={batch.enterBatchMode} className="gap-1.5 text-xs">
                 <CheckSquare className="h-3.5 w-3.5" />

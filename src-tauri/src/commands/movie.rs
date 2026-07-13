@@ -180,7 +180,7 @@ pub fn add_movies(app: AppHandle, db: State<'_, Database>, paths: Vec<String>) -
         let path_owned = path.clone();
         let movie_id = id.clone();
         std::thread::spawn(move || {
-            let covers_dir = app_clone.path().app_data_dir().unwrap().join("covers");
+            let covers_dir = app_clone.path().app_data_dir().unwrap().join("data").join("covers");
             std::fs::create_dir_all(&covers_dir).ok();
             let cover_out = covers_dir.join(format!("{}.png", movie_id));
             let cover_out_str = cover_out.to_string_lossy().to_string();

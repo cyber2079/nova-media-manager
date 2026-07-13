@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::packer::{self, ThemeManifest, unpack_theme};
+use super::packer::{self, unpack_theme};
 
 // ═══════════════ REGISTRY ═══════════════
 
