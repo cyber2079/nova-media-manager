@@ -257,7 +257,7 @@ export default function ThemeStudioPage() {
               {tab === "script" && (
                 <div className="flex-1 flex min-h-0">
                   {/* Timeline list */}
-                  <div className={`${editingIdx >= 0 ? "w-96" : "flex-1"} overflow-y-auto p-3 space-y-1.5 transition-all`}>
+                  <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
                     {detail.script.length === 0 ? (
                       <div className="text-center py-16 text-gray-600">
                         <div className="text-4xl mb-3">📝</div>
@@ -360,21 +360,21 @@ export default function ThemeStudioPage() {
                             </div>
                           )}
                         </div>
-                        {/* Text (i18n key) */}
+                        {/* Text (i18n key or free text) */}
                         <div>
-                          <label className="block text-[10px] text-gray-500 mb-1">文本 (i18n key)</label>
-                          <select value={String(editData.text || "")} onChange={e => setField("text", e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-mono outline-none">
-                            <option value="">(无文本)</option>
-                            {i18nKeys.map(k => (
-                              <option key={k} value={k}>{k}</option>
-                            ))}
-                          </select>
+                          <label className="block text-[10px] text-gray-500 mb-1">文本 (i18n key 或直接输入)</label>
+                          <input value={String(editData.text || "")} onChange={e => setField("text", e.target.value)}
+                            list="i18n-datalist"
+                            className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-mono outline-none focus:border-primary/50" />
+                          <datalist id="i18n-datalist">
+                            {i18nKeys.map(k => <option key={k} value={k} />)}
+                          </datalist>
                           {editData.text && (
                             <div className="mt-1 p-2 rounded-lg bg-white/[0.02] border border-white/5 text-[10px] text-gray-400 italic line-clamp-3">
                               💬 {t(String(editData.text), "")}
                             </div>
                           )}
+                        </div>
                         </div>
                         {/* BGM */}
                         <div>
