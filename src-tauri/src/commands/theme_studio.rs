@@ -1,4 +1,4 @@
-//! Theme Studio — full CRUD for theme projects. Dev-only.
+//! Theme Studio — CRUD for theme projects. Dev-only (.env gate on frontend).
 
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -8,65 +8,54 @@ const THEMES_DIR: &str = r"D:\nova-proprietary\themes";
 const ASSETS_DIR: &str = r"D:\nova-themes-assets";
 const PUBLIC_THEMES: &str = r"D:\nova-media-manager\public\themes";
 
-/// theme-id → public/themes directory name
 fn public_dir(theme_id: &str) -> String {
-    match theme_id {
-        "ice-girl" => "ice girl".into(),
-        "cyber-girl" => "cyber girl".into(),
-        _ => theme_id.to_string(),
-    }
+    match theme_id { "ice-girl" => "ice girl".into(), "cyber-girl" => "cyber girl".into(), _ => theme_id.to_string() }
 }
 
 // ═══════════════ TYPES ═══════════════
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Serialize, Deserialize, Clone)] #[serde(rename_all = "camelCase")]
 pub struct ThemeProject {
     pub id: String, pub name: String, pub version: String,
     #[serde(rename = "type")] pub theme_type: String,
     pub status: String, pub requires_license: String,
     pub description: Option<String>,
-    pub scene_count: usize, pub done_count: usize,
-    pub asset_count: usize, pub total_asset_bytes: u64,
+    pub asset_count: usize, pub done_count: usize,
+    pub script_node_count: usize, pub total_asset_bytes: u64,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct ThemeScene {
-    pub id: String, pub status: String, pub scene_type: String,
-    pub prompt_key: String, pub description: String,
-    /// Relative URL under /themes/ for direct <img src>
-    pub thumbnail_url: String,
-    pub thumbnail_exists: bool,
-    pub asset_size: u64,
-    /// AI prompt text
-    pub prompt_text: String,
-    /// i18n key for typewriter/story text (for frontend t())
-    pub i18n_key: String,
+#[derive(Debug, Serialize, Deserialize, Clone)] #[serde(rename_all = "camelCase")]
+pub struct ScriptNode {
+    pub id: String, pub label: String,
+    pub background: String,
+    pub face: String, pub text: String, pub bgm: String,
+    pub skill_show: bool,
+    pub thumb_ok: bool, pub thumb_url: String, pub thumb_size: u64,
+    pub i18n_preview: String,
+    pub face_ok: bool, pub face_url: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Serialize, Deserialize, Clone)] #[serde(rename_all = "camelCase")]
+pub struct AssetItem {
+    pub id: String, pub status: String, #[serde(rename = "type")] pub asset_type: String,
+    pub path: String, pub description: String,
+    pub exists: bool, pub thumb_url: String, pub size: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)] #[serde(rename_all = "camelCase")]
 pub struct ThemeDetail {
-    pub manifest: serde_json::Value,
-    pub prompts: serde_json::Value,
-    pub scenes: Vec<ThemeScene>,
-    pub assets: Vec<String>,
-    /// Theme type explanation
+    pub manifest: serde_json::Value, pub prompts: serde_json::Value,
+    pub script: Vec<ScriptNode>, pub assets: Vec<AssetItem>,
     pub type_description: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Serialize, Deserialize, Clone)] #[serde(rename_all = "camelCase")]
 pub struct CreateProjectInput {
     pub id: String, pub name: String, pub theme_type: String, pub requires_license: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ValidateResult {
-    pub ok: bool, pub errors: Vec<String>, pub warnings: Vec<String>,
-}
+#[derive(Debug, Serialize, Deserialize)] #[serde(rename_all = "camelCase")]
+pub struct ValidateResult { pub ok: bool, pub errors: Vec<String>, pub warnings: Vec<String> }
 
 // ═══════════════ COMMANDS ═══════════════
 
@@ -74,20 +63,21 @@ pub struct ValidateResult {
 pub fn theme_studio_list_projects() -> Result<Vec<ThemeProject>, String> {
     let dir = Path::new(THEMES_DIR);
     if !dir.exists() { return Ok(vec![]); }
-    let mut projects = Vec::new();
-    for entry in fs::read_dir(dir).map_err(|e| e.to_string())? {
-        let entry = entry.map_err(|e| e.to_string())?;
-        let path = entry.path();
-        if !path.is_dir() { continue; }
-        let mp = path.join("manifest.json");
+    let mut projs = Vec::new();
+    for e in fs::read_dir(dir).map_err(|e| e.to_string())? {
+        let e = e.map_err(|e| e.to_string())?;
+        let p = e.path();
+        if !p.is_dir() { continue; }
+        let mp = p.join("manifest.json");
         if !mp.exists() { continue; }
         let raw = fs::read_to_string(&mp).unwrap_or_default();
         let m: serde_json::Value = serde_json::from_str(&raw).unwrap_or_default();
-        let id = path.file_name().unwrap_or_default().to_string_lossy().to_string();
-        let nscenes = m["scenes"].as_array().map(|a| a.len()).unwrap_or(0);
-        let done = m["scenes"].as_array().map(|a| a.iter().filter(|s| s["status"]=="done").count()).unwrap_or(0);
-        let (ac, tb) = count_public_assets(&id);
-        projects.push(ThemeProject {
+        let id = p.file_name().unwrap_or_default().to_string_lossy().to_string();
+        let ac = m["assets"].as_array().map(|a| a.len()).unwrap_or(0);
+        let done = m["assets"].as_array().map(|a| a.iter().filter(|x| x["status"]=="done").count()).unwrap_or(0);
+        let sn = m["script"].as_array().map(|a| a.len()).unwrap_or(0);
+        let (_, tb) = count_public_assets(&id);
+        projs.push(ThemeProject {
             id,
             name: m["name"].as_str().unwrap_or("?").to_string(),
             version: m["version"].as_str().unwrap_or("0.1").to_string(),
@@ -95,82 +85,36 @@ pub fn theme_studio_list_projects() -> Result<Vec<ThemeProject>, String> {
             status: m["status"].as_str().unwrap_or("draft").to_string(),
             requires_license: m["requiresLicense"].as_str().unwrap_or("pro").to_string(),
             description: m["description"].as_str().map(|s| s.to_string()),
-            scene_count: nscenes, done_count: done,
-            asset_count: ac, total_asset_bytes: tb,
+            asset_count: ac, done_count: done, script_node_count: sn, total_asset_bytes: tb,
         });
     }
-    projects.sort_by(|a, b| a.id.cmp(&b.id));
-    Ok(projects)
+    projs.sort_by(|a, b| a.id.cmp(&b.id));
+    Ok(projs)
 }
 
 #[tauri::command]
 pub fn theme_studio_get_project(theme_id: String) -> Result<ThemeDetail, String> {
     let proj_dir = Path::new(THEMES_DIR).join(&theme_id);
     if !proj_dir.exists() { return Err(format!("not found: {}", theme_id)); }
-
     let manifest: serde_json::Value = read_json(&proj_dir.join("manifest.json"));
     let prompts: serde_json::Value = read_json(&proj_dir.join("prompts.json"));
-    let theme_type = manifest["type"].as_str().unwrap_or("static").to_string();
-    let pd = public_dir(&theme_id);
-    let pub_dir = Path::new(PUBLIC_THEMES).join(&pd);
+    let theme_type = manifest["type"].as_str().unwrap_or("static");
+    let pd = &public_dir(&theme_id);
+    let pub_dir = Path::new(PUBLIC_THEMES).join(pd);
+    let bg_default = manifest["backgroundDefault"].as_str().unwrap_or("").to_string();
 
-    // Build scenes with actual file mapping
-    let mut scenes = Vec::new();
-    if let Some(arr) = manifest["scenes"].as_array() {
-        for s in arr {
-            let sid = s["id"].as_str().unwrap_or("?").to_string();
-            let stype = s["type"].as_str().unwrap_or("image").to_string();
-            let status = s["status"].as_str().unwrap_or("todo").to_string();
-            let pkey = s["promptKey"].as_str().unwrap_or(&sid).to_string();
-            let desc = s["description"].as_str().unwrap_or("").to_string();
+    let assets = build_assets(&manifest, &pub_dir, pd);
+    let script = build_script(&manifest, &pub_dir, pd, theme_type, &bg_default);
 
-            // Resolve actual file path
-            let (real_path, exists, size) = resolve_scene_file(&pub_dir, &sid, &stype);
-
-            // Prompt text from prompts.json
-            let prompt_text = find_prompt_text(&prompts, &theme_type, &pkey);
-
-            // i18n text: story → scene text; dynamic → quotes referencing this face
-            let i18n_key = if theme_type == "story" {
-                let num: String = sid.chars().filter(|c| c.is_ascii_digit()).collect();
-                if num.is_empty() { String::new() }
-                else { format!("home.cg_scene{}_text", num) }
-            } else if theme_type == "dynamic" {
-                // For faces: show which typing quotes reference this face
-                face_quote_labels(&manifest, sid.strip_prefix("face-").unwrap_or(&sid)).join(" | ")
-            } else { String::new() };
-
-            let actual_status = if exists { "done".to_string() } else { status };
-
-            scenes.push(ThemeScene {
-                id: sid, status: actual_status, scene_type: stype,
-                prompt_key: pkey, description: desc,
-                thumbnail_url: format!("themes/{}/{}", pd, real_path),
-                thumbnail_exists: exists,
-                asset_size: size,
-                prompt_text,
-                i18n_key,
-            });
-        }
-    }
-
-    let type_desc = match theme_type.as_str() {
-        "story" => "线性剧情推进 · 背景图切换 + BGM 分区 + 场景文案",
+    let type_desc = match theme_type {
+        "story" => "线性剧情推进 · 背景图按脚本切换 + BGM分区",
         "dynamic" => "背景视频 + 打字机轮播 + 表情随机切换",
-        "static" => "纯壁纸/渐变背景 · 无剧情无交互",
+        "static" => "纯壁纸/渐变 · 无剧情无交互",
         "hybrid" => "story + dynamic 组合模式",
         _ => "",
     }.to_string();
 
-    let mut assets = list_files_recursive(&pub_dir);
-    // Also list from ASSETS_DIR if it has something
-    let assets2 = Path::new(ASSETS_DIR).join(&theme_id);
-    if assets2.exists() {
-        assets.extend(list_files_recursive(&assets2));
-    }
-    assets.sort(); assets.dedup();
-
-    Ok(ThemeDetail { manifest, prompts, scenes, assets, type_description: type_desc })
+    Ok(ThemeDetail { manifest, prompts, script, assets, type_description: type_desc })
 }
 
 #[tauri::command]
@@ -195,20 +139,15 @@ pub fn theme_studio_create_project(input: CreateProjectInput) -> Result<ThemePro
     if proj_dir.exists() { return Err("already exists".into()); }
     fs::create_dir_all(&proj_dir).map_err(|e| e.to_string())?;
 
-    let scenes: Vec<serde_json::Value> = match input.theme_type.as_str() {
+    let assets: Vec<serde_json::Value> = match input.theme_type.as_str() {
         "dynamic" => {
-            let faces = ["smug","happy","angry","cry","naughty","head"];
-            let mut s: Vec<_> = faces.iter().map(|f| serde_json::json!({"id":format!("face-{}",f),"status":"todo","type":"image","promptKey":format!("face-{}",f),"description":format!("表情: {}",f)})).collect();
-            s.push(serde_json::json!({"id":"bg-video","status":"todo","type":"video","promptKey":"bg-video","description":"背景视频"}));
-            s
-        }
-        "story" => (1..=16).map(|i| {
-            serde_json::json!({"id":format!("scene{}",i),"status":"todo","type":"image","promptKey":format!("scene{}",i),"description":format!("场景{}",i)})
-        }).collect(),
-        "hybrid" => {
-            let mut s: Vec<_> = (1..=16).map(|i| serde_json::json!({"id":format!("scene{}",i),"status":"todo","type":"image","promptKey":format!("scene{}",i)})).collect();
-            for f in &["smug","happy","angry","cry","naughty"] { s.push(serde_json::json!({"id":format!("face-{}",f),"status":"todo","type":"image","promptKey":format!("face-{}",f)})); }
-            s
+            let mut a = vec![];
+            for f in ["smug","happy","angry","cry","petty","naughty","neutral","surprise"] {
+                a.push(serde_json::json!({"id":format!("face-{}",f),"status":"todo","type":"image","path":format!("faces/{}.webp",f),"description":format!("表情: {}",f)}));
+            }
+            a.push(serde_json::json!({"id":"bg-video","status":"todo","type":"video","path":"video/bg-loop.mp4","description":"背景视频"}));
+            a.push(serde_json::json!({"id":"head","status":"todo","type":"image","path":"head.webp","description":"头像"}));
+            a
         }
         _ => vec![],
     };
@@ -217,11 +156,12 @@ pub fn theme_studio_create_project(input: CreateProjectInput) -> Result<ThemePro
         "id": format!("com.nova.{}", input.id), "name": input.name, "version": "0.1.0",
         "type": input.theme_type, "status": "draft", "requiresLicense": input.requires_license,
         "author":"Nova","description":"","cssFile":"theme.css","preview":"preview.webp",
-        "config":{"accent":"#6366f1","characters":[]},"scenes":scenes,
+        "config":{"accent":"#6366f1","characters":[]},
+        "assets": assets, "script": [],
     });
 
     let prompts = match input.theme_type.as_str() {
-        "dynamic" => serde_json::json!({"type":"dynamic","model":"doubao-seedream-4-5-251128","global":{"style":"","ratio":"16:9","negativePrompt":"模糊、低画质、水印、文字、logo"},"background":{"type":"video","model":"doubao-seedance-1-0-pro-fast-251015","prompt":"","duration":10},"faces":{"smug":{"type":"image","prompt":"","ratio":"1:1"},"happy":{"type":"image","prompt":"","ratio":"1:1"},"angry":{"type":"image","prompt":"","ratio":"1:1"},"cry":{"type":"image","prompt":"","ratio":"1:1"},"naughty":{"type":"image","prompt":"","ratio":"1:1"},"head":{"type":"image","prompt":"","ratio":"1:1"}}}),
+        "dynamic" => serde_json::json!({"type":"dynamic","model":"doubao-seedream-4-5-251128","global":{"style":"","ratio":"16:9","negativePrompt":"模糊、低画质、水印、文字、logo"},"background":{"type":"video","model":"doubao-seedance-1-0-pro-fast-251015","prompt":"","duration":10},"faces":{"smug":{"type":"image","prompt":"","ratio":"1:1"},"happy":{"type":"image","prompt":"","ratio":"1:1"},"angry":{"type":"image","prompt":"","ratio":"1:1"},"cry":{"type":"image","prompt":"","ratio":"1:1"},"petty":{"type":"image","prompt":"","ratio":"1:1"},"naughty":{"type":"image","prompt":"","ratio":"1:1"},"neutral":{"type":"image","prompt":"","ratio":"1:1"},"surprise":{"type":"image","prompt":"","ratio":"1:1"},"head":{"type":"image","prompt":"","ratio":"1:1"}}}),
         "story" => serde_json::json!({"type":"story","model":"doubao-seedream-4-5-251128","global":{"style":"","ratio":"16:9","negativePrompt":"模糊、低画质、水印、文字、logo"},"scenes":{}}),
         _ => serde_json::json!({"type":"static"}),
     };
@@ -229,7 +169,7 @@ pub fn theme_studio_create_project(input: CreateProjectInput) -> Result<ThemePro
     fs::write(proj_dir.join("manifest.json"), serde_json::to_string_pretty(&manifest).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
     if input.theme_type != "static" { fs::write(proj_dir.join("prompts.json"), serde_json::to_string_pretty(&prompts).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?; }
 
-    Ok(ThemeProject { id: input.id, name: input.name, version: "0.1.0".into(), theme_type: input.theme_type, status: "draft".into(), requires_license: input.requires_license, description: None, scene_count: scenes.len(), done_count: 0, asset_count: 0, total_asset_bytes: 0 })
+    Ok(ThemeProject { id: input.id, name: input.name, version: "0.1.0".into(), theme_type: input.theme_type, status: "draft".into(), requires_license: input.requires_license, description: None, asset_count: assets.len(), done_count: 0, script_node_count: 0, total_asset_bytes: 0 })
 }
 
 #[tauri::command]
@@ -250,14 +190,11 @@ pub fn theme_studio_validate(theme_id: String) -> Result<ValidateResult, String>
     }
     let pd = public_dir(&theme_id);
     let pub_dir = Path::new(PUBLIC_THEMES).join(&pd);
-    if let Some(arr) = m["scenes"].as_array() {
-        for s in arr {
-            let sid = s["id"].as_str().unwrap_or("?");
-            let st = s["status"].as_str().unwrap_or("todo");
-            if st == "done" {
-                let stype = s["type"].as_str().unwrap_or("image");
-                let (_, exists, _) = resolve_scene_file(&pub_dir, sid, stype);
-                if !exists { errs.push(format!("scene {} status=done but file not found", sid)); }
+    if let Some(script) = m["script"].as_array() {
+        for node in script {
+            let bg = node["background"].as_str().unwrap_or("");
+            if !bg.is_empty() && !pub_dir.join(bg).exists() {
+                errs.push(format!("script.{}.background '{}' not found", node["id"].as_str().unwrap_or("?"), bg));
             }
         }
     }
@@ -267,9 +204,72 @@ pub fn theme_studio_validate(theme_id: String) -> Result<ValidateResult, String>
 #[tauri::command]
 pub async fn theme_studio_generate(theme_id: String) -> Result<String, String> {
     let s = std::process::Command::new("node").arg("D:\\nova-media-manager\\scripts\\theme-generate.mjs").arg(&theme_id).output().map_err(|e| format!("Fail: {e}"))?;
-    let o = String::from_utf8_lossy(&s.stdout).to_string();
-    let e = String::from_utf8_lossy(&s.stderr).to_string();
+    let o = String::from_utf8_lossy(&s.stdout).to_string(); let e = String::from_utf8_lossy(&s.stderr).to_string();
     if s.status.success() { Ok(o) } else { Err(format!("{o}\n{e}")) }
+}
+
+// ═══════════════ BUILDERS ═══════════════
+
+fn build_assets(manifest: &serde_json::Value, pub_dir: &Path, pd: &str) -> Vec<AssetItem> {
+    manifest["assets"].as_array().map(|arr| arr.iter().map(|a| {
+        let path = a["path"].as_str().unwrap_or(a["id"].as_str().unwrap_or("?")).to_string();
+        let fp = pub_dir.join(&path);
+        let (exists, size) = if fp.exists() { (true, fp.metadata().map(|m| m.len()).unwrap_or(0)) } else { (false, 0) };
+        AssetItem {
+            id: a["id"].as_str().unwrap_or("?").to_string(),
+            status: if exists { "done".into() } else { a["status"].as_str().unwrap_or("todo").into() },
+            asset_type: a["type"].as_str().unwrap_or("image").into(),
+            path: path.clone(),
+            description: a["description"].as_str().unwrap_or("").into(),
+            exists,
+            thumb_url: if exists { format!("themes/{}/{}", pd, path) } else { String::new() },
+            size,
+        }
+    }).collect()).unwrap_or_default()
+}
+
+fn build_script(manifest: &serde_json::Value, pub_dir: &Path, pd: &str, _theme_type: &str, bg_default: &str) -> Vec<ScriptNode> {
+    manifest["script"].as_array().map(|arr| arr.iter().map(|node| {
+        let bg = if let Some(s) = node["background"].as_str() { s }
+            else if !bg_default.is_empty() { bg_default }
+            else { "" };
+        let face = node["face"].as_str().unwrap_or("");
+        let text = node["text"].as_str().unwrap_or("");
+
+        // background thumb
+        let (thumb_ok, thumb_url, thumb_size) = if bg.is_empty() {
+            (false, String::new(), 0u64)
+        } else {
+            let full = pub_dir.join(bg);
+            if full.exists() { (true, format!("themes/{}/{}", pd, bg), full.metadata().map(|m| m.len()).unwrap_or(0)) }
+            else { (false, String::new(), 0) }
+        };
+
+        // face thumb
+        let (face_ok, face_url) = if face.is_empty() || face == "video:secretary" {
+            (false, String::new())
+        } else {
+            let fp = pub_dir.join("faces").join(format!("{}.webp", face));
+            if fp.exists() { (true, format!("themes/{}/faces/{}.webp", pd, face)) }
+            else { (false, String::new()) }
+        };
+
+        // i18n preview
+        let i18n_preview = if !text.is_empty() { format!("🗣️ {}", text) } else { String::new() };
+
+        ScriptNode {
+            id: node["id"].as_str().unwrap_or("?").to_string(),
+            label: node["label"].as_str().unwrap_or("").to_string(),
+            background: bg.to_string(),
+            face: face.to_string(),
+            text: text.to_string(),
+            bgm: node["bgm"].as_str().unwrap_or("").to_string(),
+            skill_show: node["skillShow"].as_bool().unwrap_or(false),
+            thumb_ok, thumb_url, thumb_size,
+            i18n_preview,
+            face_ok, face_url,
+        }
+    }).collect()).unwrap_or_default()
 }
 
 // ═══════════════ HELPERS ═══════════════
@@ -283,97 +283,9 @@ fn count_public_assets(theme_id: &str) -> (usize, u64) {
     let d = Path::new(PUBLIC_THEMES).join(public_dir(theme_id));
     if !d.exists() { return (0, 0); }
     let (mut c, mut b) = (0, 0u64);
-    walk_files(&d, &mut c, &mut b);
-    (c, b)
+    walk_files(&d, &mut c, &mut b); (c, b)
 }
 
 fn walk_files(dir: &Path, count: &mut usize, bytes: &mut u64) {
-    if let Ok(entries) = fs::read_dir(dir) {
-        for e in entries.flatten() {
-            let p = e.path();
-            if p.is_dir() { walk_files(&p, count, bytes); }
-            else { *count += 1; *bytes += e.metadata().map(|m| m.len()).unwrap_or(0); }
-        }
-    }
-}
-
-fn list_files_recursive(dir: &Path) -> Vec<String> {
-    let mut v = vec![];
-    if !dir.exists() { return v; }
-    let prefix = dir.to_string_lossy().to_string();
-    walk_list(dir, &prefix, &mut v);
-    v
-}
-
-fn walk_list(dir: &Path, prefix: &str, out: &mut Vec<String>) {
-    if let Ok(entries) = fs::read_dir(dir) {
-        for e in entries.flatten() {
-            let p = e.path();
-            if p.is_dir() { walk_list(&p, prefix, out); }
-            else { out.push(p.to_string_lossy().strip_prefix(prefix).unwrap_or("").trim_start_matches(&['\\','/']).to_string()); }
-        }
-    }
-}
-
-/// Map scene ID to actual file in public/themes/{dir}/
-/// Returns (relative_url, exists, size_bytes)
-fn resolve_scene_file(pub_dir: &Path, scene_id: &str, scene_type: &str) -> (String, bool, u64) {
-    let ext = if scene_type == "video" { "mp4" } else { "webp" };
-    type C = (String, String); // (fs_path, url_path)
-    let candidates: Vec<C> = if scene_id.starts_with("face-") {
-        let name = scene_id.strip_prefix("face-").unwrap();
-        vec![
-            (format!("faces/{}.webp", name), format!("faces/{}.webp", name)),
-            (format!("faces/{} face.webp", name), format!("faces/{} face.webp", name)),
-        ]
-    } else if scene_id == "head" {
-        vec![("head.webp".into(), "head.webp".into())]
-    } else if scene_id == "bg-video" || scene_id == "bg-loop" {
-        vec![("video/bg-loop.mp4".into(), "video/bg-loop.mp4".into())]
-    } else if scene_id == "video-secretary" {
-        vec![("video/secretary.mp4".into(), "video/secretary.mp4".into())]
-    } else if scene_id.starts_with("scene") {
-        let num: String = scene_id.chars().filter(|c| c.is_ascii_digit()).collect();
-        vec![
-            (format!("scenes/scene-{:0>2}.{}", num, ext), format!("scenes/scene-{:0>2}.{}", num, ext)),
-            (format!("pic/{}.{}", scene_id, ext), format!("pic/{}.{}", scene_id, ext)),
-        ]
-    } else {
-        vec![(format!("{}.{}", scene_id, ext), format!("{}.{}", scene_id, ext))]
-    };
-
-    for (rel, url) in &candidates {
-        let fs_path = pub_dir.join(rel);
-        if fs_path.exists() {
-            let size = fs_path.metadata().map(|m| m.len()).unwrap_or(0);
-            return (url.clone(), true, size);
-        }
-    }
-    let dflt = candidates.first().map(|(_, u)| u.clone()).unwrap_or_default();
-    (dflt, false, 0)
-}
-
-/// For dynamic type: find which typing quotes use this face.
-fn face_quote_labels(manifest: &serde_json::Value, face_name: &str) -> Vec<String> {
-    manifest["typingQuotes"].as_array()
-        .map(|qs| qs.iter()
-            .filter(|q| q["face"].as_str().unwrap_or("") == face_name)
-            .filter_map(|q| q["label"].as_str().map(|s| s.to_string()))
-            .collect())
-        .unwrap_or_default()
-}
-
-fn find_prompt_text(prompts: &serde_json::Value, theme_type: &str, prompt_key: &str) -> String {
-    if theme_type == "dynamic" {
-        if let Some(f) = prompts["faces"].get(prompt_key.strip_prefix("face-").unwrap_or(prompt_key)) {
-            return f["prompt"].as_str().unwrap_or("").to_string();
-        }
-        if prompt_key == "bg-video" || prompt_key == "bg-loop" {
-            return prompts["background"]["prompt"].as_str().unwrap_or("").to_string();
-        }
-    }
-    if let Some(s) = prompts["scenes"].get(prompt_key) {
-        return s["prompt"].as_str().unwrap_or("").to_string();
-    }
-    String::new()
+    if let Ok(entries) = fs::read_dir(dir) { for e in entries.flatten() { let p = e.path(); if p.is_dir() { walk_files(&p, count, bytes); } else { *count += 1; *bytes += e.metadata().map(|m| m.len()).unwrap_or(0); } } }
 }
