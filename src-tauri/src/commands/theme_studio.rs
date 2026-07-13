@@ -203,8 +203,7 @@ pub fn theme_studio_create_project(input: CreateProjectInput) -> Result<ThemePro
             s
         }
         "story" => (1..=16).map(|i| {
-            let iv = [1,6,7,9,10,11,15].contains(&i);
-            serde_json::json!({"id":format!("scene{}",i),"status":"todo","type":if iv{"video"}else{"image"},"promptKey":format!("scene{}",i),"description":format!("场景{}",i)})
+            serde_json::json!({"id":format!("scene{}",i),"status":"todo","type":"image","promptKey":format!("scene{}",i),"description":format!("场景{}",i)})
         }).collect(),
         "hybrid" => {
             let mut s: Vec<_> = (1..=16).map(|i| serde_json::json!({"id":format!("scene{}",i),"status":"todo","type":"image","promptKey":format!("scene{}",i)})).collect();
