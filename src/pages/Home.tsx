@@ -403,10 +403,6 @@ export default function Home() {
               </div>
             );
           })()}
-                </div>
-              </div>
-            );
-          })()}
           {/* Skill icons */}
           <div className="theme-card mx-auto inline-flex rounded-2xl px-5 py-3.5">
           <div className="flex justify-center gap-8 flex-wrap">
