@@ -106,7 +106,11 @@ export default function ThemeStudioPage() {
           id: node.id, label: node.label, background: node.background, face: node.face,
           text: node.text, bgm: node.bgm, skillShow: node.skillShow,
         };
-        return { id: node.id, ...editData };
+        return {
+          id: node.id, label: String(editData.label || ""), background: String(editData.background || ""),
+          face: String(editData.face || ""), text: String(editData.text || ""),
+          bgm: String(editData.bgm || ""), skillShow: !!editData.skillShow,
+        };
       });
       await invoke("theme_studio_update_script", { themeId: selected, script });
       setEditingIdx(-1);
@@ -306,7 +310,7 @@ export default function ThemeStudioPage() {
 
                   {/* Properties Panel */}
                   {editingIdx >= 0 && editingNode && (
-                    <div className="w-80 shrink-0 border-l border-white/5 bg-[#0a0f18] flex flex-col overflow-y-auto">
+                    <div key={editingIdx} className="w-80 shrink-0 border-l border-white/5 bg-[#0a0f18] flex flex-col overflow-y-auto">
                       <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
                         <span className="text-xs font-bold text-white">节点 #{editingIdx + 1}</span>
                         <button onClick={() => setEditingIdx(-1)} className="text-gray-400 hover:text-white"><X className="h-3.5 w-3.5" /></button>
@@ -326,10 +330,10 @@ export default function ThemeStudioPage() {
                         {/* Background */}
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-1">背景图/视频</label>
-                          <select onChange={e => { if (e.target.value) setField("background", e.target.value); }}
+                          <select value={String(editData.background || "")} onChange={e => setField("background", e.target.value)}
                             className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none mb-1">
                             <option value="">(默认背景)</option>
-                            {assetPaths.map(p => <option key={p} value={p} selected={editData.background === p}>{p}</option>)}
+                            {assetPaths.map(p => <option key={p} value={p}>{p}</option>)}
                           </select>
                           <input value={String(editData.background || "")} onChange={e => setField("background", e.target.value)}
                             className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-mono outline-none focus:border-primary/50"
@@ -371,21 +375,24 @@ export default function ThemeStudioPage() {
                         </div>
                         {/* Scene text */}
                         <div>
-                          <label className="block text-[10px] text-gray-500 mb-1">
-                            场景文本
-                            {editData.text && editData.text.startsWith("home.") && (
-                              <span className="text-primary-light/60 ml-1">(i18n: {String(editData.text)})</span>
-                            )}
-                          </label>
-                          <textarea value={editData.text && editData.text.startsWith("home.") ? t(String(editData.text), "") : String(editData.text || "")}
-                            onChange={e => setField("text", e.target.value)}
+                          <label className="block text-[10px] text-gray-500 mb-1">场景文本</label>
+                          <textarea value={String(editData.text || "")} onChange={e => setField("text", e.target.value)}
                             rows={6}
-                            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs leading-relaxed outline-none focus:border-primary/50 resize-vertical" />
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[9px] text-gray-600">快捷填入:</span>
-                            <select onChange={e => { if (e.target.value) setField("text", e.target.value); }}
+                            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs leading-relaxed outline-none focus:border-primary/50 resize-vertical font-mono" />
+                          {/* i18n preview if it's a known key */}
+                          {editData.text && i18nKeys.includes(String(editData.text)) && (
+                            <div className="mt-1 p-2 rounded-lg bg-primary/5 border border-primary/10 text-[10px] text-primary-light/80 italic line-clamp-3">
+                              💬 {t(String(editData.text), "")}
+                            </div>
+                          )}
+                          {editData.text && !i18nKeys.includes(String(editData.text)) && (
+                            <div className="mt-1 text-[9px] text-green-400/60">✓ 自定义文本（非 i18n key）</div>
+                          )}
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-[9px] text-gray-600 shrink-0">快捷:</span>
+                            <select onChange={e => { if (e.target.value) setField("text", e.target.value); }} value=""
                               className="flex-1 px-2 py-1 rounded bg-white/5 border border-white/5 text-gray-300 text-[10px] font-mono outline-none">
-                              <option value="">— i18n key —</option>
+                              <option value="">— 选 i18n key —</option>
                               {i18nKeys.map(k => <option key={k} value={k}>{k}</option>)}
                             </select>
                           </div>
