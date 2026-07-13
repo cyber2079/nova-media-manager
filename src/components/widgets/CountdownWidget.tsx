@@ -157,21 +157,7 @@ export default function CountdownWidget({ config }: { config: CountdownConfig })
         )}
         {isMini && (
           <div className="relative" style={{ width: 40, height: 40 }}>
-            {isCG ? (
-              <>
-                <img
-                  src="/themes/cyber%20girl/icons/timer.png"
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover rounded-md cursor-pointer"
-                  style={{
-                    opacity: running ? 1 : 0.5,
-                    animation: running ? "cg-timer-spin 1s linear infinite" : "none",
-                  }}
-                  onClick={running ? pause : start}
-                  title={running ? t("widget.countdown_pause") : t("widget.countdown_start_title")}
-                />
-              </>
-            ) : (
+            {(
               <>
                 <svg className="absolute inset-0" width="40" height="40" style={{ transform: "rotate(-90deg)" }}>
                   <circle cx="20" cy="20" r="17" fill="none"

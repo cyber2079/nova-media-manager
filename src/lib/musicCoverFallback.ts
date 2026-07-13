@@ -17,7 +17,7 @@ const DEFAULT_SVG = [
 
 /**
  * Returns the fallback music cover image URL based on the currently active theme.
- * - Premium themes (ice-girl, cyber-girl): uses `{theme}/icons/music.webp`
+ * - Premium themes (ice-girl, cyber-girl): uses `{theme}/music-cover.webp`
  * - Default theme: uses an inline SVG music-note icon
  */
 export function getMusicCoverFallback(): string {

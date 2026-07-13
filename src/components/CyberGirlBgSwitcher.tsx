@@ -1,25 +1,25 @@
 import { useEffect, useRef } from "react";
 
-const CG_BASE = "/themes/cyber%20girl/pic";
+const CG = "/themes/cyber%20girl";
 
-// 16 scenes
+// 16 scenes — bg from scenes/, face from faces/
 const SCENES = [
-  { bg: `${CG_BASE}/start1.webp`,            face: "no face.webp",            skillShow: false },
-  { bg: `${CG_BASE}/start2-listen song.webp`, face: "happy face.webp",        skillShow: true },
-  { bg: `${CG_BASE}/start3.webp`,             face: "no face.webp",            skillShow: false },
-  { bg: `${CG_BASE}/bg1.webp`,                face: "communicate face.webp",   skillShow: false },
-  { bg: `${CG_BASE}/bg2.webp`,                face: "angry face.webp",         skillShow: false },
-  { bg: `${CG_BASE}/1.webp`,                  face: "say face.webp",           skillShow: false },
-  { bg: `${CG_BASE}/2.webp`,                  face: "say face.webp",           skillShow: false },
-  { bg: `${CG_BASE}/3.webp`,                  face: "say face.webp",           skillShow: false },
-  { bg: `${CG_BASE}/4.webp`,                  face: "say face.webp",           skillShow: false },
-  { bg: `${CG_BASE}/5.webp`,                  face: "say face.webp",           skillShow: false },
-  { bg: `${CG_BASE}/6.webp`,                  face: "angry face.webp",         skillShow: false },
-  { bg: `${CG_BASE}/7.webp`,                  face: "happy face.webp",         skillShow: false },
-  { bg: `${CG_BASE}/start34.webp`,            face: "communicate face.webp",   skillShow: false },
-  { bg: `${CG_BASE}/bg3.webp`,                face: "angry face.webp",         skillShow: false },
-  { bg: `${CG_BASE}/start4.webp`,             face: "say face.webp",           skillShow: false },
-  { bg: `${CG_BASE}/end.webp`,                face: "angry face.webp",         skillShow: false },
+  { bg: `${CG}/bg.webp`,                         face: "neutral",    skillShow: false },
+  { bg: `${CG}/scenes/skill-show-music.webp`,    face: "happy",      skillShow: true },
+  { bg: `${CG}/scenes/scene-01.webp`,            face: "neutral",    skillShow: false },
+  { bg: `${CG}/scenes/scene-11.webp`,            face: "talk",       skillShow: false },
+  { bg: `${CG}/scenes/scene-12.webp`,            face: "angry",      skillShow: false },
+  { bg: `${CG}/scenes/scene-04.webp`,            face: "talk",       skillShow: false },
+  { bg: `${CG}/scenes/scene-05.webp`,            face: "talk",       skillShow: false },
+  { bg: `${CG}/scenes/scene-06.webp`,            face: "talk",       skillShow: false },
+  { bg: `${CG}/scenes/scene-07.webp`,            face: "talk",       skillShow: false },
+  { bg: `${CG}/scenes/scene-08.webp`,            face: "talk",       skillShow: false },
+  { bg: `${CG}/scenes/scene-09.webp`,            face: "angry",      skillShow: false },
+  { bg: `${CG}/scenes/scene-10.webp`,            face: "happy",      skillShow: false },
+  { bg: `${CG}/scenes/scene-02.webp`,            face: "talk",       skillShow: false },
+  { bg: `${CG}/scenes/scene-13.webp`,            face: "angry",      skillShow: false },
+  { bg: `${CG}/scenes/scene-03.webp`,            face: "talk",       skillShow: false },
+  { bg: `${CG}/scenes/scene-14.webp`,            face: "angry",      skillShow: false },
 ];
 
 export interface CgScene { bg: string; face: string; skillShow: boolean; }

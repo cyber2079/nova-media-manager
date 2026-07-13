@@ -217,16 +217,16 @@ function ThemeTitle() {
 
 function CgSkillShowcase({ cgBase, t, cgSceneIdx, textClass, textColor }: { cgBase: string; t: any; cgSceneIdx: number; textClass: string; textColor: string }) {
   const skills = [
-    { src: "start2-listen song.webp", corner: "tl" as const, labelKey: "nav.music" },
-    { src: "start2-watch movie.webp", corner: "tr" as const, labelKey: "nav.movies" },
-    { src: "start2-view pic.webp",   corner: "bl" as const, labelKey: "nav.images" },
-    { src: "start2-play game.webp",  corner: "br" as const, labelKey: "nav.games" },
+    { src: "skill-show-music.webp", corner: "tl" as const, labelKey: "nav.music" },
+    { src: "skill-show-movie.webp", corner: "tr" as const, labelKey: "nav.movies" },
+    { src: "skill-show-image.webp", corner: "bl" as const, labelKey: "nav.images" },
+    { src: "skill-show-game.webp",  corner: "br" as const, labelKey: "nav.games" },
   ];
   return (
     <div className="relative w-full" style={{ height: "min(58vh, 520px)", minHeight: "360px" }}>
       <div className="absolute inset-0 flex flex-col items-center justify-center z-10" style={{ pointerEvents: "none" }}>
         <div className="rounded-2xl overflow-hidden shrink-0" style={{ width: 100, height: 100, boxShadow: "0 0 25px rgba(199,77,255,0.25), 0 0 50px rgba(255,77,166,0.1)" }}>
-          <img src={`${cgBase}/pic/happy face.webp`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img src={`${cgBase}/faces/happy.webp`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
         <div className="cg-scroll theme-card rounded-lg px-5 py-3 mt-4" style={{ maxWidth: "520px", width: "fit-content", minWidth: "220px" }}>
           <CgTypewriter key={`cg-skill-${cgSceneIdx}`} text={t(`home.cg_scene${cgSceneIdx + 1}_text`)} speed={50} className={cn(textClass, "text-center")} style={{ color: textColor }} />
@@ -314,9 +314,9 @@ export default function Home() {
             {iceFace && (
               <div className="shrink-0 rounded-2xl overflow-hidden" style={{ boxShadow: "0 0 18px rgba(176,224,255,0.18), 0 0 45px rgba(176,224,255,0.06)" }}>
                 {iceFace.startsWith("video:") ? (
-                  <video src={`/themes/ice%20girl/pic/${iceFace.slice(6)}.mp4`} autoPlay muted playsInline onEnded={(e) => e.currentTarget.pause()} style={{ width: "240px", height: "auto" }} />
+                  <video src={`/themes/ice%20girl/video/${iceFace.slice(6)}.mp4`} autoPlay muted playsInline onEnded={(e) => e.currentTarget.pause()} style={{ width: "240px", height: "auto" }} />
                 ) : (
-                  <img src={`/themes/ice%20girl/pic/${iceFace} face.webp`} alt="" style={{ width: "144px", height: "144px", imageRendering: "auto" }} />
+                  <img src={`/themes/ice%20girl/faces/${iceFace}.webp`} alt="" style={{ width: "144px", height: "144px", imageRendering: "auto" }} />
                 )}
               </div>
             )}
@@ -368,7 +368,7 @@ export default function Home() {
             <div className="flex items-end justify-center gap-4 mb-8">
               {CG_SCENES[cgSceneIdx] && (
                 <div className="shrink-0 rounded-2xl overflow-hidden" style={{ boxShadow: "0 0 20px rgba(199,77,255,0.2), 0 0 45px rgba(255,77,166,0.08)" }}>
-                  <img src={`${cgBase}/pic/${CG_SCENES[cgSceneIdx].face}`} alt="" style={{ width: "144px", height: "144px", objectFit: "cover" }} />
+                  <img src={`${cgBase}/faces/${CG_SCENES[cgSceneIdx].face}.webp`} alt="" style={{ width: "144px", height: "144px", objectFit: "cover" }} />
                 </div>
               )}
               <div className="cg-scroll theme-card rounded-lg p-5 text-center max-w-xl">

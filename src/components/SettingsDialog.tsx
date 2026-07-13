@@ -22,8 +22,8 @@ interface Props {
 
 const themeList: { key: ThemeName; labelKey: string; emoji: string; image?: string }[] = [
   { key: "default", labelKey: "settings.theme_default", emoji: "🏠" },
-  { key: "ice-girl", labelKey: "settings.theme_ice", emoji: "❄️", image: "/themes/ice%20girl/pic/head.webp" },
-  { key: "cyber-girl", labelKey: "settings.theme_cg", emoji: "💜", image: "/themes/cyber%20girl/pic/bg1.webp" },
+  { key: "ice-girl", labelKey: "settings.theme_ice", emoji: "❄️", image: "/themes/ice%20girl/head.webp" },
+  { key: "cyber-girl", labelKey: "settings.theme_cg", emoji: "💜", image: "/themes/cyber%20girl/bg.webp" },
 ];
 
 type TabId = "general" | "appearance" | "music" | "images" | "movies" | "games" | "widgets";

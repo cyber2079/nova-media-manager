@@ -55,41 +55,78 @@
 
 ## 三、主题开发 SOP
 
-### 3.1 目录结构约定
+### 3.1 素材目录结构（强制）
+
+每个主题的素材目录必须按以下结构组织。**打包脚本只收集此结构内的文件，多出的文件不会被打包。**
 
 ```
-D:\nova-proprietary\themes\{theme-id}\   ← Git 私库 — 元数据 + 提示词
-├── manifest.json          ← 主题声明（按 manifest.schema.json）
-├── prompts.json           ← AI 生成提示词（按 prompts.schema.json）
-├── theme.css              ← CSS 变量 + 主题样式
-└── preview.webp           ← 设置页缩略图
-
-D:\nova-themes-assets\{theme-id}\        ← Syncthing 同步 — AI 生成的素材
-├── preview.webp           ← (同项目目录)
-├── head.webp              ← 角色头像 512×512
-├── bg.webp / bg.mp4       ← 首页背景
-├── faces\
-│   ├── lofty.webp         ← 表情：高傲
-│   ├── happy.webp         ← 表情：开心
-│   ├── angry.webp         ← 表情：愤怒
-│   ├── cry.webp           ← 表情：哭泣
-│   └── naughty.webp       ← 表情：调皮
-├── icons\
-│   ├── home.webp          ← 首页导航图标
-│   ├── movie.webp         ← 电影导航图标
-│   ├── music.webp         ← 音乐导航图标
-│   ├── pic.webp           ← 图片导航图标
-│   └── game.webp          ← 游戏导航图标
-├── scenes\                ← 剧情场景背景图
-│   ├── scene1.webp
-│   ├── scene2.webp
-│   └── ...
-└── video\
-    ├── bg-loop.mp4        ← 背景视频循环
-    └── secretary.mp4      ← 秘书/问候视频
+{assets}/                           ← public/themes/{dir}/ 或 nova-themes-assets/
+├── preview.webp                    ← 设置页缩略图，16:9
+│
+├── icons/                          ← 导航 + 技能图标，128×128 WebP
+│   ├── home.webp                   ← 首页导航 [必须]
+│   ├── movie.webp                  ← 电影导航 [必须]
+│   ├── pic.webp                    ← 图片导航 [必须]
+│   ├── music.webp                  ← 音乐导航 [必须]
+│   ├── game.webp                   ← 游戏导航 [必须]
+│   ├── skill-01.webp               ← 技能图标 [必须，≥6个]
+│   ├── skill-02.webp
+│   ├── skill-03.webp
+│   ├── skill-04.webp
+│   ├── skill-05.webp
+│   └── skill-06.webp
+│
+├── faces/                          ← 角色表情，512×512 WebP，正方形
+│   ├── happy.webp                  ← 开心 [必须]
+│   ├── angry.webp                  ← 愤怒 [必须]
+│   ├── neutral.webp                ← 无表情 [必须]
+│   ├── cry.webp                    ← 哭泣
+│   ├── naughty.webp                ← 调皮
+│   ├── talk.webp                   ← 说话
+│   ├── surprise.webp               ← 惊讶
+│   ├── smug.webp                   ← 傲慢（冰霜女皇专属）
+│   └── curse.webp                  ← 狂暴
+│
+├── scenes/                         ← 剧情场景背景，1080p WebP
+│   ├── scene-01.webp
+│   ├── scene-02.webp
+│   └── ...                         ← 按编号递增
+│
+├── video/                          ← 视频（可选）
+│   ├── bg-loop.mp4                 ← 首页背景循环，H.264，≤60MB
+│   └── secretary.mp4               ← 秘书问候视频
+│
+├── bg.webp                         ← 视频未加载时的静态占位图
+└── music-cover.webp                ← 音乐库默认封面
 ```
 
-### 3.2 创建新主题 — 7 步
+**不要出现的东西**：
+- `.png` 源文件（如果已有同名 `.webp`）
+- `- 副本` / `(1)` / `(2)` 等复制标记
+- 即梦 AI 生成的原始文件名（如 `jimeng-2026-07-03-1074-...webp`）
+- 大于 5MB 的单个文件（WebP 可压缩）
+- 任何代码未引用的文件
+
+### 3.2 文件命名规范
+
+| 规则 | 示例 |
+|---|---|
+| 全小写，连字符分隔 | `scene-01.webp` 不是 `Scene 01.webp` |
+| 编号始终两位数字 | `skill-03.webp` 不是 `skill-3.webp` |
+| 不含空格 | `angry.webp` 不是 `angry face.webp` |
+| 不含中文 | `preview.webp` 不是 `预览图.webp` |
+| 单数形式 | `icon` 不是 `icons`，`face` 不是 `faces` |
+| `.webp` 后缀（仅 WebP） | 不要同时保留 `.png` 副本 |
+
+### 3.3 现有主题对齐状态
+
+| 主题 | 状态 | 说明 |
+|---|---|---|
+| **ice-girl** | ⚠️ 部分对齐 | 技能图标 1-6.webp 需重命名 skill-01~06；表情 `xx face.webp` 去空格；目录无 faces/scenes/video 分拆 |
+| **cyber-girl** | ⚠️ 部分对齐 | 技能图标 skill1~6 需改成 skill-01~06；表情同理；pic 目录需要分拆 |
+| **新主题** | ✅ 从 day 1 按此规范 | AI 生成素材时必须输出到此结构 |
+
+### 3.4 创建新主题 — 7 步
 
 ```
 STEP 1  写 prompts.json

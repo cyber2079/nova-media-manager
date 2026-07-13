@@ -530,8 +530,8 @@ export default function Layout() {
     <div className="min-h-screen bg-surface" id="app" ref={appRef}>
       {/* ── Ice Girl background ── */}
       {isIce && <>
-        <video ref={iceVidRef} className="ice-bg-video fixed inset-0 object-cover w-full h-full" autoPlay muted playsInline poster="/themes/ice%20girl/pic/ice.webp" src="/themes/ice%20girl/pic/ice_moive.mp4" />
-        <video ref={iceVidBRef} className="hidden" muted playsInline preload="auto" src="/themes/ice%20girl/pic/ice_moive.mp4" />
+        <video ref={iceVidRef} className="ice-bg-video fixed inset-0 object-cover w-full h-full" autoPlay muted playsInline poster="/themes/ice%20girl/bg.webp" src="/themes/ice%20girl/video/bg-loop.mp4" />
+        <video ref={iceVidBRef} className="hidden" muted playsInline preload="auto" src="/themes/ice%20girl/video/bg-loop.mp4" />
       </>}
 
       {/* ── Cyber Girl background ── */}
