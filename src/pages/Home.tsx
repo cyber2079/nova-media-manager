@@ -200,18 +200,29 @@ function tagCssColor(str: string): string {
   return vars[Math.abs(h) % vars.length];
 }
 
+/** Theme metadata — maps ThemeName to rendering strategy.
+ *  Future premium themes register here once downloaded + installed. */
+type ThemeType = "story" | "dynamic" | "static" | "hybrid";
+
+const THEME_META: Record<string, { type: ThemeType; i18nKey: string; titleClass: string; subtitleClass: string }> = {
+  default:     { type: "static",  i18nKey: "home.default", titleClass: "text-4xl font-bold tracking-tight text-white", subtitleClass: "text-lg text-gray-400" },
+  "ice-girl":  { type: "dynamic", i18nKey: "home.ice",   titleClass: "text-6xl font-black tracking-[0.1em] ice-text-glow text-[#b0e0ff] uppercase", subtitleClass: "text-xl font-semibold tracking-[0.25em] text-[#87ceeb]/70 uppercase" },
+  "cyber-girl":{ type: "story",   i18nKey: "home.cg",     titleClass: "text-5xl font-black tracking-[0.1em] cg-text-glow text-[#e890ff] uppercase", subtitleClass: "text-xl font-semibold tracking-[0.2em] text-[#ff4da6]/70 uppercase" },
+};
+
+function getThemeMeta(theme: string) {
+  return THEME_META[theme] ?? THEME_META.default;
+}
+
 function ThemeTitle() {
   const { t } = useTranslation();
   const { theme } = useThemeStore();
-  const isIce = theme === "ice-girl";
-  const isCG = theme === "cyber-girl";
-  const k = isCG ? "home.cg" : isIce ? "home.ice" : "home.default";
-  const title = t(`${k}_title`);
-  const subtitle = t(`${k}_subtitle`);
-  const isDefault = theme === "default";
+  const meta = getThemeMeta(theme);
+  const title = t(`${meta.i18nKey}_title`);
+  const subtitle = t(`${meta.i18nKey}_subtitle`);
   return (<>
-    {title && <h1 className={cn("font-bold theme-enter-title", isDefault && "text-4xl font-bold tracking-tight text-white", isIce && "text-6xl font-black tracking-[0.1em] ice-text-glow text-[#b0e0ff] uppercase", isCG && "text-5xl font-black tracking-[0.1em] cg-text-glow text-[#e890ff] uppercase")}>{title}</h1>}
-    {subtitle && <p className={cn(title && "mt-3", isDefault && "text-lg text-gray-400", isIce && "text-xl font-semibold tracking-[0.25em] text-[#87ceeb]/70 uppercase", isCG && "text-xl font-semibold tracking-[0.2em] text-[#ff4da6]/70 uppercase")}>{subtitle}</p>}
+    {title && <h1 className={cn("font-bold theme-enter-title", meta.titleClass)}>{title}</h1>}
+    {subtitle && <p className={cn(title && "mt-3", meta.subtitleClass)}>{subtitle}</p>}
   </>);
 }
 
@@ -269,18 +280,16 @@ export default function Home() {
   const { theme } = useThemeStore();
   const { t } = useTranslation();
   const { getCharacters, saveOverride, resetCharacter } = useThemeShortcutStore();
-  const isDefault = theme === "default";
-  const isIce = theme === "ice-girl";
-  const isCG = theme === "cyber-girl";
+  const themeType = getThemeMeta(theme).type;
   const [editingChar, setEditingChar] = useState<ThemeCharacter | null>(null);
   const [iceBgVisible, setIceBgVisible] = useState(false);
   const [iceFace, setIceFace] = useState("");
   const [cgSceneIdx, setCgSceneIdx] = useState(0);
 
   useEffect(() => {
-    if (!isCG) return;
+    if (themeType !== "story") return;
     return onCgSceneChange(setCgSceneIdx);
-  }, [isCG]);
+  }, [themeType]);
 
   const cyberBgmEnabled = useSettingsStore((s) => s.cyberBgmEnabled);
   const cgTextSize = useSettingsStore((s) => s.cgTextSize);
@@ -288,11 +297,11 @@ export default function Home() {
   const cgTextClass = `text-${cgTextSize} tracking-wide leading-relaxed`;
 
   useEffect(() => {
-    if (!isCG || !cyberBgmEnabled) { stopBgm(); return; }
+    if (themeType !== "story" || !cyberBgmEnabled) { stopBgm(); return; }
     if (cgSceneIdx <= 4) switchBgm("start");
     else switchBgm("main");
-  }, [isCG, cgSceneIdx, cyberBgmEnabled]);
-  useEffect(() => { return () => { stopBgm(); }; }, [isCG]);
+  }, [themeType, cgSceneIdx, cyberBgmEnabled]);
+  useEffect(() => { return () => { stopBgm(); }; }, [themeType]);
 
   const handleCharClick = (c: ThemeCharacter) => { if (c.appPath) launchApp(c.appPath); };
   const handleCharContext = (e: React.MouseEvent, c: ThemeCharacter) => { e.preventDefault(); setEditingChar(c); };
@@ -301,13 +310,13 @@ export default function Home() {
     <div className="space-y-8 animate-fade-in-up">
       {/* Theme Title */}
       <div className="text-center"><ThemeTitle /></div>
-      {isDefault && <div className="h-px w-48 mx-auto bg-gradient-to-r from-transparent via-primary/40 to-transparent" />}
+      {themeType === "static" && <div className="h-px w-48 mx-auto bg-gradient-to-r from-transparent via-primary/40 to-transparent" />}
 
-      {/* ── Default Dashboard ── */}
-      {isDefault && <DashBoard />}
+      {/* ── Static Dashboard ── */}
+      {themeType === "static" && <DashBoard />}
 
-      {/* ── Ice Girl Section ── */}
-      {isIce && (
+      {/* ── Dynamic: background video + typewriter + skill icons ── */}
+      {themeType === "dynamic" && (
         <div className="mt-12 pt-8" data-hero>
           {/* Typewriter lore */}
           <div className="flex items-end justify-center gap-4 mb-6" style={{ opacity: iceBgVisible ? 1 : 0, transition: "opacity 0.6s ease" }}>
@@ -359,8 +368,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Cyber Girl Section ── */}
-      {isCG && (
+      {/* ── Story: scene progression + BGM ── */}
+      {themeType === "story" && (
         <div className="mt-12 pt-8" data-hero>
           {CG_SCENES[cgSceneIdx]?.skillShow ? (
             <CgSkillShowcase key={cgSceneIdx} cgBase={cgBase} t={t} cgSceneIdx={cgSceneIdx} textClass={cgTextClass} textColor={cgTextColor} />
