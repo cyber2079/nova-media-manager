@@ -379,23 +379,44 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Story: scene progression + BGM ── */}
+      {/* ── Story: script-driven scene progression ── */}
       {themeType === "story" && (
         <div className="mt-12 pt-8" data-hero>
-          {CG_SCENES[cgSceneIdx]?.skillShow ? (
-            <CgSkillShowcase key={cgSceneIdx} cgBase={cgBase} t={t} cgSceneIdx={cgSceneIdx} textClass={cgTextClass} textColor={cgTextColor} />
-          ) : (
-            <div className="flex items-end justify-center gap-4 mb-8">
-              {CG_SCENES[cgSceneIdx] && (
-                <div className="shrink-0 rounded-2xl overflow-hidden" style={{ boxShadow: "0 0 20px rgba(199,77,255,0.2), 0 0 45px rgba(255,77,166,0.08)" }}>
-                  <img src={`${cgBase}/faces/${CG_SCENES[cgSceneIdx].face}.webp`} alt="" style={{ width: "144px", height: "144px", objectFit: "cover" }} />
+          {(() => {
+            const node = script[cgSceneIdx];
+            if (!node) return null;
+            const bgUrl = node.thumbOk ? `/${node.thumbUrl}` : undefined;
+            const faceUrl = node.face && node.faceOk ? node.faceUrl : undefined;
+            const displayText = node.text.startsWith("home.") ? t(node.text) : node.text;
+
+            if (node.skillShow) {
+              return (
+                <div className="relative w-full" style={{ height: "min(58vh, 520px)", minHeight: "360px" }}>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center z-10" style={{ pointerEvents: "none" }}>
+                    <div className="rounded-2xl overflow-hidden shrink-0" style={{ width: 100, height: 100, boxShadow: "0 0 25px rgba(199,77,255,0.25), 0 0 50px rgba(255,77,166,0.1)" }}>
+                      <img src={`${cgBase}/pic/happy face.webp`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                    <div className="cg-scroll theme-card rounded-lg px-5 py-3 mt-4" style={{ maxWidth: "520px", width: "fit-content", minWidth: "220px" }}>
+                      <CgTypewriter key={cgSceneIdx} text={displayText} speed={50} className={cn(cgTextClass, "text-center")} style={{ color: cgTextColor }} />
+                    </div>
+                  </div>
                 </div>
-              )}
-              <div className="cg-scroll theme-card rounded-lg p-5 text-center max-w-xl">
-                <CgTypewriter key={cgSceneIdx} text={t(`home.cg_scene${cgSceneIdx + 1}_text`)} speed={55} className={cgTextClass} style={{ color: cgTextColor }} />
+              );
+            }
+
+            return (
+              <div className="flex items-end justify-center gap-4 mb-8">
+                {faceUrl && (
+                  <div className="shrink-0 rounded-2xl overflow-hidden" style={{ boxShadow: "0 0 20px rgba(199,77,255,0.2), 0 0 45px rgba(255,77,166,0.08)" }}>
+                    <img src={faceUrl} alt="" style={{ width: "144px", height: "144px", objectFit: "cover" }} />
+                  </div>
+                )}
+                <div className="cg-scroll theme-card rounded-lg p-5 text-center max-w-xl">
+                  <CgTypewriter key={cgSceneIdx} text={displayText} speed={55} className={cgTextClass} style={{ color: cgTextColor }} />
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
           {/* Skill icons */}
           <div className="theme-card mx-auto inline-flex rounded-2xl px-5 py-3.5">
           <div className="flex justify-center gap-8 flex-wrap">
