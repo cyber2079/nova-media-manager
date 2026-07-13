@@ -326,11 +326,14 @@ export default function ThemeStudioPage() {
                         {/* Background */}
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-1">背景图/视频</label>
-                          <select value={String(editData.background || "")} onChange={e => setField("background", e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none">
+                          <select onChange={e => { if (e.target.value) setField("background", e.target.value); }}
+                            className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none mb-1">
                             <option value="">(默认背景)</option>
-                            {assetPaths.map(p => <option key={p} value={p}>{p}</option>)}
+                            {assetPaths.map(p => <option key={p} value={p} selected={editData.background === p}>{p}</option>)}
                           </select>
+                          <input value={String(editData.background || "")} onChange={e => setField("background", e.target.value)}
+                            className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-mono outline-none focus:border-primary/50"
+                            placeholder="或直接输入路径..." />
                           {editData.background && (
                             <div className="mt-1.5 aspect-video rounded-lg bg-black/30 overflow-hidden">
                               <img src={`/themes/${selected === "ice-girl" ? "ice%20girl" : "cyber%20girl"}/${editData.background}`}
@@ -341,8 +344,14 @@ export default function ThemeStudioPage() {
                         </div>
                         {/* Face */}
                         <div>
-                          <label className="block text-[10px] text-gray-500 mb-1">表情</label>
-                          <div className="flex gap-1.5 flex-wrap mb-1">
+                          <label className="block text-[10px] text-gray-500 mb-1">表情 · 快捷填入</label>
+                          <select onChange={e => { if (e.target.value) setField("face", e.target.value); }}
+                            className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none mb-1.5">
+                            <option value="">— 选择表情 —</option>
+                            <option value="">无</option>
+                            {faceFiles.map(f => <option key={f} value={f}>{f}</option>)}
+                          </select>
+                          <div className="flex gap-1.5 flex-wrap">
                             <button onClick={() => setField("face", "")}
                               className={`px-2 py-0.5 rounded text-[10px] ${!editData.face ? "bg-primary/20 text-primary-light" : "bg-white/5 text-gray-400 hover:text-white"}`}>无</button>
                             {faceFiles.map(f => (
@@ -353,7 +362,7 @@ export default function ThemeStudioPage() {
                             ))}
                           </div>
                           {editData.face && (
-                            <div className="w-16 h-16 rounded-lg overflow-hidden border border-white/5 bg-black/30">
+                            <div className="mt-1.5 w-16 h-16 rounded-lg overflow-hidden border border-white/5 bg-black/30">
                               <img src={`/themes/${selected === "ice-girl" ? "ice%20girl" : "cyber%20girl"}/faces/${editData.face}.webp`}
                                 className="w-full h-full object-cover"
                                 onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
