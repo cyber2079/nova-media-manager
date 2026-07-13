@@ -3,10 +3,12 @@ import { useTranslation } from "react-i18next";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { Download, Loader2, X } from "lucide-react";
+import { useGate } from "@/lib/useGate";
 
 export default function UpdateChecker() {
   const { t, i18n } = useTranslation();
   const isZh = i18n.language.startsWith("zh");
+  const canUpdate = useGate("auto-update"); // Pro+ only — Free users update manually from GitHub Releases
   const [update, setUpdate] = useState<{
     version: string;
     notes: string;
@@ -16,10 +18,9 @@ export default function UpdateChecker() {
   const [progress, setProgress] = useState(0);
   const [dismissed, setDismissed] = useState(false);
 
-  // Check for updates on mount (only in Pro/Ultra)
+  // Check for updates on mount — Pro+ only
   useEffect(() => {
-    // Community edition (free) doesn't get updates via the updater plugin
-    // Check license first — but for now, always check
+    if (!canUpdate) return; // Free tier → manual update via GitHub Releases
     let cancelled = false;
 
     const checkUpdate = async () => {
