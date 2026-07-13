@@ -201,6 +201,18 @@ pub fn theme_studio_validate(theme_id: String) -> Result<ValidateResult, String>
     Ok(ValidateResult { ok: errs.is_empty(), errors: errs, warnings: vec![] })
 }
 
+/// Runtime command — used by Home.tsx to drive rendering from manifest.script
+#[tauri::command]
+pub fn theme_get_script(theme_id: String) -> Result<Vec<ScriptNode>, String> {
+    let proj_dir = Path::new(THEMES_DIR).join(&theme_id);
+    let manifest: serde_json::Value = read_json(&proj_dir.join("manifest.json"));
+    let pd = &public_dir(&theme_id);
+    let pub_dir = Path::new(PUBLIC_THEMES).join(pd);
+    let bg_default = manifest["backgroundDefault"].as_str().unwrap_or("").to_string();
+    let theme_type = manifest["type"].as_str().unwrap_or("static");
+    Ok(build_script(&manifest, &pub_dir, pd, theme_type, &bg_default))
+}
+
 #[tauri::command]
 pub async fn theme_studio_generate(theme_id: String) -> Result<String, String> {
     let s = std::process::Command::new("node").arg("D:\\nova-media-manager\\scripts\\theme-generate.mjs").arg(&theme_id).output().map_err(|e| format!("Fail: {e}"))?;

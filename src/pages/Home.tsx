@@ -13,6 +13,7 @@ import { readFileSafe } from "@/lib/readFileSafe";
 import ThemeShortcutEditDialog from "@/components/ThemeShortcutEditDialog";
 import TypewriterText from "@/components/TypewriterText";
 import { onCgSceneChange, CG_SCENES } from "@/components/CyberGirlBgSwitcher";
+import { invoke } from "@tauri-apps/api/core";
 
 // Module-level BGM singleton
 let _bgmAudio: HTMLAudioElement | null = null;
@@ -276,15 +277,37 @@ function CgTypewriter({ text, speed = 55, delay = 0, className }: { text: string
   return <p className={className}>{displayed || " "}{typing && <span className="inline-block w-0.5 h-3.5 bg-[#e890ff]/60 ml-0.5 align-middle animate-pulse" />}</p>;
 }
 
+/** Load manifest.script from Rust for premium themes */
+interface RuntimeScriptNode { id: string; label: string; background: string; face: string; text: string; bgm: string; skillShow: boolean; thumbOk: boolean; thumbUrl: string; faceOk: boolean; faceUrl: string; i18nPreview: string; }
+function useThemeScript(theme: string) {
+  const [script, setScript] = useState<RuntimeScriptNode[]>([]);
+  useEffect(() => {
+    if (theme === "default") { setScript([]); return; }
+    let cancelled = false;
+    invoke<RuntimeScriptNode[]>("theme_get_script", { themeId: theme })
+      .then(s => { if (!cancelled) setScript(s); })
+      .catch(() => { if (!cancelled) setScript([]); });
+    return () => { cancelled = true; };
+  }, [theme]);
+  return script;
+}
+
 export default function Home() {
   const { theme } = useThemeStore();
   const { t } = useTranslation();
   const { getCharacters, saveOverride, resetCharacter } = useThemeShortcutStore();
   const themeType = getThemeMeta(theme).type;
+  const script = useThemeScript(theme);
   const [editingChar, setEditingChar] = useState<ThemeCharacter | null>(null);
   const [iceBgVisible, setIceBgVisible] = useState(false);
   const [iceFace, setIceFace] = useState("");
   const [cgSceneIdx, setCgSceneIdx] = useState(0);
+
+  // Build dynamic quotes from script
+  const dynamicQuotes = useMemo(() => (themeType === "dynamic" ? script.map(node => ({
+    text: node.text.startsWith("home.") ? t(node.text) : node.text,
+    face: node.face,
+  })) : []), [script, themeType, t]);
 
   useEffect(() => {
     if (themeType !== "story") return;
@@ -294,13 +317,19 @@ export default function Home() {
   const cyberBgmEnabled = useSettingsStore((s) => s.cyberBgmEnabled);
   const cgTextSize = useSettingsStore((s) => s.cgTextSize);
   const cgTextColor = useSettingsStore((s) => s.cgTextColor);
+  const cgTextBgColor = useSettingsStore((s) => s.cgTextBgColor);
+  const cgTextBgOpacity = useSettingsStore((s) => s.cgTextBgOpacity);
   const cgTextClass = `text-${cgTextSize} tracking-wide leading-relaxed`;
+  const cgScrollBgStyle = { background: `color-mix(in srgb, ${cgTextBgColor} ${cgTextBgOpacity}%, transparent)` };
 
+  // BGM driven by script node bgm field
   useEffect(() => {
     if (themeType !== "story" || !cyberBgmEnabled) { stopBgm(); return; }
-    if (cgSceneIdx <= 4) switchBgm("start");
+    const node = script[cgSceneIdx];
+    if (node?.bgm) switchBgm(node.bgm as "start" | "main");
+    else if (cgSceneIdx <= 4) switchBgm("start");
     else switchBgm("main");
-  }, [themeType, cgSceneIdx, cyberBgmEnabled]);
+  }, [themeType, cgSceneIdx, cyberBgmEnabled, script]);
   useEffect(() => { return () => { stopBgm(); }; }, [themeType]);
 
   const handleCharClick = (c: ThemeCharacter) => { if (c.appPath) launchApp(c.appPath); };
@@ -315,8 +344,8 @@ export default function Home() {
       {/* ── Static Dashboard ── */}
       {themeType === "static" && <DashBoard />}
 
-      {/* ── Dynamic: background video + typewriter + skill icons ── */}
-      {themeType === "dynamic" && (
+      {/* ── Dynamic: script-driven typewriter + skill icons ── */}
+      {themeType === "dynamic" && dynamicQuotes.length > 0 && (
         <div className="mt-12 pt-8" data-hero>
           {/* Typewriter lore */}
           <div className="flex items-end justify-center gap-4 mb-6" style={{ opacity: iceBgVisible ? 1 : 0, transition: "opacity 0.6s ease" }}>
@@ -330,25 +359,7 @@ export default function Home() {
               </div>
             )}
             <div className="ice-scroll theme-card rounded-lg p-5 text-center max-w-xl">
-              <TypewriterText quotes={[
-                { text: t("home.ice_ascendancy_text"), face: "lofty" },
-                { text: t("home.ice_quote_1"), face: "happy" },
-                { text: t("home.ice_quote_2"), face: "angry" },
-                { text: t("home.ice_quote_3"), face: "lofty" },
-                { text: t("home.ice_quote_4"), face: "angry" },
-                { text: t("home.ice_quote_5"), face: "happy" },
-                { text: t("home.ice_quote_7"), face: "lofty" },
-                { text: t("home.ice_quote_8"), face: "angry" },
-                { text: t("home.ice_quote_9"), face: "angry" },
-                { text: t("home.ice_quote_10"), face: "angry" },
-                { text: t("home.ice_quote_11"), face: "happy" },
-                { text: t("home.ice_quote_12"), face: "angry" },
-                { text: t("home.ice_quote_13"), face: "angry" },
-                { text: t("home.ice_quote_14"), face: "cry" },
-                { text: t("home.ice_quote_15"), face: "angry" },
-                { text: t("home.ice_quote_16"), face: "naughty" },
-                { text: t("home.ice_quote_17"), face: "video:secretary" },
-              ]} speed={70} pause={1000} onVisibilityChange={setIceBgVisible} onFaceChange={setIceFace}
+              <TypewriterText quotes={dynamicQuotes} speed={70} pause={1000} onVisibilityChange={setIceBgVisible} onFaceChange={setIceFace}
                 className="text-xs text-[#b0e0ff] tracking-wide leading-relaxed" />
             </div>
           </div>
