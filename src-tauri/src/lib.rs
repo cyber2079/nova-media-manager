@@ -131,6 +131,7 @@ pub fn run() {
             windows::open_secondary_window,
             windows::close_secondary_window,
             windows::is_secondary_window_open,
+            windows::list_monitors,
             theme::install_theme_file,
             theme::install_theme_bytes,
             theme::list_installed_themes,

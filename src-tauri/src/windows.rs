@@ -135,3 +135,36 @@ pub fn _emit_to_secondary<T: Serialize + Clone>(app: &AppHandle, event: &str, pa
         let _ = w.emit(event, payload);
     }
 }
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct MonitorInfo {
+    pub name: String,
+    pub size: (u32, u32),
+    pub position: (i32, i32),
+    pub scale_factor: f64,
+    pub is_primary: bool,
+}
+
+/// List all available monitors for the settings dropdown
+#[tauri::command]
+pub fn list_monitors(app: AppHandle) -> Result<Vec<MonitorInfo>, String> {
+    let primary = app.primary_monitor().ok().flatten();
+    let monitors = app.available_monitors().map_err(|e| e.to_string())?;
+    let mut list = Vec::new();
+    for m in monitors {
+        let pos = m.position();
+        let sz = m.size();
+        let is_primary = primary.as_ref().map_or(false, |p| {
+            p.position().x == pos.x && p.position().y == pos.y
+        });
+        list.push(MonitorInfo {
+            name: m.name().unwrap_or_else(|| format!("{}×{}", sz.width, sz.height)),
+            size: (sz.width, sz.height),
+            position: (pos.x, pos.y),
+            scale_factor: m.scale_factor(),
+            is_primary,
+        });
+    }
+    Ok(list)
+}
