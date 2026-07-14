@@ -306,6 +306,7 @@ export default function Home() {
   useEffect(() => {
     if (themeType === "static") {
       loadMovies(); loadImages(); loadMusic(); loadGames();
+      usePlayHistoryStore.getState().init();
     }
   }, [themeType]);
   const script = useThemeScript(theme);
