@@ -80,7 +80,7 @@ export default function WallpaperEngine() {
       <img
         src={src}
         alt=""
-        className="fixed inset-0 z-0 w-full h-full"
+        className="fixed inset-0 z-0 w-full h-full pointer-events-none"
         style={{
           objectFit,
           opacity: `var(--bg-opacity, 0.7)`,
