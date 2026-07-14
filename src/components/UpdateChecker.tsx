@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
-import { Download, Loader2, X } from "lucide-react";
+import { Download, ExternalLink, Loader2, X } from "lucide-react";
 import { useGate } from "@/lib/useGate";
+
+const RELEASES_URL = "https://github.com/cyber2079/nova-media-manager/releases";
 
 export default function UpdateChecker() {
   const { t, i18n } = useTranslation();
   const isZh = i18n.language.startsWith("zh");
-  const canUpdate = useGate("auto-update"); // Pro+ only — Free users update manually from GitHub Releases
+  const canUpdate = useGate("auto-update"); // Pro+ → auto-download; Free → notify only
   const [update, setUpdate] = useState<{
     version: string;
     notes: string;
@@ -18,27 +20,18 @@ export default function UpdateChecker() {
   const [progress, setProgress] = useState(0);
   const [dismissed, setDismissed] = useState(false);
 
-  // Check for updates on mount — Pro+ only
+  // Check for updates on mount — all tiers
   useEffect(() => {
-    if (!canUpdate) return; // Free tier → manual update via GitHub Releases
     let cancelled = false;
 
     const checkUpdate = async () => {
       try {
         const result = await check();
         if (!result || cancelled) return;
-
-        setUpdate({
-          version: result.version,
-          notes: result.body || "",
-          date: result.date || "",
-        });
-      } catch {
-        // No update available or network error — silent
-      }
+        setUpdate({ version: result.version, notes: result.body || "", date: result.date || "" });
+      } catch { /* silent */ }
     };
 
-    // Delay check to not block startup
     const timer = setTimeout(checkUpdate, 3000);
     return () => { cancelled = true; clearTimeout(timer); };
   }, []);
@@ -118,25 +111,22 @@ export default function UpdateChecker() {
         </div>
       )}
 
-      {/* Download button */}
-      {!downloading && (
-        <button
-          onClick={handleDownload}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-sm font-medium"
-        >
-          <Download className="h-4 w-4" />
-          {isZh ? "立即更新" : "Update Now"}
+      {/* Action */}
+      {!downloading && canUpdate && (
+        <button onClick={handleDownload} className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-sm font-medium">
+          <Download className="h-4 w-4" />{isZh ? "立即更新" : "Update Now"}
         </button>
       )}
-
       {downloading && (
-        <button
-          disabled
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary/50 text-white/50 text-sm font-medium"
-        >
-          <Loader2 className="h-4 w-4 animate-spin" />
-          {isZh ? "正在下载..." : "Downloading..."}
-        </button>
+        <div className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary/50 text-white/50 text-sm font-medium">
+          <Loader2 className="h-4 w-4 animate-spin" />{isZh ? "正在下载..." : "Downloading..."}
+        </div>
+      )}
+      {!canUpdate && (
+        <a href={RELEASES_URL} target="_blank" rel="noopener noreferrer"
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary/15 text-primary-light hover:bg-primary/25 transition-colors text-sm font-medium">
+          <ExternalLink className="h-4 w-4" />{isZh ? "手动下载 · GitHub" : "Download from GitHub"}
+        </a>
       )}
     </div>
   );
