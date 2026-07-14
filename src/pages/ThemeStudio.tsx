@@ -348,13 +348,8 @@ export default function ThemeStudioPage() {
                         </div>
                         {/* Face */}
                         <div>
-                          <label className="block text-[10px] text-gray-500 mb-1">表情 · 快捷填入</label>
-                          <select value={String(editData.face || "")} onChange={e => setField("face", e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none mb-1.5">
-                            <option value="">— 选择表情 —</option>
-                            {faceFiles.map(f => <option key={f} value={f}>{f}</option>)}
-                          </select>
-                          <div className="flex gap-1.5 flex-wrap">
+                          <label className="block text-[10px] text-gray-500 mb-1">表情</label>
+                          <div className="flex gap-1.5 flex-wrap mb-1.5">
                             <button onClick={() => setField("face", "")}
                               className={`px-2 py-0.5 rounded text-[10px] ${!editData.face ? "bg-primary/20 text-primary-light" : "bg-white/5 text-gray-400 hover:text-white"}`}>无</button>
                             {faceFiles.map(f => (
@@ -365,7 +360,7 @@ export default function ThemeStudioPage() {
                             ))}
                           </div>
                           {editData.face && (
-                            <div className="mt-1.5 w-16 h-16 rounded-lg overflow-hidden border border-white/5 bg-black/30">
+                            <div className="w-16 h-16 rounded-lg overflow-hidden border border-white/5 bg-black/30">
                               <img src={`/themes/${selected === "ice-girl" ? "ice%20girl" : "cyber%20girl"}/faces/${editData.face}.webp`}
                                 className="w-full h-full object-cover"
                                 onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
