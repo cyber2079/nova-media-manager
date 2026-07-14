@@ -74,7 +74,7 @@ export default function WallpaperEngine() {
   const src = wp.mode === "single" ? singleSrc : wp.mode === "folder" ? folderSrc : null;
   if (!src) return null;
 
-  const bgSize = wp.fit === "none" ? "auto" : wp.fit === "fill" ? "100% 100%" : "cover";
+  const bgSize = wp.fit === "none" ? "contain" : wp.fit === "fill" ? "100% 100%" : "cover";
   return (
     <>
       <div
@@ -85,8 +85,6 @@ export default function WallpaperEngine() {
           backgroundSize: bgSize,
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",
-          maxWidth: wp.fit === "none" ? "100vw" : undefined,
-          maxHeight: wp.fit === "none" ? "100vh" : undefined,
           opacity: `var(--bg-opacity, 0.7)`,
           transition: "opacity 1s ease",
         }}
