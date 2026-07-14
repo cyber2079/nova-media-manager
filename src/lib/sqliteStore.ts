@@ -1,5 +1,5 @@
 // ── SQLite-backed persistent store (replaces localStorage) ──
-// All data lives in %APPDATA%/media_library.db via Tauri commands.
+// DB + covers + themes live in {app_data}/data/ — safe from cache cleanup.
 // Falls back gracefully when running outside Tauri (dev/browser).
 
 let _tauri: typeof import("@tauri-apps/api/core") | null = null;
