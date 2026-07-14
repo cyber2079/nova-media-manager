@@ -295,6 +295,17 @@ export default function Home() {
   const { t } = useTranslation();
   const { getCharacters, saveOverride, resetCharacter } = useThemeShortcutStore();
   const themeType = getThemeMeta(theme).type;
+
+  // Preload all media stores so Dashboard counts show immediately
+  const loadMovies = useMovieStore((s) => s.loadMovies);
+  const loadImages = useImageStore((s) => s.loadImages);
+  const loadMusic = useMusicStore((s) => s.loadMusic);
+  const loadGames = useGameStore((s) => s.loadGames);
+  useEffect(() => {
+    if (themeType === "static") {
+      loadMovies(); loadImages(); loadMusic(); loadGames();
+    }
+  }, [themeType]);
   const script = useThemeScript(theme);
   const [editingChar, setEditingChar] = useState<ThemeCharacter | null>(null);
   const [iceBgVisible, setIceBgVisible] = useState(false);
