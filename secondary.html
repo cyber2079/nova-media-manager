@@ -1,12 +1,33 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>副屏面板</title>
-  </head>
-  <body>
-    <div id="secondary-root"></div>
-    <script type="module" src="/src/secondary/main.tsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>副屏面板</title>
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:system-ui,sans-serif;background:#080c14;color:#fff;overflow:hidden}
+  .flex-center{display:flex;align-items:center;justify-content:center}
+  .container{min-height:100vh;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem}
+  h1{font-size:2rem;font-weight:800}
+  .sub{font-size:1rem;color:#96adc8}
+  .time{font-size:3rem;font-family:monospace;color:#7aafff}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1 id="title">Nova 副屏</h1>
+  <p class="sub">播放音乐时此处将展示封面与频谱</p>
+  <div class="time" id="clock">--:--:--</div>
+  <p class="sub" id="date" style="font-size:0.85rem;color:#56555f">---</p>
+</div>
+<script>
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('zh-CN', { hour12: false });
+    document.getElementById('date').textContent = now.toLocaleDateString('zh-CN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  }
+  tick(); setInterval(tick, 1000);
+</script>
+</body>
 </html>
