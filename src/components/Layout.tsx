@@ -655,9 +655,9 @@ export default function Layout() {
 
       <main
         className={cn("mx-auto max-w-7xl px-6 overflow-hidden", !isHome && "relative rounded-xl")}
-        style={isHome ? { height: "calc(100vh - 4rem)" } : { height: "calc(100vh - 5rem - 3rem)", marginTop: "5rem" }}
+        style={{ height: "calc(100vh - 5rem - 3rem)", marginTop: "5rem" }}
         data-route={isHome ? "home" : "page"}>
-        <div className={cn("relative z-[1] h-full overflow-y-auto overscroll-contain", isHome ? "pt-2 pb-14" : "px-0 pt-6")}>
+        <div className={cn("relative z-[1] h-full overflow-y-auto overscroll-contain", "px-0 pt-6")}>
           <Outlet />
           <ScrollFade height={56} />
         </div>
