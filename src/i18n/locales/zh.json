@@ -19,6 +19,8 @@
     "ice_subtitle": "凌驾风雪之上，一切喧嚣终归沉寂",
     "cg_title": "代码幽灵",
     "cg_subtitle": "新星城 · 秩序巡卫第七分队",
+    "recent_use": "最近使用",
+    "recent_use_empty": "暂无使用记录",
     "default_title": "欢迎回来",
     "default_subtitle": "一站式管理所有本地媒体资源",
     "total_count": "共 {{count}} 项媒体资源",

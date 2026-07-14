@@ -45,7 +45,7 @@ import { useGameStore } from "@/stores/gameStore";
 import { useMusicStore } from "@/stores/musicStore";
 import { usePlayHistoryStore } from "@/stores/playHistoryStore";
 import { useSettingsStore } from "@/stores/settingsStore";
-import { Film, Image, Gamepad2, Tag, Clock, Music } from "lucide-react";
+import { Film, Image, Gamepad2, Clock, Music } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 // Shared lazy-loaded convertFileSrc
@@ -112,14 +112,6 @@ function DashBoard() {
     return items.sort((a, b) => b.time.localeCompare(a.time)).slice(0, 8);
   }, [movies, images, games, t]);
 
-  const tags = useMemo(() => {
-    const tc = new Map<string, number>();
-    movies.forEach((m) => m.tags.forEach((tg) => tc.set(tg, (tc.get(tg) || 0) + 1)));
-    images.forEach((i) => (i.tags || []).forEach((tg) => tc.set(tg, (tc.get(tg) || 0) + 1)));
-    games.forEach((g) => (g.tags || []).forEach((tg) => tc.set(tg, (tc.get(tg) || 0) + 1)));
-    return Array.from(tc.entries()).sort((a, b) => b[1] - a[1]).slice(0, 12);
-  }, [movies, images, games]);
-
   const total = movies.length + images.length + musicCount + games.length;
 
   return (
@@ -158,47 +150,35 @@ function DashBoard() {
             </div>
           ) : <p className="text-sm text-[#8aa8c4]">{t("dashboard.empty")}</p>}
         </div>
+        {/* 最近使用 — 来自播放历史（电影/音乐/游戏） */}
         <div>
-          <h3 className="text-xs font-semibold text-[#9ab8d4] uppercase tracking-wider mb-3">{t("dashboard.popular_tags")}</h3>
-          {tags.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {tags.map(([tag, count]) => (
-                <span key={tag} className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs border transition-all hover:scale-105 cursor-default" style={{
-                  backgroundColor: `color-mix(in srgb, ${tagCssColor(tag)} 20%, #101520)`,
-                  borderColor: `color-mix(in srgb, ${tagCssColor(tag)} 40%, #1a1f2a)`,
-                  color: tagCssColor(tag),
-                }}><Tag className="h-2.5 w-2.5" />{tag}<span className="opacity-50 ml-0.5">{count}</span></span>
+          <h3 className="text-xs font-semibold text-[#9ab8d4] uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Clock className="h-3.5 w-3.5" style={{ color: "var(--color-primary-light)", filter: "brightness(1.3)" }} />
+            {t("home.recent_use")}
+          </h3>
+          {recentPlays.length > 0 ? (
+            <div className="space-y-1.5">
+              {recentPlays.slice(0, 8).map((e, i) => (
+                <div key={e.id + i}
+                  className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-surface-lighter/50 transition-colors cursor-pointer"
+                  onClick={() => navigate(e.type === "movie" ? "/movies" : e.type === "game" ? "/games" : "/music")}>
+                  {e.type === "movie" ? <Film className="h-4 w-4 shrink-0" style={{ color: "var(--color-primary)", filter: "brightness(1.3)" }} />
+                    : e.type === "game" ? <Gamepad2 className="h-4 w-4 shrink-0" style={{ color: "var(--color-primary-dark)", filter: "brightness(1.3)" }} />
+                    : <Music className="h-4 w-4 shrink-0" style={{ color: "var(--color-accent)", filter: "brightness(1.3)" }} />}
+                  <span className="flex-1 text-sm text-[#c8ddf0] truncate">{e.name}</span>
+                  <span className="text-[10px] text-[#8aa8c4] shrink-0">
+                    {e.type === "movie" ? t("dashboard.movies") : e.type === "game" ? t("dashboard.games") : t("dashboard.music")}
+                  </span>
+                </div>
               ))}
             </div>
-          ) : <p className="text-sm text-[#8aa8c4]">{t("dashboard.no_tags")}</p>}
+          ) : (
+            <p className="text-sm text-[#8aa8c4]">{t("home.recent_use_empty")}</p>
+          )}
         </div>
       </div>
-
-      {recentPlays.length > 0 && (
-        <div>
-          <h3 className="text-xs font-semibold text-[#9ab8d4] uppercase tracking-wider mb-3 flex items-center gap-2"><Clock className="h-3.5 w-3.5" style={{ color: "var(--color-primary-light)", filter: "brightness(1.3)" }} />{t("music.recent_plays")}</h3>
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {recentPlays.slice(0, 8).map((e, i) => (
-              <div key={e.id + i} className="flex items-center gap-2 shrink-0 rounded-lg border border-primary/20 px-3 py-2 text-sm cursor-pointer hover:bg-surface-lighter/50 transition-colors"
-                style={{ background: "color-mix(in srgb, var(--color-primary) 6%, #101520)" }}
-                onClick={() => navigate(e.type === "movie" ? "/movies" : e.type === "game" ? "/games" : "/music")}>
-                {e.type === "movie" ? <Film className="h-3.5 w-3.5" style={{ color: "var(--color-primary)", filter: "brightness(1.3)" }} />
-                  : e.type === "game" ? <Gamepad2 className="h-3.5 w-3.5" style={{ color: "var(--color-primary-dark)", filter: "brightness(1.3)" }} />
-                  : <Music className="h-3.5 w-3.5" style={{ color: "var(--color-accent)", filter: "brightness(1.3)" }} />}
-                <span className="text-[#c8ddf0] truncate max-w-[120px]">{e.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
-}
-
-function tagCssColor(str: string): string {
-  const vars = ["var(--color-primary)", "var(--color-primary-light)", "var(--color-accent)", "var(--color-primary-dark)"];
-  let h = 0; for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
-  return vars[Math.abs(h) % vars.length];
 }
 
 /** Theme metadata — maps ThemeName to rendering strategy.
