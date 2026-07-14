@@ -12,7 +12,7 @@ const THEME_PATH_MAP: Record<string, string> = {
 };
 
 export function themeUrl(themeId: string, assetPath: string): string {
-  if (import.meta.env.VITE_LICENSE_TIER === "pro") {
+  if ((import.meta as any).env?.VITE_LICENSE_TIER) {
     const base = THEME_PATH_MAP[themeId] || `/themes/${themeId}`;
     return `${base}/${assetPath}`;
   }
