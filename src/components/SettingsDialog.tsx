@@ -1069,9 +1069,8 @@ function FontFamilySection({ t, fontFamily, setFontFamily }: any) {
 }
 
 function WallpaperSection({ t }: { t: any }) {
-  const { wallpaper, setWallpaperConfig } = useSettingsStore((s: any) => ({
-    wallpaper: s.wallpaper, setWallpaperConfig: s.setWallpaperConfig,
-  }));
+  const wallpaper = useSettingsStore((s: any) => s.wallpaper);
+  const setWallpaperConfig = useSettingsStore((s: any) => s.setWallpaperConfig);
 
   const pickFile = async () => {
     try {
