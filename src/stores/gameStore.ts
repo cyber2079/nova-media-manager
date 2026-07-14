@@ -68,6 +68,15 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   launchGame: async (id: string) => {
     await invoke("launch_game", { id });
+    // Record in play history
+    const g = get().games.find(g2 => g2.id === id);
+    if (g) {
+      const { usePlayHistoryStore } = await import("./playHistoryStore");
+      usePlayHistoryStore.getState().record({
+        id: g.id, name: g.name, type: "game",
+        time: new Date().toISOString(),
+      });
+    }
   },
 
   updateTags: (id: string, tags: string[]) => {

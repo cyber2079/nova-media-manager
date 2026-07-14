@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { playHistory as phDb } from "@/lib/sqliteStore";
 
 export type PlayEvent = {
-  id: string; name: string; type: "movie" | "music"; time: string;
+  id: string; name: string; type: "movie" | "music" | "game"; time: string;
 };
 
 interface PlayHistoryState {
@@ -32,7 +32,7 @@ export const usePlayHistoryStore = create<PlayHistoryState>((set, get) => ({
       if (rows.length > 0) {
         const history: PlayEvent[] = rows.map((r) => ({
           id: r.id, name: r.name,
-          type: r.type as "movie" | "music",
+          type: r.type as "movie" | "music" | "game",
           time: r.playedAt,
         }));
         set({ history, recent: history.slice(0, 12) });

@@ -181,8 +181,10 @@ function DashBoard() {
             {recentPlays.slice(0, 8).map((e, i) => (
               <div key={e.id + i} className="flex items-center gap-2 shrink-0 rounded-lg border border-primary/20 px-3 py-2 text-sm cursor-pointer hover:bg-surface-lighter/50 transition-colors"
                 style={{ background: "color-mix(in srgb, var(--color-primary) 6%, #101520)" }}
-                onClick={() => navigate(e.type === "movie" ? "/movies" : "/music")}>
-                {e.type === "movie" ? <Film className="h-3.5 w-3.5" style={{ color: "var(--color-primary)", filter: "brightness(1.3)" }} /> : <Music className="h-3.5 w-3.5" style={{ color: "var(--color-accent)", filter: "brightness(1.3)" }} />}
+                onClick={() => navigate(e.type === "movie" ? "/movies" : e.type === "game" ? "/games" : "/music")}>
+                {e.type === "movie" ? <Film className="h-3.5 w-3.5" style={{ color: "var(--color-primary)", filter: "brightness(1.3)" }} />
+                  : e.type === "game" ? <Gamepad2 className="h-3.5 w-3.5" style={{ color: "var(--color-primary-dark)", filter: "brightness(1.3)" }} />
+                  : <Music className="h-3.5 w-3.5" style={{ color: "var(--color-accent)", filter: "brightness(1.3)" }} />}
                 <span className="text-[#c8ddf0] truncate max-w-[120px]">{e.name}</span>
               </div>
             ))}
