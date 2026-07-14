@@ -94,25 +94,24 @@ function DashBoard() {
   const movies = useMovieStore((s) => s.movies);
   const images = useImageStore((s) => s.images);
   const games = useGameStore((s) => s.games);
-  const musicCount = useMusicStore((s) => s.music.length);
+  const music = useMusicStore((s) => s.music);
+  const musicCount = music.length;
   const recentPlays = usePlayHistoryStore((s) => s.recent);
 
-  const stats = useMemo(() => [
-    { key: "movies", icon: Film, count: movies.length, cssColor: "var(--color-primary)", to: "/movies" },
-    { key: "images", icon: Image, count: images.length, cssColor: "var(--color-accent)", to: "/images" },
-    { key: "music", icon: Music, count: musicCount, cssColor: "var(--color-primary-light)", to: "/music" },
-    { key: "games", icon: Gamepad2, count: games.length, cssColor: "var(--color-primary-dark)", to: "/games" },
-  ], [movies.length, images.length, musicCount, games.length]);
-
-  const recent = useMemo(() => {
-    const items: { name: string; type: string; time: string; cssColor: string }[] = [];
-    movies.slice(-4).reverse().forEach((m) => items.push({ name: m.name, type: t("dashboard.movies"), time: m.addTime, cssColor: "var(--color-primary)" }));
-    images.slice(-4).reverse().forEach((i) => items.push({ name: i.name, type: t("dashboard.images"), time: (i as any).addTime || "", cssColor: "var(--color-accent)" }));
-    games.slice(-4).reverse().forEach((g) => items.push({ name: g.name, type: t("dashboard.games"), time: g.addTime, cssColor: "var(--color-primary-light)" }));
-    return items.sort((a, b) => b.time.localeCompare(a.time)).slice(0, 8);
-  }, [movies, images, games, t]);
-
   const total = movies.length + images.length + musicCount + games.length;
+
+  // Per-category top 8 recent items
+  const movieRecent = movies.slice(-8).reverse();
+  const imageRecent = images.slice(-8).reverse();
+  const musicRecent = music.slice(-8).reverse();
+  const gameRecent = games.slice(-8).reverse();
+
+  const cats = [
+    { key: "movies", icon: Film, count: movies.length, cssColor: "var(--color-primary)", to: "/movies", recent: movieRecent },
+    { key: "images", icon: Image, count: images.length, cssColor: "var(--color-accent)", to: "/images", recent: imageRecent },
+    { key: "music", icon: Music, count: musicCount, cssColor: "var(--color-primary-light)", to: "/music", recent: musicRecent },
+    { key: "games", icon: Gamepad2, count: games.length, cssColor: "var(--color-primary-dark)", to: "/games", recent: gameRecent },
+  ];
 
   return (
     <div className="space-y-6">
@@ -122,89 +121,59 @@ function DashBoard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        {stats.map((s) => (
-          <button key={s.key} onClick={() => navigate(s.to)}
-            className="group relative overflow-hidden rounded-xl border border-primary/20 p-4 sm:p-5 text-left transition-all duration-300 hover:scale-[1.03] hover:shadow-lg"
-            style={{ background: "color-mix(in srgb, var(--color-primary) 6%, #101520)" }}>
-            <div className="absolute top-0 right-0 w-16 h-16 opacity-10 group-hover:opacity-20 transition-opacity" style={{ background: `radial-gradient(circle at center, ${s.cssColor}, transparent 70%)` }} />
-            <s.icon className="h-5 w-5 sm:h-6 sm:w-6 mb-2 sm:mb-3" style={{ color: s.cssColor, filter: "brightness(1.3)" }} />
-            <p className="text-xl sm:text-2xl font-bold text-white">{s.count}</p>
-            <p className="text-[11px] sm:text-xs text-[#9ab8d4] mt-0.5 sm:mt-1">{t(`nav.${s.key}`)}</p>
-          </button>
+      <div className="grid grid-cols-2 gap-5">
+        {cats.map(cat => (
+          <div key={cat.key}>
+            {/* Stat button */}
+            <button onClick={() => navigate(cat.to)}
+              className="w-full group relative overflow-hidden rounded-xl border border-primary/20 p-4 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+              style={{ background: "color-mix(in srgb, var(--color-primary) 6%, #101520)" }}>
+              <div className="absolute top-0 right-0 w-16 h-16 opacity-10 group-hover:opacity-20 transition-opacity" style={{ background: `radial-gradient(circle at center, ${cat.cssColor}, transparent 70%)` }} />
+              <cat.icon className="h-5 w-5 mb-2" style={{ color: cat.cssColor, filter: "brightness(1.3)" }} />
+              <p className="text-xl font-bold text-white">{cat.count}</p>
+              <p className="text-[11px] text-[#9ab8d4] mt-0.5">{t(`nav.${cat.key}`)}</p>
+            </button>
+            {/* Recent items below card */}
+            <div className="mt-2 space-y-0.5">
+              {cat.recent.length > 0 ? cat.recent.map((item: any, i: number) => (
+                <button key={i}
+                  onClick={() => {
+                    if (cat.key === "games") { useGameStore.getState().launchGame(item.id).catch(() => {}); return; }
+                    if (cat.key === "music") {
+                      const musicItem = item as any; /* play music */
+                      import("@/stores/audioPlayerStore").then(m => {
+                        m.useAudioPlayerStore.getState().play(musicItem);
+                      }).catch(() => {});
+                      return;
+                    }
+                    navigate(cat.to);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors group/row">
+                  <span className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: cat.cssColor, filter: "brightness(1.3)" }} />
+                  <span className="flex-1 text-xs text-[#c8ddf0] truncate">{item.name}</span>
+                  {item.duration && <span className="text-[9px] text-[#8aa8c4] shrink-0">{item.duration}</span>}
+                </button>
+              )) : (
+                <p className="text-[10px] text-[#8aa8c4] px-3 py-1">{t("home.recent_use_empty")}</p>
+              )}
+            </div>
+          </div>
         ))}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h3 className="text-xs font-semibold text-[#9ab8d4] uppercase tracking-wider mb-3">{t("dashboard.recent")}</h3>
-          {recent.length > 0 ? (
-            <div className="space-y-1">
-              {recent.map((item, i) => (
-                <div key={i} className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-surface-lighter/50 transition-colors group cursor-default">
-                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: item.cssColor, filter: "brightness(1.3)" }} />
-                  <span className="flex-1 text-sm text-[#c8ddf0] truncate">{item.name}</span>
-                  <span className="text-[10px] text-[#8aa8c4] shrink-0">{item.type}</span>
-                </div>
-              ))}
-            </div>
-          ) : <p className="text-sm text-[#8aa8c4]">{t("dashboard.empty")}</p>}
-        </div>
-        {/* 最近使用 — 来自播放历史（电影/音乐/游戏） */}
-        <div>
-          <h3 className="text-xs font-semibold text-[#9ab8d4] uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Clock className="h-3.5 w-3.5" style={{ color: "var(--color-primary-light)", filter: "brightness(1.3)" }} />
-            {t("home.recent_use")}
-          </h3>
-          {recentPlays.length > 0 ? (
-            <div className="space-y-1.5">
-              {recentPlays.slice(0, 8).map((e, i) => (
-                <div key={e.id + i}
-                  className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-surface-lighter/50 transition-colors cursor-pointer"
-                  onClick={() => navigate(e.type === "movie" ? "/movies" : e.type === "game" ? "/games" : "/music")}>
-                  {e.type === "movie" ? <Film className="h-4 w-4 shrink-0" style={{ color: "var(--color-primary)", filter: "brightness(1.3)" }} />
-                    : e.type === "game" ? <Gamepad2 className="h-4 w-4 shrink-0" style={{ color: "var(--color-primary-dark)", filter: "brightness(1.3)" }} />
-                    : <Music className="h-4 w-4 shrink-0" style={{ color: "var(--color-accent)", filter: "brightness(1.3)" }} />}
-                  <span className="flex-1 text-sm text-[#c8ddf0] truncate">{e.name}</span>
-                  <span className="text-[10px] text-[#8aa8c4] shrink-0">
-                    {e.type === "movie" ? t("dashboard.movies") : e.type === "game" ? t("dashboard.games") : t("dashboard.music")}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-[#8aa8c4]">{t("home.recent_use_empty")}</p>
-          )}
-        </div>
       </div>
     </div>
   );
 }
 
-/** Theme metadata — maps ThemeName to rendering strategy.
- *  Future premium themes register here once downloaded + installed. */
 type ThemeType = "story" | "dynamic" | "static" | "hybrid";
 
-const THEME_META: Record<string, { type: ThemeType; i18nKey: string; titleClass: string; subtitleClass: string }> = {
-  default:     { type: "static",  i18nKey: "home.default", titleClass: "text-4xl font-bold tracking-tight text-white", subtitleClass: "text-lg text-gray-400" },
-  "ice-girl":  { type: "dynamic", i18nKey: "home.ice",   titleClass: "text-6xl font-black tracking-[0.1em] ice-text-glow text-[#b0e0ff] uppercase", subtitleClass: "text-xl font-semibold tracking-[0.25em] text-[#87ceeb]/70 uppercase" },
-  "cyber-girl":{ type: "story",   i18nKey: "home.cg",     titleClass: "text-5xl font-black tracking-[0.1em] cg-text-glow text-[#e890ff] uppercase", subtitleClass: "text-xl font-semibold tracking-[0.2em] text-[#ff4da6]/70 uppercase" },
+const THEME_META: Record<string, { type: ThemeType }> = {
+  default:     { type: "static" },
+  "ice-girl":  { type: "dynamic" },
+  "cyber-girl":{ type: "story" },
 };
 
 function getThemeMeta(theme: string) {
   return THEME_META[theme] ?? THEME_META.default;
-}
-
-function ThemeTitle() {
-  const { t } = useTranslation();
-  const { theme } = useThemeStore();
-  const meta = getThemeMeta(theme);
-  const title = t(`${meta.i18nKey}_title`);
-  const subtitle = t(`${meta.i18nKey}_subtitle`);
-  return (<>
-    {title && <h1 className={cn("font-bold theme-enter-title", meta.titleClass)}>{title}</h1>}
-    {subtitle && <p className={cn(title && "mt-3", meta.subtitleClass)}>{subtitle}</p>}
-  </>);
 }
 
 function CgSkillShowcase({ t, cgSceneIdx, textClass, textColor }: { t: any; cgSceneIdx: number; textClass: string; textColor: string }) {
@@ -329,10 +298,6 @@ export default function Home() {
 
   return (
     <div className="space-y-8 animate-fade-in-up">
-      {/* Theme Title */}
-      <div className="text-center"><ThemeTitle /></div>
-      {themeType === "static" && <div className="h-px w-48 mx-auto bg-gradient-to-r from-transparent via-primary/40 to-transparent" />}
-
       {/* ── Static Dashboard ── */}
       {themeType === "static" && <DashBoard />}
 

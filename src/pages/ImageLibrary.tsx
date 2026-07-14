@@ -19,7 +19,8 @@ import { tagColor } from "@/lib/tagColor";
 import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { readFileSafe } from "@/lib/readFileSafe";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, X, Upload, Loader2, Star, Image, ImageIcon, Trash2, Tag, CheckSquare, Maximize2, Minimize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, X, Upload, Loader2, Star, Image, ImageIcon, Trash2, Tag, CheckSquare, Maximize2, Minimize2, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
 import LayoutSwitch, { type LayoutMode } from "@/components/LayoutSwitch";
 import { useLayoutMode } from "@/lib/useLayoutMode";
@@ -217,6 +218,7 @@ export default function ImageLibrary() {
 
   const [previewIdx, setPreviewIdx] = useState(-1);
   const [blobUrls, setBlobUrls] = useState<Record<string, string>>({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -238,8 +240,9 @@ export default function ImageLibrary() {
   const filtered = useMemo(() => {
     let r = activeTags.length ? images.filter((i) => activeTags.some((t) => i.tags?.includes(t))) : images;
     if (favOnly) { const ids = new Set(getByType("image")); r = r.filter((i) => ids.has(i.id)); }
+    if (searchQuery) { const q = searchQuery.toLowerCase(); r = r.filter((i) => i.name.toLowerCase().includes(q)); }
     return r;
-  }, [images, activeTags, favOnly, getByType]);
+  }, [images, activeTags, favOnly, getByType, searchQuery]);
 
   const pageSize = layoutMode === "small" ? 30 : 20;
   const { page, setPage, totalPages, paginated } = usePagination(filtered, pageSize);
@@ -279,7 +282,11 @@ export default function ImageLibrary() {
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex items-center gap-4">
         <h1 className="text-2xl font-bold">{t("image.title")}</h1>
-        <div className="flex-1" />
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <Input placeholder={t("image.search", "搜索图片...")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-8 pr-7" />
+          {searchQuery && <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-0.5"><X className="h-3.5 w-3.5" /></button>}
+        </div>
         <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
         <Button onClick={handleAddImages} className="gap-2"><Upload className="h-4 w-4" />{t("image.add")}</Button>
         {!batch.showCheckboxes ? (
