@@ -78,6 +78,7 @@ export default function WallpaperEngine() {
   return (
     <>
       <img
+        key={`${wp.fit}-${src.slice(-20)}`}
         src={src}
         alt=""
         className="fixed inset-0 z-0 w-full h-full pointer-events-none"
