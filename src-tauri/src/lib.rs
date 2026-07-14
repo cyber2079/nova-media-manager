@@ -127,6 +127,7 @@ pub fn run() {
             license::activate_license,
             license::check_license,
             license::unbind_license,
+            license::get_last_check_times,
             windows::open_secondary_window,
             windows::close_secondary_window,
             windows::is_secondary_window_open,

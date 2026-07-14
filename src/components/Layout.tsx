@@ -30,8 +30,11 @@ import UpdateChecker from "@/components/UpdateChecker";
 import { useLicenseStore, isPro } from "@/stores/licenseStore";
 import { useThemePackStore } from "@/stores/themePackStore";
 import { analytics, useAnalyticsPageView } from "@/lib/analytics";
+import { invoke } from "@tauri-apps/api/core";
 import { getMusicCoverFallback } from "@/lib/musicCoverFallback";
 import { compareVersions } from "@/lib/compareVersions";
+import { themeUrl } from "@/lib/themeBase";
+import { useSecurity } from "@/lib/useSecurity";
 import { ThemeAssets, themeUrl } from "@/lib/themeBase";
 
 const navItems = [
@@ -92,6 +95,46 @@ export default function Layout() {
   const appRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { useLicenseStore.getState().init(); }, []);
+  useSecurity();
+
+  // ── Periodic license check (every 7 days; 30-day grace for offline) ──
+  // Uses Rust kv_store timestamps (server + local) to prevent clock manipulation
+  useEffect(() => {
+    const CHECK_INTERVAL = 7 * 24 * 60 * 60 * 1000; // 7 days
+    const GRACE_DAYS = 30;
+
+    const doCheck = async () => {
+      const { license, check } = useLicenseStore.getState();
+      if (license.tier === "free") return;
+
+      try {
+        await check();
+        // check() stores timestamps server-side via Rust kv_store — nothing to do here
+      } catch (err) {
+        // Server unreachable — compute elapsed using physical-time delta
+        try {
+          const times = await invoke<{ serverTime?: string; localTime?: string }>("get_last_check_times");
+          if (times.localTime) {
+            const lastLocal = new Date(times.localTime).getTime();
+            const elapsed = Math.max(0, Date.now() - lastLocal);
+            if (elapsed / (24 * 60 * 60 * 1000) > GRACE_DAYS) {
+              // 30+ days without a successful check → degrade to Free
+              useLicenseStore.setState({
+                license: { tier: "free", duration: "permanent", expiresAt: null, maxDevices: 1 },
+              });
+            }
+          }
+        } catch {
+          // kv reads failed — keep current state, retry next cycle
+        }
+      }
+    };
+
+    // Run on startup, then every 7 days
+    const t = setTimeout(doCheck, 3000); // 3s after mount so init() completes
+    const interval = setInterval(doCheck, CHECK_INTERVAL);
+    return () => { clearTimeout(t); clearInterval(interval); };
+  }, []);
 
   // Resume: Pro+ but premium themes not yet downloaded (e.g. app closed mid-download)
   // Uses version comparison: server list vs local registry
