@@ -167,8 +167,13 @@ export default function ThemeStudioPage() {
 
   function imgError(id: string) { setImgErrors(prev => { const n = new Set(prev); n.add(id); return n; }); }
 
-  // Available face files from disk
-  const faceFiles = [...new Set((detail?.assets ?? []).filter(a => a.path.startsWith("faces/") && a.exists).map(a => a.path.replace("faces/", "").replace(".webp", "")))];
+  // Available face files — combined: manifest scan + hardcoded known list per theme
+  const knownFaces: Record<string, string[]> = {
+    "ice-girl": ["smug","happy","angry","cry","petty","naughty","neutral","surprise","curse"],
+    "cyber-girl": ["angry","happy","neutral","talk"],
+  };
+  const diskFaces = [...new Set((detail?.assets ?? []).filter(a => a.path.startsWith("faces/") && a.exists).map(a => a.path.replace("faces/", "").replace(".webp", "")))];
+  const faceFiles = [...new Set([...diskFaces, ...(knownFaces[selected!] ?? [])])];
   const assetPaths = (detail?.assets ?? []).filter(a => a.exists).map(a => a.path);
   const editingNode = editingIdx >= 0 && detail ? detail.script[editingIdx] : null;
 
