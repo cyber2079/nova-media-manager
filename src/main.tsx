@@ -17,6 +17,9 @@ migrateFromLocalStorage();
 // Restore theme shortcut overrides from SQLite (only localStorage-only store)
 useThemeShortcutStore.getState().init();
 
+// Disable right-click globally (production + dev)
+document.addEventListener("contextmenu", (e) => e.preventDefault());
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>
