@@ -1140,6 +1140,7 @@ function WallpaperSection({ t }: { t: any }) {
               className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none">
               <option value="none">{t("settings.wallpaper_fit_none", "正常")}</option>
               <option value="cover">{t("settings.wallpaper_fit_cover", "填充")}</option>
+              <option value="contain">{t("settings.wallpaper_fit_contain", "完整")}</option>
               <option value="fill">{t("settings.wallpaper_fit_fill", "拉伸")}</option>
             </select>
           </div>

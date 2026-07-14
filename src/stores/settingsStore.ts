@@ -5,7 +5,7 @@ import type { ThemeName } from "./themeStore";
 export type BgVideoMode = "normal" | "fill" | "stretch";
 export type WallpaperMode = "none" | "single" | "folder";
 export type WallpaperShuffle = "sequential" | "random";
-export type WallpaperFit = "none" | "cover" | "fill";
+export type WallpaperFit = "none" | "cover" | "fill" | "contain";
 export type WallpaperConfig = {
   mode: WallpaperMode;
   path: string;
