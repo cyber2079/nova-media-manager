@@ -311,7 +311,6 @@ main[data-route="home"] {
 [data-custom-theme="true"] .animate-fade-in-up .h-px,
 [data-custom-theme="true"] .animate-fade-in-up .cs2-divider { display: none !important; }
 
-main[data-route="home"] { margin-top: 4rem !important; }
 
 input[type="range"]::-webkit-slider-thumb { width: 10px; height: 10px; }
 input[type="range"]::-moz-range-thumb { width: 10px; height: 10px; }
