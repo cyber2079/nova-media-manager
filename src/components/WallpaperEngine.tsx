@@ -128,10 +128,8 @@ export default function WallpaperEngine() {
           style={imgStyle}
         />
       </div>
-      <div
-        className="fixed inset-0 z-[1] pointer-events-none"
-        style={{ background: "linear-gradient(180deg, rgba(8,12,20,0.55) 0%, rgba(8,12,20,0.3) 50%, rgba(8,12,20,0.55) 100%)" }}
-      />
+
+
     </>
   );
 }
