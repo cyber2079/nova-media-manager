@@ -10,8 +10,6 @@ import { cn } from "@/lib/utils";
 import ScrollFade from "@/components/ScrollFade";
 import ThemeManager from "@/components/ThemeManager";
 import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown, FolderOpen, ImageIcon, Shuffle } from "lucide-react";
-import type { WallpaperConfig, WallpaperMode, WallpaperShuffle, WallpaperFit } from "@/stores/settingsStore";
-import { dialog } from "@tauri-apps/plugin-dialog";
 import { ThemeAssets } from "@/lib/themeBase";
 import { useLicenseStore, isPro, isUltra } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS } from "@/stores/settingsStore";
@@ -1077,7 +1075,8 @@ function WallpaperSection({ t }: { t: any }) {
 
   const pickFile = async () => {
     try {
-      const selected = await dialog.open({
+      const { open } = await import("@tauri-apps/plugin-dialog");
+      const selected = await open({
         multiple: false,
         filters: [{ name: "Images", extensions: ["webp","jpg","jpeg","png","bmp","gif"] }],
       });
@@ -1087,7 +1086,8 @@ function WallpaperSection({ t }: { t: any }) {
 
   const pickFolder = async () => {
     try {
-      const selected = await dialog.open({ directory: true, multiple: false });
+      const { open } = await import("@tauri-apps/plugin-dialog");
+      const selected = await open({ directory: true, multiple: false });
       if (selected) { setWallpaperConfig({ mode: "folder", path: selected as string }); }
     } catch (e) { console.error("[wallpaper]", e); }
   };

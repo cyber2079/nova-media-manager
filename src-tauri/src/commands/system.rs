@@ -19,6 +19,7 @@ static LAST_NET: Mutex<Option<(Instant, u64, u64)>> = Mutex::new(None);
 
 /// List image files in a directory (wallpaper slideshow).
 #[tauri::command]
+#[allow(dead_code)]
 pub fn wallpaper_list_images(path: String) -> Result<Vec<String>, String> {
     let d = std::path::Path::new(&path);
     if !d.is_dir() { return Ok(vec![]); }
