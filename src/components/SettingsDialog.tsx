@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
@@ -15,7 +15,6 @@ import { useLicenseStore, isPro, isUltra } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS } from "@/stores/settingsStore";
 import { useWidgetStore, pageKeys } from "@/stores/widgetStore";
 import type { PageKey } from "@/stores/widgetStore";
-import { openSecondaryDisplay, closeSecondaryDisplay, canUseSecondaryDisplay } from "@/lib/crossWindow";
 
 interface Props {
   open: boolean;
@@ -246,7 +245,6 @@ export default function SettingsDialog({ open, onClose }: Props) {
             {activeTab === "general" && (
               <>
                 <LicenseSection t={t} i18n={i18n} />
-                <SecondaryDisplaySection t={t} i18n={i18n} />
                 <LanguageSection {...{ t, language, handleLanguage, languages }} />
                 <StartupSection {...{ t, autoStart, autoLoading, handleAutoStart, startFullscreen, setStartFullscreen, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, hideTitleBar, setHideTitleBar }} />
                 <DataSection t={t} />
@@ -429,79 +427,6 @@ function ResetButton({ tab, t, onReset }: { tab: string; t: (k: string) => strin
         <RotateCcw className="h-3 w-3" />{t("settings.reset_tab", { tab: t(`settings.tab_${tab}`) })}
       </Button>
     </div>
-  );
-}
-
-function SecondaryDisplaySection({ t, i18n }: { t: any; i18n: any }) {
-  const isZh = i18n.language?.startsWith("zh");
-  const { license } = useLicenseStore();
-  const isUltra = license.tier === "ultra" || license.tier === "custom";
-  const [secondaryOpen, setSecondaryOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [monitors, setMonitors] = useState<Array<{ name: string; isPrimary: boolean }>>([]);
-  const [selectedMonitor, setSelectedMonitor] = useState(0);
-
-  // Check current secondary window state
-  useEffect(() => {
-    import("@tauri-apps/api/core").then(({ invoke }) => {
-      invoke<any[]>("list_monitors").then(list => {
-        setMonitors((list || []).map((m, i) => ({ name: m.name || `显示器 ${i + 1}`, isPrimary: m.isPrimary })));
-      }).catch(()=>{});
-      invoke<{ open: boolean }>("is_secondary_window_open").then(info => setSecondaryOpen(info?.open ?? false)).catch(()=>{});
-    }).catch(()=>{});
-  }, []);
-
-  const handleToggle = async () => {
-    setLoading(true);
-    try {
-      if (secondaryOpen) {
-        await closeSecondaryDisplay();
-        setSecondaryOpen(false);
-      } else {
-        await openSecondaryDisplay();
-        setSecondaryOpen(true);
-      }
-    } catch(e: any) {
-      alert(isZh ? `操作失败: ${e}` : `Failed: ${e}`);
-    }
-    setLoading(false);
-  };
-
-  // Dev mode (.env VITE_LICENSE_TIER) → no restrictions
-  if (!isUltra && !(import.meta as any).env?.VITE_LICENSE_TIER) return null;
-
-  return (
-    <section>
-      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-        {isZh ? "副屏显示" : "Secondary Display"}
-      </h4>
-      <div className="p-4 rounded-xl border border-white/5 space-y-4"
-        style={{ background: "color-mix(in srgb, var(--color-primary) 4%, transparent)" }}>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-white font-medium">{isZh ? "启用副屏" : "Enable Secondary Display"}</p>
-            <p className="text-[11px] text-gray-500 mt-0.5">{isZh ? "在外接显示器上显示播放信息与视觉面板" : "Show media info on external monitor"}</p>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" checked={secondaryOpen} onChange={handleToggle} disabled={loading}
-              className="sr-only peer" />
-            <div className="w-9 h-5 bg-white/10 rounded-full peer peer-checked:bg-primary/60 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all" />
-          </label>
-        </div>
-
-        {monitors.length > 1 && secondaryOpen && (
-          <div className="flex items-center gap-2 text-[11px] text-gray-500">
-            <span>{isZh ? "显示器:" : "Monitor:"}</span>
-            <select value={selectedMonitor} onChange={e => setSelectedMonitor(Number(e.target.value))}
-              className="px-2 py-1 rounded bg-white/5 border border-white/10 text-white text-[11px] outline-none">
-              {monitors.map((m, i) => (
-                <option key={i} value={i}>{m.name}{m.isPrimary ? (isZh ? "（主屏）" : " (Primary)") : ""}</option>
-              ))}
-            </select>
-          </div>
-        )}
-      </div>
-    </section>
   );
 }
 

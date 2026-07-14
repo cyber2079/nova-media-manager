@@ -174,14 +174,6 @@ export const useAudioPlayerStore = create<AudioPlayerState>((set, get) => {
       _transitioning = true;
       set({ track, isPlaying: true, currentTime: 0, duration: 0 });
 
-      import("@/lib/crossWindow").then(({ emitNowPlaying }) => {
-        emitNowPlaying({
-          title: track.name, artist: track.artist, album: track.album,
-          coverPath: track.coverPath, duration: track.duration || "",
-          currentTime: "0:00", isPlaying: true,
-        });
-      }).catch(() => {});
-
       if (!_onEnded) _onEnded = defaultAutoNext;
       if (!_onPrev) _onPrev = defaultPrev;
       if (!_onNext) _onNext = defaultNext;
