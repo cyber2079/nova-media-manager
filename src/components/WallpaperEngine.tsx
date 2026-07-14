@@ -62,7 +62,6 @@ export default function WallpaperEngine() {
     if (wp.fit === "none") {
       return {
         width: "auto", height: "auto",
-        maxWidth: "100vw", maxHeight: "100vh",
         opacity: `var(--bg-opacity, 0.7)`,
       };
     }
@@ -80,10 +79,11 @@ export default function WallpaperEngine() {
     };
   })();
 
+  const isNone = wp.fit === "none";
   return (
     <>
-      <div className="fixed inset-0 z-0 pointer-events-none flex items-center justify-center">
-          <img src={src} alt="" style={imgStyle} />
+      <div className={`fixed z-0 pointer-events-none ${isNone ? "" : "inset-0 flex items-center justify-center"}`}>
+          <img src={src} alt="" style={imgStyle} className={isNone ? "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" : ""} />
       </div>
       <div className="fixed inset-0 z-[1] pointer-events-none"
         style={{ background: "linear-gradient(180deg, rgba(8,12,20,0.55) 0%, rgba(8,12,20,0.3) 50%, rgba(8,12,20,0.55) 100%)" }}
