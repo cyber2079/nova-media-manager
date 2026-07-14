@@ -85,6 +85,25 @@
 
 **结论**：唯一的实质副作用是 P1-1（编译优化）和 P1-2（UPX）。其余措施完全无感。
 
+### 开发环境兼容性
+
+四项措施需要区分 dev / release，否则影响本地开发：
+
+| # | 措施 | dev 环境 | release 环境 | 实现方式 |
+|---|---|---|---|---|
+| P0-1 | DevTools 禁用 | ❌不禁用 | ✅禁用 | `#[cfg(not(debug_assertions))]` 条件编译 |
+| P0-2 | CIP 去 unsafe-eval | ❌保留（Vite HMR 用 `eval` 实现热更新，去掉开发环境会崩） | ✅去掉 | 两套 CIP：release 用 Rust 注入，dev 保持现状 |
+| P0-3 | F5 禁用 | ❌不禁用 | ✅禁用 | `if (import.meta.env.DEV) return` 跳过 |
+| P1-3 | 反调试检测 | ❌不启用 | ✅启用 | `#[cfg(not(debug_assertions))]` 包裹 |
+
+其余 9 项无影响：
+- P1-1 `Cargo.toml [profile.release]` — 天生只作用于 release
+- P1-2 UPX — 只压缩发布后的 `.exe`
+- P1-4 前端 hash — 启动校验，dev 模式可跳过
+- P1-5 .nvtp 签名 — 开发者自己用私钥签，不影响
+- P1-6 zeroize — 无感知
+- P2-1/2 — 类型，发布前才启用
+
 ### 优化建议
 
 | 如果担心... | 调整方案 |
@@ -105,6 +124,21 @@
 ⑤ P1-6（1h）            → 防内存 dump
 ⑥ P2（后续）            → 终极防线
 ```
+
+---
+
+## 六、开发环境不受影响
+
+一句话总结：**加了 `#[cfg(not(debug_assertions))]` 或 `import.meta.env.DEV` 判断之后，本地 `npm run tauri:dev` 和现在的体验完全一样**。
+
+| 你开发时 | 发布后 |
+|---|---|
+| F12 能用 ✅ | F12 禁用 ❌ |
+| F5 刷新 ✅ | F5 禁用 ❌ |
+| CIP 含 unsafe-eval（Vite HMR 需要）✅ | CIP 纯净 ❌ |
+| 调试器不会退出 ✅ | 调试器被检测 → 退出 ❌ |
+
+所有安全措施通过编译期判断，只对 `cargo build --release` 产物生效。
 
 ---
 
