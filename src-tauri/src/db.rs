@@ -103,6 +103,7 @@ impl Database {
     }
 
     /// App-wide directory (logs, config) — may be cleared by system cleanup.
+    #[allow(dead_code)]
     pub fn app_data_dir(&self) -> &PathBuf {
         &self.app_data_dir
     }
