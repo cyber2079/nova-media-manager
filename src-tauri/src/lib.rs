@@ -58,6 +58,12 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
+            // Release: disable DevTools
+            #[cfg(not(debug_assertions))]
+            if let Some(w) = app.get_webview_window("main") {
+                w.set_devtools(false);
+            }
+
             // Database
             let app_data_dir = app.path().app_data_dir()
                 .expect("failed to get app data dir");
