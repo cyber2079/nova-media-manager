@@ -159,7 +159,7 @@ pub fn list_monitors(app: AppHandle) -> Result<Vec<MonitorInfo>, String> {
             p.position().x == pos.x && p.position().y == pos.y
         });
         list.push(MonitorInfo {
-            name: m.name().unwrap_or_else(|| format!("{}×{}", sz.width, sz.height)),
+            name: String::from(m.name().unwrap_or("")),
             size: (sz.width, sz.height),
             position: (pos.x, pos.y),
             scale_factor: m.scale_factor(),
