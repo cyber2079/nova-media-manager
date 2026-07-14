@@ -74,19 +74,21 @@ export default function WallpaperEngine() {
   const src = wp.mode === "single" ? singleSrc : wp.mode === "folder" ? folderSrc : null;
   if (!src) return null;
 
-  const fitLabel = wp.fit === "none" ? "normal" : wp.fit;
+  const bgSize = wp.fit === "none" ? "auto" : wp.fit === "fill" ? "100% 100%" : "cover";
   return (
     <>
       <div
-        key={`bg-${fitLabel}-${src.slice(-20)}`}
+        key={src.slice(-20)}
         className="fixed inset-0 z-0 pointer-events-none"
         style={{
           backgroundImage: `url("${src}")`,
-          backgroundSize: wp.fit === "none" ? "auto" : wp.fit === "fill" ? "100% 100%" : "cover",
+          backgroundSize: bgSize,
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",
+          maxWidth: wp.fit === "none" ? "100vw" : undefined,
+          maxHeight: wp.fit === "none" ? "100vh" : undefined,
           opacity: `var(--bg-opacity, 0.7)`,
-          transition: "opacity 1s ease, background-size 0.3s ease",
+          transition: "opacity 1s ease",
         }}
       />
       {/* Dark overlay to keep UI readable */}
