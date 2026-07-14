@@ -74,7 +74,7 @@ export default function WallpaperEngine() {
   const src = wp.mode === "single" ? singleSrc : wp.mode === "folder" ? folderSrc : null;
   if (!src) return null;
 
-  const objectFit = wp.fit === "fill" ? "cover" : wp.fit || "cover";
+  const objectFit: React.CSSProperties["objectFit"] = wp.fit || "cover";
   return (
     <>
       <img
