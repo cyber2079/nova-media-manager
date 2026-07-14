@@ -467,7 +467,7 @@ function SecondaryDisplaySection({ t, i18n }: { t: any; i18n: any }) {
     setLoading(false);
   };
 
-  // Dev mode (.env VITE_LICENSE_TIER=pro) → show all features
+  // Dev mode (.env VITE_LICENSE_TIER) → no restrictions
   if (!isUltra && !(import.meta as any).env?.VITE_LICENSE_TIER) return null;
 
   return (

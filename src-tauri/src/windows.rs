@@ -24,7 +24,8 @@ pub fn open_secondary_window(
     app: AppHandle,
     license: tauri::State<'_, LicenseState>,
 ) -> Result<SecondaryWindowInfo, String> {
-    // ── License check ──
+    // ── License check (skip in dev builds) ──
+    #[cfg(not(debug_assertions))]
     {
         let info = license.info.lock().map_err(|e| e.to_string())?;
         match info.as_ref() {
@@ -32,6 +33,8 @@ pub fn open_secondary_window(
             _ => return Err("多显示器功能需要旗舰版（Ultra）。请升级您的许可证。".to_string()),
         }
     }
+    #[cfg(debug_assertions)]
+    let _ = &license; // unused in dev
 
     // Check if already open
     if let Some(w) = app.get_webview_window(SECONDARY_LABEL) {

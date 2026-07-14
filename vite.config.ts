@@ -18,8 +18,8 @@ export default defineConfig({
     watch: {
       ignored: ["**/src-tauri/**"],
     },
-    force: true,
-    hmr: { overlay: false },
+    // Multi-page: serve secondary.html directly rather than falling through to index.html
+    proxy: {},
   },
   build: {
     rollupOptions: {
