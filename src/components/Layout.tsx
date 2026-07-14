@@ -98,7 +98,10 @@ export default function Layout() {
 
   // ── Periodic license check (every 7 days; 30-day grace for offline) ──
   // Uses Rust kv_store timestamps (server + local) to prevent clock manipulation
+  // SKIP in dev mode — localhost has no server to check against
   useEffect(() => {
+    if ((import.meta as any).env?.VITE_LICENSE_TIER) return;
+
     const CHECK_INTERVAL = 7 * 24 * 60 * 60 * 1000; // 7 days
     const GRACE_DAYS = 30;
 
