@@ -52,12 +52,8 @@ pub fn open_secondary_window(
 
     // Create the window
     // `app` must be clone for move into closure
-    // Dev mode: use Vite dev server URL. Production: use bundled asset.
-    #[cfg(debug_assertions)]
-    let url = WebviewUrl::External("http://localhost:1420/secondary.html".parse().unwrap());
-    #[cfg(not(debug_assertions))]
-    let url = WebviewUrl::App("secondary.html".into());
-
+    // All modes: re-use main app entry. The React app reads `?secondary=1` to render a different layout.
+    let url = WebviewUrl::App("index.html?secondary=1".into());
     let builder = WebviewWindowBuilder::new(&app, SECONDARY_LABEL, url)
         .title("副屏面板 — 媒体管理中心")
         .inner_size(800.0, 600.0)
