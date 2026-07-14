@@ -52,7 +52,13 @@ pub fn open_secondary_window(
 
     // Create the window
     // `app` must be clone for move into closure
-    let builder = WebviewWindowBuilder::new(&app, SECONDARY_LABEL, WebviewUrl::App("secondary.html".into()))
+    // Dev mode: use Vite dev server URL. Production: use bundled asset.
+    #[cfg(debug_assertions)]
+    let url = WebviewUrl::External("http://localhost:1420/secondary.html".parse().unwrap());
+    #[cfg(not(debug_assertions))]
+    let url = WebviewUrl::App("secondary.html".into());
+
+    let builder = WebviewWindowBuilder::new(&app, SECONDARY_LABEL, url)
         .title("副屏面板 — 媒体管理中心")
         .inner_size(800.0, 600.0)
         .decorations(false)
