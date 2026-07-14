@@ -3,7 +3,8 @@
 //! Logs to: {app_data_dir}/logs/app.log
 //! Rotation: single file, max 5 MB, keeps 3 backup files
 //! Panics: captured and written to crash-{timestamp}.log
-
+//! File logging enabled in release builds only.
+#![allow(dead_code)]
 use log::{Log, Metadata, Record};
 use std::fs::{self, File};
 use std::io::Write;

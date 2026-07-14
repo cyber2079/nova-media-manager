@@ -2,7 +2,7 @@ use rusqlite::{Connection, Result as SqlResult};
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-pub struct Database { pub conn: Mutex<Connection>, data_dir: PathBuf, app_data_dir: PathBuf }
+pub struct Database { pub conn: Mutex<Connection>, data_dir: PathBuf, #[allow(dead_code)] app_data_dir: PathBuf }
 
 impl Database {
     /// Database + covers + themes live in `app_data_dir/data/` to separate

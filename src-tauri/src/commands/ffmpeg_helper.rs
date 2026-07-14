@@ -33,6 +33,7 @@ pub fn ensure_ffmpeg() {
 }
 
 /// Ensure ffprobe is available. Downloads via sidecar if neither bundled nor cached.
+#[allow(dead_code)]
 pub fn ensure_ffprobe() {
     let fp = ffprobe_path();
     if !fp.exists() {

@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::packer::{self, unpack_theme};
+use super::packer::unpack_theme;
 
 // ═══════════════ REGISTRY ═══════════════
 
@@ -118,18 +118,6 @@ pub fn remove_theme(data_dir: &Path, theme_id: &str) -> Result<(), String> {
         .map_err(|e| format!("Failed to write registry: {e}"))?;
 
     Ok(())
-}
-
-/// Check if a theme is installed.
-pub fn is_installed(data_dir: &Path, theme_id: &str) -> bool {
-    let registry_path = data_dir.join("themes").join("registry.json");
-    let registry = load_registry(&registry_path);
-    registry.themes.iter().any(|t| t.id == theme_id)
-}
-
-/// Path to the nvtp storage directory (NOT extraction dir anymore).
-pub fn nvtp_dir(data_dir: &Path) -> PathBuf {
-    data_dir.join("themes").join("nvtp")
 }
 
 // ═══════════════ INTERNAL ═══════════════

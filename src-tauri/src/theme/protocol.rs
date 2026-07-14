@@ -43,6 +43,7 @@ impl ProtocolState {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn has_theme(&self, theme_id: &str) -> bool {
         self.nvtp_dir.join(format!("{}.nvtp", theme_id)).exists()
     }

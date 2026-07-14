@@ -16,6 +16,9 @@
 //! │            │    per-theme key derived from seed    │
 //! └────────────┴─────────────────────────────────────┘
 
+// pack_theme/extract_theme used externally (theme-pack.mjs, CLI)
+#![allow(dead_code)]
+
 use serde::{Deserialize, Serialize};
 use std::io::{Write, Cursor};
 use std::path::Path;
