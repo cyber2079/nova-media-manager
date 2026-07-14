@@ -17,8 +17,16 @@ migrateFromLocalStorage();
 // Restore theme shortcut overrides from SQLite (only localStorage-only store)
 useThemeShortcutStore.getState().init();
 
-// Disable right-click globally (production + dev)
+// Disable right-click globally
 document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+// Disable F5 / Ctrl+R refresh in production (dev still allows reload for HMR)
+document.addEventListener("keydown", (e) => {
+  if (import.meta.env.DEV) return; // skip in dev
+  if (e.key === "F5" || (e.key === "r" && (e.ctrlKey || e.metaKey))) {
+    e.preventDefault();
+  }
+});
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

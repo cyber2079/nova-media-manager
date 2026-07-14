@@ -20,7 +20,8 @@
         "resizable": true,
         "decorations": false,
         "fullscreen": true,
-        "maximized": false
+        "maximized": false,
+        "devtools": false
       }
     ],
     "security": {
