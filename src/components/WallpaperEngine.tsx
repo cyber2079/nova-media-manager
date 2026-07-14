@@ -75,16 +75,17 @@ export default function WallpaperEngine() {
   if (!src) return null;
 
   const objectFit: React.CSSProperties["objectFit"] = wp.fit || "none";
+  const isNone = wp.fit === "none";
   return (
     <>
       <img
         key={`${wp.fit}-${src.slice(-20)}`}
         src={src}
         alt=""
-        className="fixed inset-0 z-0 w-full h-full pointer-events-none"
+        className={`fixed z-0 pointer-events-none ${isNone ? "inset-0 m-auto max-h-full max-w-full" : "inset-0 w-full h-full"}`}
         style={{
           objectFit,
-          objectPosition: wp.fit === "none" ? "center" : undefined,
+          objectPosition: isNone ? undefined : "center",
           opacity: `var(--bg-opacity, 0.7)`,
           transition: "opacity 1s ease",
         }}
