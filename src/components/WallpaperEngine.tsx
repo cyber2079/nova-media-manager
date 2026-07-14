@@ -74,21 +74,19 @@ export default function WallpaperEngine() {
   const src = wp.mode === "single" ? singleSrc : wp.mode === "folder" ? folderSrc : null;
   if (!src) return null;
 
-  const objectFit: React.CSSProperties["objectFit"] = wp.fit || "none";
-  const isNone = wp.fit === "none";
+  const fitLabel = wp.fit === "none" ? "normal" : wp.fit;
   return (
     <>
-      <img
-        key={`${wp.fit}-${src.slice(-20)}`}
-        src={src}
-        alt=""
-        className={`fixed z-0 pointer-events-none ${isNone
-          ? "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[100vw] max-h-[100vh]"
-          : "inset-0 w-full h-full"}`}
+      <div
+        key={`bg-${fitLabel}-${src.slice(-20)}`}
+        className="fixed inset-0 z-0 pointer-events-none"
         style={{
-          objectFit,
+          backgroundImage: `url("${src}")`,
+          backgroundSize: wp.fit === "none" ? "auto" : wp.fit === "fill" ? "100% 100%" : "cover",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
           opacity: `var(--bg-opacity, 0.7)`,
-          transition: "opacity 1s ease",
+          transition: "opacity 1s ease, background-size 0.3s ease",
         }}
       />
       {/* Dark overlay to keep UI readable */}
