@@ -3,7 +3,7 @@ mod db;
 mod license;
 mod logger;
 mod theme;
-mod windows;
+
 
 use db::Database;
 use tauri::Manager;

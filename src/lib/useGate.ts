@@ -6,15 +6,14 @@ import { useLicenseStore } from "@/stores/licenseStore";
  * Gating philosophy:
  * - Free users get a complete, non-crippled media manager.
  * - Paid tiers unlock content (premium themes) and infrastructure
- *   (cloud sync, auto-update, secondary screen).
+ *   (cloud sync, auto-update).
  * - Never gate basic tool features — those are table stakes.
  * - One-code-one-machine is enforced server-side, not via feature flag.
  */
 export type FeatureFlag =
   | "premium-theme"    // non-default themes (ice-girl, cyber-girl, …)
   | "auto-update"      // staged-rollout update channel
-  | "cloud-sync"       // cross-device data sync
-  | "secondary-screen"; // multi-monitor support
+  | "cloud-sync";       // cross-device data sync
 
 /**
  * Returns true when the current license tier is entitled to `feature`.
@@ -29,7 +28,6 @@ export function useGate(feature: FeatureFlag): boolean {
       return tier !== "free";
 
     case "cloud-sync":
-    case "secondary-screen":
       return tier === "ultra" || tier === "custom";
 
     default:
