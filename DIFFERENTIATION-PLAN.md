@@ -181,17 +181,57 @@
 
 ### 3.3 实施优先级
 
-| P0 · 许可证 + 主题安全 | P1 · 更新 + 内容 | P2 · 云 + 副屏 |
-|---|---|---|
-| 🔒 `useGate()` hook ✅ | 🔄 自动更新分级推送 | ☁️ 云端数据同步 |
-| 🚪 首次启动引导框 | 📋 主题列表 API 完善 | 🖥️ 副屏完善 |
-| 🎨 主题选择器门控 | 📦 主题打包脚本修通 | 📊 使用数据看板 |
-| 📦 .nvtp 自动下载（首次进度条） | 🔐 Tauri custom protocol | 💬 主题剧情补完 |
-| 🔐 主题安全架构（AES + 内存解密） | 🤖 AI 素材批量补全 | 🌐 Landing Page `/recover` |
-| 📱 一机一码 + 解绑规则 | 🛡️ 异常检测 | |
-| 🎫 爱发电卡密系统 | 🖥️ 管理后台基础版 | |
-| ⏱️ 30天/365天精确倒计时 | 🎨 新主题开发 | |
-| 🔄 7天联网校验 + 30天宽限 | | |
+#### ✅ P0 · 许可证 + 主题安全 — 全部完成
+
+| 任务 | 说明 |
+|---|---|
+| `useGate()` hook | `src/lib/useGate.ts` — 4 个 FeatureFlag |
+| OnboardingDialog 首次引导框 | 免费使用 / 激活码 → 下载进度条 |
+| `useAvailableThemes()` 主题门控 | loaded 检查防竞态 |
+| .nvtp 自动下载 + 中断恢复 | 进度条 + 启动时版本号对比自动补 |
+| Tauri custom protocol | `nova://` → 内存解密，明文不落地 |
+| 一机一码 + 解绑规则 | 30天锁定期 / 365天3次上限 |
+| 30d/365d 精确倒计时 | 设置页实时显示，最后24h HH:MM:SS |
+| 7天联网校验 + 30天宽限 | 双时间戳防改时钟 |
+| 爱发电卡密系统 | 🔴 阻塞 — 爱发电认证待通过 |
+
+#### ✅ S1 · 安全加固 — 全部完成
+
+| 任务 | 说明 |
+|---|---|
+| 禁用 F12 | `tauri.conf.json` — `devtools: false` |
+| CSP 清理 | `nova:` 协议加入 img-src/media-src |
+| 右键/拖拽/F12 拦截 | `useSecurity.ts` — production only |
+
+#### ✅ P1 · 完成项
+
+| 任务 | 说明 |
+|---|---|
+| 主题列表 API | `GET /api/themes/list` → ice-girl + cyber-girl |
+| 主题打包脚本 | `theme-pack.mjs` — 本地ZIP+XOR → scp 到 ECS CDN |
+| 素材规范化 | ice-girl 174→25 / cyber-girl 86→35 |
+| Scene 脚本系统 | Theme Studio + `manifest.script[]` 驱动打字机 |
+| 自动更新分级 | Free→GitHub / Pro+→自动下载+进度条 |
+| media_library.db 迁移 | DB 移至 `data/` 子目录，与缓存隔离 |
+| Landing Page `/recover.html` | 强制解绑 + 订单号验证 |
+
+#### ⬜ P1 · 剩余
+
+| 任务 |
+|---|
+| AI 素材批量补全 (ice-girl + cyber-girl) |
+| 剧情补完 (台词 + en 翻译) |
+| 新主题开发 (可爱风 / 治愈 / 像素 — 见 theme-strategy.md) |
+
+#### ⬜ P2
+
+| 任务 |
+|---|
+| ☁️ 云端数据同步 |
+| 🖥️ 副屏完善 |
+| 📊 使用数据看板 |
+| 🛡️ 异常检测 |
+| 🎨 Theme Studio 打磨 (AI 一键生成全链路) |
 
 ---
 
