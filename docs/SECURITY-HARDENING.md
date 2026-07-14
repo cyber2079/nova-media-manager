@@ -1,154 +1,83 @@
 # Nova Media Manager — 应用层安全加固方案
 
-> 2026-07-15 · 方案阶段，待确认后实施
+> 2026-07-15 · 全部使用免费/开源方案
 
-## 一、威胁回顾
+## 一、当前状态
 
-| 攻击向量 | 难度 | 危害 | 当前状态 |
-|---|---|---|---|
-| 开 F12 查看前端代码 | 极低 | 暴露所有 JS 逻辑、API 端点 | 下个 commit 禁用 |
-| 从二进制提取 MASTER_SEED 等字符串 | 低 | 解密所有 .nvtp 主题包 | 无防护 |
-| 用 Ghidra/IDA 反编译 Rust 二进制 | 中 | 找到 license 校验分支，patch 跳转绕过 | 无防护 |
-| 替换 `dist/` 中的前端 JS 文件 | 低 | 改 `useGate()` 返回值，所有功能免费 | 无防护 |
-| 进程内存 dump 提取 token/解密素材 | 中 | 窃取 JWT、截取渲染后的图片 | 无防护 |
-| 替换 `public/themes/` 中的素材 | 极低 | 用自己的图换掉官方素材 | 无防护 |
-
-## 二、可用的技术手段
-
-### 2.1 二进制层面
-
-| 手段 | 效果 | 成本 | 推荐 |
-|---|---|---|---|
-| **UPX 压缩壳** | 把 .exe 压缩，`strings` 命令看不到明文字符串，IDA 看到的入口点不是真实代码 | 免费，一行命令 | ✅ 必做 |
-| **Vmprotect / Themida** | 商业级虚拟化保护——把关键函数（license 校验）编译成自定义字节码，在虚拟机中执行。反汇编器看到的是垃圾指令。 | ¥3,000-15,000/年 | ⚠️ 有预算可做 |
-| **obsidium / Enigma Protector** | 中档保护，反调试 + 代码加密 + 导入表混淆 | ¥500-2,000/一次性 | ✅ 推荐 |
-| **Rust 编译优化 + strip** | `lto = true, opt-level = "z", strip = true` — 符号剥离，函数内联，增加逆向难度 | 免费，Cargo.toml 配置 | ✅ 必做 |
-
-### 2.2 资源完整性
-
-| 手段 | 效果 | 成本 |
-|---|---|---|
-| **前端 JS bundle hash 校验** | 启动时 Rust 计算 `dist/` 下所有文件的 SHA256，对比编译时嵌入的预期值。任何 JS 被篡改 → 拒绝启动 | 中等（需 Tauri resource 嵌入） |
-| **主题素材签名** | 每个 .nvtp 包内含 Ed25519 签名，Rust 安装前验签。替换素材 → 验签失败 → 拒绝安装 | 低（已有密钥对） |
-| **Tauri bundle resources 加密** | 把 `dist/` 打包时用 AES 加密，Rust 启动时内存解密后交给 WebView。JS 文件不落明文 | 高（需改 Tauri 构建流程） |
-
-### 2.3 运行时反调试
-
-| 手段 | 效果 | 成本 |
-|---|---|---|
-| **IsDebuggerPresent** | Rust 启动时检查是否被调试器附加，是则退出 | 极低（5 行代码） |
-| **CheckRemoteDebuggerPresent** | 同上，检查远程调试器 | 极低 |
-| **NtQueryInformationProcess** | 检测隐藏调试器（如 x64dbg 的 ScyllaHide） | 低 |
-| **硬件断点检测** | 检测 Dr0-Dr3 寄存器是否被设置（反硬件断点） | 低 |
-| **反内存 dump** | 定时擦除内存中的敏感数据（token、key），用完立即 zeroize | 低 |
-
-### 2.4 WebView 层面
-
-| 手段 | 效果 | 成本 |
-|---|---|---|
-| **禁用 DevTools** | Tauri window config 中 `devtools: false` — 仅 release 生效，完全禁用 F12 | 1 行配置 |
-| **禁用右键** | `contextmenu` 事件拦截 | 1 行代码（已做） |
-| **禁用 F5/Ctrl+R 刷新** | 防止用户刷新页面绕过某些前端门控 | 低 |
-| **CSP 移除 unsafe-eval** | 防止通过 console 执行任意 JS | 0.5h |
-
-## 三、分层实施方案
-
-### 第一层：零成本基础防护（本周可做）
-
-```
-目标：让好奇玩家无法 F12/右键，让初级 cracker 无法用 strings 提取密钥
-```
-
-| 措施 | 具体操作 |
+| 措施 | 状态 |
 |---|---|
-| ✅ 禁用 DevTools | `tauri.conf.json` → `"devtools": false`（仅 release 窗口） |
-| ✅ 禁用右键 | `main.tsx` 加 `contextmenu` 拦截 |
-| ✅ Rust release 优化 | `Cargo.toml` 加 `strip = true`, `lto = true`, `opt-level = "z"` |
-| ✅ UPX 加壳 | 构建后 `upx --best --lzma target/release/app.exe` |
-| ✅ 调试器检测 | `main.rs` 启动时 `IsDebuggerPresent()` → 退出 |
-| ✅ CSP 清理 | 移除 `unsafe-eval` |
+| 禁用右键 | ✅ 已实现 (`main.tsx`) |
+| 代码混淆 (license + crypto 在私库) | ✅ 已实现 |
+| 主题加密 (XOR + SHA256) | ✅ 已实现 |
+| nova:// custom protocol | ⚠️ 笔记本规划中 |
+| DevTools 禁用 (release) | ❌ 未做 |
+| CSP 移除 `unsafe-eval` | ❌ 未做 |
+| Rust release 优化 (strip/lto) | ❌ 未做 |
+| UPX 压缩壳 | ❌ 未做 |
+| 反调试检测 | ❌ 未做 |
+| 前端 bundle hash 校验 | ❌ 未做 |
+| .nvtp Ed25519 签名 | ❌ 未做 |
+| 反内存 dump (zeroize) | ❌ 未做 |
+| 禁用 F5/Ctrl+R 刷新 | ❌ 未做 |
 
-**效果**：
-- 二进制从 ~8MB 压缩到 ~3MB
-- `strings` 输出 MASTER_SEED、SERVER_URL、API 端点的可能性大幅降低
-- 调试器附加被检测
-- F12 和右键完全失效
+---
 
-### 第二层：中等成本商业防护（发布前做）
+## 二、待实施清单（全部免费）
 
-```
-目标：让专业 cracker 的逆向成本 > ¥199
-```
+### 🔴 P0 — 立刻做
 
-| 措施 | 具体操作 |
-|---|---|
-| ✅ Enigma Protector | 保护 license 校验函数、MASTER_SEED 常量、API URL |
-| ✅ 前端 bundle hash 校验 | Rust 启动时验证 dist/ 完整性 |
-| ✅ 主题素材 Ed25519 签名 | packer.rs 打包时加签，loader.rs 安装时验签 |
-| ✅ 反内存 dump | `zeroize` crate 加密擦除 token/key |
+| # | 措施 | 操作 | 效果 | 工作量 |
+|---|---|---|---|---|
+| P0-1 | DevTools 禁用 | `tauri.conf.json` 加 `"devtools": false`（release 生效） | F12 完全失效 | 1 行 |
+| P0-2 | CSP 移除 unsafe-eval | `tauri.conf.json` CIP 中去掉 `'unsafe-eval'` | 禁止 console 执行任意 JS | 0.5h |
+| P0-3 | 禁用 F5/Ctrl+R | `main.tsx` 拦截 `keydown` — F5 和 Ctrl+R 被阻止 | 前端状态不可恢复 | 5 行 |
 
-**效果**：
-- license 验证逻辑被虚拟化，无法静态分析
-- JS 文件被篡改 → 应用拒绝启动
-- .nvtp 被替换 → 验签失败
-- token 使用后立即从内存擦除
+### 🟡 P1 — 发布前做
 
-### 第三层：重度商业防护（商业化后考虑）
+| # | 措施 | 操作 | 效果 | 工作量 |
+|---|---|---|---|---|
+| P1-1 | Rust release 优化 | `Cargo.toml` `[profile.release]` 加 `strip = true`, `lto = true`, `opt-level = "z"`, `panic = "abort"` | 符号剥离 + 函数内联 + 体积缩小 ~40% | 0.5h |
+| P1-2 | UPX 压缩壳 | 构建后 `upx --best --lzma app.exe` | `.exe` 从 ~8MB 压到 ~3MB，`strings` 看不到明文 | 免费一行命令 |
+| P1-3 | 反调试检测 | `main.rs` 启动时检测 `IsDebuggerPresent()` + `CheckRemoteDebuggerPresent()` + 硬件断点 Dr0-Dr3 | 调试器附加 → 应用退出 | 1h |
+| P1-4 | 前端 bundle hash | 编译时 Rust 嵌入 `dist/` 各文件 SHA256；启动时逐文件对比；不匹配 → 弹窗退出 | JS 被篡改 → 拒绝启动 | 3h |
+| P1-5 | .nvtp Ed25519 签名 | `packer.rs` 打包时用私钥签名 manifest；`loader.rs` 安装前用公钥验签 | 主题被替换 → 验签失败 | 已有密钥对，2h |
+| P1-6 | 内存 token 擦除 | 引入 `zeroize` crate；token/key 使用后立即 `zeroize()` | dump 内存找不到 token | 1h |
 
-```
-目标：达到商业软件级别的反逆向水平
-```
+### 🟢 P2 — 长期
 
-| 措施 | 具体操作 |
-|---|---|
-| ✅ Vmprotect | 关键代码段虚拟化执行 |
-| ✅ Tauri bundle 加密 | dist/ 在安装包中用 AES 加密，启动时内存解密 |
-| ✅ nova:// 协议内存不落地 | 已完成 |
-| ✅ 服务器端行为检测 | 同一 license 短时间内多地登录 → 标记可疑 |
+| # | 措施 | 操作 | 效果 | 工作量 |
+|---|---|---|---|---|
+| P2-1 | nova:// 内存解密 | Rust custom protocol → 拦截 `nova://` URL → 从加密缓存读 → 内存 AES 解密 → 返回 WebView | 明文素材从不落盘 | 3-5 天 |
+| P2-2 | 字符串混淆 | 编译时用宏展开 + XOR 编码编译期常量，运行时解码 | MASTER_SEED/SERVER_URL 不出现于二进制 | 1h (macro_rules) |
 
-## 四、资源替换检测流程
+---
 
-```
-应用启动
-  ├→ Rust 计算 dist/ 下所有文件的 SHA256
-  ├→ 对比嵌入二进制中的预期 hash（编译时生成）
-  ├→ 不匹配 → 弹窗 "应用文件已损坏" → 退出
-  │
-  ├→ 用户选择 .nvtp 主题文件
-  ├→ loader.rs 验证 Ed25519 签名
-  ├→ 签名无效 → "主题包已损坏或被篡改"
-  │
-  ├→ <img src="nova://theme/ice-girl/faces/angry.webp">
-  ├→ Rust custom protocol 拦截
-  ├→ 从加密缓存读取 → 内存 AES 解密 → 返回 WebView
-  ├→ 明文图片从不落盘
-```
+## 三、所有方案均为免费
 
-## 五、成本估算
+| 方案 | 类型 | 说明 |
+|---|---|---|
+| UPX | 开源 (GPL) | 二进制压缩壳，20 年历史 |
+| Rust strip/lto | 内置 | 无需额外工具 |
+| IsDebuggerPresent | Windows API | 系统自带 |
+| zeroize | Rust crate | MIT/Apache 2.0 |
+| Ed25519 签名 | rust-ed25519-compact | 已有密钥对 |
+| 前端 hash | 自实现 | SHA256 + include_bytes! |
 
-| 项目 | 一次性 | 年费 | 说明 |
-|---|---|---|---|
-| UPX | 免费 | — | 开源 |
-| Enigma Protector | ¥1,500 | — | 永久授权 |
-| Vmprotect | — | ¥15,000/年 | 按版本更新 |
-| Rust 编译优化 | 免费 | — | 0.5h 配置 |
-| 反调试代码 | 免费 | — | 1h 编写 |
-| 前端 hash 校验 | 免费 | — | 3h 编写 |
-| .nvtp 签名 | 免费 | — | 已有密钥对 |
+没有任何付费方案。所有措施用 Rust 生态 + Windows API + 开源工具即可完成。
 
-## 六、建议的起步方案
+---
 
-**免费方案足以防住 90% 的潜在破解者**：
+## 四、实施顺序
 
 ```
-UPX 压缩 → strings 失效
-Rust 优化 + strip → 符号剥离，逆向难度翻倍
-反调试检测 → 调试器直接退出
-F12/右键禁用 → 前端代码不可见
-前端 hash 校验 → JS 文件不可篡改
-.nvtp 签名 → 主题不可替换
+① P0-1~P0-3（1h）      → 防住好奇玩家
+② P1-1 + P1-2（1h）     → strings 失效 + 体积缩小
+③ P1-3（1h）            → 反调试
+④ P1-4 + P1-5（5h）     → 防篡改 JS + 主题
+⑤ P1-6（1h）            → 防内存 dump
+⑥ P2（后续）            → 终极防线
 ```
 
-7 项措施中 5 项零成本、2 项需要编码（反调试 + hash 校验），**本周内可完成**。
+---
 
-> **待确认**：先做免费方案（第一层全做 + 第二层的 hash 校验和签名），还是直接上 Enigma Protector？是否要先搜一下 Vmprotect/Themida 的报价？
+> **待确认**：按顺序从 P0 开始执行？
