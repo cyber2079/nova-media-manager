@@ -233,21 +233,66 @@ pub async fn theme_studio_generate(theme_id: String) -> Result<String, String> {
 // ═══════════════ BUILDERS ═══════════════
 
 fn build_assets(manifest: &serde_json::Value, pub_dir: &Path, pd: &str) -> Vec<AssetItem> {
-    manifest["assets"].as_array().map(|arr| arr.iter().map(|a| {
-        let path = a["path"].as_str().unwrap_or(a["id"].as_str().unwrap_or("?")).to_string();
-        let fp = pub_dir.join(&path);
-        let (exists, size) = if fp.exists() { (true, fp.metadata().map(|m| m.len()).unwrap_or(0)) } else { (false, 0) };
-        AssetItem {
-            id: a["id"].as_str().unwrap_or("?").to_string(),
-            status: if exists { "done".into() } else { a["status"].as_str().unwrap_or("todo").into() },
-            asset_type: a["type"].as_str().unwrap_or("image").into(),
-            path: path.clone(),
-            description: a["description"].as_str().unwrap_or("").into(),
-            exists,
-            thumb_url: if exists { format!("themes/{}/{}", pd, path) } else { String::new() },
-            size,
+    let mut items: Vec<AssetItem> = Vec::new();
+    let mut known_paths = std::collections::HashSet::new();
+
+    // 1. Collect from manifest
+    if let Some(arr) = manifest["assets"].as_array() {
+        for a in arr {
+            let path = a["path"].as_str().unwrap_or(a["id"].as_str().unwrap_or("?")).to_string();
+            let fp = pub_dir.join(&path);
+            let (exists, size) = if fp.exists() { (true, fp.metadata().map(|m| m.len()).unwrap_or(0)) } else { (false, 0) };
+            known_paths.insert(path.clone().to_lowercase());
+            items.push(AssetItem {
+                id: a["id"].as_str().unwrap_or("?").to_string(),
+                status: if exists { "done".into() } else { a["status"].as_str().unwrap_or("todo").into() },
+                asset_type: a["type"].as_str().unwrap_or("image").into(),
+                path: path.clone(),
+                description: a["description"].as_str().unwrap_or("").into(),
+                exists,
+                thumb_url: if exists { format!("themes/{}/{}", pd, path) } else { String::new() },
+                size,
+            });
         }
-    }).collect()).unwrap_or_default()
+    }
+
+    // 2. Scan disk for files not listed in manifest (e.g. new/deleted face, missing nav icon)
+    // Only scan known subdirs to avoid picking up .DS_Store etc.
+    for prefix in &["faces", "icons", "scenes", "video"] {
+        let scan_dir = pub_dir.join(prefix);
+        if !scan_dir.exists() || !scan_dir.is_dir() { continue; }
+        if let Ok(entries) = std::fs::read_dir(&scan_dir) {
+            for entry in entries.flatten() {
+                let name = entry.file_name().to_string_lossy().to_string();
+                if name.starts_with('.') { continue; }
+                let rel = format!("{}/{}", prefix, name);
+                if known_paths.contains(&rel.to_lowercase()) { continue; }
+                let fp = scan_dir.join(&name);
+                let size = fp.metadata().map(|m| m.len()).unwrap_or(0);
+                let id = format!("disk-{}-{}", prefix, name.replace('.', "-"));
+                items.push(AssetItem {
+                    id,
+                    status: "done".into(),
+                    asset_type: guess_asset_type(&name),
+                    path: rel.clone(),
+                    description: String::new(),
+                    exists: true,
+                    thumb_url: format!("themes/{}/{}", pd, rel),
+                    size,
+                });
+                known_paths.insert(rel.to_lowercase());
+            }
+        }
+    }
+
+    items
+}
+
+fn guess_asset_type(name: &str) -> String {
+    let n = name.to_lowercase();
+    if n.ends_with(".mp4") || n.ends_with(".webm") { "video".into() }
+    else if n.ends_with(".mp3") || n.ends_with(".m4a") { "audio".into() }
+    else { "image".into() }
 }
 
 fn build_script(manifest: &serde_json::Value, pub_dir: &Path, pd: &str, _theme_type: &str, bg_default: &str) -> Vec<ScriptNode> {

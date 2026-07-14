@@ -33,7 +33,6 @@ import { analytics, useAnalyticsPageView } from "@/lib/analytics";
 import { invoke } from "@tauri-apps/api/core";
 import { getMusicCoverFallback } from "@/lib/musicCoverFallback";
 import { compareVersions } from "@/lib/compareVersions";
-import { themeUrl } from "@/lib/themeBase";
 import { useSecurity } from "@/lib/useSecurity";
 import { ThemeAssets, themeUrl } from "@/lib/themeBase";
 
