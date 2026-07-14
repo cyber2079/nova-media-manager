@@ -5,7 +5,7 @@ import type { ThemeName } from "./themeStore";
 export type BgVideoMode = "normal" | "fill" | "stretch";
 export type WallpaperMode = "none" | "single" | "folder";
 export type WallpaperShuffle = "sequential" | "random";
-export type WallpaperFit = "cover" | "contain" | "fill";
+export type WallpaperFit = "none" | "cover" | "fill";
 export type WallpaperConfig = {
   mode: WallpaperMode;
   path: string;
@@ -189,7 +189,7 @@ function getDefaultLoop(): BgVideoLoopConfig {
 }
 
 function getDefaultWallpaper(): WallpaperConfig {
-  return { mode: "none", path: "", shuffle: "sequential", interval: 30, fit: "cover" };
+  return { mode: "none", path: "", shuffle: "sequential", interval: 30, fit: "none" };
 }
 
 function readSaved(): Partial<SettingsState> {

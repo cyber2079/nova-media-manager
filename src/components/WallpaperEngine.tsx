@@ -74,7 +74,7 @@ export default function WallpaperEngine() {
   const src = wp.mode === "single" ? singleSrc : wp.mode === "folder" ? folderSrc : null;
   if (!src) return null;
 
-  const objectFit: React.CSSProperties["objectFit"] = wp.fit || "cover";
+  const objectFit: React.CSSProperties["objectFit"] = wp.fit || "none";
   return (
     <>
       <img
@@ -84,6 +84,7 @@ export default function WallpaperEngine() {
         className="fixed inset-0 z-0 w-full h-full pointer-events-none"
         style={{
           objectFit,
+          objectPosition: wp.fit === "none" ? "center" : undefined,
           opacity: `var(--bg-opacity, 0.7)`,
           transition: "opacity 1s ease",
         }}
