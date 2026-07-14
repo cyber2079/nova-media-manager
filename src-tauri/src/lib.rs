@@ -8,8 +8,48 @@ mod theme;
 use db::Database;
 use tauri::Manager;
 
+/// Release-only: detect debugger attached → exit immediately
+#[cfg(all(target_os = "windows", not(debug_assertions)))]
+fn anti_debug_check() {
+    unsafe {
+        extern "system" { fn IsDebuggerPresent() -> i32; }
+        if IsDebuggerPresent() != 0 { std::process::exit(1); }
+    }
+}
+#[cfg(not(all(target_os = "windows", not(debug_assertions))))]
+fn anti_debug_check() {}
+
+/// Release-only: verify frontend JS/HTML files haven't been tampered with
+#[cfg(not(debug_assertions))]
+fn verify_frontend_integrity() {
+    include!(concat!(env!("OUT_DIR"), "/frontend_hashes.rs"));
+    use sha2::{Digest, Sha256};
+    use std::path::Path;
+    let dist = std::env::current_exe().ok().and_then(|e| {
+        e.parent().map(|p| p.join("_up_").join("dist"))
+    });
+    if let Some(ref d) = dist {
+        if !d.exists() { return; }
+        for &(name, expected) in FRONTEND_HASHES {
+            let data = match std::fs::read(d.join(name)) {
+                Ok(d) => d, Err(_) => { eprintln!("[integrity] missing: {}", name); std::process::exit(1); }
+            };
+            let actual = hex::encode(Sha256::digest(&data));
+            if actual != expected {
+                eprintln!("[integrity] tampered: {}", name);
+                std::process::exit(1);
+            }
+        }
+    }
+}
+#[cfg(debug_assertions)]
+fn verify_frontend_integrity() {}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    anti_debug_check();
+    verify_frontend_integrity();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
