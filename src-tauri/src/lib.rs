@@ -94,6 +94,7 @@ pub fn run() {
             commands::shell::set_wallpaper,
             commands::convert::convert_video_to_webp,
             commands::system::get_system_info,
+            commands::system::wallpaper_list_images,
             commands::file_explorer::list_drives,
             commands::file_explorer::list_dir,
             commands::file_explorer::open_my_computer,

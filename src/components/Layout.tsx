@@ -27,6 +27,7 @@ import PrivacyConsent from "@/components/PrivacyConsent";
 import BgVideoTuner from "@/components/BgVideoTuner";
 import CyberGirlBgSwitcher from "@/components/CyberGirlBgSwitcher";
 import UpdateChecker from "@/components/UpdateChecker";
+import WallpaperEngine from "@/components/WallpaperEngine";
 import { useLicenseStore, isPro } from "@/stores/licenseStore";
 import { useThemePackStore } from "@/stores/themePackStore";
 import { analytics, useAnalyticsPageView } from "@/lib/analytics";
@@ -77,6 +78,7 @@ export default function Layout() {
   const { t, i18n } = useTranslation();
   const meta = themeMeta[theme];
   const isIce = theme === "ice-girl";
+  const isDefault = theme === "default";
   const isCG = theme === "cyber-girl";
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();
   const bgVideoMode = useSettingsStore((s) => s.bgVideoMode);
@@ -577,6 +579,9 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-surface" id="app" ref={appRef}>
+      {/* ── Default theme wallpaper engine ── */}
+      {isDefault && <WallpaperEngine />}
+
       {/* ── Ice Girl background ── */}
       {isIce && <>
         <video ref={iceVidRef} className="ice-bg-video fixed inset-0 object-cover w-full h-full" autoPlay muted playsInline poster={ThemeAssets.ice.bg} src={ThemeAssets.ice.bgVideo} />

@@ -17,6 +17,27 @@ pub struct SystemInfo {
 
 static LAST_NET: Mutex<Option<(Instant, u64, u64)>> = Mutex::new(None);
 
+/// List image files in a directory (wallpaper slideshow).
+#[tauri::command]
+pub fn wallpaper_list_images(path: String) -> Result<Vec<String>, String> {
+    let d = std::path::Path::new(&path);
+    if !d.is_dir() { return Ok(vec![]); }
+    let mut files = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(d) {
+        for e in entries.flatten() {
+            let p = e.path();
+            if p.is_file() {
+                let ext = p.extension().unwrap_or_default().to_string_lossy().to_lowercase();
+                if ["webp","jpg","jpeg","png","bmp","gif"].contains(&ext.as_str()) {
+                    files.push(p.to_string_lossy().to_string());
+                }
+            }
+        }
+    }
+    files.sort();
+    Ok(files)
+}
+
 #[tauri::command]
 pub fn get_system_info() -> Result<SystemInfo, String> {
     use sysinfo::{System, Networks};

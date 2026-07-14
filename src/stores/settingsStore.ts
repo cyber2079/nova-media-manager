@@ -3,6 +3,16 @@ import { kv } from "@/lib/sqliteStore";
 import type { ThemeName } from "./themeStore";
 
 export type BgVideoMode = "normal" | "fill" | "stretch";
+export type WallpaperMode = "none" | "single" | "folder";
+export type WallpaperShuffle = "sequential" | "random";
+export type WallpaperFit = "cover" | "contain" | "fill";
+export type WallpaperConfig = {
+  mode: WallpaperMode;
+  path: string;
+  shuffle: WallpaperShuffle;
+  interval: number; // seconds
+  fit: WallpaperFit;
+};
 
 export type BgVideoLoopConfig = {
   enabled: boolean;
@@ -115,6 +125,9 @@ export type SettingsState = {
   cgTextBgColor: string;
   cgTextBgOpacity: number;
 
+  // ── Wallpaper (default theme only) ──
+  wallpaper: WallpaperConfig;
+
   // ── New palette system (replaces 13 individual controls) ──
   paletteAccent: string;
   paletteSaturation: number;  // 0-100
@@ -162,6 +175,7 @@ export type SettingsState = {
   setPaletteAccent: (v: string) => void;
   setPaletteSaturation: (v: number) => void;
   setPaletteContrast: (v: "dark" | "light") => void;
+  setWallpaperConfig: (cfg: Partial<WallpaperConfig>) => void;
   resetPaletteToTheme: (theme: ThemeName) => void;
 };
 
@@ -172,6 +186,10 @@ function getDefaultLoop(): BgVideoLoopConfig {
     enabled: true, loopCount: 0, firstPlayStart: 0, firstPlayEnd: 0,
     loopStart: 0, loopDuration: 3, transitionMs: 450, playbackRate: 0.7,
   };
+}
+
+function getDefaultWallpaper(): WallpaperConfig {
+  return { mode: "none", path: "", shuffle: "sequential", interval: 30, fit: "cover" };
 }
 
 function readSaved(): Partial<SettingsState> {
@@ -326,7 +344,7 @@ async function persist(s: SettingsState) {
     visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
     headerOpacity: s.headerOpacity, footerOpacity: s.footerOpacity,
     surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
-    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized,
+    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, wallpaper: s.wallpaper, wallpaper: s.wallpaper,
   });
   // Write to both: SQLite (primary) + localStorage (fast sync fallback)
   localStorage.setItem(STORAGE_KEY, payload);
@@ -420,6 +438,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     cgTextColor: (saved as any).cgTextColor || "#e0c0ff",
     cgTextBgColor: (saved as any).cgTextBgColor || "#c74dff",
     cgTextBgOpacity: (saved as any).cgTextBgOpacity ?? 15,
+    wallpaper: (saved as any).wallpaper || getDefaultWallpaper(),
     paletteAccent: (saved as any).paletteAccent || "#4788f0",
     paletteSaturation: (saved as any).paletteSaturation ?? ((saved as any).paletteVibrancy != null ? (saved as any).paletteVibrancy * 10 : 50),
     paletteContrast: (saved as any).paletteContrast || "dark",
@@ -470,7 +489,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             paletteAccent: (s.paletteAccent as string) ?? get().paletteAccent,
             paletteSaturation: (s.paletteSaturation as number) ?? ((s as any).paletteVibrancy != null ? (s as any).paletteVibrancy * 10 : get().paletteSaturation),
             paletteContrast: (s.paletteContrast as any) ?? get().paletteContrast,
-            paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized,
+            paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized, wallpaper: s.wallpaper ?? get().wallpaper,
           });
           applyPalette(); applySurface();
           applyFontColors();
@@ -523,6 +542,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setPaletteAccent(v) { set({ paletteAccent: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
     setPaletteSaturation(v) { set({ paletteSaturation: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
     setPaletteContrast(v) { set({ paletteContrast: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
+    setWallpaperConfig(cfg) { set((s) => ({ wallpaper: { ...s.wallpaper, ...cfg } })); outdate(); persist(get()); },
     resetPaletteToTheme(theme) {
       const def = THEME_PALETTE_DEFAULTS[theme] ?? THEME_PALETTE_DEFAULTS.default;
       set({ paletteAccent: def.accent, paletteSaturation: def.saturation, paletteContrast: def.contrast, paletteCustomized: false });

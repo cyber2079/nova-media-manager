@@ -9,7 +9,9 @@ import { languages } from "@/i18n";
 import { cn } from "@/lib/utils";
 import ScrollFade from "@/components/ScrollFade";
 import ThemeManager from "@/components/ThemeManager";
-import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown } from "lucide-react";
+import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown, FolderOpen, ImageIcon, Shuffle } from "lucide-react";
+import type { WallpaperConfig, WallpaperMode, WallpaperShuffle, WallpaperFit } from "@/stores/settingsStore";
+import { dialog } from "@tauri-apps/plugin-dialog";
 import { ThemeAssets } from "@/lib/themeBase";
 import { useLicenseStore, isPro, isUltra } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS } from "@/stores/settingsStore";
@@ -321,6 +323,9 @@ export default function SettingsDialog({ open, onClose }: Props) {
                     </label>
                   </div>
                 </section>
+
+                {/* ── Wallpaper (default theme only) ── */}
+                {theme === "default" && <WallpaperSection t={t} />}
 
                 {/* ── Theme Packs ── */}
                 <ThemeManager />
@@ -1060,6 +1065,86 @@ function FontFamilySection({ t, fontFamily, setFontFamily }: any) {
             </button>
           );
         })}
+      </div>
+    </section>
+  );
+}
+
+function WallpaperSection({ t }: { t: any }) {
+  const { wallpaper, setWallpaperConfig } = useSettingsStore((s: any) => ({
+    wallpaper: s.wallpaper, setWallpaperConfig: s.setWallpaperConfig,
+  }));
+
+  const pickFile = async () => {
+    try {
+      const selected = await dialog.open({
+        multiple: false,
+        filters: [{ name: "Images", extensions: ["webp","jpg","jpeg","png","bmp","gif"] }],
+      });
+      if (selected) { setWallpaperConfig({ mode: "single", path: selected as string }); }
+    } catch (e) { console.error("[wallpaper]", e); }
+  };
+
+  const pickFolder = async () => {
+    try {
+      const selected = await dialog.open({ directory: true, multiple: false });
+      if (selected) { setWallpaperConfig({ mode: "folder", path: selected as string }); }
+    } catch (e) { console.error("[wallpaper]", e); }
+  };
+
+  return (
+    <section>
+      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.wallpaper_title", "自定义壁纸")}</h4>
+      <div className="space-y-3">
+        <div className="flex gap-2">
+          <button onClick={() => setWallpaperConfig({ mode: "none" })}
+            className={cn("flex-1 py-1.5 rounded-lg text-xs border transition-colors",
+              wallpaper.mode === "none" ? "bg-primary/15 border-primary/40 text-primary-light" : "border-white/5 text-gray-400 hover:text-white")}>
+            {t("settings.wallpaper_off", "默认")}
+          </button>
+          <button onClick={pickFile}
+            className={cn("flex-1 py-1.5 rounded-lg text-xs border transition-colors flex items-center justify-center gap-1",
+              wallpaper.mode === "single" ? "bg-primary/15 border-primary/40 text-primary-light" : "border-white/5 text-gray-400 hover:text-white")}>
+            <ImageIcon className="h-3 w-3" /> {t("settings.wallpaper_single", "单张")}
+          </button>
+          <button onClick={pickFolder}
+            className={cn("flex-1 py-1.5 rounded-lg text-xs border transition-colors flex items-center justify-center gap-1",
+              wallpaper.mode === "folder" ? "bg-primary/15 border-primary/40 text-primary-light" : "border-white/5 text-gray-400 hover:text-white")}>
+            <FolderOpen className="h-3 w-3" /> {t("settings.wallpaper_folder", "文件夹")}
+          </button>
+        </div>
+        {(wallpaper.mode !== "none" && wallpaper.path) ? (
+          <div className="text-[10px] text-gray-500 truncate font-mono bg-white/[0.02] px-2 py-1 rounded">{wallpaper.path}</div>
+        ) : null}
+        {wallpaper.mode === "folder" && (<>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-400">{t("settings.wallpaper_slideshow", "幻灯片")}</span>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={wallpaper.shuffle === "random"}
+                onChange={(e) => setWallpaperConfig({ shuffle: e.target.checked ? "random" : "sequential" })}
+                className="h-4 w-4 rounded accent-[var(--color-primary)]" />
+              <span className="text-xs text-gray-300 flex items-center gap-1"><Shuffle className="h-3 w-3" />{t("settings.wallpaper_shuffle", "随机")}</span>
+            </label>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-400 shrink-0">{t("settings.wallpaper_interval", "间隔")}</span>
+            <input type="range" min={5} max={300} value={wallpaper.interval}
+              onChange={(e) => setWallpaperConfig({ interval: Number(e.target.value) })}
+              className="flex-1 h-1 accent-[var(--color-primary)]" />
+            <span className="text-xs text-gray-400 w-10 text-right">{wallpaper.interval}s</span>
+          </div>
+        </>)}
+        {wallpaper.mode !== "none" && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-400">{t("settings.wallpaper_fit", "填充")}</span>
+            <select value={wallpaper.fit} onChange={(e) => setWallpaperConfig({ fit: e.target.value as WallpaperFit })}
+              className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none">
+              <option value="cover">{t("settings.wallpaper_fit_cover", "裁剪")}</option>
+              <option value="contain">{t("settings.wallpaper_fit_contain", "完整")}</option>
+              <option value="fill">{t("settings.wallpaper_fit_fill", "拉伸")}</option>
+            </select>
+          </div>
+        )}
       </div>
     </section>
   );
