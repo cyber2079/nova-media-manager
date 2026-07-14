@@ -349,10 +349,9 @@ export default function ThemeStudioPage() {
                         {/* Face */}
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-1">表情 · 快捷填入</label>
-                          <select onChange={e => { if (e.target.value) setField("face", e.target.value); }}
+                          <select value={String(editData.face || "")} onChange={e => setField("face", e.target.value)}
                             className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none mb-1.5">
                             <option value="">— 选择表情 —</option>
-                            <option value="">无</option>
                             {faceFiles.map(f => <option key={f} value={f}>{f}</option>)}
                           </select>
                           <div className="flex gap-1.5 flex-wrap">
