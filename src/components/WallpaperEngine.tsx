@@ -82,10 +82,11 @@ export default function WallpaperEngine() {
         key={`${wp.fit}-${src.slice(-20)}`}
         src={src}
         alt=""
-        className={`fixed z-0 pointer-events-none ${isNone ? "inset-0 m-auto max-h-full max-w-full" : "inset-0 w-full h-full"}`}
+        className={`fixed z-0 pointer-events-none ${isNone
+          ? "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[100vw] max-h-[100vh]"
+          : "inset-0 w-full h-full"}`}
         style={{
           objectFit,
-          objectPosition: isNone ? undefined : "center",
           opacity: `var(--bg-opacity, 0.7)`,
           transition: "opacity 1s ease",
         }}
