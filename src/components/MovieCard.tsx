@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import SafeImage from "@/components/SafeImage";
 import { memo } from "react";
 import type { Movie } from "@/types/movie";
-import { Play, Trash2, Clock, Maximize, Loader2, Tag } from "lucide-react";
+import { Play, Trash2, Clock, Maximize, Loader2, Tag, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { tagColor } from "@/lib/tagColor";
 import { useTranslation } from "react-i18next";
@@ -15,12 +15,13 @@ interface MovieCardProps {
   onDelete: (id: string) => void;
   onPlay: (movie: Movie) => void;
   onEditTags?: () => void;
+  onSetWallpaper?: (path: string) => void;
   compact?: boolean;
   favorited?: boolean;
   onToggleFav?: () => void;
 }
 
-export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, compact, favorited, onToggleFav }: MovieCardProps) {
+export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, onSetWallpaper, compact, favorited, onToggleFav }: MovieCardProps) {
   const { t } = useTranslation();
   const isProcessing = movie.status === "processing";
 
@@ -115,6 +116,12 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, co
             </div>
             )}
           </div>
+          {onSetWallpaper && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light"
+              onClick={(e) => { e.stopPropagation(); onSetWallpaper(movie.filePath); }} title="设为背景">
+              <Monitor className="h-3.5 w-3.5" />
+            </Button>
+          )}
           {onEditTags && (
             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light"
               onClick={(e) => { e.stopPropagation(); onEditTags(); }} title="Edit tags">

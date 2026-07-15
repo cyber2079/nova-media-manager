@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useMovieStore } from "@/stores/movieStore";
+import { useSettingsStore } from "@/stores/settingsStore";
+import { useThemeStore } from "@/stores/themeStore";
 import MovieCard from "@/components/MovieCard";
 import EmptyState from "@/components/EmptyState";
 import SafeImage from "@/components/SafeImage";
@@ -39,6 +41,12 @@ export default function MovieLibrary() {
   const [tagEditItem, setTagEditItem] = useState<Movie | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ msg: string; onOk: () => void } | null>(null);
   const confirmThen = (msg: string, fn: () => void) => setConfirmDelete({ msg, onOk: fn });
+
+  const handleSetWallpaper = useCallback((filePath: string) => {
+    useSettingsStore.getState().setWallpaperConfig({ mode: "single", path: filePath });
+    useThemeStore.getState().setTheme("default");
+  }, []);
+
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -250,7 +258,7 @@ export default function MovieLibrary() {
                 <div key={movie.id} className="relative group"
                   onClick={() => { if (batch.showCheckboxes) batch.toggle(movie.id); }}>
                   {batch.showCheckboxes && <BatchCheckbox checked={batch.selected.has(movie.id)} onToggle={() => batch.toggle(movie.id)} />}
-                  <MovieCard movie={movie} onDelete={(id) => confirmThen(t("movie.confirm_delete"), () => deleteMovie(id))} onPlay={batch.showCheckboxes ? () => {} : handlePlayMovie} onEditTags={() => setTagDialogMovie(movie)} compact={layoutMode === "small"} favorited={isFavorite(movie.id)} onToggleFav={() => toggleFavorite(movie.id, "movie")} />
+                  <MovieCard movie={movie} onDelete={(id) => confirmThen(t("movie.confirm_delete"), () => deleteMovie(id))} onPlay={batch.showCheckboxes ? () => {} : handlePlayMovie} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagDialogMovie(movie)} compact={layoutMode === "small"} favorited={isFavorite(movie.id)} onToggleFav={() => toggleFavorite(movie.id, "movie")} />
                 </div>
               ))}
             </div>

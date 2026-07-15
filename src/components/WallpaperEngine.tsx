@@ -73,63 +73,32 @@ export default function WallpaperEngine() {
   const src = wp.mode === "single" ? singleSrc : wp.mode === "folder" ? folderSrc : null;
   if (!src) return null;
 
+  const isVideo = /\.(mp4|mkv|webm|avi|mov)$/i.test(wp.path || "");
+
   const baseStyle: React.CSSProperties = {
     opacity: `var(--bg-opacity, 0.7)`,
     transition: "opacity 0.6s ease",
   };
 
-  const imgStyle: React.CSSProperties = (() => {
+  const fitStyle: React.CSSProperties = (() => {
     if (wp.fit === "none") {
-      // 原图不溢出屏幕，自动等比缩小，不变形，完整展示整张图
       return {
-        ...baseStyle,
-        width: "auto",
-        height: "auto",
-        maxWidth: "100vw",
-        maxHeight: "100vh",
-        position: "absolute",
-        left: "50%",
-        top: "50%",
-        transform: "translate(-50%, -50%)",
-      };
+        width: "auto", height: "auto", maxWidth: "100vw", maxHeight: "100vh",
+        position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)",
+      } as React.CSSProperties;
     }
-    if (wp.fit === "fill") {
-      return {
-        ...baseStyle,
-        width: "100%",
-        height: "100%",
-        objectFit: "fill",
-      };
-    }
-    if (wp.fit === "contain") {
-      return {
-        ...baseStyle,
-        width: "100%",
-        height: "100%",
-        objectFit: "contain",
-      };
-    }
-    // cover 默认
-    return {
-      ...baseStyle,
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-    };
+    return { width: "100%", height: "100%", objectFit: wp.fit === "contain" ? "contain" : wp.fit === "fill" ? "fill" : "cover" } as React.CSSProperties;
   })();
 
+  const fullStyle = { ...baseStyle, ...fitStyle };
+
   return (
-    <>
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <img
-          key={src.slice(-20)}
-          src={src}
-          alt=""
-          style={imgStyle}
-        />
-      </div>
-
-
-    </>
+    <div className="fixed inset-0 z-0 pointer-events-none">
+      {isVideo ? (
+        <video key={src.slice(-20)} src={src} autoPlay loop muted playsInline style={fullStyle} />
+      ) : (
+        <img key={src.slice(-20)} src={src} alt="" style={fullStyle} />
+      )}
+    </div>
   );
 }
