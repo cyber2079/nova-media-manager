@@ -654,12 +654,22 @@ export default function Layout() {
       </header>
 
       <main
-        className="mx-auto max-w-7xl px-6 overflow-hidden relative rounded-xl"
-        style={{ height: "calc(100vh - 5rem - 3rem)", marginTop: "5rem" }}
+        className={cn(
+          "mx-auto max-w-7xl px-6 overflow-hidden relative rounded-xl",
+          isHome && !isDefault && "!max-w-none !px-0 !overflow-visible !rounded-none pointer-events-none",
+        )}
+        style={isHome && !isDefault
+          ? { height: "auto", marginTop: 0 }
+          : { height: "calc(100vh - 5rem - 3rem)", marginTop: "5rem" }}
         data-route={isHome ? "home" : "page"}>
-        <div className={cn("relative z-[1] h-full overflow-y-auto overscroll-contain", "px-0 pt-6")}>
+        <div className={cn(
+          "relative z-[1]",
+          isHome && !isDefault
+            ? "overflow-visible [&>*]:pointer-events-auto"
+            : "h-full overflow-y-auto overscroll-contain px-0 pt-6",
+        )}>
           <Outlet />
-          <ScrollFade height={56} />
+          <ScrollFade height={isHome && !isDefault ? 0 : 56} />
         </div>
       </main>
 
