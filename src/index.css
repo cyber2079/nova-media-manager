@@ -45,8 +45,8 @@
    Content cards use .theme-card glass for readability. */
 /* Premium 首页：透明背景，视频全见。Content 用 .theme-card 毛玻璃保证可读性 */
 
-/* ICE 背景 Canvas 切换残留强防 — 仅冰主题可见 */
-body:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
+/* ICE 背景 Canvas 仅在非冰主题时强制隐藏 — 防止切换残留 */
+html:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
 
 [data-theme="ice-girl"] main[data-route="home"],
 [data-theme="cyber-girl"] main[data-route="home"] {
