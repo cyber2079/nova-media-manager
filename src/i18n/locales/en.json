@@ -290,8 +290,6 @@
     "theme": "Theme",
     "close": "Close",
     "auto_hide_header": "Auto-hide Header",
-    "compact_header": "Compact Header",
-    "compact_header_hint": "Shrink header height and hide nav text to save vertical space",
     "custom_color": "Custom Theme Color",
     "use_custom_color": "Use custom color",
     "auto_hide_footer": "Auto-hide Footer",

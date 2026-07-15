@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Film, Image, Gamepad2, Home, Music, Sun, Sword, Shield, Swords, Maximize2, Minimize2, Search, Settings, Globe, Sparkles, Play, Pause, SkipBack, SkipForward, SlidersHorizontal, X, Volume2, VolumeX, Eye, EyeOff } from "lucide-react";
+import { Film, Image, Gamepad2, Home, Music, Sun, Sword, Shield, Swords, Maximize2, Minimize2, Search, Settings, Globe, Sparkles, Play, Pause, SkipBack, SkipForward, SlidersHorizontal, X, Volume2, VolumeX } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { cn } from "@/lib/utils";
 import { kv } from "@/lib/sqliteStore";
@@ -81,9 +81,6 @@ export default function Layout() {
   const isDefault = theme === "default";
   const isCG = theme === "cyber-girl";
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();
-  const compactMode = useSettingsStore((s) => s.compactMode);
-  const layoutMode = useSettingsStore((s) => s.layoutMode);
-  const setLayoutMode = useSettingsStore((s) => s.setLayoutMode);
   const bgVideoMode = useSettingsStore((s) => s.bgVideoMode);
   const bgOverlayOpacity = useSettingsStore((s) => s.bgOverlayOpacity);
   const headerOpacity = useSettingsStore((s) => s.headerOpacity);
@@ -598,8 +595,8 @@ export default function Layout() {
       </>}
 
       {/* ── Header ── */}
-      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden", (compactMode || layoutMode !== "full") && "!h-10")} style={headerOpacityStyle}>
-        <div className={cn("mx-auto flex max-w-7xl items-center justify-between px-6", (compactMode || layoutMode !== "full") ? "h-10" : "h-16")}>
+      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden")} style={headerOpacityStyle}>
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
             {isIce ? (
               <div className="flex flex-col leading-none"><span className="ice-title text-sm font-bold">{t("app.title")}</span></div>
@@ -626,7 +623,7 @@ export default function Layout() {
                       <item.icon className="h-5 w-5" />
                     )}
                   </div>
-                  <span className={cn(isIce && "tracking-wider", isCG && "tracking-[0.1em]", (compactMode || layoutMode !== "full") && "hidden")}>{t(`nav.${item.key}`)}</span>
+                  <span className={cn(isIce && "tracking-wider", isCG && "tracking-[0.1em]")}>{t(`nav.${item.key}`)}</span>
                 </NavLink>
               );
             })}
@@ -644,13 +641,6 @@ export default function Layout() {
                 <Sparkles className="h-4 w-4 text-purple-400" />
               </button>
             )}
-            <button onClick={() => {
-              const modes = ["full", "left", "right"];
-              const idx = modes.indexOf(layoutMode);
-              setLayoutMode(modes[(idx + 1) % modes.length]);
-            }} className={cn("flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-300 active:scale-90", layoutMode !== "full" ? "bg-primary/20 text-primary-light" : "hover:bg-surface-lighter text-gray-400")} title={layoutMode === "full" ? "侧边栏模式" : layoutMode === "left" ? "切换到右侧" : "恢复全屏"}>
-              {layoutMode === "full" ? <Eye className="h-4 w-4" /> : layoutMode === "left" ? <Eye className="h-4 w-4 rotate-90" /> : <Eye className="h-4 w-4 -rotate-90" />}
-            </button>
             <button onClick={() => setSettingsOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={t("settings.title")}>
               <Settings className="h-4 w-4 text-gray-400" />
             </button>
@@ -664,21 +654,10 @@ export default function Layout() {
       </header>
 
       <main
-        className={cn(
-          "overflow-hidden relative transition-all duration-400 ease-in-out",
-          layoutMode === "full" && "mx-auto max-w-7xl rounded-xl",
-          layoutMode !== "full" && "fixed w-[360px] rounded-xl border border-white/5",
-          layoutMode === "left" && "left-0",
-          layoutMode === "right" && "right-0",
-        )}
-        style={{
-          height: layoutMode === "full" ? "calc(100vh - 5rem - 3rem)" : "100vh",
-          marginTop: layoutMode === "full" ? "5rem" : "0",
-          background: layoutMode !== "full" ? "color-mix(in srgb, var(--color-primary) 4%, rgba(8,12,20,0.92))" : undefined,
-          backdropFilter: layoutMode !== "full" ? "blur(12px)" : undefined,
-        }}
+        className="mx-auto max-w-7xl px-6 overflow-hidden relative rounded-xl"
+        style={{ height: "calc(100vh - 5rem - 3rem)", marginTop: "5rem" }}
         data-route={isHome ? "home" : "page"}>
-        <div className="relative z-[1] h-full overflow-y-auto overscroll-contain px-6 pt-6 pb-14">
+        <div className={cn("relative z-[1] h-full overflow-y-auto overscroll-contain", "px-0 pt-6")}>
           <Outlet />
           <ScrollFade height={56} />
         </div>
@@ -747,6 +726,9 @@ function MiniPlayer() {
   const doNext = useAudioPlayerStore((s) => s.next);
   const doSetBg = useAudioPlayerStore((s) => s.setBackground);
   const doStop = useAudioPlayerStore((s) => s.stop);
+
+  // track is null when nothing is playing — don't render MiniPlayer
+  if (!track) return null;
 
   const pct = dur > 0 ? (time / dur) * 100 : 0;
 

@@ -120,9 +120,6 @@ export type SettingsState = {
   playerBgColor: string;
   playerBgMode: "follow" | "custom";
   cyberBgmEnabled: boolean;
-  compactMode: boolean;
-  /** "full" = normal, "left" = sidebar-left, "right" = sidebar-right */
-  layoutMode: string;
   cgTextSize: "xs" | "sm" | "base";
   cgTextColor: string;
   cgTextBgColor: string;
@@ -349,7 +346,7 @@ async function persist(s: SettingsState) {
     visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
     headerOpacity: s.headerOpacity, footerOpacity: s.footerOpacity,
     surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
-    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, compactMode: s.compactMode, layoutMode: s.layoutMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, wallpaper: s.wallpaper, wallpaper: s.wallpaper,
+    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, wallpaper: s.wallpaper, wallpaper: s.wallpaper,
   });
   // Write to both: SQLite (primary) + localStorage (fast sync fallback)
   localStorage.setItem(STORAGE_KEY, payload);
@@ -439,8 +436,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     playerBgColor: (saved as any).playerBgColor || "",
     playerBgMode: (saved as any).playerBgMode || "follow",
     cyberBgmEnabled: (saved as any).cyberBgmEnabled ?? true,
-    compactMode: (saved as any).compactMode || false,
-    layoutMode: (saved as any).layoutMode || "full",
     cgTextSize: (saved as any).cgTextSize || "xs",
     cgTextColor: (saved as any).cgTextColor || "#e0c0ff",
     cgTextBgColor: (saved as any).cgTextBgColor || "#c74dff",
@@ -488,8 +483,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             scrollFadeOpacity: (s.scrollFadeOpacity as number) ?? get().scrollFadeOpacity,
             playerBgColor: (s.playerBgColor as string) ?? get().playerBgColor,
             playerBgMode: (s.playerBgMode as any) ?? get().playerBgMode,
-            compactMode: (s.compactMode as boolean) ?? get().compactMode,
-            layoutMode: (s.layoutMode as string) ?? get().layoutMode,
             cyberBgmEnabled: (s.cyberBgmEnabled as boolean) ?? get().cyberBgmEnabled,
             cgTextSize: (s.cgTextSize as any) ?? get().cgTextSize,
             cgTextColor: (s.cgTextColor as string) ?? get().cgTextColor,
@@ -543,8 +536,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setPlayerBgColor(v) { set({ playerBgColor: v }); outdate(); persist(get()); },
     setPlayerBgMode(v) { set({ playerBgMode: v }); outdate(); persist(get()); },
     setCyberBgmEnabled(v) { set({ cyberBgmEnabled: v }); outdate(); persist(get()); },
-    setCompactMode(v) { set({ compactMode: v }); outdate(); persist(get()); },
-    setLayoutMode(v) { set({ layoutMode: v }); outdate(); persist(get()); },
     setCgTextSize(v) { set({ cgTextSize: v }); outdate(); persist(get()); },
     setCgTextColor(v) { set({ cgTextColor: v }); outdate(); persist(get()); },
     setCgTextBgColor(v) { set({ cgTextBgColor: v }); outdate(); persist(get()); },

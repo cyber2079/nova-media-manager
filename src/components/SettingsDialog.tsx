@@ -80,7 +80,6 @@ export default function SettingsDialog({ open, onClose }: Props) {
     playerBgColor, playerBgMode, setPlayerBgColor, setPlayerBgMode,
     cyberBgmEnabled, setCyberBgmEnabled,
     cgTextSize, cgTextColor, setCgTextSize, setCgTextColor,
-    compactMode, setCompactMode,
     paletteAccent, paletteSaturation, paletteContrast, paletteCustomized, setPaletteAccent, setPaletteSaturation, setPaletteContrast, resetPaletteToTheme,
   } = useSettingsStore();
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages, setEnabled, setPosition, setMyComputerMode, setGlobalWidgets, setPageWidget, setCountdown } = useWidgetStore();
@@ -247,7 +246,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
               <>
                 <LicenseSection t={t} i18n={i18n} />
                 <LanguageSection {...{ t, language, handleLanguage, languages }} />
-                <StartupSection {...{ t, autoStart, autoLoading, handleAutoStart, startFullscreen, setStartFullscreen, compactMode, setCompactMode, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, hideTitleBar, setHideTitleBar }} />
+                <StartupSection {...{ t, autoStart, autoLoading, handleAutoStart, startFullscreen, setStartFullscreen, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, hideTitleBar, setHideTitleBar }} />
                 <DataSection t={t} />
                 <FeedbackSection t={t} />
                 <ResetButton tab="general" t={t} onReset={() => setConfirmReset("general")} />
@@ -645,7 +644,7 @@ function LanguageSection({ t, language, handleLanguage, languages }: any) {
   );
 }
 
-function StartupSection({ t, autoStart, autoLoading, handleAutoStart, startFullscreen, setStartFullscreen, compactMode, setCompactMode, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, hideTitleBar, setHideTitleBar }: any) {
+function StartupSection({ t, autoStart, autoLoading, handleAutoStart, startFullscreen, setStartFullscreen, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, hideTitleBar, setHideTitleBar }: any) {
   return (
     <section>
       <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.startup")}</h4>
@@ -653,7 +652,6 @@ function StartupSection({ t, autoStart, autoLoading, handleAutoStart, startFulls
         <ToggleRow label={t("settings.auto_launch")} active={autoStart} disabled={autoLoading} onToggle={handleAutoStart} />
         <ToggleRow label={t("settings.start_fullscreen")} active={startFullscreen} onToggle={() => setStartFullscreen(!startFullscreen)} />
         <ToggleRow label={t("settings.hide_title_bar")} active={hideTitleBar} onToggle={() => setHideTitleBar(!hideTitleBar)} hint={t("settings.hide_title_bar_hint")} />
-        <ToggleRow label={t("settings.compact_header")} active={compactMode} onToggle={() => setCompactMode(!compactMode)} hint={t("settings.compact_header_hint")} />
         <ToggleRow label={t("settings.auto_hide_header")} active={autoHideHeader} onToggle={() => setAutoHideHeader(!autoHideHeader)} icon={<EyeOff className="h-3.5 w-3.5 text-gray-500" />} />
         <ToggleRow label={t("settings.auto_hide_footer")} active={autoHideFooter} onToggle={() => setAutoHideFooter(!autoHideFooter)} icon={<EyeOff className="h-3.5 w-3.5 text-gray-500" />} />
       </div>
