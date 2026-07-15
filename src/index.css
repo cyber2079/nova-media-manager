@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* ICE 背景 Canvas 仅在非冰主题隐藏 — 防止切换残留 */
+html:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
+
 /* ═══════════ Local fonts ═══════════ */
 @font-face {
   font-family: "Maoken Glitch Sans";
