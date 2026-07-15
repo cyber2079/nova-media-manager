@@ -300,11 +300,12 @@ export default function ThemeStudioPage() {
                                   </div>
                                   <div className="text-[8px] text-gray-600 font-mono truncate">{node.background || "(默认)"}</div>
                                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                                    {node.face && <span className="text-[8px] text-gray-500">😶 {node.face}</span>}
-                                    {node.bgm && <span className="text-[8px] text-gray-500">♪ {node.bgm}</span>}
-                                    {node.text && <span className="text-[8px] text-accent/60 font-mono truncate max-w-[140px]">{node.text}</span>}
+                                    {node.face && <span className="text-[8px] text-gray-500 shrink-0">😶 {node.face}</span>}
+                                    {node.bgm && <span className="text-[8px] text-gray-500 shrink-0">♪ {node.bgm}</span>}
                                   </div>
-                                </div>
+                                  {node.text && (
+                                    <div className="text-[9px] text-gray-300 leading-relaxed mt-1.5 line-clamp-2">{node.i18nPreview || node.text}</div>
+                                  )}
                               </div>
                             </div>
                           </div>
