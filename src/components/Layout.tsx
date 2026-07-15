@@ -83,6 +83,8 @@ export default function Layout() {
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();
   const compactMode = useSettingsStore((s) => s.compactMode);
   const setCompactMode = useSettingsStore((s) => s.setCompactMode);
+  const layoutMode = useSettingsStore((s) => s.layoutMode);
+  const setLayoutMode = useSettingsStore((s) => s.setLayoutMode);
   const bgVideoMode = useSettingsStore((s) => s.bgVideoMode);
   const bgOverlayOpacity = useSettingsStore((s) => s.bgOverlayOpacity);
   const headerOpacity = useSettingsStore((s) => s.headerOpacity);
@@ -597,7 +599,7 @@ export default function Layout() {
       </>}
 
       {/* ── Header ── */}
-      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden", compactMode && "!h-10")} style={headerOpacityStyle}>
+      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden", (compactMode || layoutMode !== "full") && "!h-10")} style={headerOpacityStyle}>
         <div className={cn("mx-auto flex max-w-7xl items-center justify-between px-6", compactMode ? "h-10" : "h-16")}>
           <div className="flex items-center gap-3">
             {isIce ? (
@@ -643,8 +645,12 @@ export default function Layout() {
                 <Sparkles className="h-4 w-4 text-purple-400" />
               </button>
             )}
-            <button onClick={() => setCompactMode(!compactMode)} className={cn("flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-300 active:scale-90", compactMode ? "bg-primary/20 text-primary-light" : "hover:bg-surface-lighter text-gray-400")} title={compactMode ? "展开模式" : "紧凑模式"}>
-              {compactMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            <button onClick={() => {
+              const modes = ["full", "left", "right"];
+              const idx = modes.indexOf(layoutMode);
+              setLayoutMode(modes[(idx + 1) % modes.length]);
+            }} className={cn("flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-300 active:scale-90", layoutMode !== "full" ? "bg-primary/20 text-primary-light" : "hover:bg-surface-lighter text-gray-400")} title={layoutMode === "full" ? "侧边栏模式" : layoutMode === "left" ? "切换到右侧" : "恢复全屏"}>
+              {layoutMode === "full" ? <Eye className="h-4 w-4" /> : layoutMode === "left" ? <Eye className="h-4 w-4 rotate-90" /> : <Eye className="h-4 w-4 -rotate-90" />}
             </button>
             <button onClick={() => setSettingsOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={t("settings.title")}>
               <Settings className="h-4 w-4 text-gray-400" />
@@ -659,16 +665,24 @@ export default function Layout() {
       </header>
 
       <main
-        className="mx-auto max-w-7xl px-6 overflow-hidden relative rounded-xl"
-        style={{ height: "calc(100vh - 5rem - 3rem)", marginTop: "5rem" }}
+        className={cn(
+          "overflow-hidden relative rounded-xl transition-all duration-400 ease-in-out",
+          layoutMode === "full" && "mx-auto max-w-7xl",
+          layoutMode === "left" && "ml-0 mr-auto w-[360px]",
+          layoutMode === "right" && "ml-auto mr-0 w-[360px]",
+        )}
+        style={{
+          height: layoutMode === "full" ? "calc(100vh - 5rem - 3rem)" : "100vh",
+          marginTop: layoutMode === "full" ? "5rem" : "0",
+        }}
         data-route={isHome ? "home" : "page"}>
-        <div className={cn("relative z-[1] h-full overflow-y-auto overscroll-contain", "px-0 pt-6")}>
+        <div className={cn("relative z-[1] h-full overflow-y-auto overscroll-contain", layoutMode !== "full" ? "px-3 pt-4" : "px-0 pt-6")}>
           <Outlet />
           <ScrollFade height={56} />
         </div>
       </main>
 
-      <footer className={cn("fixed bottom-0 left-0 right-0 z-50 backdrop-blur-sm", "transition-all duration-300", "h-12", !footerVisible && "opacity-0 translate-y-full pointer-events-none")}
+      <footer className={cn("fixed bottom-0 left-0 right-0 z-50 backdrop-blur-sm", "transition-all duration-300", "h-12", (layoutMode !== "full") && "hidden", !footerVisible && "opacity-0 translate-y-full pointer-events-none")}
         style={{ backgroundColor: `color-mix(in srgb, var(--color-surface) ${footerOpacity}%, transparent)` }}>
         <div className="mx-auto flex h-full max-w-7xl items-center justify-center px-6 gap-3.5">
           {playerIsBg && playerTrack && <MiniPlayer />}
