@@ -310,8 +310,7 @@ export default function ThemeStudioPage() {
                             </div>
                           </div>
                         );
-                      })
-                    )}
+                      })}
                   </div>
 
                   {/* Properties Panel */}

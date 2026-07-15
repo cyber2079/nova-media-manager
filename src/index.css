@@ -41,6 +41,16 @@
   --color-surface-lighter:color-mix(in srgb, var(--color-primary) 8%, #1a1f2a);
 }
 
+/* Premium themes: let the background video/images show through on homepage.
+   Content cards use .theme-card glass for readability. */
+[data-theme="ice-girl"] .bg-surface { background: transparent; }
+[data-theme="cyber-girl"] .bg-surface { background: transparent; }
+[data-theme="ice-girl"] main[data-route="home"],
+[data-theme="cyber-girl"] main[data-route="home"] {
+  background: transparent;
+  border-color: transparent;
+}
+
 /* ── Unified glass card (overlays on background images/videos) ── */
 .theme-card {
   background: rgba(8, 12, 20, 0.72);
