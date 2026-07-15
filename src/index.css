@@ -45,11 +45,11 @@
    Content cards use .theme-card glass for readability. */
 [data-theme="ice-girl"] .bg-surface { background: transparent; }
 [data-theme="cyber-girl"] .bg-surface { background: transparent; }
+/* Premium 首页：透明背景，视频全可见。Content 用 .theme-card 毛玻璃保证可读性 */
 [data-theme="ice-girl"] main[data-route="home"],
 [data-theme="cyber-girl"] main[data-route="home"] {
-  background: transparent;
-  border-color: transparent;
-  overflow: hidden !important;  /* bottom-pinned content — no scroll needed */
+  background: transparent !important;
+  border-color: transparent !important;
 }
 
 /* ── Unified glass card (overlays on background images/videos) ── */

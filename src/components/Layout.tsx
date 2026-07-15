@@ -578,7 +578,7 @@ export default function Layout() {
   const headerOpacityStyle = { backgroundColor: `color-mix(in srgb, var(--color-surface) ${headerOpacity}%, transparent)` };
 
   return (
-    <div className="min-h-screen bg-surface" id="app" ref={appRef}>
+    <div className={cn("min-h-screen", isDefault && "bg-surface")} id="app" ref={appRef}>
       {/* ── Default theme wallpaper engine ── */}
       {isDefault && <WallpaperEngine />}
 
