@@ -81,8 +81,6 @@ export default function Layout() {
   const isDefault = theme === "default";
   const isCG = theme === "cyber-girl";
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();
-  const compactMode = useSettingsStore((s) => s.compactMode);
-  const setCompactMode = useSettingsStore((s) => s.setCompactMode);
   const layoutMode = useSettingsStore((s) => s.layoutMode);
   const setLayoutMode = useSettingsStore((s) => s.setLayoutMode);
   const bgVideoMode = useSettingsStore((s) => s.bgVideoMode);
@@ -599,8 +597,8 @@ export default function Layout() {
       </>}
 
       {/* ── Header ── */}
-      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden", (compactMode || layoutMode !== "full") && "!h-10")} style={headerOpacityStyle}>
-        <div className={cn("mx-auto flex max-w-7xl items-center justify-between px-6", compactMode ? "h-10" : "h-16")}>
+      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden", layoutMode !== "full" && "!h-10")} style={headerOpacityStyle}>
+        <div className={cn("mx-auto flex max-w-7xl items-center justify-between px-6", layoutMode !== "full" ? "h-10" : "h-16")}>
           <div className="flex items-center gap-3">
             {isIce ? (
               <div className="flex flex-col leading-none"><span className="ice-title text-sm font-bold">{t("app.title")}</span></div>
@@ -627,7 +625,7 @@ export default function Layout() {
                       <item.icon className="h-5 w-5" />
                     )}
                   </div>
-                  <span className={cn(isIce && "tracking-wider", isCG && "tracking-[0.1em]", compactMode && "hidden")}>{t(`nav.${item.key}`)}</span>
+                  <span className={cn(isIce && "tracking-wider", isCG && "tracking-[0.1em]", layoutMode !== "full" && "hidden")}>{t(`nav.${item.key}`)}</span>
                 </NavLink>
               );
             })}
@@ -666,14 +664,17 @@ export default function Layout() {
 
       <main
         className={cn(
-          "overflow-hidden relative rounded-xl transition-all duration-400 ease-in-out",
-          layoutMode === "full" && "mx-auto max-w-7xl",
-          layoutMode === "left" && "ml-0 mr-auto w-[360px]",
-          layoutMode === "right" && "ml-auto mr-0 w-[360px]",
+          "overflow-hidden relative transition-all duration-400 ease-in-out",
+          layoutMode === "full" && "mx-auto max-w-7xl rounded-xl",
+          layoutMode !== "full" && "fixed w-[360px] rounded-xl border border-white/5",
+          layoutMode === "left" && "left-0",
+          layoutMode === "right" && "right-0",
         )}
         style={{
           height: layoutMode === "full" ? "calc(100vh - 5rem - 3rem)" : "100vh",
           marginTop: layoutMode === "full" ? "5rem" : "0",
+          background: layoutMode !== "full" ? "color-mix(in srgb, var(--color-primary) 4%, rgba(8,12,20,0.92))" : undefined,
+          backdropFilter: layoutMode !== "full" ? "blur(12px)" : undefined,
         }}
         data-route={isHome ? "home" : "page"}>
         <div className={cn("relative z-[1] h-full overflow-y-auto overscroll-contain", layoutMode !== "full" ? "px-3 pt-4" : "px-0 pt-6")}>
