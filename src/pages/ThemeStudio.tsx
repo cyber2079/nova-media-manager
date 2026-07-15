@@ -376,11 +376,12 @@ export default function ThemeStudioPage() {
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-1">场景文本</label>
                           <textarea value={String(editData.text || "")} onChange={e => setField("text", e.target.value)}
-                            rows={6}
-                            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs leading-relaxed outline-none focus:border-primary/50 resize-vertical font-mono" />
+                            rows={10}
+                            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs leading-relaxed outline-none focus:border-primary/50 resize-vertical font-mono"
+                            style={{ minHeight: "8rem" }} />
                           {/* i18n preview if it's a known key */}
                           {editData.text && i18nKeys.includes(String(editData.text)) && (
-                            <div className="mt-1 p-2 rounded-lg bg-primary/5 border border-primary/10 text-[10px] text-primary-light/80 italic line-clamp-3">
+                            <div className="mt-1 p-2 rounded-lg bg-primary/5 border border-primary/10 text-[10px] text-primary-light/80 italic max-h-32 overflow-y-auto">
                               💬 {t(String(editData.text), "")}
                             </div>
                           )}
