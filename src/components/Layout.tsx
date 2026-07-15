@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Film, Image, Gamepad2, Home, Music, Sun, Sword, Shield, Swords, Maximize2, Minimize2, Search, Settings, Globe, Sparkles, Play, Pause, SkipBack, SkipForward, SlidersHorizontal, X, Volume2, VolumeX } from "lucide-react";
+import { Film, Image, Gamepad2, Home, Music, Sun, Sword, Shield, Swords, Maximize2, Minimize2, Search, Settings, Globe, Sparkles, Play, Pause, SkipBack, SkipForward, SlidersHorizontal, X, Volume2, VolumeX, Eye, EyeOff } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { cn } from "@/lib/utils";
 import { kv } from "@/lib/sqliteStore";
@@ -81,6 +81,8 @@ export default function Layout() {
   const isDefault = theme === "default";
   const isCG = theme === "cyber-girl";
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();
+  const compactMode = useSettingsStore((s) => s.compactMode);
+  const setCompactMode = useSettingsStore((s) => s.setCompactMode);
   const bgVideoMode = useSettingsStore((s) => s.bgVideoMode);
   const bgOverlayOpacity = useSettingsStore((s) => s.bgOverlayOpacity);
   const headerOpacity = useSettingsStore((s) => s.headerOpacity);
@@ -595,8 +597,8 @@ export default function Layout() {
       </>}
 
       {/* ── Header ── */}
-      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden")} style={headerOpacityStyle}>
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden", compactMode && "!h-10")} style={headerOpacityStyle}>
+        <div className={cn("mx-auto flex max-w-7xl items-center justify-between px-6", compactMode ? "h-10" : "h-16")}>
           <div className="flex items-center gap-3">
             {isIce ? (
               <div className="flex flex-col leading-none"><span className="ice-title text-sm font-bold">{t("app.title")}</span></div>
@@ -623,7 +625,7 @@ export default function Layout() {
                       <item.icon className="h-5 w-5" />
                     )}
                   </div>
-                  <span className={cn(isIce && "tracking-wider", isCG && "tracking-[0.1em]")}>{t(`nav.${item.key}`)}</span>
+                  <span className={cn(isIce && "tracking-wider", isCG && "tracking-[0.1em]", compactMode && "hidden")}>{t(`nav.${item.key}`)}</span>
                 </NavLink>
               );
             })}
@@ -641,6 +643,9 @@ export default function Layout() {
                 <Sparkles className="h-4 w-4 text-purple-400" />
               </button>
             )}
+            <button onClick={() => setCompactMode(!compactMode)} className={cn("flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-300 active:scale-90", compactMode ? "bg-primary/20 text-primary-light" : "hover:bg-surface-lighter text-gray-400")} title={compactMode ? "展开模式" : "紧凑模式"}>
+              {compactMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
             <button onClick={() => setSettingsOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={t("settings.title")}>
               <Settings className="h-4 w-4 text-gray-400" />
             </button>

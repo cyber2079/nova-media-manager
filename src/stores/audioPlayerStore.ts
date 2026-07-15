@@ -137,7 +137,11 @@ export const useAudioPlayerStore = create<AudioPlayerState>((set, get) => {
   audio.addEventListener("timeupdate", () => {
     const s = get();
     if (!s.isPlaying) return;
-    set({ currentTime: audio.currentTime, duration: audio.duration || 0 });
+    // Guard against NaN/Infinity on broken audio devices
+    const d = audio.duration;
+    const t = audio.currentTime;
+    if (!isFinite(d) || !isFinite(t)) return;
+    set({ currentTime: t, duration: d || 0 });
   });
   audio.addEventListener("play", () => set({ isPlaying: true }));
   audio.addEventListener("pause", () => {
@@ -145,6 +149,11 @@ export const useAudioPlayerStore = create<AudioPlayerState>((set, get) => {
   });
   audio.addEventListener("ended", () => {
     if (_onEnded) { _onEnded(); } else { set({ isPlaying: false }); }
+  });
+  audio.addEventListener("error", () => {
+    // Audio device missing / codec failure — don't leave isPlaying=true
+    _transitioning = false;
+    set({ isPlaying: false, track: null, visualizerBars: new Array(32).fill(0.01) });
   });
 
   return {

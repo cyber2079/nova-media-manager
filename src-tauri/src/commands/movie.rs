@@ -180,15 +180,23 @@ pub fn add_movies(app: AppHandle, db: State<'_, Database>, paths: Vec<String>) -
         let path_owned = path.clone();
         let movie_id = id.clone();
         std::thread::spawn(move || {
-            let covers_dir = app_clone.path().app_data_dir().unwrap().join("data").join("covers");
-            std::fs::create_dir_all(&covers_dir).ok();
-            let cover_out = covers_dir.join(format!("{}.png", movie_id));
-            let cover_out_str = cover_out.to_string_lossy().to_string();
+            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                let covers_dir = app_clone.path().app_data_dir().unwrap().join("data").join("covers");
+                std::fs::create_dir_all(&covers_dir).ok();
+                let cover_out = covers_dir.join(format!("{}.png", movie_id));
+                let cover_out_str = cover_out.to_string_lossy().to_string();
 
-            eprintln!("[bg] processing video: {}", path_owned);
+                eprintln!("[bg] processing video: {}", path_owned);
+                process_video(&path_owned, &cover_out_str)
+            }));
 
-            let (duration, formatted, resolution, cover_path, error_msg) =
-                process_video(&path_owned, &cover_out_str);
+            let (duration, formatted, resolution, cover_path, error_msg, status) = match result {
+                Ok((d, f, r, c, e)) => (d, f, r, c, e, "ready"),
+                Err(_) => {
+                    let err = "后台处理异常，请重新导入".to_string();
+                    (0.0, String::new(), String::new(), String::new(), err, "error")
+                }
+            };
 
             // Update DB
             {
@@ -201,7 +209,7 @@ pub fn add_movies(app: AppHandle, db: State<'_, Database>, paths: Vec<String>) -
                         formatted, duration as i64,
                         if !resolution.is_empty() { &resolution } else { "Unknown" },
                         if !cover_path.is_empty() { &cover_path } else { "" },
-                        "ready", error_msg, movie_id,
+                        status, error_msg, movie_id,
                     ],
                 );
             }
