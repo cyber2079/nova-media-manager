@@ -18,6 +18,7 @@ import { useFavoritesStore } from "@/stores/favoritesStore";
 import { tagColor } from "@/lib/tagColor";
 import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "@/stores/settingsStore";
+import { useThemeStore } from "@/stores/themeStore";
 import { readFileSafe } from "@/lib/readFileSafe";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, X, Upload, Loader2, Star, Image, ImageIcon, Trash2, Tag, CheckSquare, Maximize2, Minimize2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -237,6 +238,12 @@ export default function ImageLibrary() {
 
   const confirmThen = (msg, fn) => setConfirmDelete({ msg, onOk: fn });
 
+  const handleSetWallpaper = useCallback((filePath: string) => {
+    useSettingsStore.getState().setWallpaperConfig({ mode: "single", path: filePath });
+    // Auto-switch to default theme so the wallpaper engine renders
+    useThemeStore.getState().setTheme("default");
+  }, []);
+
   const filtered = useMemo(() => {
     let r = activeTags.length ? images.filter((i) => activeTags.some((t) => i.tags?.includes(t))) : images;
     if (favOnly) { const ids = new Set(getByType("image")); r = r.filter((i) => ids.has(i.id)); }
@@ -343,7 +350,7 @@ export default function ImageLibrary() {
                       <BatchCheckbox checked={batch.selected.has(img.id)} onToggle={() => batch.toggle(img.id)} />
                     </div>
                   )}
-                  <ImageCard image={img} onDelete={(id) => confirmThen(t("image.confirm_delete"), () => deleteImage(id))} onClick={() => {}} onEditTags={() => setTagEditItem(img)} compact={layoutMode === "small"} favorited={isFavorite(img.id)} onToggleFav={() => toggleFavorite(img.id, "image")} />
+                  <ImageCard image={img} onDelete={(id) => confirmThen(t("image.confirm_delete"), () => deleteImage(id))} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagEditItem(img)} compact={layoutMode === "small"} favorited={isFavorite(img.id)} onToggleFav={() => toggleFavorite(img.id, "image")} />
                 </div>
               ))}
             </div>

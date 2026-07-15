@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import SafeImage from "@/components/SafeImage";
 import type { ImageItem } from "@/types/image";
-import { Trash2, Image as ImageIcon, Tag } from "lucide-react";
+import { Trash2, Image as ImageIcon, Tag, Monitor } from "lucide-react";
 import { cn, formatFileSize } from "@/lib/utils";
 import { tagColor } from "@/lib/tagColor";
 import FavoriteStar from "@/components/FavoriteStar";
@@ -14,12 +14,13 @@ interface ImageCardProps {
   onDelete: (id: string) => void;
   onClick?: () => void;
   onEditTags?: () => void;
+  onSetWallpaper?: (path: string) => void;
   compact?: boolean;
   favorited?: boolean;
   onToggleFav?: () => void;
 }
 
-export default memo(function ImageCard({ image, onDelete, onClick, onEditTags, compact, favorited, onToggleFav }: ImageCardProps) {
+export default memo(function ImageCard({ image, onDelete, onClick, onEditTags, onSetWallpaper, compact, favorited, onToggleFav }: ImageCardProps) {
 
   return (
     <Card
@@ -64,6 +65,12 @@ export default memo(function ImageCard({ image, onDelete, onClick, onEditTags, c
               {image.resolution} · {formatFileSize(image.fileSize)}
             </p>}
           </div>
+          {onSetWallpaper && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light"
+              onClick={(e) => { e.stopPropagation(); onSetWallpaper(image.filePath); }} title="设为壁纸">
+              <Monitor className="h-3.5 w-3.5" />
+            </Button>
+          )}
           {onEditTags && (
             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light"
               onClick={(e) => { e.stopPropagation(); onEditTags(); }} title="Edit tags">
