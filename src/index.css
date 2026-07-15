@@ -124,7 +124,6 @@ main[data-route="home"] {
   background: color-mix(in srgb, var(--color-primary) 6%, rgba(8,12,20,0.88));
   border: 1px solid rgba(255,255,255,0.04);
 }
-
 /* ═══════════ ICE GIRL THEME ═══════════ */
 [data-theme="ice-girl"] .ice-title { font-family: var(--font-display); letter-spacing: 0.15em; text-transform: uppercase; color: #b0e0ff; }
 [data-theme="ice-girl"] .ice-text-glow { text-shadow: 0 0 15px rgba(135,206,250,0.5), 0 0 30px rgba(135,206,250,0.2); }
@@ -295,6 +294,20 @@ main[data-route="home"] {
 @keyframes fadeOutDown {
   from { opacity: 1; transform: translateY(0); }
   to   { opacity: 0; transform: translateY(12px); }
+}
+@keyframes media-strip-slide-up {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+.animate-media-strip-up { animation: media-strip-slide-up 0.22s ease-out forwards; }
+
+/* QuickLaunch add button pulse ring */
+.ql-add-btn:hover {
+  animation: ql-add-pulse 2s ease-out infinite;
+}
+@keyframes ql-add-pulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary-light) 30%, transparent); }
+  100% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--color-primary-light) 0%, transparent); }
 }
 ::view-transition-old(root) { animation: fadeOutDown 0.2s ease-in forwards; }
 ::view-transition-new(root) { animation: fadeInUp 0.3s ease-out 0.05s forwards; }

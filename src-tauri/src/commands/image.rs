@@ -26,7 +26,7 @@ pub fn get_all_images(db: State<Database>) -> Result<Vec<ImageItem>, String> {
         "SELECT id, name, file_path, cover_path, resolution, file_size, width, height, tags, add_time FROM images"
     ).map_err(|e| e.to_string())?;
 
-    let images = stmt.query_map([], |row| {
+    let mut images: Vec<ImageItem> = stmt.query_map([], |row| {
         let tags_str: String = row.get(8)?;
         Ok(ImageItem {
             id: row.get(0)?, name: row.get(1)?, file_path: row.get(2)?,
@@ -38,6 +38,14 @@ pub fn get_all_images(db: State<Database>) -> Result<Vec<ImageItem>, String> {
     }).map_err(|e| e.to_string())?
     .filter_map(|r| r.ok())
     .collect();
+
+    // Validate cover file existence
+    for img in images.iter_mut() {
+        if !img.cover_path.is_empty() && !std::path::Path::new(&img.cover_path).exists() {
+            img.cover_path.clear();
+            let _ = conn.execute("UPDATE images SET cover_path='' WHERE id=?1", rusqlite::params![img.id]);
+        }
+    }
 
     Ok(images)
 }

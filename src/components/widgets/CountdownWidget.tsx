@@ -4,8 +4,6 @@ import DesktopWidget from "@/components/DesktopWidget";
 import { useWidgetStore, type CountdownConfig } from "@/stores/widgetStore";
 import { Play, Pause, RotateCcw, Settings, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useThemeStore } from "@/stores/themeStore";
-
 function fmtTime(h: number, m: number, s: number): string {
   if (h > 0) return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
@@ -13,10 +11,8 @@ function fmtTime(h: number, m: number, s: number): string {
 
 export default function CountdownWidget({ config }: { config: CountdownConfig }) {
   const { t } = useTranslation();
-  const theme = useThemeStore((s) => s.theme);
   const setCountdown = useWidgetStore((s) => s.setCountdown);
   const isMini = config.displayMode === "mini";
-  const isCG = theme === "cyber-girl";
 
   const [displaySec, setDisplaySec] = useState(config.hours * 3600 + config.minutes * 60 + config.seconds);
   const [floatRemain, setFloatRemain] = useState(config.hours * 3600 + config.minutes * 60 + config.seconds);
@@ -144,40 +140,37 @@ export default function CountdownWidget({ config }: { config: CountdownConfig })
 
   return (
     <DesktopWidget position={config.position}>
-      <div className="bg-surface-light/95 backdrop-blur-md border border-primary/30 rounded-xl shadow-xl select-none"
-        style={{ padding: isMini ? 0 : "8px 12px 8px 12px" }}>
-        {!isMini && !panelOpen && (
-          <CompactDisplay t={t} running={running} remaining={fmtTime(config.hours, mins, secs)} progress={progress}
-            start={start} pause={pause} reset={reset} setPanel={() => setPanelOpen(true)} totalSecs={h*3600+m*60+s} />
-        )}
-        {!isMini && panelOpen && (
-          <SettingsPanel t={t} h={h} setH={setH} m={m} setM={setM} s={s} setS={setS}
-            loops={loops} setLoops={setLoops} glow={glow} setGlow={setGlow} voice={voice} setVoice={setVoice}
-            config={config} setCountdown={setCountdown} start={start} close={() => setPanelOpen(false)} />
-        )}
-        {isMini && (
-          <div className="relative" style={{ width: 40, height: 40 }}>
-            {(
-              <>
-                <svg className="absolute inset-0" width="40" height="40" style={{ transform: "rotate(-90deg)" }}>
-                  <circle cx="20" cy="20" r="17" fill="none"
-                    stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
-                  <circle cx="20" cy="20" r="17" fill="none"
-                    stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round"
-                    strokeDasharray={106.814}
-                    strokeDashoffset={106.814 * (1 - progress * (running ? 1 : 0))}
-                    style={{ filter: "drop-shadow(0 0 2px rgba(255,255,255,0.3))" }} />
-                </svg>
-                <button onClick={running ? pause : start} title={running ? t("widget.countdown_pause") : t("widget.countdown_start_title")}
-                  className="absolute bottom-0 right-0 flex items-center justify-center rounded-full transition-all duration-200"
-                  style={{ width: 14, height: 14, background: "rgba(0,0,0,0.5)" }}>
-                  {running ? <Pause className="h-2 w-2 text-white" /> : <Play className="h-2 w-2 ml-0.5 text-white" />}
-                </button>
-              </>
-            )}
-          </div>
-        )}
-      </div>
+      {isMini ? (
+        <div className="relative" style={{ width: 40, height: 40 }}>
+          <svg className="absolute inset-0 pointer-events-none" width="40" height="40" style={{ transform: "rotate(-90deg)" }}>
+            <circle cx="20" cy="20" r="17" fill="none"
+              stroke="var(--color-surface-lighter)" strokeWidth="2" />
+            <circle cx="20" cy="20" r="17" fill="none"
+              stroke="var(--color-primary-light)" strokeWidth="2" strokeLinecap="round"
+              strokeDasharray={106.814}
+              strokeDashoffset={106.814 * (1 - progress * (running ? 1 : 0))}
+              style={{ filter: `drop-shadow(0 0 3px var(--color-primary-light))` }} />
+          </svg>
+          <button onClick={running ? pause : start} title={running ? t("widget.countdown_pause") : t("widget.countdown_start_title")}
+            className="absolute inset-0 flex items-center justify-center rounded-full transition-all duration-200">
+            {running
+              ? <Pause className="h-3 w-3" style={{ color: "var(--font-primary)" }} />
+              : <Play className="h-3 w-3 ml-0.5" style={{ color: "var(--font-primary)" }} />}
+          </button>
+        </div>
+      ) : (
+        <div className="bg-surface-light/95 backdrop-blur-md border border-primary/30 rounded-xl shadow-xl select-none"
+          style={{ padding: panelOpen ? "8px 12px 8px 12px" : "8px 12px 8px 12px" }}>
+          {!panelOpen ? (
+            <CompactDisplay t={t} running={running} remaining={fmtTime(config.hours, mins, secs)} progress={progress}
+              start={start} pause={pause} reset={reset} setPanel={() => setPanelOpen(true)} totalSecs={h*3600+m*60+s} />
+          ) : (
+            <SettingsPanel t={t} h={h} setH={setH} m={m} setM={setM} s={s} setS={setS}
+              loops={loops} setLoops={setLoops} glow={glow} setGlow={setGlow} voice={voice} setVoice={setVoice}
+              config={config} setCountdown={setCountdown} start={start} close={() => setPanelOpen(false)} />
+          )}
+        </div>
+      )}
     </DesktopWidget>
   );
 }
@@ -187,18 +180,18 @@ function CompactDisplay({ t, running, remaining, progress, start, pause, reset, 
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 text-center">
-        <span className="text-sm font-mono text-white tabular-nums">{remaining}</span>
+        <span className="text-sm font-mono tabular-nums" style={{ color: "var(--font-primary)" }}>{remaining}</span>
         {running && (
           <div className="w-full h-1 bg-surface-lighter rounded-full mt-1 overflow-hidden">
-            <div className="h-full bg-primary rounded-full" style={{ width: `${progress * 100}%`, transition: "width 0.04s linear" }} />
+            <div className="h-full rounded-full" style={{ width: `${progress * 100}%`, transition: "width 0.04s linear", background: "var(--color-primary-light)" }} />
           </div>
         )}
       </div>
       <div className="flex items-center gap-0.5">
         {!running ? (
-          <button onClick={start} disabled={totalSecs <= 0} className="text-primary-light hover:text-white disabled:opacity-30 p-1" title={t("widget.countdown_start_title")}><Play className="h-3.5 w-3.5" /></button>
+          <button onClick={start} disabled={totalSecs <= 0} className="disabled:opacity-30 p-1" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_start_title")}><Play className="h-3.5 w-3.5" /></button>
         ) : (
-          <button onClick={pause} className="text-primary-light hover:text-white p-1" title={t("widget.countdown_pause")}><Pause className="h-3.5 w-3.5" /></button>
+          <button onClick={pause} className="p-1" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_pause")}><Pause className="h-3.5 w-3.5" /></button>
         )}
         <button onClick={reset} className="text-gray-400 hover:text-white p-1" title={t("widget.countdown_reset")}><RotateCcw className="h-3 w-3" /></button>
         <button onClick={setPanel} className="text-gray-400 hover:text-white p-1" title={t("widget.countdown_settings")}><Settings className="h-3 w-3" /></button>
@@ -232,11 +225,11 @@ function SettingsPanel({ t, h, setH, m, setM, s, setS, loops, setLoops, glow, se
       <div className="space-y-1 text-xs text-gray-400">
         <label className="flex items-center gap-1.5 cursor-pointer">
           <input type="checkbox" checked={glow} onChange={(e) => setGlow(e.target.checked)} className="accent-primary-light" />
-          <span className={glow ? "text-primary-light" : ""}>{t("widget.countdown_glow")}</span>
+          <span style={glow ? { color: "var(--color-primary-light)" } : undefined}>{t("widget.countdown_glow")}</span>
         </label>
         <label className="flex items-center gap-1.5 cursor-pointer">
           <input type="checkbox" checked={voice} onChange={(e) => setVoice(e.target.checked)} className="accent-primary-light" />
-          <span className={voice ? "text-primary-light" : ""}>{t("widget.countdown_voice")}</span>
+          <span style={voice ? { color: "var(--color-primary-light)" } : undefined}>{t("widget.countdown_voice")}</span>
         </label>
         {voice && (
           <div className="flex items-center gap-1 text-xs text-gray-400 ml-4">
@@ -250,7 +243,8 @@ function SettingsPanel({ t, h, setH, m, setM, s, setS, loops, setLoops, glow, se
         <p className="text-[10px] text-gray-500">{t("widget.countdown_popup_always")}</p>
       </div>
       <button onClick={start} disabled={h + m + s <= 0}
-        className="w-full text-xs py-1.5 rounded bg-primary text-white hover:bg-primary/90 disabled:opacity-30 transition-colors">
+        className="w-full text-xs py-1.5 rounded hover:opacity-90 disabled:opacity-30 transition-colors"
+        style={{ background: "var(--color-primary)", color: "var(--font-primary)" }}>
         {t("widget.countdown_start")}
       </button>
     </div>

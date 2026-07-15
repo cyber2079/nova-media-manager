@@ -153,15 +153,19 @@ export default function QuickLaunchBar() {
         );
       })}
 
-      {/* Add button */}
+      {/* Add button — pulse ring */}
       <button
         onClick={handleAdd}
-        className="flex items-center justify-center h-9 w-9 rounded-md border border-dashed
-          border-primary text-primary-light hover:bg-primary/10
-          transition-all duration-200 active:scale-90"
+        className="ql-add-btn flex items-center justify-center h-8 w-8 rounded-full
+          text-gray-600 hover:text-primary-light
+          transition-all duration-300 active:scale-90"
         title={t("quicklaunch.add")}
+        style={{
+          background: "transparent",
+          boxShadow: "none",
+        }}
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="h-4 w-4" strokeWidth={1.5} />
       </button>
 
       {tooltip && (

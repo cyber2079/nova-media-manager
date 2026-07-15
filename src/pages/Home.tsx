@@ -45,7 +45,8 @@ import { useGameStore } from "@/stores/gameStore";
 import { useMusicStore } from "@/stores/musicStore";
 import { usePlayHistoryStore } from "@/stores/playHistoryStore";
 import { useSettingsStore } from "@/stores/settingsStore";
-import { Film, Image, Gamepad2, Clock, Music } from "lucide-react";
+import { Film, Image, Gamepad2, Clock, Music, Minimize2 } from "lucide-react";
+import { useHomeMode, setHomeMode } from "@/lib/homeMode";
 import { useNavigate } from "react-router-dom";
 
 // Shared lazy-loaded convertFileSrc
@@ -115,10 +116,19 @@ function DashBoard() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-primary/20 p-5 sm:p-6" style={{ background: "color-mix(in srgb, var(--color-primary) 4%, #080c14)" }}>
-        <p className="inline-block rounded-full border border-primary/30 px-3 py-1 text-xs text-primary-light">
-          {t("home.total_count", { count: total })}
-        </p>
+      <div className="flex items-center gap-3">
+        <div className="flex-1 rounded-2xl border border-primary/20 p-5 sm:p-6" style={{ background: "color-mix(in srgb, var(--color-primary) 4%, #080c14)" }}>
+          <p className="inline-block rounded-full border border-primary/30 px-3 py-1 text-xs text-primary-light">
+            {t("home.total_count", { count: total })}
+          </p>
+        </div>
+        <button
+          onClick={() => setHomeMode("strip")}
+          className="shrink-0 h-10 w-10 flex items-center justify-center rounded-full text-gray-500 hover:text-white hover:bg-surface-lighter transition-colors border border-primary/10"
+          title="收缩为迷你条"
+        >
+          <Minimize2 className="h-4 w-4" />
+        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-5">
@@ -164,6 +174,13 @@ function DashBoard() {
   );
 }
 
+/** Switches between full DashBoard and compact MediaStrip */
+function DashBoardOrStrip() {
+  const [mode] = useHomeMode();
+  if (mode === "full") return <DashBoard />;
+  return null; // MediaStrip is rendered in Layout.tsx at the bottom
+}
+
 type ThemeType = "story" | "dynamic" | "static" | "hybrid";
 
 const THEME_META: Record<string, { type: ThemeType }> = {
@@ -184,23 +201,32 @@ function CgSkillShowcase({ t, cgSceneIdx, textClass, textColor }: { t: any; cgSc
     { src: ThemeAssets.cg.scene("skill-show-game.webp"),  corner: "br" as const, labelKey: "nav.games" },
   ];
   return (
-    <div className="relative w-full" style={{ height: "min(58vh, 520px)", minHeight: "360px" }}>
-      <div className="absolute inset-0 flex flex-col items-center justify-center z-10" style={{ pointerEvents: "none" }}>
-        <div className="rounded-2xl overflow-hidden shrink-0" style={{ width: 100, height: 100, boxShadow: "0 0 25px rgba(199,77,255,0.25), 0 0 50px rgba(255,77,166,0.1)" }}>
+    <div className="relative w-full flex flex-col items-center gap-3" style={{ paddingTop: "min(6vh, 40px)" }}>
+      {/* Face + typewriter — centered header */}
+      <div className="flex flex-col items-center" style={{ pointerEvents: "none" }}>
+        <div className="rounded-2xl overflow-hidden shrink-0" style={{ width: 80, height: 80, boxShadow: "0 0 25px rgba(199,77,255,0.25), 0 0 50px rgba(255,77,166,0.1)" }}>
           <img src={ThemeAssets.cg.face("happy")} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
-        <div className="cg-scroll theme-card rounded-lg px-5 py-3 mt-4" style={{ maxWidth: "520px", width: "fit-content", minWidth: "220px" }}>
+        <div className="cg-scroll theme-card rounded-lg px-4 py-2.5 mt-3" style={{ maxWidth: "480px", minWidth: "200px" }}>
           <CgTypewriter key={`cg-skill-${cgSceneIdx}`} text={t(`home.cg_scene${cgSceneIdx + 1}_text`)} speed={50} className={cn(textClass, "text-center")} style={{ color: textColor }} />
         </div>
       </div>
-      {skills.map((sk, i) => (
-        <div key={sk.src} className="absolute rounded-xl overflow-hidden" style={{
-          ...(sk.corner === "tl" ? { top: "2%", left: "2%" } : sk.corner === "tr" ? { top: "2%", right: "2%" } : sk.corner === "bl" ? { bottom: "2%", left: "2%" } : { bottom: "2%", right: "2%" }),
-          width: "clamp(200px, 30%, 300px)",
-          boxShadow: "0 0 20px rgba(199,77,255,0.2), 0 0 40px rgba(255,77,166,0.08)",
-          animation: `cg-swoop-${sk.corner} 0.5s cubic-bezier(0.22,0.61,0.36,1) ${i * 0.08 + 0.2}s both`,
-        }}><img src={sk.src} alt="" className="w-full h-auto block" /></div>
-      ))}
+
+      {/* Skill images — 2×2 grid centered below */}
+      <div
+        className="flex flex-wrap justify-center gap-3 w-full max-w-[640px]"
+        style={{ pointerEvents: "none" }}
+      >
+        {skills.map((sk, i) => (
+          <div key={sk.src} className="rounded-xl overflow-hidden animate-fade-in-up" style={{
+            width: "clamp(160px, 22%, 240px)",
+            boxShadow: "0 0 20px rgba(199,77,255,0.2), 0 0 40px rgba(255,77,166,0.08)",
+            animationDelay: `${i * 0.12 + 0.2}s`,
+          }}>
+            <img src={sk.src} alt="" className="w-full h-auto block" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -298,8 +324,8 @@ export default function Home() {
 
   return (
     <div className="space-y-8 animate-fade-in-up">
-      {/* ── Static Dashboard ── */}
-      {themeType === "static" && <DashBoard />}
+      {/* ── Static: Dashboard or compact strip ── */}
+      {themeType === "static" && <DashBoardOrStrip />}
 
       {/* ── Dynamic: script-driven typewriter + skill icons ── */}
       {themeType === "dynamic" && dynamicQuotes.length > 0 && (

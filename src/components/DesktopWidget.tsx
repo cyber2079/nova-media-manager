@@ -18,7 +18,7 @@ export default function DesktopWidget({ position, children, className }: {
   const pos = POS_MAP[position as keyof typeof POS_MAP] || "bottom-20 right-5";
 
   return (
-    <div className={cn("fixed z-[2] select-none", pos, className)}>
+    <div className={cn("fixed z-[47] select-none", pos, className)}>
       {children}
     </div>
   );

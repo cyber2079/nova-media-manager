@@ -121,10 +121,23 @@ pub fn get_all_movies(db: State<Database>) -> Result<Vec<Movie>, String> {
         "SELECT id, name, file_path, cover_path, duration, duration_seconds,          resolution, file_size, format, tags, add_time, status, error_msg FROM movies"
     ).map_err(|e| e.to_string())?;
 
-    let movies = stmt.query_map([], |row| Movie::from_row(row))
+    let mut movies: Vec<Movie> = stmt.query_map([], |row| Movie::from_row(row))
         .map_err(|e| e.to_string())?
         .filter_map(|r| r.ok())
         .collect();
+
+    // Validate cover file existence on load — stale paths produce blank cards
+    for m in movies.iter_mut() {
+        if !m.cover_path.is_empty() && !std::path::Path::new(&m.cover_path).exists() {
+            m.cover_path.clear();
+            // Update DB so it stays fixed across restarts
+            let _ = conn.execute(
+                "UPDATE movies SET cover_path='' WHERE id=?1",
+                rusqlite::params![m.id],
+            );
+        }
+    }
+
     Ok(movies)
 }
 

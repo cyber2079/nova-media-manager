@@ -82,7 +82,7 @@ export default function MyComputerWidget({ config }: { config: WidgetConfig }) {
         >
           {/* SVG outer ring */}
           <div className="relative">
-            <svg width="100" height="100" viewBox="0 0 100 100" className="drop-shadow-lg">
+            <svg width="100" height="100" viewBox="0 0 100 100" className="drop-shadow-lg pointer-events-none">
               <circle cx="50" cy="50" r={44} fill="none" stroke="var(--color-primary)" strokeOpacity="0.2" strokeWidth="1.5" />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">

@@ -68,7 +68,7 @@ export default memo(function GameCard({ game, onDelete, onLaunch, onEditTags, co
 
       </div>
 
-      <CardContent className={compact ? "p-2" : "p-3"} style={{ minHeight: compact ? 40 : 56 }}>
+      <CardContent className={compact ? "p-2" : "p-3"}>
         {compact ? null : (
           <div className="flex flex-wrap gap-1 mb-2" style={{ minHeight: 20 }}>
             {game.tags.map((tag) => {
@@ -82,17 +82,22 @@ export default memo(function GameCard({ game, onDelete, onLaunch, onEditTags, co
             })}
           </div>
         )}
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <h3 className={cn("truncate font-medium", compact ? "text-xs" : "text-sm")}>{game.name}</h3>
-            {!compact && <p className="mt-1 text-xs text-gray-500">{game.platform}</p>}
-          </div>
+
+        {/* 名称 — 单独一行 */}
+        <h3 className={cn("truncate font-medium mb-1.5", compact ? "text-xs" : "text-sm")}>{game.name}</h3>
+
+        {/* 信息行 */}
+        {!compact && <p className="text-xs text-gray-500 mb-2">{game.platform}</p>}
+
+        {/* 操作按钮行 */}
+        <div className="flex items-center gap-1">
           {onEditTags && (
             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light"
               onClick={(e) => { e.stopPropagation(); onEditTags(); }} title="Edit tags">
               <Tag className="h-3.5 w-3.5" />
             </Button>
           )}
+          <div className="flex-1" />
           <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-red-400"
             onClick={() => onDelete(game.id)}>
             <Trash2 className="h-4 w-4" />

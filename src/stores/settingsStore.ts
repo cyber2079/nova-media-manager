@@ -246,7 +246,6 @@ export function applyPalette() {
   root.style.setProperty("--font-primary", text);
   root.style.setProperty("--font-secondary", muted);
   root.style.setProperty("--scroll-fade-opacity", String(v / 400));
-  root.style.setProperty("--bg-opacity", String((55 + v * 0.3) / 100));
 
   // ── CG text colors follow accent ──
   root.style.setProperty("--cg-text-color", primary);

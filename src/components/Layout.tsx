@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Film, Image, Gamepad2, Home, Music, Sun, Sword, Shield, Swords, Maximize2, Minimize2, Search, Settings, Globe, Sparkles, Play, Pause, SkipBack, SkipForward, SlidersHorizontal, X, Volume2, VolumeX } from "lucide-react";
+import { Film, Image, Gamepad2, Home, Music, Sun, Sword, Shield, Swords, Maximize2, Minimize2, Search, Settings, Globe, Sparkles, SlidersHorizontal, X, LayoutGrid } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { cn } from "@/lib/utils";
 import { kv } from "@/lib/sqliteStore";
@@ -8,11 +8,12 @@ import { useThemeStore, type ThemeName } from "@/stores/themeStore";
 import { useTranslation } from "react-i18next";
 import { languages } from "@/i18n";
 import QuickLaunchBar from "@/components/QuickLaunchBar";
+import QuickHub from "@/components/QuickHub";
 import SettingsDialog from "@/components/SettingsDialog";
 import GlobalSearch from "@/components/GlobalSearch";
 import KeyboardHelp from "@/components/KeyboardHelp";
 import { useSettingsStore, computeThemeColors, fontSizeScale, iconSizeScale, applySurface, applyFontFamily } from "@/stores/settingsStore";
-import { useAudioPlayerStore, fmtTime } from "@/stores/audioPlayerStore";
+import { useAudioPlayerStore } from "@/stores/audioPlayerStore";
 import { useWidgetStore } from "@/stores/widgetStore";
 import MyComputerWidget from "@/components/widgets/MyComputerWidget";
 import SystemMonitorWidget from "@/components/widgets/SystemMonitorWidget";
@@ -32,7 +33,8 @@ import { useLicenseStore, isPro } from "@/stores/licenseStore";
 import { useThemePackStore } from "@/stores/themePackStore";
 import { analytics, useAnalyticsPageView } from "@/lib/analytics";
 import { invoke } from "@tauri-apps/api/core";
-import { getMusicCoverFallback } from "@/lib/musicCoverFallback";
+
+import { useHomeMode } from "@/lib/homeMode";
 import { compareVersions } from "@/lib/compareVersions";
 import { useSecurity } from "@/lib/useSecurity";
 import { ThemeAssets, themeUrl } from "@/lib/themeBase";
@@ -80,12 +82,16 @@ export default function Layout() {
   const isIce = theme === "ice-girl";
   const isDefault = theme === "default";
   const isCG = theme === "cyber-girl";
+  const [homeMode] = useHomeMode();
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();
   const bgVideoMode = useSettingsStore((s) => s.bgVideoMode);
   const bgOverlayOpacity = useSettingsStore((s) => s.bgOverlayOpacity);
   const headerOpacity = useSettingsStore((s) => s.headerOpacity);
   const footerOpacity = useSettingsStore((s) => s.footerOpacity);
   const isHome = location.pathname === "/";
+  const showQuickHub = true;
+  const isHomeStrip = isHome && isDefault && homeMode === "strip";
+  const [stripOpen, setStripOpen] = useState(false);
   const pageKey = isHome ? "home" : (location.pathname.replace("/", "") as string) || "home";
   const showWidgets = globalWidgets || (widgetPages[pageKey] ?? false);
   const [isFS, setIsFS] = useState(true);
@@ -578,7 +584,7 @@ export default function Layout() {
   const headerOpacityStyle = { backgroundColor: `color-mix(in srgb, var(--color-surface) ${headerOpacity}%, transparent)` };
 
   return (
-    <div className={cn("min-h-screen", isDefault && "bg-surface")} id="app" ref={appRef}>
+    <div className={cn("min-h-screen", isDefault && !isHomeStrip && "bg-surface")} id="app" ref={appRef}>
       {/* ── Default theme wallpaper engine ── */}
       {isDefault && <WallpaperEngine />}
 
@@ -658,9 +664,11 @@ export default function Layout() {
           "mx-auto max-w-7xl px-6 overflow-hidden relative rounded-xl",
           isHome && !isDefault && "!max-w-none !px-0 !overflow-visible !rounded-none pointer-events-none",
         )}
-        style={isHome && !isDefault
-          ? { height: "auto", marginTop: 0 }
-          : { height: "calc(100vh - 5rem - 3rem)", marginTop: "5rem" }}
+        style={(() => {
+          if (isHomeStrip) return { height: "auto", marginTop: 0, background: "transparent", borderColor: "transparent" } as React.CSSProperties;
+          if (isHome && !isDefault) return { height: "auto", marginTop: 0 };
+          return { height: "calc(100vh - 5rem - 3rem)", marginTop: "5rem" };
+        })()}
         data-route={isHome ? "home" : "page"}>
         <div className={cn(
           "relative z-[1]",
@@ -673,13 +681,47 @@ export default function Layout() {
         </div>
       </main>
 
-      <footer className={cn("fixed bottom-0 left-0 right-0 z-50 backdrop-blur-sm", "transition-all duration-300", "h-12", !footerVisible && "opacity-0 translate-y-full pointer-events-none")}
-        style={{ backgroundColor: `color-mix(in srgb, var(--color-surface) ${footerOpacity}%, transparent)` }}>
-        <div className="mx-auto flex h-full max-w-7xl items-center justify-center px-6 gap-3.5">
-          {playerIsBg && playerTrack && <MiniPlayer />}
+      {/* ── Footer: glass bar, centered layout ── */}
+      <footer
+        className={cn("fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 h-12", !footerVisible && "opacity-0 translate-y-full pointer-events-none")}
+        style={{
+          background: "rgba(8,12,20,0.78)",
+          backdropFilter: "blur(16px) saturate(140%)",
+          WebkitBackdropFilter: "blur(16px) saturate(140%)",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <div className="flex items-center justify-center gap-2.5 h-full px-4">
+          {/* QuickHub trigger button (all pages) */}
+          {showQuickHub && (
+            <button
+              onClick={() => setStripOpen((v) => !v)}
+              className={cn(
+                "shrink-0 h-8 w-8 flex items-center justify-center rounded-lg transition-colors",
+                stripOpen ? "bg-primary/15 text-primary-light" : "text-gray-400 hover:text-white hover:bg-white/5",
+              )}
+              title="快捷中心"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+          )}
+
+          {/* Divider between trigger and QuickLaunch */}
+          {showQuickHub && <div className="w-px h-5 bg-white/[0.08] shrink-0" />}
+
+          {/* QuickLaunch apps */}
           <QuickLaunchBar />
         </div>
       </footer>
+
+      {/* ── QuickHub popover (all pages in strip mode) ── */}
+      {showQuickHub && stripOpen && (
+        <div className="fixed inset-0 z-[45] flex items-end justify-center" onClick={() => setStripOpen(false)}>
+          <div className="max-w-[calc(100vw-2rem)] w-[900px] mb-14" onClick={(e) => e.stopPropagation()}>
+            <QuickHub onClose={() => setStripOpen(false)} />
+          </div>
+        </div>
+      )}
 
       {bgMusicConfirm && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -718,81 +760,4 @@ export default function Layout() {
   );
 }
 
-function MiniPlayer() {
-  const navigate = useNavigate();
-  const { theme } = useThemeStore();
-  const [seeking, setSeeking] = useState(false);
-  const barRef = useRef<HTMLDivElement>(null);
 
-  const track = useAudioPlayerStore((s) => s.track);
-  const dur = useAudioPlayerStore((s) => s.duration);
-  const time = useAudioPlayerStore((s) => s.currentTime);
-  const vol = useAudioPlayerStore((s) => s.volume);
-  const isPlaying = useAudioPlayerStore((s) => s.isPlaying);
-  const doToggle = useAudioPlayerStore((s) => s.toggle);
-  const doSeek = useAudioPlayerStore((s) => s.seek);
-  const doSetVol = useAudioPlayerStore((s) => s.setVolume);
-  const doPrev = useAudioPlayerStore((s) => s.prev);
-  const doNext = useAudioPlayerStore((s) => s.next);
-  const doSetBg = useAudioPlayerStore((s) => s.setBackground);
-  const doStop = useAudioPlayerStore((s) => s.stop);
-
-  // track is null when nothing is playing — don't render MiniPlayer
-  if (!track) return null;
-
-  const pct = dur > 0 ? (time / dur) * 100 : 0;
-
-  const seekTo = useCallback((clientX: number) => {
-    if (!barRef.current || !dur) return;
-    const rect = barRef.current.getBoundingClientRect();
-    const p = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    doSeek(p);
-  }, []);
-
-  const onMouseDown = useCallback((e: React.MouseEvent) => { setSeeking(true); seekTo(e.clientX); }, [seekTo]);
-
-  useEffect(() => {
-    if (!seeking) return;
-    const onMove = (e: MouseEvent) => seekTo(e.clientX);
-    const onUp = () => setSeeking(false);
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
-  }, [seeking, seekTo]);
-
-  useEffect(() => {
-    if (!track && !isPlaying) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.code === "Space") { e.preventDefault(); doToggle(); }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  return (
-    <div className="flex flex-col gap-0.5 shrink-0" style={{ width: "170px" }}>
-      <div className="flex items-center gap-1.5">
-        <div className="w-4 h-4 rounded overflow-hidden bg-surface-lighter shrink-0">
-          <img src={track.coverPath || getMusicCoverFallback()} alt="" className="w-full h-full object-cover"
-            onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
-        </div>
-        <span className="text-[10px] text-white truncate flex-1 leading-none">{track.name}</span>
-        <button onClick={() => vol === 0 ? doSetVol(1) : doSetVol(0)} className="h-4 w-4 flex items-center justify-center rounded text-gray-200 hover:text-white hover:bg-surface-lighter transition-colors shrink-0" title={`音量 ${Math.round(vol * 100)}%`}>
-          {vol === 0 ? <VolumeX className="h-2.5 w-2.5" /> : <Volume2 className="h-2.5 w-2.5" />}
-        </button>
-        <button onClick={doPrev} className="h-4 w-4 flex items-center justify-center rounded text-gray-200 hover:text-white hover:bg-surface-lighter transition-colors shrink-0"><SkipBack className="h-2.5 w-2.5" /></button>
-        <button onClick={doToggle} className="h-4 w-4 flex items-center justify-center rounded text-gray-200 hover:text-white hover:bg-primary/20 transition-colors shrink-0">
-          {isPlaying ? <Pause className="h-2.5 w-2.5" /> : <Play className="h-2.5 w-2.5 ml-0.5" />}
-        </button>
-        <button onClick={doNext} className="h-4 w-4 flex items-center justify-center rounded text-gray-200 hover:text-white hover:bg-surface-lighter transition-colors shrink-0"><SkipForward className="h-2.5 w-2.5" /></button>
-        <button onClick={() => { doSetBg(false); navigate("/music"); }} className="h-4 w-4 flex items-center justify-center rounded text-gray-200 hover:text-primary-light hover:bg-primary/10 transition-colors shrink-0" title="还原播放器"><Maximize2 className="h-2.5 w-2.5" /></button>
-      </div>
-      <div ref={barRef} className="w-full flex items-center cursor-pointer h-1.5" onMouseDown={onMouseDown}>
-        <div className="w-full h-[2px] rounded-full bg-surface-lighter relative hover:h-[4px] transition-all">
-          <div className="absolute left-0 top-0 h-full rounded-full bg-primary-light" style={{ width: `${pct}%`, transition: seeking ? "none" : "width 0.3s linear" }} />
-        </div>
-      </div>
-    </div>
-  );
-}

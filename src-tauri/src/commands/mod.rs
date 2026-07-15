@@ -1,3 +1,4 @@
+pub mod anti_bot;
 pub mod movie;
 pub mod image;
 pub mod game;
@@ -9,6 +10,7 @@ pub mod shell;
 pub mod convert;
 pub mod ffmpeg_helper;
 pub mod system;
+pub mod system_tools;
 pub mod file_explorer;
 pub mod steam_scanner;
 pub mod theme_studio;

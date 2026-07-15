@@ -39,6 +39,48 @@ const TYPEL: Record<string, { emoji: string; label: string }> = {
 
 const BGM_OPTIONS = ["", "start", "main"];
 
+/** Extracted from inline .map() to avoid JSX parser ambiguity */
+function ScriptNodeRow({ node, idx, isSelected, hasErr, onSelect, onImgError }: {
+  node: { id: string; label?: string; skillShow?: boolean; background?: string; face?: string; bgm?: string; text?: string; i18nPreview?: string; thumbOk?: boolean; thumbUrl?: string };
+  idx: number; isSelected: boolean; hasErr: boolean; onSelect: () => void; onImgError: () => void;
+}) {
+  const rowClass = `flex items-stretch gap-1.5 group cursor-pointer ${isSelected ? "ring-1 ring-primary-light/30 rounded-xl" : ""}`;
+  const cardClass = ["flex-1 rounded-xl border overflow-hidden transition-all"];
+  if (isSelected) cardClass.push("border-primary-light/40 bg-primary/5");
+  else if (node.thumbOk) cardClass.push("border-green-400/15 bg-green-400/3");
+  else cardClass.push("border-white/5 bg-white/[0.02]");
+
+  return (
+    <div key={node.id} className={rowClass} onClick={onSelect}>
+      <div className="w-6 flex flex-col items-center justify-center shrink-0">
+        <span className="text-[10px] font-bold text-gray-500">{idx + 1}</span>
+      </div>
+      <div className={cardClass.join(" ")}>
+        <div className="flex items-stretch">
+          <div className="w-44 shrink-0 aspect-video relative flex items-center justify-center bg-black/20 overflow-hidden">
+            {node.thumbOk && !hasErr
+              ? <img src={`/${node.thumbUrl}`} alt="" className="absolute inset-0 w-full h-full object-cover" onError={onImgError} />
+              : <Image className="h-4 w-4 text-gray-700" />}
+            <div className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full ${node.thumbOk ? "bg-green-400" : "bg-gray-600"}`} />
+          </div>
+          <div className="flex-1 px-3 py-2 min-w-0">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="text-[11px] font-bold text-white">{node.label || node.id}</span>
+              {node.skillShow && <span className="text-[7px] bg-purple-400/20 text-purple-400 px-1 rounded">技能展示</span>}
+            </div>
+            <div className="text-[8px] text-gray-600 font-mono truncate">{node.background || "(默认)"}</div>
+            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+              {node.face && <span className="text-[8px] text-gray-500 shrink-0">😶 {node.face}</span>}
+              {node.bgm && <span className="text-[8px] text-gray-500 shrink-0">♪ {node.bgm}</span>}
+            </div>
+            {node.text && <div className="text-[9px] text-gray-300 leading-relaxed mt-1.5 line-clamp-2">{node.i18nPreview || node.text}</div>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ThemeStudioPage() {
   const { t } = useTranslation();
   const nav = useNavigate();
@@ -267,50 +309,16 @@ export default function ThemeStudioPage() {
                 <div className="flex-1 flex min-h-0">
                   {/* Timeline list */}
                   <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
-                    {detail.script.length === 0 ? (
-                      <div className="text-center py-16 text-gray-600">
-                        <div className="text-4xl mb-3">📝</div>
-                        <p className="text-sm">暂无场景脚本</p>
-                        <button onClick={addNode} className="text-primary-light/70 hover:text-primary-light mt-2 text-xs">+ 添加第一个节点</button>
-                      </div>
-                    ) : (
-                      detail.script.map((node, idx) => {
-                        const hasErr = imgErrors.has(node.id);
-                        const isSelected = editingIdx === idx;
-                        return (
-                          <div key={node.id} className={`flex items-stretch gap-1.5 group cursor-pointer ${isSelected ? "ring-1 ring-primary-light/30 rounded-xl" : ""}`}
-                            onClick={() => startEdit(idx)}>
-                            <div className="w-6 flex flex-col items-center justify-center shrink-0">
-                              <span className="text-[10px] font-bold text-gray-500">{idx + 1}</span>
-                            </div>
-                            <div className={`flex-1 rounded-xl border overflow-hidden transition-all ${isSelected ? "border-primary-light/40 bg-primary/5" : node.thumbOk ? "border-green-400/15 bg-green-400/3" : "border-white/5 bg-white/[0.02]"}`}>
-                              <div className="flex items-stretch">
-                                <div className="w-44 shrink-0 aspect-video relative flex items-center justify-center bg-black/20 overflow-hidden">
-                                  {node.thumbOk && !hasErr ? (
-                                    <img src={`/${node.thumbUrl}`} alt="" className="absolute inset-0 w-full h-full object-cover" onError={() => imgError(node.id)} />
-                                  ) : (
-                                    <Image className="h-4 w-4 text-gray-700" />
-                                  )}
-                                  <div className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full ${node.thumbOk ? "bg-green-400" : "bg-gray-600"}`} />
-                                </div>
-                                <div className="flex-1 px-3 py-2 min-w-0">
-                                  <div className="flex items-center gap-1.5 mb-0.5">
-                                    <span className="text-[11px] font-bold text-white">{node.label || node.id}</span>
-                                    {node.skillShow && <span className="text-[7px] bg-purple-400/20 text-purple-400 px-1 rounded">技能展示</span>}
-                                  </div>
-                                  <div className="text-[8px] text-gray-600 font-mono truncate">{node.background || "(默认)"}</div>
-                                  <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                                    {node.face && <span className="text-[8px] text-gray-500 shrink-0">😶 {node.face}</span>}
-                                    {node.bgm && <span className="text-[8px] text-gray-500 shrink-0">♪ {node.bgm}</span>}
-                                  </div>
-                                  {node.text && (
-                                    <div className="text-[9px] text-gray-300 leading-relaxed mt-1.5 line-clamp-2">{node.i18nPreview || node.text}</div>
-                                  )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                    {detail.script.length === 0
+                      ? <div className="text-center py-16 text-gray-600">
+                          <div className="text-4xl mb-3">📝</div>
+                          <p className="text-sm">暂无场景脚本</p>
+                          <button onClick={addNode} className="text-primary-light/70 hover:text-primary-light mt-2 text-xs">+ 添加第一个节点</button>
+                        </div>
+                      : detail.script.map((node, idx) => (
+                          <ScriptNodeRow key={node.id} node={node} idx={idx} isSelected={editingIdx === idx} hasErr={imgErrors.has(node.id)} onSelect={() => startEdit(idx)} onImgError={() => imgError(node.id)} />
+                        ))
+                    }
                   </div>
 
                   {/* Properties Panel */}
