@@ -334,6 +334,8 @@
     "start_fullscreen": "启动时全屏",
     "auto_hide_header": "自动隐藏顶栏",
     "auto_hide_footer": "自动隐藏底栏",
+    "compact_header": "紧凑顶栏",
+    "compact_header_hint": "缩小顶栏高度并隐藏导航文字，释放更多纵向空间",
     "theme": "主题",
     "custom_color": "自定义主题色",
     "use_custom_color": "启用自定义主题色",

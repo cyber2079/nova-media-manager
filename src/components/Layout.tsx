@@ -81,6 +81,7 @@ export default function Layout() {
   const isDefault = theme === "default";
   const isCG = theme === "cyber-girl";
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();
+  const compactMode = useSettingsStore((s) => s.compactMode);
   const layoutMode = useSettingsStore((s) => s.layoutMode);
   const setLayoutMode = useSettingsStore((s) => s.setLayoutMode);
   const bgVideoMode = useSettingsStore((s) => s.bgVideoMode);
@@ -597,8 +598,8 @@ export default function Layout() {
       </>}
 
       {/* ── Header ── */}
-      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden", layoutMode !== "full" && "!h-10")} style={headerOpacityStyle}>
-        <div className={cn("mx-auto flex max-w-7xl items-center justify-between px-6", layoutMode !== "full" ? "h-10" : "h-16")}>
+      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden", (compactMode || layoutMode !== "full") && "!h-10")} style={headerOpacityStyle}>
+        <div className={cn("mx-auto flex max-w-7xl items-center justify-between px-6", (compactMode || layoutMode !== "full") ? "h-10" : "h-16")}>
           <div className="flex items-center gap-3">
             {isIce ? (
               <div className="flex flex-col leading-none"><span className="ice-title text-sm font-bold">{t("app.title")}</span></div>
@@ -625,7 +626,7 @@ export default function Layout() {
                       <item.icon className="h-5 w-5" />
                     )}
                   </div>
-                  <span className={cn(isIce && "tracking-wider", isCG && "tracking-[0.1em]", layoutMode !== "full" && "hidden")}>{t(`nav.${item.key}`)}</span>
+                  <span className={cn(isIce && "tracking-wider", isCG && "tracking-[0.1em]", (compactMode || layoutMode !== "full") && "hidden")}>{t(`nav.${item.key}`)}</span>
                 </NavLink>
               );
             })}
@@ -677,7 +678,7 @@ export default function Layout() {
           backdropFilter: layoutMode !== "full" ? "blur(12px)" : undefined,
         }}
         data-route={isHome ? "home" : "page"}>
-        <div className={cn("relative z-[1] h-full overflow-y-auto overscroll-contain", layoutMode !== "full" ? "px-3 pt-4" : "px-0 pt-6")}>
+        <div className="relative z-[1] h-full overflow-y-auto overscroll-contain px-0 pt-6">
           <Outlet />
           <ScrollFade height={56} />
         </div>
