@@ -49,6 +49,7 @@
 [data-theme="cyber-girl"] main[data-route="home"] {
   background: transparent;
   border-color: transparent;
+  overflow: hidden !important;  /* bottom-pinned content — no scroll needed */
 }
 
 /* ── Unified glass card (overlays on background images/videos) ── */
