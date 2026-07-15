@@ -683,7 +683,7 @@ export default function Layout() {
         </div>
       </main>
 
-      <footer className={cn("fixed bottom-0 left-0 right-0 z-50 backdrop-blur-sm", "transition-all duration-300", "h-12", (layoutMode !== "full") && "hidden", !footerVisible && "opacity-0 translate-y-full pointer-events-none")}
+      <footer className={cn("fixed bottom-0 left-0 right-0 z-50 backdrop-blur-sm", "transition-all duration-300", "h-12", !footerVisible && "opacity-0 translate-y-full pointer-events-none")}
         style={{ backgroundColor: `color-mix(in srgb, var(--color-surface) ${footerOpacity}%, transparent)` }}>
         <div className="mx-auto flex h-full max-w-7xl items-center justify-center px-6 gap-3.5">
           {playerIsBg && playerTrack && <MiniPlayer />}
