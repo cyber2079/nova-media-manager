@@ -678,7 +678,7 @@ export default function Layout() {
           backdropFilter: layoutMode !== "full" ? "blur(12px)" : undefined,
         }}
         data-route={isHome ? "home" : "page"}>
-        <div className="relative z-[1] h-full overflow-y-auto overscroll-contain px-0 pt-6">
+        <div className="relative z-[1] h-full overflow-y-auto overscroll-contain px-6 pt-6 pb-14">
           <Outlet />
           <ScrollFade height={56} />
         </div>
