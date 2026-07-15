@@ -14,9 +14,19 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host ">>> git push origin master..." -ForegroundColor Cyan
-git push origin master
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Push failed — retry in a moment" -ForegroundColor Red
+$env:GIT_HTTP_LOW_SPEED_LIMIT = "0"
+$env:GIT_HTTP_LOW_SPEED_TIME = "0"
+$retries = 3
+for ($i = 1; $i -le $retries; $i++) {
+    git -c http.postBuffer=524288000 -c http.lowSpeedLimit=0 -c http.lowSpeedTime=0 push origin master
+    if ($LASTEXITCODE -eq 0) { break }
+    if ($i -lt $retries) {
+        $wait = $i * 5
+        Write-Host "Push failed (attempt $i/$retries), retrying in ${wait}s..." -ForegroundColor Yellow
+        Start-Sleep $wait
+    } else {
+        Write-Host "Push failed after $retries attempts" -ForegroundColor Red
+    }
 }
 
 # ── 私库 ──
@@ -33,9 +43,16 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host ">>> git push origin main..." -ForegroundColor Cyan
-git push origin main
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Push failed — retry in a moment" -ForegroundColor Red
+for ($i = 1; $i -le $retries; $i++) {
+    git -c http.postBuffer=524288000 -c http.lowSpeedLimit=0 -c http.lowSpeedTime=0 push origin main
+    if ($LASTEXITCODE -eq 0) { break }
+    if ($i -lt $retries) {
+        $wait = $i * 5
+        Write-Host "Push failed (attempt $i/$retries), retrying in ${wait}s..." -ForegroundColor Yellow
+        Start-Sleep $wait
+    } else {
+        Write-Host "Push failed after $retries attempts" -ForegroundColor Red
+    }
 }
 
 Write-Host ">>> DONE!" -ForegroundColor Green
