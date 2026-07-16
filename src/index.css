@@ -43,7 +43,6 @@ html:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
 /* ICE 背景 Canvas 仅在非冰主题时强制隐藏 — 防止切换残留 */
 html:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
 
-[data-theme="default"] main[data-route="home"],
 [data-theme="ice-girl"] main[data-route="home"],
 [data-theme="cyber-girl"] main[data-route="home"] {
   background: transparent !important;

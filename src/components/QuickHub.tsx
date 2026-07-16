@@ -27,6 +27,7 @@ const SWIPE_THRESHOLD = 40;
 interface QuickHubProps { onClose: () => void }
 
 export default function QuickHub({ onClose }: QuickHubProps) {
+  const navigate = useNavigate();
   return (
     <div
       className="w-full rounded-2xl overflow-hidden animate-media-strip-up"
@@ -41,7 +42,7 @@ export default function QuickHub({ onClose }: QuickHubProps) {
       <div className="flex items-center justify-between px-4 pt-3 pb-0.5">
         <span className="text-[10px] text-gray-500 tracking-[0.15em] uppercase select-none">快捷中心</span>
         <div className="flex items-center gap-1">
-          <button onClick={() => { onClose(); setHomeMode("full"); }}
+          <button onClick={() => { onClose(); setHomeMode("full"); navigate("/"); }}
             className="h-7 w-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/8 transition-colors" title="展开完整面板">
             <Maximize2 className="h-3.5 w-3.5" />
           </button>
