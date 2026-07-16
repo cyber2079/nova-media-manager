@@ -1,5 +1,6 @@
 import { useThemeStore } from "@/stores/themeStore";
 import { themeUrl } from "@/lib/themeBase";
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 // Inline SVG music-note icon (lucide-react Music equivalent) for default theme
 const DEFAULT_SVG = [
@@ -20,4 +21,17 @@ export function getMusicCoverFallback(): string {
   const theme = useThemeStore.getState().theme;
   if (theme === "ice-girl" || theme === "cyber-girl") return themeUrl(theme, "music-cover.webp");
   return DEFAULT_SVG;
+}
+
+/**
+ * 封面路径 → 可加载的 URL。
+ * DB 里存的是本地绝对路径，直接塞 <img src> 会被当相对 URL 请求出 404 —
+ * 必须经 asset 协议转换；已是 URL（http/data/blob/公共资源）的原样返回。
+ */
+export function musicCoverSrc(coverPath?: string): string {
+  if (coverPath) {
+    if (/^(https?:|data:|blob:|asset:|\/)/.test(coverPath)) return coverPath;
+    try { return convertFileSrc(coverPath); } catch { /* not in Tauri */ }
+  }
+  return getMusicCoverFallback();
 }
