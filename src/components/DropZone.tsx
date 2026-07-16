@@ -5,11 +5,13 @@ import { cn } from "@/lib/utils";
 interface DropZoneProps {
   onDrop: (paths: string[]) => void;
   accept?: string; // comma-separated extensions: ".mp4,.avi,.mkv"
+  /** 放行无扩展名条目（疑似文件夹）— 交给 Rust expand_media_paths 识别递归 */
+  allowFolders?: boolean;
   children?: React.ReactNode;
   className?: string;
 }
 
-export default memo(function DropZone({ onDrop, accept, children, className }: DropZoneProps) {
+export default memo(function DropZone({ onDrop, accept, allowFolders, children, className }: DropZoneProps) {
   const { t } = useTranslation();
   const [dragging, setDragging] = useState(false);
   const counter = useRef(0);
@@ -23,9 +25,11 @@ export default memo(function DropZone({ onDrop, accept, children, className }: D
     (name: string) => {
       if (exts.length === 0) return true;
       const lower = name.toLowerCase();
+      // 无扩展名 → 大概率是文件夹，放行给后端自动识别
+      if (allowFolders && !lower.includes(".")) return true;
       return exts.some((e) => lower.endsWith(e));
     },
-    [exts]
+    [exts, allowFolders]
   );
 
   const handleDragOver = useCallback(

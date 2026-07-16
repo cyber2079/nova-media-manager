@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from "react"
 import { useMusicStore } from "@/stores/musicStore";
 import { useAudioPlayerStore, fmtTime, getAudio } from "@/stores/audioPlayerStore";
 import { useSettingsStore } from "@/stores/settingsStore";
-import { getMusicCoverFallback } from "@/lib/musicCoverFallback";
+import { getMusicCoverFallback, musicCoverSrc } from "@/lib/musicCoverFallback";
 import MusicCard from "@/components/MusicCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,8 @@ import { useLayoutMode } from "@/lib/useLayoutMode";
 import PaginationBar from "@/components/PaginationBar";
 import { usePagination } from "@/lib/usePagination";
 import { useToast } from "@/components/Toast";
+import { importMediaPaths, pickFolderAndImport, importSummaryText } from "@/lib/mediaScan";
+import { FolderOpen } from "lucide-react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { usePlaylistStore } from "@/stores/playlistStore";
 import type { Music as MusicType } from "@/types/music";
@@ -166,7 +168,13 @@ export default function MusicLibrary() {
 
   const tagNames = useMemo(() => allTags.map(([tag]) => tag), [allTags]);
 
-  const handleDropImport = useCallback(async (paths: string[]) => { await addMusic(paths); }, [addMusic]);
+  // 拖入的可能是文件或文件夹 — Rust 自动识别、递归展开、与库去重
+  const handleDropImport = useCallback(async (paths: string[]) => {
+    try {
+      const r = await importMediaPaths(paths, "music");
+      toast(importSummaryText(r, "首"), r.added > 0 ? "success" : "info");
+    } catch { await addMusic(paths); }
+  }, [addMusic]);
 
   const handleAdd = useCallback(async () => {
     try {
@@ -175,6 +183,13 @@ export default function MusicLibrary() {
       if (selected) { const paths = Array.isArray(selected) ? selected : [selected]; await addMusic(paths); }
     } catch { toast(t("music.toast_tauri_only"), "error"); }
   }, [addMusic]);
+
+  const handleAddFolder = useCallback(async () => {
+    try {
+      const r = await pickFolderAndImport("music");
+      if (r) toast(importSummaryText(r, "首"), r.added > 0 ? "success" : "info");
+    } catch { toast(t("music.toast_tauri_only"), "error"); }
+  }, []);
 
   const handleBatchDelete = useCallback(() => {
     confirmThen(t("music.confirm_batch_delete", { n: batch.selected.size }), async () => {
@@ -314,7 +329,7 @@ export default function MusicLibrary() {
 
   return (
     <>
-    <DropZone onDrop={handleDropImport} accept={".mp3,.flac,.wav,.m4a,.ogg,.wma,.aac"}>
+    <DropZone onDrop={handleDropImport} accept={".mp3,.flac,.wav,.m4a,.ogg,.wma,.aac"} allowFolders>
       <div ref={vizCanvasRef} style={{ position: "absolute", width: 0, height: 0, overflow: "hidden", pointerEvents: "none" }} />
     <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
@@ -340,6 +355,7 @@ export default function MusicLibrary() {
             <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
             <button onClick={() => { setShowPlaylists(true); setSelectedPlaylist(playlists[0]?.id ?? null); }} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", "border-primary text-gray-500 hover:border-primary-light/30 hover:text-primary-light")} title={t("music.show_playlists")}><ListMusic className="h-4 w-4" /></button>
             <Button onClick={handleAdd} className="gap-2"><Upload className="h-4 w-4" />{t("music.add")}</Button>
+            <Button variant="outline" onClick={handleAddFolder} className="gap-2" title="选择文件夹，递归扫描新增音乐入库"><FolderOpen className="h-4 w-4" />文件夹</Button>
             {!batch.showCheckboxes ? (
               <Button variant="outline" size="sm" onClick={batch.enterBatchMode} className="gap-1.5 text-xs">
                 <CheckSquare className="h-3.5 w-3.5" />
@@ -500,7 +516,7 @@ export default function MusicLibrary() {
                         )}
                         {!isPlBatch && <span className="w-6 text-center text-[11px] text-gray-600 shrink-0">{idx + 1}</span>}
                         <div className="w-9 h-9 rounded overflow-hidden bg-surface-lighter shrink-0">
-                          <img src={m.coverPath || getMusicCoverFallback()} alt="" className="w-full h-full object-cover object-top scale-125" onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
+                          <img src={musicCoverSrc(m.coverPath)} alt="" className="w-full h-full object-cover object-top scale-125" onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={cn("text-sm truncate", playing?.id === m.id ? "text-primary-light font-medium" : "text-gray-200")}>{m.name}</p>
@@ -574,7 +590,7 @@ export default function MusicLibrary() {
                         {selected && <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>}
                       </div>
                       <div className="w-9 h-9 rounded overflow-hidden bg-surface-lighter shrink-0">
-                        <img src={m.coverPath || getMusicCoverFallback()} alt="" className="w-full h-full object-cover object-top scale-125"
+                        <img src={musicCoverSrc(m.coverPath)} alt="" className="w-full h-full object-cover object-top scale-125"
                           onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -628,7 +644,7 @@ export default function MusicLibrary() {
                       {batch.showCheckboxes && <BatchCheckbox inline checked={batch.selected.has(m.id)} onToggle={() => batch.toggle(m.id)} />}
                       {!batch.isBatchMode && <span className="w-6 text-center text-[11px] text-gray-600 shrink-0">{idx + 1}</span>}
                       <div className="w-9 h-9 rounded overflow-hidden bg-surface-lighter shrink-0">
-                        <img src={m.coverPath || getMusicCoverFallback()} alt="" className="w-full h-full object-cover object-top scale-125"
+                        <img src={musicCoverSrc(m.coverPath)} alt="" className="w-full h-full object-cover object-top scale-125"
                           onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -711,10 +727,17 @@ export default function MusicLibrary() {
         style={{ padding: "12px 20px", ...(playerBgCustom && playerBgColor ? { background: playerBgColor } : {}) }}>
         {/* 2 columns: cover (left), 3 rows (right) */}
         <div className="flex items-stretch gap-4">
-          {/* LEFT: cover column — fills full height, no square constraint */}
+          {/* LEFT: cover column — 有封面显示封面；无封面显示旋转 CD（默认主题 cd.jpg） */}
           <div className="shrink-0 relative rounded overflow-hidden" style={{ width: 72 }}>
-            <img src={playing.coverPath || getMusicCoverFallback()} alt="" className="absolute inset-0 w-full h-full object-cover object-top scale-125"
-              onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
+            {playing.coverPath ? (
+              <img src={musicCoverSrc(playing.coverPath)} alt="" className="absolute inset-0 w-full h-full object-cover object-top scale-125"
+                onError={(e) => { (e.target as HTMLImageElement).src = "/cd.jpg"; }} />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img src="/cd.jpg" alt="" className="w-16 h-16 rounded-full object-cover shadow-lg"
+                  style={{ animation: isPlaying ? "spin 4s linear infinite" : "none" }} />
+              </div>
+            )}
           </div>
 
           {/* RIGHT: 3 rows */}

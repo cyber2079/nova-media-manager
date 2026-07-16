@@ -28,6 +28,8 @@ import { useLayoutMode } from "@/lib/useLayoutMode";
 import PaginationBar from "@/components/PaginationBar";
 import { usePagination } from "@/lib/usePagination";
 import { useToast } from "@/components/Toast";
+import { importMediaPaths, pickFolderAndImport, importSummaryText } from "@/lib/mediaScan";
+import { FolderOpen } from "lucide-react";
 
 async function toBlobUrl(filePath: string): Promise<string> {
   if (filePath.startsWith("http://") || filePath.startsWith("https://") || filePath.startsWith("blob:") || filePath.startsWith("data:") || filePath.startsWith("/themes/")) {
@@ -267,7 +269,20 @@ export default function ImageLibrary() {
   const tagNames = useMemo(() => allTags.map(([tag]) => tag), [allTags]);
   const viewerSrcs = useMemo(() => filtered.map((img) => blobUrls[img.coverPath] || img.coverPath), [filtered, blobUrls]);
 
-  const handleDropImport = useCallback(async (paths: string[]) => { await addImages(paths); }, [addImages]);
+  // 拖入的可能是文件或文件夹 — Rust 自动识别、递归展开、与库去重
+  const handleDropImport = useCallback(async (paths: string[]) => {
+    try {
+      const r = await importMediaPaths(paths, "images");
+      toast(importSummaryText(r, "张"), r.added > 0 ? "success" : "info");
+    } catch { await addImages(paths); }
+  }, [addImages]);
+
+  const handleAddFolder = useCallback(async () => {
+    try {
+      const r = await pickFolderAndImport("images");
+      if (r) toast(importSummaryText(r, "张"), r.added > 0 ? "success" : "info");
+    } catch { /* not in Tauri */ }
+  }, []);
   const handleAddImages = useCallback(async () => {
     try {
       const { open } = await import("@tauri-apps/plugin-dialog");
@@ -285,7 +300,7 @@ export default function ImageLibrary() {
 
   return (
     <>
-    <DropZone onDrop={handleDropImport} accept={".png,.jpg,.jpeg,.gif,.webp,.bmp"}>
+    <DropZone onDrop={handleDropImport} accept={".png,.jpg,.jpeg,.gif,.webp,.bmp"} allowFolders>
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex items-center gap-4">
         <h1 className="text-2xl font-bold">{t("image.title")}</h1>
@@ -296,6 +311,7 @@ export default function ImageLibrary() {
         </div>
         <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
         <Button onClick={handleAddImages} className="gap-2"><Upload className="h-4 w-4" />{t("image.add")}</Button>
+        <Button variant="outline" onClick={handleAddFolder} className="gap-2" title="选择文件夹，递归扫描新增图片入库"><FolderOpen className="h-4 w-4" />文件夹</Button>
         {!batch.showCheckboxes ? (
           <Button variant="outline" size="sm" onClick={batch.enterBatchMode} className="gap-1.5 text-xs"><CheckSquare className="h-3.5 w-3.5" />{t("batch.enter")}</Button>
         ) : (

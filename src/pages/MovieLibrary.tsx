@@ -28,9 +28,14 @@ import BatchCheckbox from "@/components/BatchCheckbox";
 import ConfirmDialog from '@/components/ConfirmDialog';
 import BatchBar from "@/components/BatchBar";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import DropZone from "@/components/DropZone";
+import { useToast } from "@/components/Toast";
+import { importMediaPaths, pickFolderAndImport, importSummaryText } from "@/lib/mediaScan";
+import { FolderOpen } from "lucide-react";
 
 export default function MovieLibrary() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const {
     movies, isLoading, searchQuery, activeTags, sortConfig,
     loadMovies, addMovies, deleteMovie, setSearchQuery, toggleTag, setSortConfig, updateMovie, updateMovieTags,
@@ -114,7 +119,26 @@ export default function MovieLibrary() {
     }
   }, [addMovies]);
 
+  const handleAddFolder = useCallback(async () => {
+    try {
+      const r = await pickFolderAndImport("movies");
+      if (r) toast(importSummaryText(r, "部"), r.added > 0 ? "success" : "info");
+    } catch { /* not in Tauri */ }
+  }, []);
+
+  // 拖入的可能是文件或文件夹 — Rust 自动识别、递归展开、与库去重
+  const handleDropImport = useCallback(async (paths: string[]) => {
+    try {
+      const r = await importMediaPaths(paths, "movies");
+      toast(importSummaryText(r, "部"), r.added > 0 ? "success" : "info");
+    } catch { await addMovies(paths); }
+  }, [addMovies]);
+
   const handlePlayMovie = (movie: Movie) => {
+    // 播放埋点（内置/外接都记）— 供最近使用 + 仪表盘统计
+    import("@/stores/playHistoryStore").then((m) =>
+      m.usePlayHistoryStore.getState().record({ id: movie.id, name: movie.name, type: "movie", time: new Date().toISOString() })
+    ).catch(() => {});
     // ── 分流：内置引擎放不了的格式（或用户选了全部外接）调起外接播放器 ──
     const { externalPlayer } = useSettingsStore.getState();
     const ext = (movie.format || movie.filePath.split(".").pop() || "").toLowerCase();
@@ -194,6 +218,7 @@ export default function MovieLibrary() {
   }, [batch, updateMovieTags]);
 
   return (
+    <DropZone onDrop={handleDropImport} accept={".mp4,.avi,.mov,.mkv,.flv,.wmv,.webm,.m4v,.ts,.rmvb"} allowFolders>
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-4">
         <h1 className="font-bold text-2xl transition-all duration-500">
@@ -209,6 +234,7 @@ export default function MovieLibrary() {
           )}
         </div>
         <Button onClick={handleAddMovies} className="gap-2"><Upload className="h-4 w-4" />{t("movie.add")}</Button>
+        <Button variant="outline" onClick={handleAddFolder} className="gap-2" title="选择文件夹，递归扫描新增影片入库"><FolderOpen className="h-4 w-4" />文件夹</Button>
         {!batch.showCheckboxes ? (
           <Button variant="outline" size="sm" onClick={batch.enterBatchMode} className="gap-1.5 text-xs">
             <CheckSquare className="h-3.5 w-3.5" />
@@ -347,5 +373,6 @@ export default function MovieLibrary() {
       {batch.showCheckboxes && <BatchBar selected={Array.from(batch.selected)} selectAll={batch.selectAll} clear={batch.leaveBatchMode} invert={batch.invert} onDelete={handleBatchDelete} allTags={tagNames} onBatchTag={handleBatchTag} t={t} />}
       <ConfirmDialog open={!!confirmDelete} message={confirmDelete?.msg || ""} onConfirm={() => { confirmDelete?.onOk(); setConfirmDelete(null); }} onCancel={() => setConfirmDelete(null)} />
     </div>
+    </DropZone>
   );
 }
