@@ -17,7 +17,7 @@ import { useImageStore } from "@/stores/imageStore";
 import { useMusicStore } from "@/stores/musicStore";
 import { useGameStore } from "@/stores/gameStore";
 import { useAudioPlayerStore, fmtTime } from "@/stores/audioPlayerStore";
-import { getMusicCoverFallback } from "@/lib/musicCoverFallback";
+import { getMusicCoverFallback, musicCoverSrc } from "@/lib/musicCoverFallback";
 import { useTranslation } from "react-i18next";
 import { setHomeMode } from "@/lib/homeMode";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -42,10 +42,6 @@ export default function QuickHub({ onClose }: QuickHubProps) {
       <div className="flex items-center justify-between px-4 pt-3 pb-0.5">
         <span className="text-[10px] text-gray-500 tracking-[0.15em] uppercase select-none">快捷中心</span>
         <div className="flex items-center gap-1">
-          <button onClick={() => { onClose(); setHomeMode("full"); navigate("/"); }}
-            className="h-7 w-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/8 transition-colors" title="展开完整面板">
-            <Maximize2 className="h-3.5 w-3.5" />
-          </button>
           <button onClick={onClose}
             className="h-7 w-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/8 transition-colors" title="收起">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
@@ -55,7 +51,7 @@ export default function QuickHub({ onClose }: QuickHubProps) {
         </div>
       </div>
 
-      <MediaCarousel />
+      <MediaNav />
       <HubMusicPlayer />
       <SystemTools />
     </div>
@@ -63,10 +59,10 @@ export default function QuickHub({ onClose }: QuickHubProps) {
 }
 
 // ═══════════════════════════════════════════════════════
-// MediaCarousel
+// MediaNav — 分类快捷入口（最近使用轮播已按需求移除）
 // ═══════════════════════════════════════════════════════
 
-function MediaCarousel() {
+function MediaNav() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const movies = useMovieStore((s) => s.movies);
@@ -75,153 +71,22 @@ function MediaCarousel() {
   const games = useGameStore((s) => s.games);
 
   const pages = [
-    { key: "movies", icon: Film,    count: movies.length, color: "var(--color-primary)",       to: "/movies", recent: movies.slice(-8).reverse() },
-    { key: "images", icon: Image,   count: images.length, color: "var(--color-accent)",         to: "/images", recent: images.slice(-8).reverse() },
-    { key: "music",  icon: Music,   count: music.length,  color: "var(--color-primary-light)",  to: "/music",  recent: music.slice(-8).reverse() },
-    { key: "games",  icon: Gamepad2,count: games.length,  color: "var(--color-primary-dark)",   to: "/games",  recent: games.slice(-8).reverse() },
+    { key: "movies", icon: Film,     count: movies.length, color: "var(--color-primary)",       to: "/movies" },
+    { key: "images", icon: Image,    count: images.length, color: "var(--color-accent)",        to: "/images" },
+    { key: "music",  icon: Music,    count: music.length,  color: "var(--color-primary-light)", to: "/music" },
+    { key: "games",  icon: Gamepad2, count: games.length,  color: "var(--color-primary-dark)",  to: "/games" },
   ];
 
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [swipeOffset, setSwipeOffset] = useState(0);
-  const [swiping, setSwiping] = useState(false);
-  const swipeStartRef = useRef(0);
-
-  // Movie viewer
-  const [playingItem, setPlayingItem] = useState<{ name: string; src: string } | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Image viewer
-  const [viewingImage, setViewingImage] = useState<{ name: string; src: string } | null>(null);
-
-  const goTo = useCallback((index: number) => { setActiveIndex(index); setSwipeOffset(0); setSwiping(false); }, []);
-  const goNext = () => { if (activeIndex < pages.length - 1) goTo(activeIndex + 1); };
-  const goPrev = () => { if (activeIndex > 0) goTo(activeIndex - 1); };
-
-  const onPointerDown = useCallback((e: React.PointerEvent) => { swipeStartRef.current = e.clientX; setSwiping(true); setSwipeOffset(0); }, []);
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!swiping) return;
-    const delta = e.clientX - swipeStartRef.current;
-    setSwipeOffset((activeIndex === 0 && delta > 0) || (activeIndex === pages.length - 1 && delta < 0) ? delta * 0.2 : delta);
-  }, [swiping, activeIndex]);
-  const onPointerUp = useCallback((e: React.PointerEvent) => {
-    if (!swiping) return;
-    const delta = e.clientX - swipeStartRef.current;
-    if (delta < -SWIPE_THRESHOLD && activeIndex < pages.length - 1) goTo(activeIndex + 1);
-    else if (delta > SWIPE_THRESHOLD && activeIndex > 0) goTo(activeIndex - 1);
-    else { setSwipeOffset(0); setSwiping(false); }
-  }, [swiping, activeIndex, goTo]);
-
-  const handleItemClick = useCallback((pageKey: string, item: any) => {
-    if (pageKey === "games") { useGameStore.getState().launchGame(item.id).catch(() => {}); return; }
-    if (pageKey === "music") {
-      import("@/stores/audioPlayerStore").then((m) => { m.useAudioPlayerStore.getState().play(item); }).catch(() => {});
-      return;
-    }
-    if (pageKey === "movies") { playMovie(item); return; }
-    if (pageKey === "images") { viewImage(item); return; }
-    navigate(pages.find((p) => p.key === pageKey)!.to);
-  }, [navigate]);
-
-  const playMovie = useCallback((movie: any) => {
-    // 流式播放：asset 协议 Range 分段拉取，避免整文件读入内存
-    try {
-      setPlayingItem({ name: movie.name, src: convertFileSrc(movie.filePath) });
-    } catch {
-      setPlayingItem({ name: movie.name, src: `asset://localhost/${movie.filePath.replace(/\\/g, "/")}` });
-    }
-  }, []);
-
-  const viewImage = useCallback(async (img: any) => {
-    try {
-      const { readFile } = await import("@tauri-apps/plugin-fs");
-      const ext = (img.filePath.split(".").pop() || "png").toLowerCase();
-      const mimeMap: Record<string,string> = { png:"image/png", jpg:"image/jpeg", jpeg:"image/jpeg", webp:"image/webp", bmp:"image/bmp", gif:"image/gif" };
-      const data = await readFile(img.filePath);
-      const blob = new Blob([data], { type: mimeMap[ext] || "image/png" });
-      setViewingImage({ name: img.name, src: URL.createObjectURL(blob) });
-    } catch { /* file read error */ }
-  }, []);
-
-  const closePlayer = useCallback(() => {
-    setPlayingItem(null);
-  }, []);
-  const closeViewer = useCallback(() => {
-    if (viewingImage) { URL.revokeObjectURL(viewingImage.src); setViewingImage(null); }
-  }, [viewingImage]);
-
-  const trackTransform = (() => {
-    const basePct = -activeIndex * 100;
-    return swipeOffset === 0 ? `translateX(${basePct}%)` : `translateX(calc(${basePct}% + ${swipeOffset}px))`;
-  })();
-
   return (
-    <div>
-      <div className="flex items-center h-14 px-3 gap-2">
-        <button onClick={goPrev} disabled={activeIndex === 0}
-          className="shrink-0 h-7 w-7 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-white/8 disabled:opacity-20 disabled:cursor-not-allowed transition-colors">
-          <ChevronLeft className="h-3.5 w-3.5" />
+    <div className="flex items-center justify-center gap-2 h-12 px-3">
+      {pages.map((p) => (
+        <button key={p.key} onClick={() => navigate(p.to)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors">
+          <p.icon className="h-4 w-4" style={{ color: p.color, filter: "brightness(1.3)" }} />
+          <span className="text-xs font-medium text-white">{t(`nav.${p.key}`)}</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.08] text-gray-400 leading-none">{p.count}</span>
         </button>
-        <div className="flex-1 overflow-hidden h-full"
-          onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp}
-          onPointerCancel={() => { setSwipeOffset(0); setSwiping(false); }}>
-          <div className="flex h-full" style={{ transform: trackTransform, transition: swiping ? "none" : "transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1)" }}>
-            {pages.map((p) => (
-              <div key={p.key} className="w-full flex-shrink-0 h-full flex items-center gap-3 px-1 select-none">
-                <button onClick={() => navigate(p.to)} className="shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors">
-                  <p.icon className="h-4 w-4" style={{ color: p.color, filter: "brightness(1.3)" }} />
-                  <span className="text-xs font-medium text-white">{t(`nav.${p.key}`)}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.08] text-gray-400 leading-none">{p.count}</span>
-                </button>
-                <div className="w-px h-4 bg-white/[0.06] shrink-0" />
-                <div className="flex-1 flex items-center gap-1.5 overflow-hidden">
-                  {p.recent.length > 0 ? p.recent.map((item: any, i: number) => (
-                    <button key={i} onClick={() => handleItemClick(p.key, item)}
-                      className="shrink-0 px-2.5 py-1 rounded-md text-[11px] text-[#c8ddf0] bg-white/[0.06] hover:bg-primary/15 hover:text-white transition-colors truncate max-w-[150px]" title={item.name}>
-                      {item.name}
-                    </button>
-                  )) : <span className="text-[10px] text-gray-600">{t("home.recent_use_empty")}</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <button onClick={goNext} disabled={activeIndex === pages.length - 1}
-          className="shrink-0 h-7 w-7 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-white/8 disabled:opacity-20 disabled:cursor-not-allowed transition-colors">
-          <ChevronRight className="h-3.5 w-3.5" />
-        </button>
-      </div>
-      <div className="flex items-center justify-center gap-1.5 pb-2">
-        {pages.map((p, i) => (
-          <button key={p.key} onClick={() => goTo(i)}
-            className={`rounded-full transition-all duration-300 ${i === activeIndex ? "bg-primary-light w-3 h-1" : "bg-white/[0.12] hover:bg-white/25 w-1 h-1"}`} />
-        ))}
-      </div>
-
-      {/* Movie player — portal to document.body to escape stacking context */}
-      {playingItem && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-md" onClick={closePlayer}>
-          <div className="relative max-w-[95vw] max-h-[95vh]" onClick={(e) => e.stopPropagation()}>
-            <button onClick={closePlayer} className="absolute -top-2 -right-2 z-10 h-9 w-9 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors border border-white/10">
-              <X className="h-4 w-4" />
-            </button>
-            <video ref={videoRef} controls autoPlay className="max-w-[95vw] max-h-[90vh] rounded-xl shadow-2xl" src={playingItem.src} />
-            <div className="absolute bottom-3 left-3 text-xs text-white/50 bg-black/40 px-2 py-1 rounded">{playingItem.name}</div>
-          </div>
-        </div>, document.body
-      )}
-
-      {/* Image viewer — portal to document.body */}
-      {viewingImage && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md" onClick={closeViewer}>
-          <button onClick={closeViewer} className="absolute top-4 right-4 z-10 h-10 w-10 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors">
-            <X className="h-5 w-5" />
-          </button>
-          <img src={viewingImage.src} alt={viewingImage.name}
-            className="max-w-[95vw] max-h-[95vh] object-contain rounded-lg shadow-2xl"
-            onClick={(e) => e.stopPropagation()} />
-          <div className="absolute bottom-4 left-4 text-xs text-white/50 bg-black/40 px-2.5 py-1 rounded">{viewingImage.name}</div>
-        </div>, document.body
-      )}
+      ))}
     </div>
   );
 }
@@ -271,7 +136,7 @@ function HubMusicPlayer() {
       <div className="mx-4 h-px bg-white/[0.06]" />
       <div className="flex items-center gap-3 px-4 py-2.5">
         <div className="w-9 h-9 rounded-lg overflow-hidden bg-white/[0.06] shrink-0">
-          <img src={track.coverPath || getMusicCoverFallback()} alt="" className="w-full h-full object-cover"
+          <img src={musicCoverSrc(track.coverPath)} alt="" className="w-full h-full object-cover"
             onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
         </div>
         <div className="flex-1 min-w-0">
