@@ -75,7 +75,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
     headerOpacity, footerOpacity, setHeaderOpacity, setFooterOpacity,
     bgOverlayOpacity, setBgOverlayOpacity,
     hideTitleBar, setHideTitleBar,
-    fontPrimaryColor, fontSecondaryColor, setFontPrimaryColor, setFontSecondaryColor,
+    fontPrimaryColor, fontSecondaryColor, widgetTextColor, setFontPrimaryColor, setFontSecondaryColor, setWidgetTextColor,
     scrollFadeOpacity, setScrollFadeOpacity,
     playerBgColor, playerBgMode, setPlayerBgColor, setPlayerBgMode,
     cyberBgmEnabled, setCyberBgmEnabled,
@@ -373,7 +373,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
 
             {/* ═══ Widgets Tab ═══ */}
             {activeTab === "widgets" && (
-              <WidgetsSection {...{ t, globalWidgets, setGlobalWidgets, widgetPages, setPageWidget, myComputer, systemMonitor, clock, calendar, countdown, setEnabled, setPosition, setMyComputerMode, setCountdown }}>
+              <WidgetsSection {...{ t, globalWidgets, setGlobalWidgets, widgetPages, setPageWidget, myComputer, systemMonitor, clock, calendar, countdown, setEnabled, setPosition, setMyComputerMode, setCountdown, widgetTextColor, setWidgetTextColor }}>
                 <ResetButton tab="widgets" t={t} onReset={() => setConfirmReset("widgets")} />
               </WidgetsSection>
             )}
@@ -871,7 +871,7 @@ function ImageWheelSection({ t, imageWheelMode, setImageWheelMode }: any) {
   );
 }
 
-function WidgetsSection({ t, globalWidgets, setGlobalWidgets, widgetPages, setPageWidget, myComputer, systemMonitor, clock, calendar, countdown, setEnabled, setPosition, setMyComputerMode, setCountdown, children }: any) {
+function WidgetsSection({ t, globalWidgets, setGlobalWidgets, widgetPages, setPageWidget, myComputer, systemMonitor, clock, calendar, countdown, setEnabled, setPosition, setMyComputerMode, setCountdown, widgetTextColor, setWidgetTextColor, children }: any) {
   return (
     <div className="space-y-7">
       <section>
@@ -891,6 +891,14 @@ function WidgetsSection({ t, globalWidgets, setGlobalWidgets, widgetPages, setPa
           </div>
         </section>
       )}
+      <section>
+        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.widget_text_color")}</h4>
+        <div className="flex items-center gap-3 mb-5">
+          <input type="color" value={widgetTextColor} onChange={(e: any) => setWidgetTextColor(e.target.value)}
+            className="h-8 w-12 rounded border border-white/5 cursor-pointer bg-transparent p-0.5" />
+          <span className="text-xs text-gray-400 font-mono">{widgetTextColor}</span>
+        </div>
+      </section>
       <section>
         <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.widgets_config")}</h4>
         <div className="space-y-4">

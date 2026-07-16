@@ -116,6 +116,7 @@ export type SettingsState = {
   hideTitleBar: boolean;
   fontPrimaryColor: string;
   fontSecondaryColor: string;
+  widgetTextColor: string;
   scrollFadeOpacity: number;
   playerBgColor: string;
   playerBgMode: "follow" | "custom";
@@ -165,6 +166,7 @@ export type SettingsState = {
   setHideTitleBar: (v: boolean) => void;
   setFontPrimaryColor: (v: string) => void;
   setFontSecondaryColor: (v: string) => void;
+  setWidgetTextColor: (v: string) => void;
   setScrollFadeOpacity: (v: number) => void;
   setPlayerBgColor: (v: string) => void;
   setPlayerBgMode: (v: "follow" | "custom") => void;
@@ -267,10 +269,11 @@ export function applySurface() {
 
 /** Apply font primary/secondary colors as CSS custom properties */
 export function applyFontColors() {
-  const { fontPrimaryColor: pc, fontSecondaryColor: sc } = useSettingsStore.getState();
+  const { fontPrimaryColor: pc, fontSecondaryColor: sc, widgetTextColor: wc } = useSettingsStore.getState();
   const root = document.documentElement;
   root.style.setProperty('--font-primary', pc);
   root.style.setProperty('--font-secondary', sc);
+  root.style.setProperty('--font-widget', wc);
 }
 
 /** Apply lyric custom colors (or reset to defaults when off) */
@@ -345,7 +348,7 @@ async function persist(s: SettingsState) {
     visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
     headerOpacity: s.headerOpacity, footerOpacity: s.footerOpacity,
     surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
-    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, wallpaper: s.wallpaper, wallpaper: s.wallpaper,
+    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, wallpaper: s.wallpaper, wallpaper: s.wallpaper,
   });
   // Write to both: SQLite (primary) + localStorage (fast sync fallback)
   localStorage.setItem(STORAGE_KEY, payload);
@@ -431,6 +434,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     hideTitleBar: (saved as any).hideTitleBar ?? true,
     fontPrimaryColor: (saved as any).fontPrimaryColor || "#ffffff",
     fontSecondaryColor: (saved as any).fontSecondaryColor || "#9ab8d4",
+    widgetTextColor: (saved as any).widgetTextColor || "#e8f4ff",
     scrollFadeOpacity: (saved as any).scrollFadeOpacity ?? 30,
     playerBgColor: (saved as any).playerBgColor || "",
     playerBgMode: (saved as any).playerBgMode || "follow",
@@ -479,6 +483,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             hideTitleBar: (s.hideTitleBar as boolean) ?? get().hideTitleBar,
             fontPrimaryColor: (s.fontPrimaryColor as string) ?? get().fontPrimaryColor,
             fontSecondaryColor: (s.fontSecondaryColor as string) ?? get().fontSecondaryColor,
+            widgetTextColor: (s.widgetTextColor as string) ?? get().widgetTextColor,
             scrollFadeOpacity: (s.scrollFadeOpacity as number) ?? get().scrollFadeOpacity,
             playerBgColor: (s.playerBgColor as string) ?? get().playerBgColor,
             playerBgMode: (s.playerBgMode as any) ?? get().playerBgMode,
@@ -531,6 +536,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setHideTitleBar(v) { set({ hideTitleBar: v }); outdate(); persist(get()); applyTitleBar(); },
     setFontPrimaryColor(v) { set({ fontPrimaryColor: v }); outdate(); persist(get()); applyFontColors(); },
     setFontSecondaryColor(v) { set({ fontSecondaryColor: v }); outdate(); persist(get()); applyFontColors(); },
+    setWidgetTextColor(v) { set({ widgetTextColor: v }); outdate(); persist(get()); applyFontColors(); },
     setScrollFadeOpacity(v) { set({ scrollFadeOpacity: v }); outdate(); persist(get()); applyScrollFade(); applyFontFamily(); },
     setPlayerBgColor(v) { set({ playerBgColor: v }); outdate(); persist(get()); },
     setPlayerBgMode(v) { set({ playerBgMode: v }); outdate(); persist(get()); },

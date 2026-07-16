@@ -93,11 +93,11 @@ export default function SystemMonitorWidget({ config }: { config: WidgetConfig }
 
         {/* Legend */}
         <div className="flex gap-2 text-[9px] tracking-wider uppercase items-center">
-          <span style={{ color: cpuColor, filter: "brightness(1.3)" }}>CPU</span>
+          <span style={{ color: "var(--font-widget)", filter: "brightness(1.3)" }}>CPU</span>
           <span className="text-[#8aa8c4]">·</span>
-          <span style={{ color: memColor, filter: "brightness(1.2)" }}>MEM</span>
+          <span style={{ color: "var(--font-widget)", filter: "brightness(1.2)" }}>MEM</span>
           <span className="text-[#8aa8c4]">·</span>
-          <span style={{ color: netColor, filter: "brightness(1.2)" }}>{formatSpeed(info.net_down + info.net_up)}</span>
+          <span style={{ color: "var(--font-widget)", filter: "brightness(1.2)" }}>{formatSpeed(info.net_down + info.net_up)}</span>
         </div>
       </div>
     </DesktopWidget>

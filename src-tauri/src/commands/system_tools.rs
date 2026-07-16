@@ -135,7 +135,10 @@ pub fn open_app_data(app: tauri::AppHandle) -> Result<(), String> {
 #[tauri::command] pub fn open_calculator() -> Result<(), String> { spawn("calc.exe", &[]) }
 #[tauri::command] pub fn open_device_manager() -> Result<(), String> { spawn("mmc", &["devmgmt.msc"]) }
 #[tauri::command] pub fn open_disk_cleanup() -> Result<(), String> { spawn("cleanmgr.exe", &[]) }
-#[tauri::command] pub fn open_registry_editor() -> Result<(), String> { spawn("regedit.exe", &[]) }
+#[tauri::command] pub fn open_registry_editor() -> Result<(), String> {
+    Command::new("powershell").args(["-NoProfile", "-Command", "Start-Process regedit -Verb RunAs"]).spawn().map_err(|e| e.to_string())?;
+    Ok(())
+}
 #[tauri::command] pub fn open_system_info() -> Result<(), String> { spawn("msinfo32.exe", &[]) }
 #[tauri::command] pub fn open_control_panel() -> Result<(), String> { spawn("control.exe", &[]) }
 #[tauri::command] pub fn open_cmd_admin() -> Result<(), String> { spawn("powershell", &["-Command", "Start-Process cmd -Verb RunAs"]) }
@@ -144,8 +147,19 @@ pub fn open_app_data(app: tauri::AppHandle) -> Result<(), String> {
     Command::new("powershell").args(["-NoProfile", "-Command", "Clear-RecycleBin -Force -ErrorAction SilentlyContinue"]).spawn().map_err(|e| e.to_string())?;
     Ok(())
 }
-/// Opens Windows Game Bar for screen recording (Win+G)
-#[tauri::command] pub fn open_game_bar() -> Result<(), String> { spawn("explorer", &["xbox-gamebar://"]) }
+/// Opens Windows Game Bar for screen recording (simulates Win+G)
+#[tauri::command]
+pub fn open_game_bar() -> Result<(), String> {
+    // Win+G opens Xbox Game Bar → capture/record overlay
+    unsafe {
+        keybd_event(0x5B, 0, 0, 0);            // VK_LWIN down
+        keybd_event(0x47, 0, 0, 0);            // G down
+        thread::sleep(Duration::from_millis(60));
+        keybd_event(0x47, 0, KEYEVENTF_KEYUP, 0); // G up
+        keybd_event(0x5B, 0, KEYEVENTF_KEYUP, 0); // VK_LWIN up
+    }
+    Ok(())
+}
 /// Opens Bluetooth quick settings
 #[tauri::command] pub fn open_bluetooth_settings() -> Result<(), String> { spawn("explorer", &["ms-settings:bluetooth"]) }
 /// Opens Wi-Fi network flyout

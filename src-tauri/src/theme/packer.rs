@@ -27,6 +27,16 @@ use super::crypto;
 
 const MAGIC: &[u8; 4] = b"NVTP";
 const CURRENT_VERSION: u16 = 1;
+const FLAG_HAS_SIGNATURE: u16 = 0x0001;
+
+/// Public key for verifying .nvtp Ed25519 signatures.
+/// Corresponds to the private key stored in the proprietary repo.
+const NVT_PUBKEY: [u8; 32] = [
+    0x7c, 0x2a, 0x0e, 0xef, 0x7b, 0x50, 0xf6, 0xc9,
+    0xb8, 0xaf, 0xf7, 0x80, 0xec, 0x92, 0xfd, 0xdb,
+    0x6b, 0x10, 0xc2, 0x22, 0xb3, 0x9b, 0xaa, 0x79,
+    0x57, 0x49, 0x8b, 0x48, 0xad, 0x82, 0x3d, 0x81,
+];
 
 // ═══════════════ TYPES ═══════════════
 
@@ -110,12 +120,69 @@ pub fn pack_theme(
     Ok(buf)
 }
 
+// ═══════════════ SIGN ═══════════════
+
+/// Append an Ed25519 signature to a .nvtp byte vector.
+/// Sets the FLAG_HAS_SIGNATURE bit and signs the entire content.
+/// The `seed` is the 32-byte Ed25519 private seed.
+pub fn sign_nvtp(data: &[u8], seed: &[u8; 32]) -> Result<Vec<u8>, String> {
+    use ed25519_compact::{KeyPair, Seed};
+
+    if data.len() < 10 {
+        return Err("Data too short to sign".into());
+    }
+
+    let mut signed = data.to_vec();
+
+    // Set HAS_SIGNATURE flag at offset 6-7
+    let flags = u16::from_le_bytes([signed[6], signed[7]]);
+    let new_flags = (flags | FLAG_HAS_SIGNATURE).to_le_bytes();
+    signed[6] = new_flags[0];
+    signed[7] = new_flags[1];
+
+    // Sign the entire content
+    let seed_obj = Seed::from_slice(seed).map_err(|e| format!("Invalid seed: {e}"))?;
+    let keypair = KeyPair::from_seed(seed_obj);
+    let signature = keypair.sk.sign(&signed, None);
+
+    // Append 64-byte signature
+    signed.extend_from_slice(&signature[..]);
+
+    Ok(signed)
+}
+
 // ═══════════════ UNPACK ═══════════════
 
 /// Parse a .nvtp file and extract the header, manifest, and decrypted ZIP bytes.
+/// If the FLAG_HAS_SIGNATURE bit is set, verifies the Ed25519 signature before
+/// accepting the file. Unsigned files (legacy) are accepted for backward compatibility.
 pub fn unpack_theme(data: &[u8]) -> Result<(NvtpHeader, ThemeManifest, Vec<u8>), String> {
     if data.len() < 10 {
         return Err("File too small".to_string());
+    }
+
+    // ── Read flags early to detect signature ──
+    let flags = u16::from_le_bytes([data[6], data[7]]);
+    let has_sig = flags & FLAG_HAS_SIGNATURE != 0;
+
+    // ── Verify signature before parsing (defense in depth) ──
+    if has_sig {
+        if data.len() < 74 { // 10 header + 64 sig minimum
+            return Err("Signed .nvtp too short".into());
+        }
+        let content_end = data.len() - 64;
+        let sig_bytes: &[u8; 64] = &data[content_end..]
+            .try_into()
+            .map_err(|_| "Bad signature length".to_string())?;
+        let content = &data[..content_end];
+
+        use ed25519_compact::{PublicKey, Signature};
+        let pk = PublicKey::from_slice(&NVT_PUBKEY)
+            .map_err(|_| "Internal: invalid pubkey".to_string())?;
+        let sig = Signature::from_slice(sig_bytes)
+            .map_err(|_| "Bad signature format".to_string())?;
+        pk.verify(content, &sig)
+            .map_err(|_| "Signature verification failed — theme may be tampered".to_string())?;
     }
 
     let mut offset = 0;
@@ -133,8 +200,7 @@ pub fn unpack_theme(data: &[u8]) -> Result<(NvtpHeader, ThemeManifest, Vec<u8>),
     }
     offset += 2;
 
-    // Flags
-    let flags = u16::from_le_bytes([data[offset], data[offset + 1]]);
+    // Flags (already read, skip 2 bytes)
     offset += 2;
 
     // Theme ID
@@ -163,8 +229,15 @@ pub fn unpack_theme(data: &[u8]) -> Result<(NvtpHeader, ThemeManifest, Vec<u8>),
         data[offset+4], data[offset+5], data[offset+6], data[offset+7],
     ]) as usize;
     offset += 8;
-    if offset + zlen != data.len() {
-        return Err(format!("Size mismatch: expected {} zip bytes, got {} remaining", zlen, data.len() - offset));
+
+    // Allow optional 64-byte signature trailer
+    let data_end = if has_sig {
+        data.len().checked_sub(64).ok_or("Signed file too short")?
+    } else {
+        data.len()
+    };
+    if offset + zlen != data_end {
+        return Err(format!("Size mismatch: expected {} zip bytes, got {} remaining", zlen, data_end - offset));
     }
     let encrypted_zip = &data[offset..offset + zlen];
 
@@ -284,6 +357,7 @@ mod tests {
 
         assert_eq!(header.theme_id, "com.nova.test");
         assert_eq!(m.name, "Test Theme");
+        assert_eq!(header.flags, 0); // unsigned by default
         assert!(!zip.is_empty());
 
         // Extract and verify
@@ -295,5 +369,55 @@ mod tests {
 
         let _ = fs::remove_dir_all(&tmp);
         let _ = fs::remove_dir_all(&out);
+    }
+
+    #[test]
+    fn test_pack_sign_unpack_roundtrip() {
+        let tmp = std::env::temp_dir().join("nvtp-test-sign");
+        let _ = fs::remove_dir_all(&tmp);
+        fs::create_dir_all(&tmp).unwrap();
+        fs::write(tmp.join("theme.css"), "body{color:red}").unwrap();
+
+        let manifest = ThemeManifest {
+            name: "Signed Theme".into(),
+            author: "Nova".into(),
+            version: "1.0.0".into(),
+            requires_license: "pro".into(),
+            preview: "preview.webp".into(),
+            css_file: "theme.css".into(),
+            files: vec![ThemeFile { path: "theme.css".into(), size: 14 }],
+            config: serde_json::json!({"accent": "#4788f0"}),
+        };
+
+        // Pack then sign
+        let nvtp = pack_theme("com.nova.sign-test", &tmp, &manifest).unwrap();
+        let seed: [u8; 32] = [
+            0x3d, 0xa2, 0x8a, 0x29, 0x8d, 0xd7, 0x43, 0x7d,
+            0x07, 0x1f, 0xc2, 0x15, 0x99, 0xb5, 0xca, 0x7e,
+            0x99, 0x5a, 0x46, 0xe0, 0x52, 0xad, 0xc3, 0xc6,
+            0xa3, 0xd6, 0x82, 0xfa, 0xdd, 0x91, 0x2a, 0x48,
+        ];
+
+        let signed = sign_nvtp(&nvtp, &seed).unwrap();
+        assert!(signed.len() > nvtp.len()); // has appended signature
+
+        // Verify unpack accepts valid signed file
+        let (header, m, zip) = unpack_theme(&signed).unwrap();
+        assert_eq!(header.theme_id, "com.nova.sign-test");
+        assert_eq!(m.name, "Signed Theme");
+        assert_eq!(header.flags & FLAG_HAS_SIGNATURE, FLAG_HAS_SIGNATURE);
+        assert!(!zip.is_empty());
+
+        // Verify that a tampered signed file is rejected
+        let mut tampered = signed.clone();
+        tampered[20] ^= 0xFF; // flip a byte in the signed content
+        let result = unpack_theme(&tampered);
+        assert!(result.is_err(), "Tampered signed file should be rejected");
+
+        // Verify that unsigned file still works (backward compat)
+        let (header2, _, _) = unpack_theme(&nvtp).unwrap();
+        assert_eq!(header2.flags & FLAG_HAS_SIGNATURE, 0);
+
+        let _ = fs::remove_dir_all(&tmp);
     }
 }

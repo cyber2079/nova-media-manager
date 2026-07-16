@@ -333,7 +333,7 @@ export default function Layout() {
       const c = getCfg(); readCfg();
       canvas = document.createElement('canvas');
       canvas.className = 'ice-bg-video';
-      canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:var(--bg-opacity,0.7);';
+      canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;';
       vidA.parentNode?.insertBefore(canvas, vidA);
       vidA.style.opacity = '0'; vidA.style.pointerEvents = 'none';
       vidB.style.opacity = '0'; vidB.style.pointerEvents = 'none';
@@ -677,7 +677,7 @@ export default function Layout() {
             : "h-full overflow-y-auto overscroll-contain px-0 pt-6",
         )}>
           <Outlet />
-          <ScrollFade height={isHome && !isDefault ? 0 : 56} />
+          <ScrollFade height={isHome ? 0 : 56} />
         </div>
       </main>
 
@@ -714,10 +714,19 @@ export default function Layout() {
         </div>
       </footer>
 
-      {/* ── QuickHub popover (all pages in strip mode) ── */}
+      {/* ── QuickHub popover — above footer toolbar, centered horizontally ── */}
       {showQuickHub && stripOpen && (
-        <div className="fixed inset-0 z-[45] flex items-end justify-center" onClick={() => setStripOpen(false)}>
-          <div className="max-w-[calc(100vw-2rem)] w-[900px] mb-14" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[45]" onClick={() => setStripOpen(false)}>
+          <div
+            className="absolute left-1/2 bottom-14 w-full rounded-2xl"
+            style={{
+              transform: "translateX(-50%)",
+              maxWidth: "min(900px, calc(100vw - 2rem))",
+              maxHeight: "calc(100vh - 5rem)",
+              overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <QuickHub onClose={() => setStripOpen(false)} />
           </div>
         </div>

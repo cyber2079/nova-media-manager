@@ -59,11 +59,11 @@ export default function CalendarWidget({ config }: { config: WidgetConfig }) {
     <DesktopWidget position={config.position}>
       <div className="flex flex-col items-center gap-1">
         {/* Year · Month — accent color like clock date text */}
-        <span className="text-[10px] font-medium tracking-[0.1em]" style={{ color: accentColor, filter: "brightness(1.2)" }}>
+        <span className="text-[10px] font-medium tracking-[0.1em]" style={{ color: "var(--font-widget)", filter: "brightness(1.2)" }}>
           {showYear} · {monthStr}
         </span>
         {/* Days in month count — light color */}
-        <span className="text-[8px] tracking-wider mt-0.5" style={{ color: lightColor, filter: "brightness(1.2)" }}>
+        <span className="text-[8px] tracking-wider mt-0.5" style={{ color: "var(--font-widget)", filter: "brightness(1.2)", opacity: 0.7 }}>
           {daysInMonth}{t("widget.days")}
         </span>
 
@@ -88,14 +88,14 @@ export default function CalendarWidget({ config }: { config: WidgetConfig }) {
           {/* Day number — primary color, same as SystemMonitorWidget center text */}
           <div className="absolute inset-0 flex flex-col items-start justify-center pointer-events-none"
             style={{ left: "62px", top: (cy - 8) + "px" }}>
-            <span className="text-[11px] font-bold" style={{ color: primaryColor, filter: "brightness(1.3)" }}>
+            <span className="text-[11px] font-bold" style={{ color: "var(--font-widget)", filter: "brightness(1.3)" }}>
               {day}
             </span>
           </div>
         </div>
 
         {/* Bottom label — light color */}
-        <span className="text-[9px] tracking-wider" style={{ color: lightColor, filter: "brightness(1.2)" }}>
+        <span className="text-[9px] tracking-wider" style={{ color: "var(--font-widget)", filter: "brightness(1.2)", opacity: 0.7 }}>
           {t("widget.day_n", { n: day })}
         </span>
       </div>

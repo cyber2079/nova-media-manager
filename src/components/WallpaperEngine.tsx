@@ -76,7 +76,6 @@ export default function WallpaperEngine() {
   const isVideo = /\.(mp4|mkv|webm|avi|mov)$/i.test(wp.path || "");
 
   const baseStyle: React.CSSProperties = {
-    opacity: `var(--bg-opacity, 0.7)`,
     transition: "opacity 0.6s ease",
   };
 

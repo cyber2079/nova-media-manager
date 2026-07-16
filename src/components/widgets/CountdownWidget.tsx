@@ -154,8 +154,8 @@ export default function CountdownWidget({ config }: { config: CountdownConfig })
           <button onClick={running ? pause : start} title={running ? t("widget.countdown_pause") : t("widget.countdown_start_title")}
             className="absolute inset-0 flex items-center justify-center rounded-full transition-all duration-200">
             {running
-              ? <Pause className="h-3 w-3" style={{ color: "var(--font-primary)" }} />
-              : <Play className="h-3 w-3 ml-0.5" style={{ color: "var(--font-primary)" }} />}
+              ? <Pause className="h-3 w-3" style={{ color: "var(--font-widget)" }} />
+              : <Play className="h-3 w-3 ml-0.5" style={{ color: "var(--font-widget)" }} />}
           </button>
         </div>
       ) : (
@@ -180,7 +180,7 @@ function CompactDisplay({ t, running, remaining, progress, start, pause, reset, 
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 text-center">
-        <span className="text-sm font-mono tabular-nums" style={{ color: "var(--font-primary)" }}>{remaining}</span>
+        <span className="text-sm font-mono tabular-nums" style={{ color: "var(--font-widget)" }}>{remaining}</span>
         {running && (
           <div className="w-full h-1 bg-surface-lighter rounded-full mt-1 overflow-hidden">
             <div className="h-full rounded-full" style={{ width: `${progress * 100}%`, transition: "width 0.04s linear", background: "var(--color-primary-light)" }} />

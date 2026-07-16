@@ -96,7 +96,7 @@ export default function MyComputerWidget({ config }: { config: WidgetConfig }) {
               </div>
             </div>
           </div>
-          <span className="text-[10px] text-primary-light/70 font-medium tracking-wide max-w-[100px] truncate" style={{ filter: "brightness(1.2)" }}>
+          <span className="text-[10px] font-medium tracking-wide max-w-[100px] truncate" style={{ color: "var(--font-widget)", filter: "brightness(1.2)" }}>
             {t("widget.my_computer", config.label)}
           </span>
         </button>
@@ -114,7 +114,7 @@ export default function MyComputerWidget({ config }: { config: WidgetConfig }) {
             </div>
             <span className="text-[8px] tracking-wide"
               style={{
-                color: disk.disk > 80 ? "rgba(255,136,136,0.7)" : "var(--color-primary-light)",
+                color: "var(--font-widget)",
                 filter: "brightness(1.2)",
               }}>
               C: {formatDiskSize(disk.disk_used)} / {formatDiskSize(disk.disk_total)}

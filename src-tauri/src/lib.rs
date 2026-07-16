@@ -12,12 +12,58 @@ use tauri::Manager;
 #[cfg(all(target_os = "windows", not(debug_assertions)))]
 fn anti_debug_check() {
     unsafe {
-        extern "system" { fn IsDebuggerPresent() -> i32; }
-        if IsDebuggerPresent() != 0 { std::process::exit(1); }
+        extern "system" {
+            fn IsDebuggerPresent() -> i32;
+            fn CheckRemoteDebuggerPresent(hProcess: isize, pbDebuggerPresent: *mut i32) -> i32;
+        }
+
+        // 1. IsDebuggerPresent — catches basic user-mode debuggers
+        if IsDebuggerPresent() != 0 {
+            std::process::exit(1);
+        }
+
+        // 2. CheckRemoteDebuggerPresent — catches debuggers that hide
+        //    from IsDebuggerPresent (e.g. x64dbg "hide debugger" plugin)
+        let mut debugger_present: i32 = 0;
+        CheckRemoteDebuggerPresent(-1, &mut debugger_present); // -1 = GetCurrentProcess()
+        if debugger_present != 0 {
+            std::process::exit(1);
+        }
+
+        // 3. Hardware breakpoint detection (Dr0-Dr3)
+        //    Debuggers set these registers for breakpoints; clean process has all zeros.
+        detect_hw_breakpoints();
     }
 }
+
 #[cfg(not(all(target_os = "windows", not(debug_assertions))))]
 fn anti_debug_check() {}
+
+/// Detect hardware breakpoints via debug registers (x86_64 only).
+/// Dr0–Dr3 hold linear addresses of hardware breakpoints.
+/// If any is non-zero, a debugger has set a hardware breakpoint → exit.
+#[cfg(all(target_arch = "x86_64", not(debug_assertions)))]
+unsafe fn detect_hw_breakpoints() {
+    let dr0: usize;
+    let dr1: usize;
+    let dr2: usize;
+    let dr3: usize;
+    core::arch::asm!(
+        "mov {}, dr0",
+        "mov {}, dr1",
+        "mov {}, dr2",
+        "mov {}, dr3",
+        out(reg) dr0, out(reg) dr1, out(reg) dr2, out(reg) dr3,
+        options(nomem, nostack, preserves_flags),
+    );
+    if dr0 != 0 || dr1 != 0 || dr2 != 0 || dr3 != 0 {
+        std::process::exit(1);
+    }
+}
+
+#[cfg(not(all(target_arch = "x86_64", not(debug_assertions))))]
+#[allow(dead_code)]
+unsafe fn detect_hw_breakpoints() {}
 
 /// Release-only: verify frontend JS/HTML files haven't been tampered with
 #[cfg(not(debug_assertions))]

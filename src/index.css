@@ -20,14 +20,6 @@ html:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
   --color-primary: #4788f0; --color-primary-light: #7aafff; --color-primary-dark: #3366cc;
   --color-accent: #6366f1; --font-display: "Inter", system-ui, sans-serif;
 }
-/* Default: subtle gradient background */
-[data-theme="default"] body::before {
-  content: "";
-  position: fixed; inset: 0; z-index: -2;
-  background: linear-gradient(180deg, #0f172a 0%, #1a2740 50%, #0f172a 100%);
-  opacity: var(--bg-opacity, 0.7);
-}
-
 [data-theme="ice-girl"] {
   --color-primary: #87ceeb; --color-primary-light: #b0e0ff; --color-primary-dark: #5b9bd5;
   --color-accent: #4488ff; --font-display: "Cinzel", serif;
@@ -51,6 +43,7 @@ html:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
 /* ICE 背景 Canvas 仅在非冰主题时强制隐藏 — 防止切换残留 */
 html:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
 
+[data-theme="default"] main[data-route="home"],
 [data-theme="ice-girl"] main[data-route="home"],
 [data-theme="cyber-girl"] main[data-route="home"] {
   background: transparent !important;
@@ -296,8 +289,8 @@ main[data-route="home"] {
   to   { opacity: 0; transform: translateY(12px); }
 }
 @keyframes media-strip-slide-up {
-  from { opacity: 0; transform: translate(-50%, 12px); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .animate-media-strip-up { animation: media-strip-slide-up 0.22s ease-out forwards; }
 
