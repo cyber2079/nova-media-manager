@@ -1,73 +1,46 @@
-# React + TypeScript + Vite
+<div align="center">
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Nova Media Manager
 
-Currently, two official plugins are available:
+**让桌面配得上你的热爱**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+电影、音乐、图片、游戏 — 一个应用全部接管。会讲故事的沉浸式主题，全格式硬核播放，你的热爱，都被好好安放。
 
-## React Compiler
+[官网](https://scm-think.cn) · [下载](https://github.com/cyber2079/nova-media-manager/releases) · [Bilibili](https://space.bilibili.com/106858508) · [爱发电](https://ifdian.net/a/cyber2079)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+</div>
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## ✨ 功能
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+| | |
+|---|---|
+| 🎭 **会讲故事的主题** | 冰霜女皇、赛博少女 — 动态背景视频、角色台词打字机、剧情场景推进。别人的桌面是工具，你的桌面有灵魂 |
+| 🎬 **全格式硬核播放** | MKV / HEVC / 蓝光 Remux 智能分流外接播放器（PotPlayer / VLC / mpv）+ 续播定位；30GB 大文件流式秒开 |
+| 📂 **文件夹一键入库** | 选文件夹或直接拖进来，递归扫描、自动去重、智能封面截帧（跳过黑场片头），支持映射盘 / NAS 路径 |
+| 📊 **看得见的习惯** | 数据仪表盘：本周统计、时段人格、最常播放；Steam 热销榜按类型推荐（RPG / 视觉小说 / 恐怖…） |
+| 🎵 **音乐，认真做了** | 实时频谱可视化三形态、卡拉 OK 逐字歌词（lrc/srt/ass）、歌单与播放模式、后台迷你播放 |
+| 🖥️ **桌面中枢** | Steam 库自动扫描一键启动、快捷中心（文件管理器 + 25 个系统工具）、时钟/日历/倒计时/性能监控小组件 |
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 📥 下载
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- [GitHub Releases](https://github.com/cyber2079/nova-media-manager/releases)（Windows MSI）
+- 官网直达：[scm-think.cn](https://scm-think.cn)
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 💰 定价
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| | 社区版 | 永久会员 |
+|---|---|---|
+| 价格 | **免费** | **¥199** 一次买断 |
+| 功能 | 全部影音管理 + 播放 + 仪表盘 + 默认主题 | + 全部沉浸式主题 + 完整剧情 + 自动更新 |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+免费版是完整产品，不是残废试用。购买渠道：[爱发电](https://ifdian.net/a/cyber2079)
+
+## 🛠️ 技术栈
+
+React 19 · TypeScript · Tailwind CSS 4 · Zustand · Vite 8 · Tauri 2 · Rust (rusqlite / FFmpeg)
+
+## 📄 License
+
+[AGPL-3.0](LICENSE) — 主题元数据与许可证模块为闭源私有仓库。
