@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useMovieStore } from "@/stores/movieStore";
-import { useSettingsStore } from "@/stores/settingsStore";
+import { useSettingsStore, EXTERNAL_PLAYER_EXTS } from "@/stores/settingsStore";
 import { useThemeStore } from "@/stores/themeStore";
 import MovieCard from "@/components/MovieCard";
 import EmptyState from "@/components/EmptyState";
@@ -27,7 +27,7 @@ import { useSearchJump } from "@/lib/searchJump";
 import BatchCheckbox from "@/components/BatchCheckbox";
 import ConfirmDialog from '@/components/ConfirmDialog';
 import BatchBar from "@/components/BatchBar";
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 
 export default function MovieLibrary() {
   const { t } = useTranslation();
@@ -115,6 +115,20 @@ export default function MovieLibrary() {
   }, [addMovies]);
 
   const handlePlayMovie = (movie: Movie) => {
+    // ── 分流：内置引擎放不了的格式（或用户选了全部外接）调起外接播放器 ──
+    const { externalPlayer } = useSettingsStore.getState();
+    const ext = (movie.format || movie.filePath.split(".").pop() || "").toLowerCase();
+    const wantExternal = externalPlayer.mode !== "never" && !!externalPlayer.path
+      && (externalPlayer.mode === "always" || EXTERNAL_PLAYER_EXTS.includes(ext));
+    if (wantExternal) {
+      invoke("launch_external_player", { movieId: movie.id, kind: externalPlayer.kind, playerPath: externalPlayer.path })
+        .catch(() => playInternal(movie)); // 调起失败回退内置
+      return;
+    }
+    playInternal(movie);
+  };
+
+  const playInternal = (movie: Movie) => {
     setPlayingMovie(movie);
     // 流式播放：asset 协议支持 HTTP Range 按需分段拉取，不再整文件读入内存
     try {

@@ -1,5 +1,6 @@
 pub mod anti_bot;
 pub mod movie;
+pub mod external_player;
 pub mod image;
 pub mod game;
 pub mod quick_launch;

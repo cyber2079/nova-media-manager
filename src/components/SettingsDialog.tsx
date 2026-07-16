@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
@@ -362,9 +362,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
             )}
 
             {/* ═══ Movies Tab ═══ */}
-            {activeTab === "movies" && (
-              <section><p className="text-sm text-gray-500">{t("settings.placeholder_movies")}</p></section>
-            )}
+            {activeTab === "movies" && <ExternalPlayerSection />}
 
             {/* ═══ Games Tab ═══ */}
             {activeTab === "games" && (
@@ -867,6 +865,86 @@ function ImageWheelSection({ t, imageWheelMode, setImageWheelMode }: any) {
           </button>
         ))}
       </div>
+    </section>
+  );
+}
+
+// ── 外接播放器设置（电影 Tab）──
+function ExternalPlayerSection() {
+  const externalPlayer = useSettingsStore((s) => s.externalPlayer);
+  const setExternalPlayer = useSettingsStore((s) => s.setExternalPlayer);
+  const [detected, setDetected] = useState<{ kind: string; name: string; path: string }[]>([]);
+  const [detecting, setDetecting] = useState(false);
+
+  const detect = useCallback(async () => {
+    setDetecting(true);
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const players = await invoke<{ kind: string; name: string; path: string }[]>("detect_external_players");
+      setDetected(players || []);
+    } catch { setDetected([]); }
+    setDetecting(false);
+  }, []);
+
+  useEffect(() => { detect(); }, [detect]);
+
+  const pickCustom = async () => {
+    try {
+      const { open } = await import("@tauri-apps/plugin-dialog");
+      const sel = await open({ multiple: false, filters: [{ name: "播放器", extensions: ["exe"] }] });
+      if (typeof sel === "string") setExternalPlayer({ kind: "custom", path: sel });
+    } catch {}
+  };
+
+  const modes: { v: "auto" | "always" | "never"; label: string; desc: string }[] = [
+    { v: "auto", label: "智能分流", desc: "MKV/AVI 等内置放不了的走外接" },
+    { v: "always", label: "全部外接", desc: "所有视频都用外接播放器" },
+    { v: "never", label: "全部内置", desc: "不使用外接播放器" },
+  ];
+
+  return (
+    <section>
+      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">外接播放器</h4>
+      <p className="text-xs text-gray-500 mb-4">HEVC/MKV/外挂字幕等内置引擎播放不了的格式，交给专业播放器。支持续播定位；mpv 可回传观看进度。</p>
+
+      <div className="grid grid-cols-3 gap-2 mb-5">
+        {modes.map((m) => (
+          <button key={m.v} onClick={() => setExternalPlayer({ mode: m.v })}
+            className={cn("px-3 py-2.5 rounded-lg text-left border transition-all duration-200",
+              externalPlayer.mode === m.v ? "bg-primary/15 border-primary/40" : "border-transparent hover:bg-surface-lighter")}>
+            <p className={cn("text-xs font-semibold", externalPlayer.mode === m.v ? "text-primary-light" : "text-gray-300")}>{m.label}</p>
+            <p className="text-[10px] text-gray-500 mt-0.5">{m.desc}</p>
+          </button>
+        ))}
+      </div>
+
+      {externalPlayer.mode !== "never" && (
+        <>
+          <div className="space-y-1.5 mb-3">
+            {detected.map((p) => (
+              <button key={p.kind} onClick={() => setExternalPlayer({ kind: p.kind, path: p.path })}
+                className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg border text-left transition-all",
+                  externalPlayer.path === p.path ? "bg-primary/15 border-primary/40" : "border-transparent hover:bg-surface-lighter")}>
+                <span className={cn("text-xs font-medium shrink-0", externalPlayer.path === p.path ? "text-primary-light" : "text-gray-300")}>{p.name}</span>
+                <span className="flex-1 text-[10px] text-gray-500 truncate" dir="rtl">{p.path}</span>
+                {externalPlayer.path === p.path && <span className="text-primary-light text-xs shrink-0">✓</span>}
+              </button>
+            ))}
+            {!detecting && detected.length === 0 && (
+              <p className="text-xs text-gray-500 px-1">未检测到常见播放器（PotPlayer / VLC / mpv / MPC-HC），可手动选择</p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={detect} disabled={detecting} className="text-xs">
+              {detecting ? "检测中..." : "重新检测"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={pickCustom} className="text-xs">手动选择 exe</Button>
+          </div>
+          {externalPlayer.kind === "custom" && externalPlayer.path && (
+            <p className="text-[10px] text-gray-500 mt-2 truncate">自定义：{externalPlayer.path}</p>
+          )}
+        </>
+      )}
     </section>
   );
 }

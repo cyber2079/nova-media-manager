@@ -129,6 +129,9 @@ export type SettingsState = {
   // ── Wallpaper (default theme only) ──
   wallpaper: WallpaperConfig;
 
+  // ── 外接播放器 ──
+  externalPlayer: ExternalPlayerConfig;
+
   // ── New palette system (replaces 13 individual controls) ──
   paletteAccent: string;
   paletteSaturation: number;  // 0-100
@@ -180,6 +183,7 @@ export type SettingsState = {
   setPaletteSaturation: (v: number) => void;
   setPaletteContrast: (v: "dark" | "light") => void;
   setWallpaperConfig: (cfg: Partial<WallpaperConfig>) => void;
+  setExternalPlayer: (cfg: Partial<ExternalPlayerConfig>) => void;
   resetPaletteToTheme: (theme: ThemeName) => void;
 };
 
@@ -328,6 +332,17 @@ export function applyFontFamily(v?: string) {
   }
 }
 
+// ── 外接播放器配置 ──
+export type ExternalPlayerMode = "auto" | "always" | "never";
+export interface ExternalPlayerConfig {
+  mode: ExternalPlayerMode; // auto=按格式分流 always=全部外接 never=全部内置
+  kind: string;             // potplayer | vlc | mpv | mpc-hc | custom
+  path: string;             // 播放器 exe 路径
+}
+export const defaultExternalPlayer = (): ExternalPlayerConfig => ({ mode: "auto", kind: "", path: "" });
+/** WebView2 基本放不了的格式 — auto 模式下走外接播放器 */
+export const EXTERNAL_PLAYER_EXTS = ["mkv", "avi", "flv", "wmv", "ts", "m2ts", "rmvb", "iso"];
+
 let _dirty = true;
 let _writing = false;
 
@@ -348,7 +363,7 @@ async function persist(s: SettingsState) {
     visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
     headerOpacity: s.headerOpacity, footerOpacity: s.footerOpacity,
     surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
-    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, wallpaper: s.wallpaper, wallpaper: s.wallpaper,
+    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
   });
   // Write to both: SQLite (primary) + localStorage (fast sync fallback)
   localStorage.setItem(STORAGE_KEY, payload);
@@ -444,6 +459,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     cgTextBgColor: (saved as any).cgTextBgColor || "#c74dff",
     cgTextBgOpacity: (saved as any).cgTextBgOpacity ?? 15,
     wallpaper: (saved as any).wallpaper || getDefaultWallpaper(),
+    externalPlayer: (saved as any).externalPlayer || defaultExternalPlayer(),
     paletteAccent: (saved as any).paletteAccent || "#4788f0",
     paletteSaturation: (saved as any).paletteSaturation ?? ((saved as any).paletteVibrancy != null ? (saved as any).paletteVibrancy * 10 : 50),
     paletteContrast: (saved as any).paletteContrast || "dark",
@@ -496,6 +512,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             paletteSaturation: (s.paletteSaturation as number) ?? ((s as any).paletteVibrancy != null ? (s as any).paletteVibrancy * 10 : get().paletteSaturation),
             paletteContrast: (s.paletteContrast as any) ?? get().paletteContrast,
             paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized, wallpaper: s.wallpaper ?? get().wallpaper,
+            externalPlayer: s.externalPlayer ?? get().externalPlayer,
           });
           applyPalette(); applySurface();
           applyFontColors();
@@ -550,6 +567,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setPaletteSaturation(v) { set({ paletteSaturation: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
     setPaletteContrast(v) { set({ paletteContrast: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
     setWallpaperConfig(cfg) { set((s) => ({ wallpaper: { ...s.wallpaper, ...cfg } })); outdate(); persist(get()); },
+    setExternalPlayer(cfg) { set((s) => ({ externalPlayer: { ...s.externalPlayer, ...cfg } })); outdate(); persist(get()); },
     resetPaletteToTheme(theme) {
       const def = THEME_PALETTE_DEFAULTS[theme] ?? THEME_PALETTE_DEFAULTS.default;
       set({ paletteAccent: def.accent, paletteSaturation: def.saturation, paletteContrast: def.contrast, paletteCustomized: false });

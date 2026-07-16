@@ -32,7 +32,7 @@ pub struct Movie {
 
 impl Movie {
     /// 列顺序约定：0-12 基础列 + 13-15 观看进度列（缺省容错，兼容旧查询）
-    fn from_row(row: &rusqlite::Row) -> rusqlite::Result<Self> {
+    pub(crate) fn from_row(row: &rusqlite::Row) -> rusqlite::Result<Self> {
         let tags_str: String = row.get::<_, String>(9)?;
         let tags: Vec<String> = serde_json::from_str(&tags_str).unwrap_or_default();
         let error_msg: String = row.get::<_, String>(12).unwrap_or_default();

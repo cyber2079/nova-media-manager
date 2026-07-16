@@ -163,6 +163,8 @@ pub fn run() {
             commands::movie::update_movie_tags,
             commands::movie::regenerate_movie_cover,
             commands::movie::update_watch_progress,
+            commands::external_player::detect_external_players,
+            commands::external_player::launch_external_player,
             commands::image::get_all_images,
             commands::image::add_images,
             commands::image::delete_image,

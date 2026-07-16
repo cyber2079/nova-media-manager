@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { tagColor } from "@/lib/tagColor";
 import { useTranslation } from "react-i18next";
 import FavoriteStar from "@/components/FavoriteStar";
+import { useSettingsStore, EXTERNAL_PLAYER_EXTS } from "@/stores/settingsStore";
 
 interface MovieCardProps {
   movie: Movie;
@@ -25,6 +26,10 @@ interface MovieCardProps {
 export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, onSetWallpaper, onRegenCover, compact, favorited, onToggleFav }: MovieCardProps) {
   const { t } = useTranslation();
   const isProcessing = movie.status === "processing";
+  // 内置引擎放不了的格式 → 角标提示走外接（诚实化，避免"点了没声音/黑屏"的困惑）
+  const extPlayer = useSettingsStore((s) => s.externalPlayer);
+  const needsExternal = EXTERNAL_PLAYER_EXTS.includes((movie.format || "").toLowerCase());
+  const showExtBadge = needsExternal && extPlayer.mode !== "never";
 
   return (
     <Card
@@ -38,6 +43,11 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
       {/* 封面区 */}
       <div className="relative aspect-[3/4] overflow-hidden bg-surface-lighter">
         <FavoriteStar active={!!favorited} onToggle={onToggleFav || (() => {})} />
+        {showExtBadge && (
+          <div className="absolute top-2 right-2 z-10 rounded bg-black/70 px-1.5 py-0.5 text-[9px] text-white/80 backdrop-blur-sm">
+            {extPlayer.path ? "外部播放" : "需外部播放器"}
+          </div>
+        )}
         {isProcessing ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-gray-500">
             <Loader2 className="h-8 w-8 animate-spin text-primary-light" />
