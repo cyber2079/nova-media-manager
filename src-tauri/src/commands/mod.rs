@@ -1,6 +1,8 @@
 pub mod anti_bot;
 pub mod movie;
 pub mod external_player;
+pub mod folder_scan;
+pub mod dashboard_stats;
 pub mod image;
 pub mod game;
 pub mod quick_launch;

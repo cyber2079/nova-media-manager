@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "媒体管理桌面应用",
+        "title": "Nova Media Manager",
         "width": 1200,
         "height": 800,
         "minWidth": 900,
@@ -24,7 +24,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' asset: data: blob: nova:; media-src 'self' asset: blob: nova:; connect-src 'self' ipc: http://localhost:1420 https://scm-think.cn; script-src 'self' 'unsafe-eval'",
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' asset: data: blob: nova: https://*.steamstatic.com https://*.eccdnx.com; media-src 'self' asset: blob: nova:; connect-src 'self' ipc: http://localhost:1420 https://scm-think.cn; script-src 'self' 'unsafe-eval'",
       "assetProtocol": {
         "enable": true,
         "scope": ["**"]

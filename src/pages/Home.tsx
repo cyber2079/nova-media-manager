@@ -48,6 +48,7 @@ import { useSettingsStore } from "@/stores/settingsStore";
 import { Film, Image, Gamepad2, Clock, Music, Minimize2 } from "lucide-react";
 import { useHomeMode, setHomeMode } from "@/lib/homeMode";
 import { useNavigate } from "react-router-dom";
+import HomeDashboard from "@/components/HomeDashboard";
 
 // Shared lazy-loaded convertFileSrc
 let _cs: ((p: string) => string) | null = null;
@@ -89,129 +90,10 @@ function CharImg({ iconPath, fallbackSrc, className }: { iconPath: string; fallb
   return <img src={display} alt="" className={className} onError={(e) => { const el = e.target as HTMLImageElement; if (el.src !== fallbackSrc) el.src = fallbackSrc; }} />;
 }
 
-function DashBoard() {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const movies = useMovieStore((s) => s.movies);
-  const images = useImageStore((s) => s.images);
-  const games = useGameStore((s) => s.games);
-  const music = useMusicStore((s) => s.music);
-  const musicCount = music.length;
-  const recentPlays = usePlayHistoryStore((s) => s.recent);
-
-  const total = movies.length + images.length + musicCount + games.length;
-
-  // Per-category top 8 recent items
-  const movieRecent = movies.slice(-8).reverse();
-  const imageRecent = images.slice(-8).reverse();
-  const musicRecent = music.slice(-8).reverse();
-  const gameRecent = games.slice(-8).reverse();
-
-  const cats = [
-    { key: "movies", icon: Film, count: movies.length, cssColor: "var(--color-primary)", to: "/movies", recent: movieRecent },
-    { key: "images", icon: Image, count: images.length, cssColor: "var(--color-accent)", to: "/images", recent: imageRecent },
-    { key: "music", icon: Music, count: musicCount, cssColor: "var(--color-primary-light)", to: "/music", recent: musicRecent },
-    { key: "games", icon: Gamepad2, count: games.length, cssColor: "var(--color-primary-dark)", to: "/games", recent: gameRecent },
-  ];
-
-  // 继续观看：有进度且未看完，按最近观看排序
-  const continueWatching = useMemo(() =>
-    movies
-      .filter((m) => !m.watched && m.watchPosition > 5 && m.status === "ready")
-      .sort((a, b) => (b.watchUpdatedAt || "").localeCompare(a.watchUpdatedAt || ""))
-      .slice(0, 6),
-  [movies]);
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="flex-1 rounded-2xl border border-primary/20 p-5 sm:p-6" style={{ background: "color-mix(in srgb, var(--color-primary) 4%, #080c14)" }}>
-          <p className="inline-block rounded-full border border-primary/30 px-3 py-1 text-xs text-primary-light">
-            {t("home.total_count", { count: total })}
-          </p>
-        </div>
-        <button
-          onClick={() => setHomeMode("strip")}
-          className="shrink-0 h-10 w-10 flex items-center justify-center rounded-full text-gray-500 hover:text-white hover:bg-surface-lighter transition-colors border border-primary/10"
-          title="收缩为迷你条"
-        >
-          <Minimize2 className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* ── 继续观看 ── */}
-      {continueWatching.length > 0 && (
-        <div className="rounded-2xl border border-primary/20 p-4" style={{ background: "color-mix(in srgb, var(--color-primary) 4%, #080c14)" }}>
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="h-3.5 w-3.5 text-primary-light" />
-            <span className="text-xs text-primary-light tracking-wide">继续观看</span>
-          </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-            {continueWatching.map((m) => {
-              const pct = m.durationSeconds > 0 ? Math.min(100, (m.watchPosition / m.durationSeconds) * 100) : 0;
-              return (
-                <button key={m.id} onClick={() => navigate("/movies", { state: { playId: m.id } })}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors">
-                  <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" style={{ filter: "brightness(1.2)" }} />
-                  <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
-                  <div className="w-16 h-1 rounded-full bg-white/10 shrink-0 overflow-hidden">
-                    <div className="h-full bg-primary-light" style={{ width: `${pct}%` }} />
-                  </div>
-                  <span className="text-[9px] text-[#8aa8c4] shrink-0 w-8 text-right">{Math.round(pct)}%</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-5">
-        {cats.map(cat => (
-          <div key={cat.key}>
-            {/* Stat button */}
-            <button onClick={() => navigate(cat.to)}
-              className="w-full group relative overflow-hidden rounded-xl border border-primary/20 p-4 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
-              style={{ background: "color-mix(in srgb, var(--color-primary) 6%, #101520)" }}>
-              <div className="absolute top-0 right-0 w-16 h-16 opacity-10 group-hover:opacity-20 transition-opacity" style={{ background: `radial-gradient(circle at center, ${cat.cssColor}, transparent 70%)` }} />
-              <cat.icon className="h-5 w-5 mb-2" style={{ color: cat.cssColor, filter: "brightness(1.3)" }} />
-              <p className="text-xl font-bold text-white">{cat.count}</p>
-              <p className="text-[11px] text-[#9ab8d4] mt-0.5">{t(`nav.${cat.key}`)}</p>
-            </button>
-            {/* Recent items below card */}
-            <div className="mt-2 space-y-0.5">
-              {cat.recent.length > 0 ? cat.recent.map((item: any, i: number) => (
-                <button key={i}
-                  onClick={() => {
-                    if (cat.key === "games") { useGameStore.getState().launchGame(item.id).catch(() => {}); return; }
-                    if (cat.key === "music") {
-                      const musicItem = item as any; /* play music */
-                      import("@/stores/audioPlayerStore").then(m => {
-                        m.useAudioPlayerStore.getState().play(musicItem);
-                      }).catch(() => {});
-                      return;
-                    }
-                    navigate(cat.to);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors group/row">
-                  <span className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: cat.cssColor, filter: "brightness(1.3)" }} />
-                  <span className="flex-1 text-xs text-[#c8ddf0] truncate">{item.name}</span>
-                  {item.duration && <span className="text-[9px] text-[#8aa8c4] shrink-0">{item.duration}</span>}
-                </button>
-              )) : (
-                <p className="text-[10px] text-[#8aa8c4] px-3 py-1">{t("home.recent_use_empty")}</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/** Switches between full DashBoard and compact MediaStrip */
+/** Switches between full dashboard and compact MediaStrip */
 function DashBoardOrStrip() {
   const [mode] = useHomeMode();
-  if (mode === "full") return <DashBoard />;
+  if (mode === "full") return <HomeDashboard />;
   return null; // MediaStrip is rendered in Layout.tsx at the bottom
 }
 

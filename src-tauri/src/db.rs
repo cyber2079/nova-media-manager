@@ -98,6 +98,25 @@ impl Database {
         ] {
             let _ = conn.execute(sql, []);
         }
+        // ── play_events：逐次播放事件（play_history 是 REPLACE 去重的"最近使用"，无法统计次数）──
+        let _ = conn.execute_batch(
+            "CREATE TABLE IF NOT EXISTS play_events (
+                event_id TEXT PRIMARY KEY,
+                item_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                item_type TEXT NOT NULL,
+                played_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_play_events_time ON play_events(played_at);
+            CREATE INDEX IF NOT EXISTS idx_play_events_item ON play_events(item_type, item_id);"
+        );
+        // 一次性 seed：把旧 play_history 的存量灌入事件表（每条目至少有最后一次播放）
+        let _ = conn.execute(
+            "INSERT OR IGNORE INTO play_events (event_id, item_id, name, item_type, played_at)
+             SELECT id || '@' || played_at, id, name, item_type, played_at FROM play_history
+             WHERE NOT EXISTS (SELECT 1 FROM play_events LIMIT 1)",
+            [],
+        );
         Ok(Database { conn: Mutex::new(conn), data_dir, app_data_dir })
     }
 

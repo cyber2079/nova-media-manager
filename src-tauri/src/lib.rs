@@ -165,6 +165,8 @@ pub fn run() {
             commands::movie::update_watch_progress,
             commands::external_player::detect_external_players,
             commands::external_player::launch_external_player,
+            commands::folder_scan::expand_media_paths,
+            commands::dashboard_stats::dashboard_stats,
             commands::image::get_all_images,
             commands::image::add_images,
             commands::image::delete_image,

@@ -195,10 +195,16 @@ pub fn hist_get_recent(db: State<Database>, limit: usize) -> Result<Vec<PlayEven
 #[tauri::command]
 pub fn hist_add(db: State<Database>, event: PlayEvent) -> Result<(), String> {
     let conn = db.conn();
+    // play_history：REPLACE 去重，服务"最近使用"列表
     conn.execute(
         "INSERT OR REPLACE INTO play_history (id, name, item_type, played_at) VALUES (?1, ?2, ?3, ?4)",
         params![event.id, event.name, event.item_type, event.played_at],
     ).map_err(|e| e.to_string())?;
+    // play_events：逐次追加，服务统计（次数/热力图/时段）
+    let _ = conn.execute(
+        "INSERT OR IGNORE INTO play_events (event_id, item_id, name, item_type, played_at) VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![format!("{}@{}", event.id, event.played_at), event.id, event.name, event.item_type, event.played_at],
+    );
     Ok(())
 }
 
