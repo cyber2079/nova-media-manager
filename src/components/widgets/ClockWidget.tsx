@@ -59,12 +59,12 @@ export default function ClockWidget({ config }: { config: WidgetConfig }) {
             <Ring cx={50} cy={50} r={34} pct={hourPct} stroke={hourColor} width={3.5} />
             <Ring cx={50} cy={50} r={27} pct={minPct} stroke={minColor} width={2.5} />
             <Ring cx={50} cy={50} r={20} pct={secPct} stroke={secColor} width={1.8} />
-            {/* Center time */}
-            <text x="49" y="47" textAnchor="middle" fill="var(--font-widget)" fontSize="11" fontWeight="700" fontFamily="system-ui, monospace">
+            {/* Center time — fill 必须走 style：SVG 属性不解析 var()，会回退黑色 */}
+            <text x="49" y="47" textAnchor="middle" style={{ fill: "var(--font-widget)" }} fontSize="11" fontWeight="700" fontFamily="system-ui, monospace">
               {String(h).padStart(2, "0")}:{String(m).padStart(2, "0")}
             </text>
             {/* Seconds + AM/PM */}
-            <text x="49" y="60" textAnchor="middle" fill="var(--font-widget)" fontSize="8" fontFamily="system-ui" opacity="0.7">
+            <text x="49" y="60" textAnchor="middle" style={{ fill: "var(--font-widget)" }} fontSize="8" fontFamily="system-ui" opacity="0.7">
               :{String(s).padStart(2, "0")} {h >= 12 ? "PM" : "AM"}
             </text>
             {/* Outer ring border */}

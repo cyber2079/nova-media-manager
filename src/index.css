@@ -85,7 +85,7 @@ html:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
 /* ═══════════ Base ═══════════ */
 html, body { height: 100%; overflow: hidden; }
 html { color-scheme: dark; }
-:root { --font-primary: #ffffff; --font-secondary: #8899aa; --scroll-fade-opacity: 0.3; }
+:root { --font-primary: #ffffff; --font-secondary: #8899aa; --font-widget: #e8f4ff; --scroll-fade-opacity: 0.3; }
 
 /* Fix select dropdowns: dark bg + light text across all browsers */
 select, select option {

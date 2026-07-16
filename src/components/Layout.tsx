@@ -12,7 +12,7 @@ import QuickHub from "@/components/QuickHub";
 import SettingsDialog from "@/components/SettingsDialog";
 import GlobalSearch from "@/components/GlobalSearch";
 import KeyboardHelp from "@/components/KeyboardHelp";
-import { useSettingsStore, computeThemeColors, fontSizeScale, iconSizeScale, applySurface, applyFontFamily } from "@/stores/settingsStore";
+import { useSettingsStore, computeThemeColors, fontSizeScale, iconSizeScale, applySurface, applyFontFamily, applyFontColors } from "@/stores/settingsStore";
 import { useAudioPlayerStore } from "@/stores/audioPlayerStore";
 import { useWidgetStore } from "@/stores/widgetStore";
 import MyComputerWidget from "@/components/widgets/MyComputerWidget";
@@ -499,16 +499,13 @@ export default function Layout() {
     });
   }, []);
 
-  // Font color
+  // Font color — applyFontColors 统一写入 --font-primary/secondary/widget
+  // （此前手写两个变量漏了 --font-widget，刷新后小组件颜色丢失）
   useEffect(() => {
-    const apply = () => {
-      const { fontPrimaryColor, fontSecondaryColor } = useSettingsStore.getState();
-      document.documentElement.style.setProperty("--font-primary", fontPrimaryColor);
-      document.documentElement.style.setProperty("--font-secondary", fontSecondaryColor);
-    };
-    apply();
+    applyFontColors();
     return useSettingsStore.subscribe((s, prev) => {
-      if (s.fontPrimaryColor !== prev.fontPrimaryColor || s.fontSecondaryColor !== prev.fontSecondaryColor) apply();
+      if (s.fontPrimaryColor !== prev.fontPrimaryColor || s.fontSecondaryColor !== prev.fontSecondaryColor
+        || s.widgetTextColor !== prev.widgetTextColor) applyFontColors();
     });
   }, []);
 
