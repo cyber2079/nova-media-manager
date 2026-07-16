@@ -11,7 +11,7 @@ import {
   Scissors, Calculator, HardDrive, ScanSearch, ShieldAlert, Info, Loader2,
   Video, Wifi, Bluetooth,
 } from "lucide-react";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import { useMovieStore } from "@/stores/movieStore";
 import { useImageStore } from "@/stores/imageStore";
 import { useMusicStore } from "@/stores/musicStore";
@@ -122,15 +122,13 @@ function MediaCarousel() {
     navigate(pages.find((p) => p.key === pageKey)!.to);
   }, [navigate]);
 
-  const playMovie = useCallback(async (movie: any) => {
+  const playMovie = useCallback((movie: any) => {
+    // 流式播放：asset 协议 Range 分段拉取，避免整文件读入内存
     try {
-      const { readFile } = await import("@tauri-apps/plugin-fs");
-      const ext = (movie.filePath.split(".").pop() || "mp4").toLowerCase();
-      const mimeMap: Record<string,string> = { mp4:"video/mp4", webm:"video/webm", mov:"video/quicktime", avi:"video/x-msvideo", mkv:"video/x-matroska", flv:"video/x-flv", wmv:"video/x-ms-wmv", m4v:"video/mp4" };
-      const data = await readFile(movie.filePath);
-      const blob = new Blob([data], { type: mimeMap[ext] || "video/mp4" });
-      setPlayingItem({ name: movie.name, src: URL.createObjectURL(blob) });
-    } catch { /* file read error */ }
+      setPlayingItem({ name: movie.name, src: convertFileSrc(movie.filePath) });
+    } catch {
+      setPlayingItem({ name: movie.name, src: `asset://localhost/${movie.filePath.replace(/\\/g, "/")}` });
+    }
   }, []);
 
   const viewImage = useCallback(async (img: any) => {
@@ -145,8 +143,8 @@ function MediaCarousel() {
   }, []);
 
   const closePlayer = useCallback(() => {
-    if (playingItem) { URL.revokeObjectURL(playingItem.src); setPlayingItem(null); }
-  }, [playingItem]);
+    setPlayingItem(null);
+  }, []);
   const closeViewer = useCallback(() => {
     if (viewingImage) { URL.revokeObjectURL(viewingImage.src); setViewingImage(null); }
   }, [viewingImage]);

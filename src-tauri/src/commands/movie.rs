@@ -79,24 +79,37 @@ fn process_video(video_path: &str, cover_output: &str) -> (f64, String, String, 
     let ffmpeg_bin = crate::commands::ffmpeg_helper::ffmpeg_path();
     let cover_path = if ffmpeg_bin.exists() {
         let mut cover = String::new();
-        // Try 5 seek points spread evenly through the video
-        for offset in [0u32, 15, 30, 60, 120] {
+        // 智能起截点：时长15% 跳过片头黑场/logo；thumbnail 滤镜从该点解码30帧，
+        // 按直方图选最有代表性的一帧（纯黑/纯色帧天然被淘汰）。
+        // 失败再回退固定点位链（损坏/极短视频）。
+        let smart_offset = duration * 0.15;
+        let mut attempts: Vec<(f64, &str)> = Vec::new();
+        if smart_offset > 0.0 {
+            attempts.push((smart_offset, "thumbnail=n=30,scale=400:-1"));
+        }
+        attempts.push((0.0, "thumbnail=n=30,scale=400:-1"));
+        for off in [15u32, 30, 60, 120] {
+            attempts.push((off as f64, "scale=400:-1"));
+        }
+        for (offset, vf) in attempts {
             let out = Command::new(&ffmpeg_bin)
                 .args([
-                    "-y", "-ss", &offset.to_string(), "-i", video_path,
+                    "-y", "-ss", &format!("{:.2}", offset), "-i", video_path,
                     "-vframes", "1", "-q:v", "4",
-                    "-vf", "scale=400:-1",
+                    "-vf", vf,
                     cover_output,
                 ])
                 .output();
             match out {
-                Ok(o) if o.status.success() => {
+                // 退出码成功还不够 — 必须确认真的写出了非空文件
+                Ok(o) if o.status.success()
+                    && std::fs::metadata(cover_output).map(|m| m.len() > 0).unwrap_or(false) => {
                     cover = cover_output.to_string();
                     break;
                 }
                 Ok(o) => {
                     let stderr = String::from_utf8_lossy(&o.stderr);
-                    error_msg.push_str(&format!("seek {}s err: {}; ", offset, stderr.lines().last().unwrap_or("").chars().take(60).collect::<String>()));
+                    error_msg.push_str(&format!("seek {:.0}s err: {}; ", offset, stderr.lines().last().unwrap_or("").chars().take(60).collect::<String>()));
                 }
                 Err(e) => {
                     error_msg.push_str(&format!("spawn err: {}; ", e));
@@ -112,6 +125,107 @@ fn process_video(video_path: &str, cover_output: &str) -> (f64, String, String, 
 
     let formatted = if duration > 0.0 { format_duration(duration) } else { String::new() };
     (duration, formatted, resolution, cover_path, error_msg)
+}
+
+/// Background metadata + cover processing on a dedicated thread.
+/// Updates DB and emits `movie-updated`. Shared by add_movies / regenerate_movie_cover.
+fn spawn_video_processing(app: AppHandle, movie_id: String, path: String) {
+    std::thread::spawn(move || {
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let covers_dir = app.path().app_data_dir().unwrap().join("data").join("covers");
+            std::fs::create_dir_all(&covers_dir).ok();
+            // 时间戳文件名：路径变化让前端绕过旧封面缓存（重新生成时必需）
+            let cover_out = covers_dir.join(format!("{}_{}.png", movie_id, chrono::Utc::now().timestamp()));
+            let cover_out_str = cover_out.to_string_lossy().to_string();
+
+            eprintln!("[bg] processing video: {}", path);
+            process_video(&path, &cover_out_str)
+        }));
+
+        let (duration, formatted, resolution, cover_path, error_msg, status) = match result {
+            Ok((d, f, r, c, e)) => (d, f, r, c, e, "ready"),
+            Err(_) => {
+                let err = "后台处理异常，请重新导入".to_string();
+                (0.0, String::new(), String::new(), String::new(), err, "error")
+            }
+        };
+
+        // Update DB
+        {
+            let db = app.state::<Database>();
+            let conn = db.conn();
+            let _ = conn.execute(
+                "UPDATE movies SET duration=?1, duration_seconds=?2, \
+                 resolution=?3, cover_path=?4, status=?5, error_msg=?6 WHERE id=?7",
+                rusqlite::params![
+                    formatted, duration as i64,
+                    if !resolution.is_empty() { &resolution } else { "Unknown" },
+                    if !cover_path.is_empty() { &cover_path } else { "" },
+                    status, error_msg, movie_id,
+                ],
+            );
+        }
+
+        // Re-read and emit
+        {
+            let db = app.state::<Database>();
+            let conn = db.conn();
+            if let Ok(movie) = conn.query_row(
+                "SELECT id, name, file_path, cover_path, duration, duration_seconds, \
+                 resolution, file_size, format, tags, add_time, status, error_msg \
+                 FROM movies WHERE id=?1",
+                rusqlite::params![movie_id],
+                |r: &rusqlite::Row| Movie::from_row(r),
+            ) {
+                let _ = app.emit("movie-updated", &movie);
+            }
+        }
+    });
+}
+
+/// 重新生成封面：复用后台处理管线（含智能选帧），进度经 movie-updated 事件推送
+#[tauri::command]
+pub fn regenerate_movie_cover(app: AppHandle, db: State<Database>, id: String) -> Result<(), String> {
+    // FFmpeg 缺失时自动下载（与 add_movies 同策略）
+    if !crate::commands::ffmpeg_helper::ffmpeg_path().exists() {
+        ffmpeg_sidecar::download::auto_download().ok();
+    }
+
+    let (file_path, old_cover): (String, String) = {
+        let conn = db.conn();
+        conn.query_row(
+            "SELECT file_path, cover_path FROM movies WHERE id=?1",
+            rusqlite::params![id],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        ).map_err(|e| e.to_string())?
+    };
+
+    if !Path::new(&file_path).exists() {
+        return Err("源视频文件不存在".to_string());
+    }
+
+    // 进入处理中状态并推送，卡片立刻显示转圈
+    {
+        let conn = db.conn();
+        let _ = conn.execute("UPDATE movies SET status='processing' WHERE id=?1", rusqlite::params![id]);
+        if let Ok(movie) = conn.query_row(
+            "SELECT id, name, file_path, cover_path, duration, duration_seconds, \
+             resolution, file_size, format, tags, add_time, status, error_msg \
+             FROM movies WHERE id=?1",
+            rusqlite::params![id],
+            |r: &rusqlite::Row| Movie::from_row(r),
+        ) {
+            let _ = app.emit("movie-updated", &movie);
+        }
+    }
+
+    // 删除旧封面文件，避免 covers 目录堆积孤儿文件
+    if !old_cover.is_empty() {
+        std::fs::remove_file(&old_cover).ok();
+    }
+
+    spawn_video_processing(app, id, file_path);
+    Ok(())
 }
 
 #[tauri::command]
@@ -189,59 +303,7 @@ pub fn add_movies(app: AppHandle, db: State<'_, Database>, paths: Vec<String>) -
         movies.push(movie.clone());
 
         // Background processing on dedicated thread
-        let app_clone = app.clone();
-        let path_owned = path.clone();
-        let movie_id = id.clone();
-        std::thread::spawn(move || {
-            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                let covers_dir = app_clone.path().app_data_dir().unwrap().join("data").join("covers");
-                std::fs::create_dir_all(&covers_dir).ok();
-                let cover_out = covers_dir.join(format!("{}.png", movie_id));
-                let cover_out_str = cover_out.to_string_lossy().to_string();
-
-                eprintln!("[bg] processing video: {}", path_owned);
-                process_video(&path_owned, &cover_out_str)
-            }));
-
-            let (duration, formatted, resolution, cover_path, error_msg, status) = match result {
-                Ok((d, f, r, c, e)) => (d, f, r, c, e, "ready"),
-                Err(_) => {
-                    let err = "后台处理异常，请重新导入".to_string();
-                    (0.0, String::new(), String::new(), String::new(), err, "error")
-                }
-            };
-
-            // Update DB
-            {
-                let db = app_clone.state::<Database>();
-                let conn = db.conn();
-                let _ = conn.execute(
-                    "UPDATE movies SET duration=?1, duration_seconds=?2, \
-                     resolution=?3, cover_path=?4, status=?5, error_msg=?6 WHERE id=?7",
-                    rusqlite::params![
-                        formatted, duration as i64,
-                        if !resolution.is_empty() { &resolution } else { "Unknown" },
-                        if !cover_path.is_empty() { &cover_path } else { "" },
-                        status, error_msg, movie_id,
-                    ],
-                );
-            }
-
-            // Re-read and emit
-            {
-                let db = app_clone.state::<Database>();
-                let conn = db.conn();
-                if let Ok(movie) = conn.query_row(
-                    "SELECT id, name, file_path, cover_path, duration, duration_seconds, \
-                     resolution, file_size, format, tags, add_time, status, error_msg \
-                     FROM movies WHERE id=?1",
-                    rusqlite::params![movie_id],
-                    |r: &rusqlite::Row| Movie::from_row(r),
-                ) {
-                    let _ = app_clone.emit("movie-updated", &movie);
-                }
-            }
-        });
+        spawn_video_processing(app.clone(), id.clone(), path.clone());
     }
 
     Ok(movies)

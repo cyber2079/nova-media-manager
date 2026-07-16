@@ -14,6 +14,7 @@ interface MovieState {
   addMovies: (paths: string[]) => Promise<void>;
   deleteMovie: (id: string) => Promise<void>;
   updateMovie: (movie: Movie) => void;
+  regenerateCover: (id: string) => Promise<void>;
   setSearchQuery: (q: string) => void;
   toggleTag: (tag: string) => void;
   updateMovieTags: (id: string, tags: string[]) => void;
@@ -54,6 +55,11 @@ export const useMovieStore = create<MovieState>((set, get) => ({
 
   updateMovie: (movie: Movie) => {
     set({ movies: get().movies.map((m) => (m.id === movie.id ? movie : m)) });
+  },
+
+  // 状态推进（processing → ready）经 movie-updated 事件回流，不在此更新
+  regenerateCover: async (id: string) => {
+    await invoke("regenerate_movie_cover", { id });
   },
 
   setSearchQuery: (q: string) => set({ searchQuery: q }),

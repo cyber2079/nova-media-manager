@@ -11,27 +11,23 @@ export function getAudio(): HTMLAudioElement {
   if (!_audio) {
     _audio = new Audio();
     _audio.preload = "auto";
+    // asset 协议是跨源资源：CORS 匿名拉取（tauri 返回 ACAO 头），
+    // 否则 MediaElementSource 被污染，可视化输出全零
+    _audio.crossOrigin = "anonymous";
   }
   return _audio;
 }
 
 // ── Public helpers ──
 
-let _audioSrc = "";
-
 export async function loadAudioSrc(filePath: string): Promise<string> {
-  if (_audioSrc) URL.revokeObjectURL(_audioSrc);
-  const { readFile } = await import("@tauri-apps/plugin-fs");
-  const data = await readFile(filePath);
-  const ext = (filePath.split(".").pop() || "mp3").toLowerCase();
-  const mimeMap: Record<string, string> = { mp3: "audio/mpeg", flac: "audio/flac", wav: "audio/wav", m4a: "audio/mp4", ogg: "audio/ogg", wma: "audio/x-ms-wma", aac: "audio/aac" };
-  const blob = new Blob([data], { type: mimeMap[ext] || "audio/mpeg" });
-  _audioSrc = URL.createObjectURL(blob);
-  return _audioSrc;
-}
-
-export function disposeAudioSrc() {
-  if (_audioSrc) { URL.revokeObjectURL(_audioSrc); _audioSrc = ""; }
+  // 流式播放：asset 协议支持 HTTP Range 按需分段拉取，不再整文件读入内存
+  try {
+    const { convertFileSrc } = await import("@tauri-apps/api/core");
+    return convertFileSrc(filePath);
+  } catch {
+    return `asset://localhost/${filePath.replace(/\\/g, "/")}`;
+  }
 }
 
 export function fmtTime(sec: number): string {
@@ -211,7 +207,6 @@ export const useAudioPlayerStore = create<AudioPlayerState>((set, get) => {
       _transitioning = false;
       audio.pause();
       audio.src = "";
-      disposeAudioSrc();
       set({ track: null, isPlaying: false, currentTime: 0, duration: 0, isBackground: false, visualizerBars: new Array(32).fill(0.01), playbackSourceId: "", playbackSourceLabel: "音乐库" });
     },
 

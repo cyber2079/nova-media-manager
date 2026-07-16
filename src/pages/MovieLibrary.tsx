@@ -26,6 +26,7 @@ import { useSearchJump } from "@/lib/searchJump";
 import BatchCheckbox from "@/components/BatchCheckbox";
 import ConfirmDialog from '@/components/ConfirmDialog';
 import BatchBar from "@/components/BatchBar";
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 export default function MovieLibrary() {
   const { t } = useTranslation();
@@ -112,30 +113,14 @@ export default function MovieLibrary() {
     }
   }, [addMovies]);
 
-  const [loadingVideo, setLoadingVideo] = useState(false);
-
-  const handlePlayMovie = async (movie: Movie) => {
+  const handlePlayMovie = (movie: Movie) => {
     setPlayingMovie(movie);
-    setLoadingVideo(true);
+    // 流式播放：asset 协议支持 HTTP Range 按需分段拉取，不再整文件读入内存
     try {
-      const { readFile } = await import("@tauri-apps/plugin-fs");
-      // Determine MIME type from extension
-      const ext = (movie.filePath.split(".").pop() || "mp4").toLowerCase();
-      const mimeMap: Record<string, string> = {
-        mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime",
-        avi: "video/x-msvideo", mkv: "video/x-matroska", flv: "video/x-flv",
-        wmv: "video/x-ms-wmv", m4v: "video/mp4",
-      };
-      const mimeType = mimeMap[ext] || "video/mp4";
-
-      const data = await readFile(movie.filePath);
-      const blob = new Blob([data], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      setVideoSrc(url);
-    } catch (e) {
-      console.error("Failed to read video:", e);
+      setVideoSrc(convertFileSrc(movie.filePath));
+    } catch {
+      setVideoSrc(`asset://localhost/${movie.filePath.replace(/\\/g, "/")}`);
     }
-    setLoadingVideo(false);
   };
 
   const handleBatchDelete = useCallback(() => {
@@ -258,7 +243,7 @@ export default function MovieLibrary() {
                 <div key={movie.id} className="relative group"
                   onClick={() => { if (batch.showCheckboxes) batch.toggle(movie.id); }}>
                   {batch.showCheckboxes && <BatchCheckbox checked={batch.selected.has(movie.id)} onToggle={() => batch.toggle(movie.id)} />}
-                  <MovieCard movie={movie} onDelete={(id) => confirmThen(t("movie.confirm_delete"), () => deleteMovie(id))} onPlay={batch.showCheckboxes ? () => {} : handlePlayMovie} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagDialogMovie(movie)} compact={layoutMode === "small"} favorited={isFavorite(movie.id)} onToggleFav={() => toggleFavorite(movie.id, "movie")} />
+                  <MovieCard movie={movie} onDelete={(id) => confirmThen(t("movie.confirm_delete"), () => deleteMovie(id))} onPlay={batch.showCheckboxes ? () => {} : handlePlayMovie} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagDialogMovie(movie)} onRegenCover={() => useMovieStore.getState().regenerateCover(movie.id).catch(() => {})} compact={layoutMode === "small"} favorited={isFavorite(movie.id)} onToggleFav={() => toggleFavorite(movie.id, "movie")} />
                 </div>
               ))}
             </div>
@@ -269,15 +254,10 @@ export default function MovieLibrary() {
         <EmptyState icon={<Video className="h-16 w-16" />} title={t("movie.no_movies")} hint={t("movie.no_movies_hint")} />
       )}
 
-      <Dialog open={!!playingMovie} onOpenChange={(open) => { if (!open) { setPlayingMovie(null); URL.revokeObjectURL(videoSrc); setVideoSrc(""); } }}>
+      <Dialog open={!!playingMovie} onOpenChange={(open) => { if (!open) { setPlayingMovie(null); setVideoSrc(""); } }}>
         <DialogContent className="max-w-4xl">
           <DialogHeader><DialogTitle>{playingMovie?.name}</DialogTitle></DialogHeader>
-          {playingMovie && loadingVideo && (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-primary-light" />
-            </div>
-          )}
-          {playingMovie && !loadingVideo && videoSrc && (
+          {playingMovie && videoSrc && (
             <div className="relative group">
               <video ref={videoRef} controls autoPlay className="w-full rounded-lg" style={{ maxHeight: "70vh" }}
                 src={videoSrc} />

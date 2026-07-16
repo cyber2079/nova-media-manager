@@ -161,6 +161,7 @@ pub fn run() {
             commands::movie::add_movies,
             commands::movie::delete_movie,
             commands::movie::update_movie_tags,
+            commands::movie::regenerate_movie_cover,
             commands::image::get_all_images,
             commands::image::add_images,
             commands::image::delete_image,
