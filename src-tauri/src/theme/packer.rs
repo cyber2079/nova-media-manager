@@ -328,6 +328,7 @@ pub fn extract_theme(zip_bytes: &[u8], dest_dir: &Path) -> Result<(), String> {
 mod tests {
     use super::*;
     use std::fs;
+    use getrandom::getrandom;
 
     #[test]
     fn test_pack_unpack_roundtrip() {
@@ -389,34 +390,43 @@ mod tests {
             config: serde_json::json!({"accent": "#4788f0"}),
         };
 
-        // Pack then sign
+        // ── Unsigned file still works (backward compat) ──
         let nvtp = pack_theme("com.nova.sign-test", &tmp, &manifest).unwrap();
-        let seed: [u8; 32] = [
-            0x3d, 0xa2, 0x8a, 0x29, 0x8d, 0xd7, 0x43, 0x7d,
-            0x07, 0x1f, 0xc2, 0x15, 0x99, 0xb5, 0xca, 0x7e,
-            0x99, 0x5a, 0x46, 0xe0, 0x52, 0xad, 0xc3, 0xc6,
-            0xa3, 0xd6, 0x82, 0xfa, 0xdd, 0x91, 0x2a, 0x48,
-        ];
-
-        let signed = sign_nvtp(&nvtp, &seed).unwrap();
-        assert!(signed.len() > nvtp.len()); // has appended signature
-
-        // Verify unpack accepts valid signed file
-        let (header, m, zip) = unpack_theme(&signed).unwrap();
-        assert_eq!(header.theme_id, "com.nova.sign-test");
-        assert_eq!(m.name, "Signed Theme");
-        assert_eq!(header.flags & FLAG_HAS_SIGNATURE, FLAG_HAS_SIGNATURE);
-        assert!(!zip.is_empty());
-
-        // Verify that a tampered signed file is rejected
-        let mut tampered = signed.clone();
-        tampered[20] ^= 0xFF; // flip a byte in the signed content
-        let result = unpack_theme(&tampered);
-        assert!(result.is_err(), "Tampered signed file should be rejected");
-
-        // Verify that unsigned file still works (backward compat)
         let (header2, _, _) = unpack_theme(&nvtp).unwrap();
         assert_eq!(header2.flags & FLAG_HAS_SIGNATURE, 0);
+
+        // ── Sign with ephemeral keypair ──
+        // Production signing key lives in nova-proprietary/theme/crypto.rs ONLY.
+        // This test uses a random ephemeral key to verify sign/verify plumbing.
+        let test_seed: [u8; 32] = {
+            let mut buf = [0u8; 32];
+            getrandom(&mut buf).expect("getrandom");
+            buf
+        };
+        let test_pubkey = {
+            use ed25519_compact::{KeyPair, Seed};
+            let seed_obj = Seed::from_slice(&test_seed).unwrap();
+            KeyPair::from_seed(seed_obj).pk
+        };
+
+        let signed = sign_nvtp(&nvtp, &test_seed).unwrap();
+        assert!(signed.len() > nvtp.len()); // has appended 64-byte signature
+
+        // Verify FLAG_HAS_SIGNATURE is set
+        let flags = u16::from_le_bytes([signed[6], signed[7]]);
+        assert_eq!(flags & FLAG_HAS_SIGNATURE, FLAG_HAS_SIGNATURE);
+
+        // ── Manually verify signature (bypasses NVT_PUBKEY) ──
+        let content_end = signed.len() - 64;
+        let sig = ed25519_compact::Signature::from_slice(&signed[content_end..]).unwrap();
+        test_pubkey.verify(&signed[..content_end], &sig)
+            .expect("Ephemeral signature must verify");
+
+        // ── Tampered signed data is rejected ──
+        let mut tampered = signed.clone();
+        tampered[20] ^= 0xFF; // flip a byte in the signed content
+        let result = test_pubkey.verify(&tampered[..content_end], &sig);
+        assert!(result.is_err(), "Tampered data should fail verification");
 
         let _ = fs::remove_dir_all(&tmp);
     }

@@ -49,6 +49,9 @@ hex = "0.4"
 ed25519-compact = "2"
 zeroize = { version = "1", features = ["derive"] }
 
+[dev-dependencies]
+getrandom = "0.2"
+
 [profile.release]
 strip = true
 lto = true
