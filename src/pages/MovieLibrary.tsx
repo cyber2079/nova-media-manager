@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { useMovieStore } from "@/stores/movieStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useThemeStore } from "@/stores/themeStore";
@@ -122,6 +123,49 @@ export default function MovieLibrary() {
       setVideoSrc(`asset://localhost/${movie.filePath.replace(/\\/g, "/")}`);
     }
   };
+
+  // ── 观看进度：节流写库（5s）+ 关闭时落盘 ──
+  const lastSavedRef = useRef(0);
+  const saveProgress = useCallback((movie: Movie, position: number, force = false) => {
+    if (!force && Math.abs(position - lastSavedRef.current) < 5) return;
+    lastSavedRef.current = position;
+    useMovieStore.getState().updateWatchProgress(movie.id, position).catch(() => {});
+  }, []);
+
+  // 续播起点：>5s 且未看完才续播（看完的从头放）
+  const resumeAt = (m: Movie) =>
+    !m.watched && m.watchPosition > 5 && m.durationSeconds > 0 && m.watchPosition < m.durationSeconds * 0.95
+      ? m.watchPosition : 0;
+  const [resumedFrom, setResumedFrom] = useState(0);
+
+  const handleVideoLoaded = () => {
+    if (!playingMovie || !videoRef.current) return;
+    const pos = resumeAt(playingMovie);
+    if (pos > 0) { videoRef.current.currentTime = pos; setResumedFrom(pos); }
+    lastSavedRef.current = pos;
+  };
+
+  const handleClosePlayer = () => {
+    // 关闭时强制落盘最终位置
+    if (playingMovie && videoRef.current && videoRef.current.currentTime > 0) {
+      saveProgress(playingMovie, videoRef.current.currentTime, true);
+    }
+    setPlayingMovie(null); setVideoSrc(""); setResumedFrom(0);
+  };
+
+  // 首页「继续观看」跳转：路由 state 带 playId，库加载完自动开播
+  const location = useLocation();
+  const autoPlayedRef = useRef(false);
+  useEffect(() => {
+    const playId = (location.state as { playId?: string } | null)?.playId;
+    if (!playId || autoPlayedRef.current || movies.length === 0) return;
+    const target = movies.find((m) => m.id === playId);
+    if (target && target.status === "ready") {
+      autoPlayedRef.current = true;
+      handlePlayMovie(target);
+      window.history.replaceState({}, "");   // 清掉 state，避免刷新重复触发
+    }
+  }, [movies, location.state]);
 
   const handleBatchDelete = useCallback(() => {
     confirmThen(t("movie.confirm_batch_delete", { n: batch.selected.size }), async () => {
@@ -254,13 +298,23 @@ export default function MovieLibrary() {
         <EmptyState icon={<Video className="h-16 w-16" />} title={t("movie.no_movies")} hint={t("movie.no_movies_hint")} />
       )}
 
-      <Dialog open={!!playingMovie} onOpenChange={(open) => { if (!open) { setPlayingMovie(null); setVideoSrc(""); } }}>
+      <Dialog open={!!playingMovie} onOpenChange={(open) => { if (!open) handleClosePlayer(); }}>
         <DialogContent className="max-w-4xl">
           <DialogHeader><DialogTitle>{playingMovie?.name}</DialogTitle></DialogHeader>
           {playingMovie && videoSrc && (
             <div className="relative group">
               <video ref={videoRef} controls autoPlay className="w-full rounded-lg" style={{ maxHeight: "70vh" }}
-                src={videoSrc} />
+                src={videoSrc}
+                onLoadedMetadata={handleVideoLoaded}
+                onTimeUpdate={(e) => { if (playingMovie) saveProgress(playingMovie, e.currentTarget.currentTime); }} />
+              {resumedFrom > 0 && (
+                <button
+                  onClick={() => { if (videoRef.current) videoRef.current.currentTime = 0; setResumedFrom(0); lastSavedRef.current = 0; }}
+                  className="absolute top-3 left-3 rounded-full bg-black/70 px-3 py-1.5 text-xs text-white hover:bg-black/90 transition-colors backdrop-blur-sm"
+                >
+                  已从 {Math.floor(resumedFrom / 60)}:{String(Math.floor(resumedFrom % 60)).padStart(2, "0")} 继续 · 点击从头播放
+                </button>
+              )}
             </div>
           )}
         </DialogContent>

@@ -21,9 +21,17 @@ pub struct Movie {
     pub status: String,
     #[serde(default)]
     pub error_msg: String,
+    // ── 观看进度（P0-3 续播）──
+    #[serde(default)]
+    pub watch_position: i64,
+    #[serde(default)]
+    pub watch_updated_at: String,
+    #[serde(default)]
+    pub watched: bool,
 }
 
 impl Movie {
+    /// 列顺序约定：0-12 基础列 + 13-15 观看进度列（缺省容错，兼容旧查询）
     fn from_row(row: &rusqlite::Row) -> rusqlite::Result<Self> {
         let tags_str: String = row.get::<_, String>(9)?;
         let tags: Vec<String> = serde_json::from_str(&tags_str).unwrap_or_default();
@@ -34,6 +42,9 @@ impl Movie {
             duration_seconds: row.get(5)?, resolution: row.get(6)?,
             file_size: row.get(7)?, format: row.get(8)?, tags,
             add_time: row.get(10)?, status: row.get(11)?, error_msg,
+            watch_position: row.get(13).unwrap_or(0),
+            watch_updated_at: row.get(14).unwrap_or_default(),
+            watched: row.get::<_, i64>(15).map(|v| v != 0).unwrap_or(false),
         })
     }
 }
@@ -172,7 +183,8 @@ fn spawn_video_processing(app: AppHandle, movie_id: String, path: String) {
             let conn = db.conn();
             if let Ok(movie) = conn.query_row(
                 "SELECT id, name, file_path, cover_path, duration, duration_seconds, \
-                 resolution, file_size, format, tags, add_time, status, error_msg \
+                 resolution, file_size, format, tags, add_time, status, error_msg, \
+                 watch_position, watch_updated_at, watched \
                  FROM movies WHERE id=?1",
                 rusqlite::params![movie_id],
                 |r: &rusqlite::Row| Movie::from_row(r),
@@ -181,6 +193,25 @@ fn spawn_video_processing(app: AppHandle, movie_id: String, path: String) {
             }
         }
     });
+}
+
+/// 写入观看进度（内置播放器节流调用）。播放 ≥95% 自动标记已看。
+/// 返回是否已标记为看完，前端据此更新本地状态。
+#[tauri::command]
+pub fn update_watch_progress(db: State<Database>, id: String, position: i64) -> Result<bool, String> {
+    let conn = db.conn();
+    let duration: i64 = conn.query_row(
+        "SELECT duration_seconds FROM movies WHERE id=?1",
+        rusqlite::params![id],
+        |r| r.get(0),
+    ).map_err(|e| e.to_string())?;
+
+    let watched = duration > 0 && (position as f64) / (duration as f64) >= 0.95;
+    conn.execute(
+        "UPDATE movies SET watch_position=?1, watch_updated_at=?2, watched=?3 WHERE id=?4",
+        rusqlite::params![position, chrono::Utc::now().to_rfc3339(), watched as i64, id],
+    ).map_err(|e| e.to_string())?;
+    Ok(watched)
 }
 
 /// 重新生成封面：复用后台处理管线（含智能选帧），进度经 movie-updated 事件推送
@@ -210,7 +241,8 @@ pub fn regenerate_movie_cover(app: AppHandle, db: State<Database>, id: String) -
         let _ = conn.execute("UPDATE movies SET status='processing' WHERE id=?1", rusqlite::params![id]);
         if let Ok(movie) = conn.query_row(
             "SELECT id, name, file_path, cover_path, duration, duration_seconds, \
-             resolution, file_size, format, tags, add_time, status, error_msg \
+             resolution, file_size, format, tags, add_time, status, error_msg, \
+             watch_position, watch_updated_at, watched \
              FROM movies WHERE id=?1",
             rusqlite::params![id],
             |r: &rusqlite::Row| Movie::from_row(r),
@@ -232,7 +264,7 @@ pub fn regenerate_movie_cover(app: AppHandle, db: State<Database>, id: String) -
 pub fn get_all_movies(db: State<Database>) -> Result<Vec<Movie>, String> {
     let conn = db.conn();
     let mut stmt = conn.prepare(
-        "SELECT id, name, file_path, cover_path, duration, duration_seconds,          resolution, file_size, format, tags, add_time, status, error_msg FROM movies"
+        "SELECT id, name, file_path, cover_path, duration, duration_seconds,          resolution, file_size, format, tags, add_time, status, error_msg,          watch_position, watch_updated_at, watched FROM movies"
     ).map_err(|e| e.to_string())?;
 
     let mut movies: Vec<Movie> = stmt.query_map([], |row| Movie::from_row(row))
@@ -287,6 +319,7 @@ pub fn add_movies(app: AppHandle, db: State<'_, Database>, paths: Vec<String>) -
             file_size, format: ext, tags: vec![],
             add_time: add_time.clone(), status: "processing".to_string(),
             error_msg: String::new(),
+            watch_position: 0, watch_updated_at: String::new(), watched: false,
         };
 
         {

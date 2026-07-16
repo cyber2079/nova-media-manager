@@ -79,6 +79,21 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
             {movie.duration}
           </div>
         )}
+
+        {/* 已看角标 */}
+        {movie.watched && (
+          <div className="absolute bottom-2 left-2 rounded bg-primary/80 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
+            已看
+          </div>
+        )}
+
+        {/* 观看进度条 */}
+        {!movie.watched && movie.watchPosition > 0 && movie.durationSeconds > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-black/50">
+            <div className="h-full bg-primary-light"
+              style={{ width: `${Math.min(100, (movie.watchPosition / movie.durationSeconds) * 100)}%` }} />
+          </div>
+        )}
       </div>
 
       <CardContent className={compact ? "p-2" : "p-3"}>

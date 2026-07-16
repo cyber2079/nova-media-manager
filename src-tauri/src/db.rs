@@ -90,6 +90,14 @@ impl Database {
                 tags TEXT DEFAULT '[]', add_time TEXT NOT NULL
             );"
         )?;
+        // ── Incremental migrations — duplicate-column errors are expected and ignored ──
+        for sql in [
+            "ALTER TABLE movies ADD COLUMN watch_position INTEGER DEFAULT 0",
+            "ALTER TABLE movies ADD COLUMN watch_updated_at TEXT DEFAULT ''",
+            "ALTER TABLE movies ADD COLUMN watched INTEGER DEFAULT 0",
+        ] {
+            let _ = conn.execute(sql, []);
+        }
         Ok(Database { conn: Mutex::new(conn), data_dir, app_data_dir })
     }
 

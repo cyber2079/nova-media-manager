@@ -15,6 +15,7 @@ interface MovieState {
   deleteMovie: (id: string) => Promise<void>;
   updateMovie: (movie: Movie) => void;
   regenerateCover: (id: string) => Promise<void>;
+  updateWatchProgress: (id: string, position: number) => Promise<void>;
   setSearchQuery: (q: string) => void;
   toggleTag: (tag: string) => void;
   updateMovieTags: (id: string, tags: string[]) => void;
@@ -60,6 +61,16 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   // 状态推进（processing → ready）经 movie-updated 事件回流，不在此更新
   regenerateCover: async (id: string) => {
     await invoke("regenerate_movie_cover", { id });
+  },
+
+  // 观看进度写库 + 本地同步（Rust 侧 ≥95% 返回 watched=true）
+  updateWatchProgress: async (id: string, position: number) => {
+    const watched = (await invoke("update_watch_progress", { id, position: Math.floor(position) })) as boolean;
+    set({
+      movies: get().movies.map((m) => (m.id === id
+        ? { ...m, watchPosition: Math.floor(position), watchUpdatedAt: new Date().toISOString(), watched }
+        : m)),
+    });
   },
 
   setSearchQuery: (q: string) => set({ searchQuery: q }),

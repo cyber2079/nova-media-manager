@@ -12,4 +12,8 @@ export interface Movie {
   addTime: string;         // ISO时间戳
   status: "processing" | "ready" | "error";
   errorMsg?: string;
+  // ── 观看进度（续播）──
+  watchPosition: number;    // 上次观看位置（秒）
+  watchUpdatedAt: string;   // ISO时间戳
+  watched: boolean;         // 已看完（≥95%）
 }

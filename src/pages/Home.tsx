@@ -114,6 +114,14 @@ function DashBoard() {
     { key: "games", icon: Gamepad2, count: games.length, cssColor: "var(--color-primary-dark)", to: "/games", recent: gameRecent },
   ];
 
+  // 继续观看：有进度且未看完，按最近观看排序
+  const continueWatching = useMemo(() =>
+    movies
+      .filter((m) => !m.watched && m.watchPosition > 5 && m.status === "ready")
+      .sort((a, b) => (b.watchUpdatedAt || "").localeCompare(a.watchUpdatedAt || ""))
+      .slice(0, 6),
+  [movies]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -130,6 +138,32 @@ function DashBoard() {
           <Minimize2 className="h-4 w-4" />
         </button>
       </div>
+
+      {/* ── 继续观看 ── */}
+      {continueWatching.length > 0 && (
+        <div className="rounded-2xl border border-primary/20 p-4" style={{ background: "color-mix(in srgb, var(--color-primary) 4%, #080c14)" }}>
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="h-3.5 w-3.5 text-primary-light" />
+            <span className="text-xs text-primary-light tracking-wide">继续观看</span>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+            {continueWatching.map((m) => {
+              const pct = m.durationSeconds > 0 ? Math.min(100, (m.watchPosition / m.durationSeconds) * 100) : 0;
+              return (
+                <button key={m.id} onClick={() => navigate("/movies", { state: { playId: m.id } })}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors">
+                  <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" style={{ filter: "brightness(1.2)" }} />
+                  <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
+                  <div className="w-16 h-1 rounded-full bg-white/10 shrink-0 overflow-hidden">
+                    <div className="h-full bg-primary-light" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="text-[9px] text-[#8aa8c4] shrink-0 w-8 text-right">{Math.round(pct)}%</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-5">
         {cats.map(cat => (
