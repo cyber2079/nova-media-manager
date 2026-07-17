@@ -291,7 +291,7 @@ export default function HomeDashboard() {
       </div>
 
       {/* ── 2×2：最常播放 | 继续观看 ── */}
-      <div className="grid grid-cols-2 gap-4 items-start">
+      <div className="grid grid-cols-2 gap-4 items-stretch">
         {/* 左上：最常播放 */}
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
@@ -345,7 +345,7 @@ export default function HomeDashboard() {
       </div>
 
       {/* ── 2×2：本周热映 | 本周热歌 ── */}
-      <div className="grid grid-cols-2 gap-4 items-start">
+      <div className="grid grid-cols-2 gap-4 items-stretch">
         {/* 左下：本周热映 */}
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
