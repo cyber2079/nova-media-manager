@@ -122,11 +122,6 @@ export default function GameLibrary() {
       <div className="flex items-center gap-4">
         <h1 className="font-bold text-2xl transition-all duration-500">{t("game.title")}</h1>
         <div className="flex-1" />
-        <div className="relative w-64">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-          <Input placeholder={t("game.search", "搜索游戏...")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pr-7" />
-          {searchQuery && <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-0.5"><X className="h-3.5 w-3.5" /></button>}
-        </div>
         {scanResult && (
           <span className="text-xs text-primary-light/80">{scanResult}</span>
         )}
