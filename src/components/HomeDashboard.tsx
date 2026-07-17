@@ -342,7 +342,6 @@ export default function HomeDashboard() {
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up"
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                  <Music className="h-3.5 w-3.5 shrink-0 text-primary-light" />
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
                   <span className="text-[10px] text-[#8aa8c4] tabular-nums shrink-0">{m.count} 次</span>
                 </button>
@@ -367,7 +366,6 @@ export default function HomeDashboard() {
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up"
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                  <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" />
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{e.name}</span>
                 </button>
               ))}
@@ -394,7 +392,6 @@ export default function HomeDashboard() {
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                  <Music className="h-3.5 w-3.5 shrink-0 text-primary-light/50" />
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
                   <span className="text-[10px] text-[#8aa8c4] shrink-0 truncate max-w-[72px]">{m.subtitle}</span>
                 </a>
