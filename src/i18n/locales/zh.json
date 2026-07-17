@@ -335,6 +335,18 @@
     "hourly_afternoon": "☀️ 午后型 — 下午的时光最惬意",
     "hourly_evening": "🌆 夜猫子 — 晚间黄金档选手"
   },
+  "trending": {
+    "top_sellers": "热销",
+    "rpg": "RPG",
+    "action": "动作",
+    "adventure": "冒险",
+    "strategy": "策略",
+    "simulation": "模拟",
+    "indie": "独立",
+    "casual": "休闲",
+    "visual_novel": "视觉小说",
+    "horror": "恐怖"
+  },
   "search": {
     "placeholder": "搜索电影、图片、音乐、游戏...",
     "no_results": "未找到匹配结果",

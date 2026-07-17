@@ -226,6 +226,7 @@
     "steam_title": "🔥 Steam 売上ランキング",
     "steam_source": "Steam公式データ",
     "steam_unavailable": "Steamランキングは現在ご利用いただけません",
+    "steam_click_hint": "クリックでSteamストアを開く",
     "revisit_title": "お久しぶりです ― あなたのコレクションから",
     "empty_played": "再生するとここに表示されます",
     "empty_watched": "視聴するとここに表示されます",
@@ -295,5 +296,18 @@
     "wraeclast": "レイクラスト紀元",
     "days": "日",
     "day_n": "今月第{{n}}日"
+  }
+,
+  "trending": {
+    "top_sellers": "人気",
+    "rpg": "RPG",
+    "action": "アクション",
+    "adventure": "アドベンチャー",
+    "strategy": "ストラテジー",
+    "simulation": "シミュレーション",
+    "indie": "インディー",
+    "casual": "カジュアル",
+    "visual_novel": "ビジュアルノベル",
+    "horror": "ホラー"
   }
 }

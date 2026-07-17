@@ -226,6 +226,7 @@
     "steam_title": "🔥 Steam Topseller",
     "steam_source": "Daten von Steam",
     "steam_unavailable": "Steam Charts derzeit nicht verfügbar",
+    "steam_click_hint": "Klicken, um im Steam-Shop zu öffnen",
     "revisit_title": "Lange nicht gesehen ― aus deinen Favoriten",
     "empty_played": "Spiele etwas ab, um es hier zu sehen",
     "empty_watched": "Schaue Filme, um sie hier zu sehen",
@@ -295,5 +296,18 @@
     "wraeclast": "Wraeclast-Ära",
     "days": "T",
     "day_n": "Tag {{n}}"
+  }
+,
+  "trending": {
+    "top_sellers": "Topseller",
+    "rpg": "RPG",
+    "action": "Action",
+    "adventure": "Abenteuer",
+    "strategy": "Strategie",
+    "simulation": "Simulation",
+    "indie": "Indie",
+    "casual": "Casual",
+    "visual_novel": "Visual Novel",
+    "horror": "Horror"
   }
 }

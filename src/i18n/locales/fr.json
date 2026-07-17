@@ -226,6 +226,7 @@
     "steam_title": "🔥 Meilleures ventes Steam",
     "steam_source": "Données de Steam",
     "steam_unavailable": "Classements Steam indisponibles pour le moment",
+    "steam_click_hint": "Cliquez pour ouvrir sur le Steam Store",
     "revisit_title": "Ça fait longtemps ― dans vos favoris",
     "empty_played": "Lancez un média pour le voir ici",
     "empty_watched": "Regardez des films pour les voir ici",
@@ -295,5 +296,18 @@
     "wraeclast": "Ère de Wraeclast",
     "days": "j",
     "day_n": "Jour {{n}}"
+  }
+,
+  "trending": {
+    "top_sellers": "Meilleures ventes",
+    "rpg": "RPG",
+    "action": "Action",
+    "adventure": "Aventure",
+    "strategy": "Stratégie",
+    "simulation": "Simulation",
+    "indie": "Indépendant",
+    "casual": "Détente",
+    "visual_novel": "Visual Novel",
+    "horror": "Horreur"
   }
 }

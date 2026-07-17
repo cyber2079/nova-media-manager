@@ -226,6 +226,7 @@
     "steam_title": "🔥 Steam 인기 순위",
     "steam_source": "Steam 공식 데이터",
     "steam_unavailable": "Steam 순위를 불러올 수 없습니다",
+    "steam_click_hint": "클릭하여 Steam 스토어 열기",
     "revisit_title": "오랜만이에요 ― 즐겨찾기에서",
     "empty_played": "재생하면 여기에 표시됩니다",
     "empty_watched": "시청하면 여기에 표시됩니다",
@@ -295,5 +296,18 @@
     "wraeclast": "레이클라스트",
     "days": "일",
     "day_n": "이번 달 {{n}}일째"
+  }
+,
+  "trending": {
+    "top_sellers": "인기",
+    "rpg": "RPG",
+    "action": "액션",
+    "adventure": "어드벤처",
+    "strategy": "전략",
+    "simulation": "시뮬레이션",
+    "indie": "인디",
+    "casual": "캐주얼",
+    "visual_novel": "비주얼 노벨",
+    "horror": "공포"
   }
 }

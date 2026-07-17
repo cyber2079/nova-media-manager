@@ -318,6 +318,18 @@
     "hourly_afternoon": "☀️ Afternooner — perfect for a break",
     "hourly_evening": "🌆 Prime Time — after work is life"
   },
+  "trending": {
+    "top_sellers": "Top Sellers",
+    "rpg": "RPG",
+    "action": "Action",
+    "adventure": "Adventure",
+    "strategy": "Strategy",
+    "simulation": "Simulation",
+    "indie": "Indie",
+    "casual": "Casual",
+    "visual_novel": "Visual Novel",
+    "horror": "Horror"
+  },
   "search": {
     "placeholder": "Search movies, images, music, games...",
     "no_results": "No results found",

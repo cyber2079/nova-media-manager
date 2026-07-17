@@ -308,14 +308,14 @@ export default function HomeDashboard() {
           <p className="text-[10px] text-[#8aa8c4]">{t("dashboard.steam_source")}</p>
         </div>
         <div className="flex flex-wrap gap-1.5 mb-3">
-          {TRENDING_TAGS.map((t) => (
-            <button key={t.tag} onClick={() => setTrendTag(t.tag)}
+          {TRENDING_TAGS.map((tag) => (
+            <button key={tag.tag} onClick={() => setTrendTag(tag.tag)}
               className={`px-2.5 py-1 rounded-full text-[10px] border transition-all ${
-                trendTag === t.tag
+                trendTag === tag.tag
                   ? "bg-primary/15 border-primary/40 text-primary-light font-semibold"
                   : "border-white/10 text-[#8aa8c4] hover:text-white hover:bg-white/5"
               }`}>
-              {t.label}
+              {t(tag.labelKey)}
             </button>
           ))}
         </div>
