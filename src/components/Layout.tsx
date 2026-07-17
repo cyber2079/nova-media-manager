@@ -33,8 +33,6 @@ import { useLicenseStore, isPro } from "@/stores/licenseStore";
 import { useThemePackStore } from "@/stores/themePackStore";
 import { analytics, useAnalyticsPageView } from "@/lib/analytics";
 import { invoke } from "@tauri-apps/api/core";
-
-import { useHomeMode, setHomeMode } from "@/lib/homeMode";
 import { compareVersions } from "@/lib/compareVersions";
 import { useSecurity } from "@/lib/useSecurity";
 import { ThemeAssets, themeUrl } from "@/lib/themeBase";
@@ -82,7 +80,7 @@ export default function Layout() {
   const isIce = theme === "ice-girl";
   const isDefault = theme === "default";
   const isCG = theme === "cyber-girl";
-  const [homeMode] = useHomeMode();
+  const dashboardMode = useSettingsStore((s) => s.dashboardMode);
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();
   const bgVideoMode = useSettingsStore((s) => s.bgVideoMode);
   const bgOverlayOpacity = useSettingsStore((s) => s.bgOverlayOpacity);
@@ -90,7 +88,7 @@ export default function Layout() {
   const footerOpacity = useSettingsStore((s) => s.footerOpacity);
   const isHome = location.pathname === "/";
   const showQuickHub = true;
-  const isHomeStrip = isHome && isDefault && homeMode === "strip";
+  const isHomeStrip = isHome && isDefault && dashboardMode === "strip";
   const [stripOpen, setStripOpen] = useState(false);
   const pageKey = isHome ? "home" : (location.pathname.replace("/", "") as string) || "home";
   const showWidgets = globalWidgets || (widgetPages[pageKey] ?? false);
@@ -704,9 +702,9 @@ export default function Layout() {
           )}
 
           {/* 仪表盘恢复图标 — 仅在默认主题迷你条模式出现（开始菜单右侧），展开后隐藏 */}
-          {isDefault && homeMode === "strip" && (
+          {isDefault && dashboardMode === "strip" && (
             <button
-              onClick={() => { setHomeMode("full"); navigate("/"); }}
+              onClick={() => { useSettingsStore.getState().setDashboardMode("full"); navigate("/"); }}
               className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
               title="展开仪表盘"
             >

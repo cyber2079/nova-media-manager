@@ -727,15 +727,14 @@ export default function MusicLibrary() {
         style={{ padding: "12px 20px", ...(playerBgCustom && playerBgColor ? { background: playerBgColor } : {}) }}>
         {/* 2 columns: cover (left), 3 rows (right) */}
         <div className="flex items-stretch gap-4">
-          {/* LEFT: cover column — 有封面显示封面；无封面显示旋转 CD（默认主题 cd.jpg） */}
+          {/* LEFT: cover column — 有封面显示封面；无封面显示 CD 动/静态图 */}
           <div className="shrink-0 relative rounded overflow-hidden" style={{ width: 72 }}>
             {playing.coverPath ? (
               <img src={musicCoverSrc(playing.coverPath)} alt="" className="absolute inset-0 w-full h-full object-cover object-top scale-125"
-                onError={(e) => { (e.target as HTMLImageElement).src = "/cd.jpg"; }} />
+                onError={(e) => { (e.target as HTMLImageElement).src = "/cd%20run.gif"; }} />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <img src="/cd.jpg" alt="" className="w-16 h-16 rounded-full object-cover shadow-lg"
-                  style={{ animation: isPlaying ? "spin 4s linear infinite" : "none" }} />
+                <img src={isPlaying ? "/cd%20run.gif" : "/cd%20pause.png"} alt="" className="w-16 h-16 rounded-full object-cover shadow-lg" />
               </div>
             )}
           </div>
