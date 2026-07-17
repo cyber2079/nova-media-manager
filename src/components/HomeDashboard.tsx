@@ -109,7 +109,7 @@ function weeklyStory(stats: Stats): { text: string; emoji: string } {
     { k: "games", v: n.games, e: "🎮", tail: "游戏时间称王" },
   ].sort((a, b) => b.v - a.v)[0];
 
-  const trend = prevTotal === 0 ? "好的开始"
+  const trend = prevTotal === 0 ? "一切从这里开始"
     : total > prevTotal * 1.5 ? "比上周投入多了不少"
     : total > prevTotal ? "比上周更来劲了"
     : total < prevTotal / 2 ? "比上周收敛许多，忙起来了？"
@@ -227,10 +227,7 @@ export default function HomeDashboard() {
       {/* ── 时段 + 构成：各半行 ── */}
       <div className="grid grid-cols-2 gap-4">
         <div className={panelClass} style={panelStyle}>
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[11px] text-[#9ab8d4]">时段习惯</p>
-            {persona && <p className="text-[10px] text-primary-light truncate ml-2">{persona}</p>}
-          </div>
+          <p className="text-[11px] text-[#9ab8d4] mb-1">时段习惯</p>
           <div className="h-16">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={hourlyData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
