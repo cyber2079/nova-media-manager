@@ -133,7 +133,7 @@ export default function GameLibrary() {
           className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center",
             "border-blue-500/30 text-blue-400 hover:bg-blue-500/10 disabled:opacity-50")}
           title="扫描 Steam 游戏">
-          {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gamepad2 className="h-4 w-4" />}
         </button>
         <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
         <Button onClick={handleAddGame} className="h-8 w-8 p-0" title={t("game.add")}><Upload className="h-4 w-4" /></Button>
