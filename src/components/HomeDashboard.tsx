@@ -176,7 +176,7 @@ export default function HomeDashboard() {
   // 继续观看（复用 P0-3 数据）
   const continueWatching = useMemo(() =>
     movies
-      .filter((m) => !m.watched && m.watchPosition > 5 && m.status === "ready")
+      .filter((m) => !m.watched && m.watchPosition > 0 && m.status === "ready")
       .sort((a, b) => (b.watchUpdatedAt || "").localeCompare(a.watchUpdatedAt || ""))
       .slice(0, 6),
   [movies]);

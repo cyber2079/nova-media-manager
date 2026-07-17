@@ -145,8 +145,10 @@ export default function MovieLibrary() {
     const wantExternal = externalPlayer.mode !== "never" && !!externalPlayer.path
       && (externalPlayer.mode === "always" || EXTERNAL_PLAYER_EXTS.includes(ext));
     if (wantExternal) {
+      // 外接播放器无法追踪进度，先记一笔续播标记
+      useMovieStore.getState().updateWatchProgress(movie.id, movie.watchPosition || 1).catch(() => {});
       invoke("launch_external_player", { movieId: movie.id, kind: externalPlayer.kind, playerPath: externalPlayer.path })
-        .catch(() => playInternal(movie)); // 调起失败回退内置
+        .catch(() => playInternal(movie));
       return;
     }
     playInternal(movie);
@@ -172,7 +174,7 @@ export default function MovieLibrary() {
 
   // 续播起点：>5s 且未看完才续播（看完的从头放）
   const resumeAt = (m: Movie) =>
-    !m.watched && m.watchPosition > 5 && m.durationSeconds > 0 && m.watchPosition < m.durationSeconds * 0.95
+    !m.watched && m.watchPosition > 0 && m.durationSeconds > 0 && m.watchPosition < m.durationSeconds * 0.95
       ? m.watchPosition : 0;
   const [resumedFrom, setResumedFrom] = useState(0);
 
