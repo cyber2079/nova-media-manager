@@ -1,7 +1,5 @@
 import { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import SafeImage from "@/components/SafeImage";
 import type { ImageItem } from "@/types/image";
 import { Trash2, Image as ImageIcon, Tag, Monitor } from "lucide-react";
@@ -68,25 +66,26 @@ export default memo(function ImageCard({ image, onDelete, onClick, onEditTags, o
         </p>}
 
         {/* 操作按钮行 */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {onSetWallpaper && (
-            <Button variant="ghost" size="icon"
-              className={cn("text-gray-500 hover:text-primary-light", compact ? "h-6 w-6" : "h-8 w-8")}
+            <button
+              className={cn("flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors",
+                compact ? "h-6 w-6" : "h-8 w-8")}
               onClick={(e) => { e.stopPropagation(); onSetWallpaper(image.filePath); }} title="设为壁纸">
               <Monitor className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
-            </Button>
+            </button>
           )}
           {onEditTags && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light"
+            <button className="h-8 w-8 flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors"
               onClick={(e) => { e.stopPropagation(); onEditTags(); }} title="Edit tags">
               <Tag className="h-3.5 w-3.5" />
-            </Button>
+            </button>
           )}
           <div className="flex-1" />
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-red-400"
+          <button className="h-8 w-8 flex items-center justify-center rounded-md text-gray-500 hover:text-red-400 hover:bg-white/5 transition-colors"
             onClick={(e) => { e.stopPropagation(); onDelete(image.id); }}>
             <Trash2 className="h-4 w-4" />
-          </Button>
+          </button>
         </div>
       </CardContent>
     </Card>

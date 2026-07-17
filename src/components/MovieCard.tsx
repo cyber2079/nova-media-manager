@@ -1,6 +1,4 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import SafeImage from "@/components/SafeImage";
 import { memo } from "react";
 import type { Movie } from "@/types/movie";
@@ -73,13 +71,12 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
         {/* 悬浮播放按钮 */}
         {!isProcessing && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/40">
-            <Button
-              size="icon"
-              className="h-12 w-12 rounded-full opacity-0 transition-all group-hover:opacity-100"
-              onClick={() => onPlay(movie)}
+            <button
+              className="h-12 w-12 rounded-full bg-primary flex items-center justify-center opacity-0 transition-all group-hover:opacity-100"
+              onClick={(e) => { e.stopPropagation(); onPlay(movie); }}
             >
-              <Play className="h-5 w-5 fill-white" />
-            </Button>
+              <Play className="h-5 w-5 fill-white ml-0.5" />
+            </button>
           </div>
         )}
 
@@ -146,35 +143,34 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
         )}
 
         {/* 操作按钮行 */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {onSetWallpaper && (
-            <Button variant="ghost" size="icon"
-              className={cn("text-gray-500 hover:text-primary-light", compact ? "h-6 w-6" : "h-8 w-8")}
+            <button
+              className={cn("flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors",
+                compact ? "h-6 w-6" : "h-8 w-8")}
               onClick={(e) => { e.stopPropagation(); onSetWallpaper(movie.filePath); }} title="设为背景">
               <Monitor className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
-            </Button>
+            </button>
           )}
           {onEditTags && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light"
+            <button className="h-8 w-8 flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors"
               onClick={(e) => { e.stopPropagation(); onEditTags(); }} title="Edit tags">
               <Tag className="h-3.5 w-3.5" />
-            </Button>
+            </button>
           )}
           {onRegenCover && !isProcessing && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light"
+            <button className="h-8 w-8 flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors"
               onClick={(e) => { e.stopPropagation(); onRegenCover(); }} title="重新生成封面">
               <RefreshCw className="h-3.5 w-3.5" />
-            </Button>
+            </button>
           )}
           <div className="flex-1" />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-gray-500 hover:text-red-400"
+          <button
+            className="h-8 w-8 flex items-center justify-center rounded-md text-gray-500 hover:text-red-400 hover:bg-white/5 transition-colors"
             onClick={(e) => { e.stopPropagation(); onDelete(movie.id); }}
           >
             <Trash2 className="h-4 w-4" />
-          </Button>
+          </button>
         </div>
       </CardContent>
     </Card>
