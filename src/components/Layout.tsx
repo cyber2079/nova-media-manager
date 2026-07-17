@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Film, Image, Gamepad2, Home, Music, Sun, Sword, Shield, Swords, Maximize2, Minimize2, Search, Settings, Globe, Sparkles, SlidersHorizontal, X, LayoutGrid, Gauge } from "lucide-react";
+import { Film, Image, Gamepad2, Home, Music, Sun, Sword, Shield, Swords, Maximize2, Minimize2, Search, Settings, Globe, Sparkles, SlidersHorizontal, X, LayoutGrid } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { cn } from "@/lib/utils";
 import { kv } from "@/lib/sqliteStore";
@@ -91,6 +91,15 @@ export default function Layout() {
   const isHomeStrip = isHome && isDefault && dashboardMode === "strip";
   const [stripOpen, setStripOpen] = useState(false);
   const pageKey = isHome ? "home" : (location.pathname.replace("/", "") as string) || "home";
+  const [pageMinimized, setPageMinimized] = useState(useSettingsStore.getState().contentMinimized[pageKey]);
+  useEffect(() => {
+    const unsub = useSettingsStore.subscribe((s, prev) => {
+      const now = s.contentMinimized[pageKey];
+      const was = prev?.contentMinimized?.[pageKey];
+      if (now !== was) setPageMinimized(!!now);
+    });
+    return unsub;
+  }, [pageKey]);
   const showWidgets = globalWidgets || (widgetPages[pageKey] ?? false);
   const [isFS, setIsFS] = useState(true);
   const wantsFS = useRef(true);
@@ -514,7 +523,10 @@ export default function Layout() {
       getCurrentWindow().setDecorations(!hideTitleBar).catch(() => {});
     };
     const t = setTimeout(sync, 100);
-    return () => { clearTimeout(t); };
+    const unsub = useSettingsStore.subscribe((s, prev) => {
+      if (s.hideTitleBar !== prev.hideTitleBar) sync();
+    });
+    return () => { clearTimeout(t); unsub(); };
   }, []);
 
   // Start fullscreen + language
@@ -596,7 +608,7 @@ export default function Layout() {
       </>}
 
       {/* ── Header ── */}
-      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden")} style={headerOpacityStyle}>
+      <header ref={headerRef} className={cn(headerClass, (!headerVisible || pageMinimized) && "hidden")} style={headerOpacityStyle}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
             {isIce ? (
@@ -656,8 +668,9 @@ export default function Layout() {
 
       <main
         className={cn(
-          "mx-auto max-w-7xl px-6 overflow-hidden relative rounded-xl",
+          "mx-auto max-w-7xl px-6 overflow-hidden relative rounded-xl transition-opacity duration-300",
           isHome && !isDefault && "!max-w-none !px-0 !overflow-visible !rounded-none pointer-events-none",
+          pageMinimized && "!opacity-0 !pointer-events-none",
         )}
         style={(() => {
           if (isHomeStrip) return { height: "auto", marginTop: 0, background: "transparent", borderColor: "transparent" } as React.CSSProperties;
@@ -687,6 +700,22 @@ export default function Layout() {
         }}
       >
         <div className="flex items-center justify-center gap-2.5 h-full px-4">
+          {/* 页面内容显隐切换 — 所有页面始终可用 */}
+          <button
+            onClick={() => {
+              const pageKey = isHome ? "home" : location.pathname.replace("/", "") || "home";
+              useSettingsStore.getState().toggleContentMinimized(pageKey);
+            }}
+            className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+            title="收起/展开页面内容"
+          >
+            {(() => {
+              const pageKey = isHome ? "home" : location.pathname.replace("/", "") || "home";
+              const minimized = useSettingsStore.getState().contentMinimized[pageKey];
+              return minimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />;
+            })()}
+          </button>
+
           {/* QuickHub trigger button (all pages) */}
           {showQuickHub && (
             <button
@@ -698,17 +727,6 @@ export default function Layout() {
               title="快捷中心"
             >
               <LayoutGrid className="h-4 w-4" />
-            </button>
-          )}
-
-          {/* 仪表盘恢复图标 — 仅在默认主题迷你条模式出现（开始菜单右侧），展开后隐藏 */}
-          {isDefault && dashboardMode === "strip" && (
-            <button
-              onClick={() => { useSettingsStore.getState().setDashboardMode("full"); navigate("/"); }}
-              className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
-              title="展开仪表盘"
-            >
-              <Gauge className="h-4 w-4" />
             </button>
           )}
 

@@ -247,7 +247,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
               <>
                 <LicenseSection t={t} i18n={i18n} />
                 <LanguageSection {...{ t, language, handleLanguage, languages }} />
-                <StartupSection {...{ t, autoStart, autoLoading, handleAutoStart, startFullscreen, setStartFullscreen, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, hideTitleBar, setHideTitleBar }} />
+                <StartupSection {...{ t, autoStart, autoLoading, handleAutoStart, startFullscreen, setStartFullscreen }} />
                 <DataSection t={t} />
                 <FeedbackSection t={t} />
                 <ResetButton tab="general" t={t} onReset={() => setConfirmReset("general")} />
@@ -304,6 +304,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
                   <div className="space-y-3">
                     <FontFamilySection {...{ t, fontFamily, setFontFamily }} />
                     <FontSection {...{ t, fontSize, setFontSize }} />
+                    <IconSection {...{ t, iconSize, setIconSize }} />
                   </div>
                 </section>
 
@@ -312,6 +313,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
                   <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.look_display")}</h4>
                   <div className="space-y-3">
                     <BgModeSection {...{ t, bgVideoMode, setBgVideoMode }} />
+                    <ToggleRow label={t("settings.hide_title_bar")} active={hideTitleBar} onToggle={() => setHideTitleBar(!hideTitleBar)} hint={t("settings.hide_title_bar_hint")} />
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={autoHideHeader} onChange={(e) => setAutoHideHeader(e.target.checked)} className="h-4 w-4 rounded accent-[var(--color-primary)]" />
                       <span className="text-sm text-gray-300">{t("settings.auto_hide_header")}</span>
@@ -656,17 +658,14 @@ function LanguageSection({ t, language, handleLanguage, languages }: any) {
   );
 }
 
-function StartupSection({ t, autoStart, autoLoading, handleAutoStart, startFullscreen, setStartFullscreen, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, hideTitleBar, setHideTitleBar }: any) {
+function StartupSection({ t, autoStart, autoLoading, handleAutoStart, startFullscreen, setStartFullscreen }: any) {
   return (
     <section>
       <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.startup")}</h4>
       <div className="space-y-4">
         <ToggleRow label={t("settings.auto_launch")} active={autoStart} disabled={autoLoading} onToggle={handleAutoStart} />
         <ToggleRow label={t("settings.start_fullscreen")} active={startFullscreen} onToggle={() => setStartFullscreen(!startFullscreen)} />
-        <ToggleRow label={t("settings.hide_title_bar")} active={hideTitleBar} onToggle={() => setHideTitleBar(!hideTitleBar)} hint={t("settings.hide_title_bar_hint")} />
-        <ToggleRow label={t("settings.auto_hide_header")} active={autoHideHeader} onToggle={() => setAutoHideHeader(!autoHideHeader)} icon={<EyeOff className="h-3.5 w-3.5 text-gray-500" />} />
-        <ToggleRow label={t("settings.auto_hide_footer")} active={autoHideFooter} onToggle={() => setAutoHideFooter(!autoHideFooter)} icon={<EyeOff className="h-3.5 w-3.5 text-gray-500" />} />
-      </div>
+              </div>
     </section>
   );
 }

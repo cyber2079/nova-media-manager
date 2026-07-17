@@ -6,9 +6,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, Cell } from "recharts";
-import { Film, Music, Gamepad2, Image as ImageIcon, Minimize2, RotateCcw } from "lucide-react";
+import { Film, Music, Gamepad2, Image as ImageIcon, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useSettingsStore } from "@/stores/settingsStore";
 import { useChartColors, withAlpha } from "@/lib/useChartColors";
 import { usePlayHistoryStore } from "@/stores/playHistoryStore";
 import { getTrending, fmtPrice, TRENDING_TAGS, type TrendingData, type TrendingGame } from "@/lib/trending";
@@ -197,18 +196,11 @@ export default function HomeDashboard() {
 
   return (
     <div className="space-y-5">
-      {/* ── 头部：总量 + 收缩按钮 ── */}
-      <div className="flex items-center gap-3">
-        <div className="flex-1 rounded-2xl border border-primary/20 p-5" style={panelStyle}>
-          <p className="inline-block rounded-full border border-primary/30 px-3 py-1 text-xs text-primary-light">
-            {t("home.total_count", { count: totalUp })}
-          </p>
-        </div>
-        <button onClick={() => useSettingsStore.getState().setDashboardMode("strip")}
-          className="shrink-0 h-10 w-10 flex items-center justify-center rounded-full text-gray-500 hover:text-white hover:bg-surface-lighter transition-colors border border-primary/10"
-          title="收缩为迷你条">
-          <Minimize2 className="h-4 w-4" />
-        </button>
+      {/* ── 头部：总量 ── */}
+      <div className="rounded-2xl border border-primary/20 p-5" style={panelStyle}>
+        <p className="inline-block rounded-full border border-primary/30 px-3 py-1 text-xs text-primary-light">
+          {t("home.total_count", { count: totalUp })}
+        </p>
       </div>
 
       {/* ── 一句话周报 ── */}

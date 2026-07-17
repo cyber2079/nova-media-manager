@@ -140,10 +140,12 @@ export type SettingsState = {
   paletteCustomized: boolean;
 
   dashboardMode: "full" | "strip";
+  contentMinimized: Record<string, boolean>;
 
   // Init from persistent store
   init: () => Promise<void>;
   setDashboardMode: (m: "full" | "strip") => void;
+  toggleContentMinimized: (page: string) => void;
   setLanguage: (lang: string) => void;
   setAutoStart: (on: boolean) => Promise<void>;
   setStartFullscreen: (on: boolean) => void;
@@ -468,6 +470,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     paletteContrast: (saved as any).paletteContrast || "dark",
     paletteCustomized: (saved as any).paletteCustomized || false,
     dashboardMode: (saved as any).dashboardMode || "full",
+    contentMinimized: (saved as any).contentMinimized || {},
 
     init: async () => {
       const raw = await kv.get(STORAGE_KEY);
@@ -518,6 +521,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized, wallpaper: s.wallpaper ?? get().wallpaper,
             externalPlayer: s.externalPlayer ?? get().externalPlayer,
             dashboardMode: (s.dashboardMode as any) ?? get().dashboardMode,
+            contentMinimized: (s.contentMinimized as any) ?? get().contentMinimized,
           });
           applyPalette(); applySurface();
           applyFontColors();
@@ -534,6 +538,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     },
     setStartFullscreen(on) { set({ startFullscreen: on }); outdate(); persist(get()); },
     setDashboardMode(m) { set({ dashboardMode: m }); outdate(); persist(get()); },
+    toggleContentMinimized(page) { set((s) => ({ contentMinimized: { ...s.contentMinimized, [page]: !s.contentMinimized[page] } })); outdate(); persist(get()); },
     setAutoHideHeader(on) { set({ autoHideHeader: on }); outdate(); persist(get()); },
     setAutoHideFooter(on) { set({ autoHideFooter: on }); outdate(); persist(get()); },
     setCustomColor(color) { set({ customColor: color }); outdate(); persist(get()); },
