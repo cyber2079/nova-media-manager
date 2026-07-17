@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useThemeStore } from "@/stores/themeStore";
 import { readFileSafe } from "@/lib/readFileSafe";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, X, Upload, Loader2, Star, Image, ImageIcon, Trash2, Tag, CheckSquare, Maximize2, Minimize2, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, X, Upload, Loader2, Star, Image, ImageIcon, Trash2, Tag, CheckSquare, Maximize2, Minimize2, Search, Monitor } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
 import LayoutSwitch, { type LayoutMode } from "@/components/LayoutSwitch";
@@ -348,6 +348,7 @@ export default function ImageLibrary() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    <button onClick={(e) => { e.stopPropagation(); handleSetWallpaper(img.filePath); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title="设为壁纸"><Monitor className="h-4 w-4" /></button>
                     <button onClick={(e) => { e.stopPropagation(); toggleFavorite(img.id, "image"); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-yellow-400 hover:bg-surface-lighter/50 transition-colors">
                       <Star className={cn("h-4 w-4", isFavorite(img.id) ? "fill-yellow-400 text-yellow-400" : "")} />
                     </button>
