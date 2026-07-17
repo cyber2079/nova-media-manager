@@ -196,11 +196,21 @@ export default function HomeDashboard() {
 
   return (
     <div className="space-y-5">
-      {/* ── 头部：总量 ── */}
-      <div className="rounded-2xl border border-primary/20 p-5" style={panelStyle}>
-        <p className="inline-block rounded-full border border-primary/30 px-3 py-1 text-xs text-primary-light">
-          {t("home.total_count", { count: totalUp })}
-        </p>
+      {/* ── 媒体库快览 chips ── */}
+      <div className="flex flex-wrap items-center gap-3">
+        {composition.map((c) => (
+          <button key={c.key} onClick={() => navigate(`/${c.key}`)}
+            className="flex items-center gap-1.5 rounded-full border border-primary/20 px-3 py-1.5 text-xs text-[#c8ddf0] hover:border-primary/40 hover:bg-primary/5 transition-colors">
+            <c.icon className="h-3.5 w-3.5" style={{ color: c.color }} />
+            <span className="tabular-nums font-semibold text-white">{c.value}</span>
+            <span className="text-[#8aa8c4]">{c.label}</span>
+          </button>
+        ))}
+        {persona && (
+          <span className="flex items-center gap-1 rounded-full border border-primary/20 px-3 py-1.5 text-xs text-primary-light">
+            {persona}
+          </span>
+        )}
       </div>
 
       {/* ── 一句话周报 ── */}
@@ -224,7 +234,7 @@ export default function HomeDashboard() {
           <div className="h-16">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={hourlyData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-                <XAxis dataKey="h" ticks={[0, 6, 12, 18, 23]} tick={{ fontSize: 9, fill: colors.fontSecondary }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="h" ticks={[0, 6, 12, 18, 23]} tick={{ fontSize: 9, fill: colors.fontSecondary || "#6a8aa8" }} axisLine={{ stroke: colors.fontSecondary || "#6a8aa8", strokeWidth: 1, opacity: 0.2 }} tickLine={false} interval={0} />
                 <Tooltip cursor={{ fill: "rgba(255,255,255,0.06)" }}
                   contentStyle={{ background: "rgba(8,12,20,0.92)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 11 }}
                   labelFormatter={(h) => `${h}:00 - ${h}:59`} formatter={(v) => [`${v} 次`, "活动"]} />

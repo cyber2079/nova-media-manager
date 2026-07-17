@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Film, Image, Gamepad2, Home, Music, Sun, Sword, Shield, Swords, Maximize2, Minimize2, Search, Settings, Globe, Sparkles, SlidersHorizontal, X, LayoutGrid } from "lucide-react";
+import { Film, Image, Gamepad2, Home, Music, Sun, Sword, Shield, Swords, Maximize2, Minimize2, Search, Settings, Globe, Sparkles, SlidersHorizontal, X, LayoutGrid, Gauge } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { cn } from "@/lib/utils";
 import { kv } from "@/lib/sqliteStore";
@@ -712,7 +712,7 @@ export default function Layout() {
             {(() => {
               const pageKey = isHome ? "home" : location.pathname.replace("/", "") || "home";
               const minimized = useSettingsStore.getState().contentMinimized[pageKey];
-              return minimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />;
+              return minimized ? <Gauge className="h-4 w-4" /> : <Gauge className="h-4 w-4" />;
             })()}
           </button>
 
