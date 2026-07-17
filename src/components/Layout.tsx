@@ -608,7 +608,7 @@ export default function Layout() {
       </>}
 
       {/* ── Header ── */}
-      <header ref={headerRef} className={cn(headerClass, (!headerVisible || pageMinimized) && "hidden")} style={headerOpacityStyle}>
+      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden")} style={headerOpacityStyle}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
             {isIce ? (
