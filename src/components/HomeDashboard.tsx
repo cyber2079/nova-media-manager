@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, Cell } from "recharts";
 import { Film, Music, Gamepad2, Image as ImageIcon, Minimize2, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -222,8 +222,8 @@ export default function HomeDashboard() {
         );
       })()}
 
-      {/* ── 时段 + 构成 + 标签：三小格一行 ── */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* ── 时段 + 构成：各半行 ── */}
+      <div className="grid grid-cols-2 gap-4">
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center justify-between mb-1">
             <p className="text-[11px] text-[#9ab8d4]">时段习惯</p>
@@ -263,27 +263,6 @@ export default function HomeDashboard() {
               </button>
             ))}
           </div>
-        </div>
-
-        <div className={panelClass} style={panelStyle}>
-          <p className="text-[11px] text-[#9ab8d4] mb-1">标签偏好</p>
-          {stats && stats.topTags.length > 0 ? (
-            <div className="h-[88px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.topTags.slice(0, 4)} layout="vertical" margin={{ top: 0, right: 20, bottom: 0, left: 0 }}>
-                  <XAxis type="number" hide />
-                  <YAxis type="category" dataKey="tag" width={52} tick={{ fontSize: 9, fill: colors.fontSecondary }} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: "rgba(255,255,255,0.06)" }}
-                    contentStyle={{ background: "rgba(8,12,20,0.92)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 11 }}
-                    formatter={(v) => [`${v} 个`, "内容"]} />
-                  <Bar dataKey="count" radius={[0, 2, 2, 0]} fill={withAlpha(colors.primary, 0.8)} animationDuration={800}
-                    label={{ position: "right", fontSize: 9, fill: colors.fontSecondary }} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <p className="text-[10px] text-[#8aa8c4] py-4 text-center">打标签后呈现口味画像</p>
-          )}
         </div>
       </div>
 
