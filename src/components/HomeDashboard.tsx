@@ -109,14 +109,14 @@ function weeklyStory(stats: Stats): { text: string; emoji: string } {
     { k: "games", v: n.games, e: "🎮", tail: "游戏时间称王" },
   ].sort((a, b) => b.v - a.v)[0];
 
-  const trend = prevTotal === 0 ? "一切从这里开始"
+  const trend = prevTotal === 0 ? ""
     : total > prevTotal * 1.5 ? "比上周投入多了不少"
     : total > prevTotal ? "比上周更来劲了"
     : total < prevTotal / 2 ? "比上周收敛许多，忙起来了？"
     : total < prevTotal ? "比上周悠着点了"
     : "和上周旗鼓相当";
 
-  return { text: `这周你${body} — ${dom.tail}，${trend}`, emoji: dom.e };
+  return { text: `这周你${body} — ${dom.tail}${trend ? `，${trend}` : ""}`, emoji: dom.e };
 }
 
 // ── 时段风格标签（四种，取活动最多的时段）──
