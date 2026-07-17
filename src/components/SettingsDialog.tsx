@@ -328,11 +328,11 @@ export default function SettingsDialog({ open, onClose }: Props) {
                         <button onClick={() => setDashboardMode("full")}
                           className={cn("px-3 py-1.5 text-xs rounded-md border transition-colors",
                             dashboardMode === "full" ? "bg-white/10 border-white/30 text-white" : "border-white/5 text-gray-400 hover:text-gray-200")}>
-                          正常</button>
+                          {t("settings.dashboard_normal")}</button>
                         <button onClick={() => setDashboardMode("strip")}
                           className={cn("px-3 py-1.5 text-xs rounded-md border transition-colors",
                             dashboardMode === "strip" ? "bg-white/10 border-white/30 text-white" : "border-white/5 text-gray-400 hover:text-gray-200")}>
-                          最小化</button>
+                          {t("settings.dashboard_strip")}</button>
                       </div>
                     </div>
                   </div>

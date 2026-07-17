@@ -650,7 +650,7 @@ export default function Layout() {
               <Search className="h-4 w-4 text-gray-400" />
             </button>
             {import.meta.env?.VITE_LICENSE_TIER && (
-              <button onClick={() => navigate("/studio")} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title="主题创作">
+              <button onClick={() => navigate("/studio")} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={t("settings.theme_studio")}>
                 <Sparkles className="h-4 w-4 text-purple-400" />
               </button>
             )}
@@ -658,7 +658,7 @@ export default function Layout() {
               <Settings className="h-4 w-4 text-gray-400" />
             </button>
             {isIce && (
-              <button onClick={() => setShowVideoTuner((v) => !v)} className={cn("flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-300", showVideoTuner ? "bg-primary/20 text-primary-light" : "hover:bg-surface-lighter text-gray-400")} title="背景视频调参">
+              <button onClick={() => setShowVideoTuner((v) => !v)} className={cn("flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-300", showVideoTuner ? "bg-primary/20 text-primary-light" : "hover:bg-surface-lighter text-gray-400")} title={t("settings.bg_tuner")}>
                 <SlidersHorizontal className="h-4 w-4" />
               </button>
             )}
@@ -707,7 +707,7 @@ export default function Layout() {
               useSettingsStore.getState().toggleContentMinimized(pageKey);
             }}
             className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
-            title="收起/展开页面内容"
+            title={t("settings.toggle_page")}
           >
             {(() => {
               const pageKey = isHome ? "home" : location.pathname.replace("/", "") || "home";
@@ -724,7 +724,7 @@ export default function Layout() {
                 "shrink-0 h-8 w-8 flex items-center justify-center rounded-lg transition-colors",
                 stripOpen ? "bg-primary/15 text-primary-light" : "text-gray-400 hover:text-white hover:bg-white/5",
               )}
-              title="快捷中心"
+              title={t("settings.quick_hub")}
             >
               <LayoutGrid className="h-4 w-4" />
             </button>

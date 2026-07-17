@@ -86,27 +86,27 @@ function TrendingCard({ g, delay, onOpen }: { g: TrendingGame; delay: number; on
 }
 
 // ── 一句话周报：模板按数据特征确定性选择（同数据同句，不随机跳）──
-function weeklyStory(stats: Stats): { text: string; emoji: string } {
+function weeklyStory(stats: Stats, t: (k: string, o?: any) => string): { text: string; emoji: string } {
   const n = stats.weekNow, p = stats.weekPrev;
   const total = n.movies + n.music + n.games;
   const prevTotal = p.movies + p.music + p.games;
 
   if (total === 0) {
     return prevTotal > 0
-      ? { text: "这周静悄悄的，上周的热闹还在么？收藏夹里的老朋友们等你回来", emoji: "🍿" }
-      : { text: "开始播放电影、听歌或启动游戏，这里会写下属于你的一周", emoji: "✨" };
+      ? { text: t("dashboard.story_idle"), emoji: "🍿" }
+      : { text: t("dashboard.story_empty"), emoji: "✨" };
   }
 
   const parts: string[] = [];
-  if (n.movies > 0) parts.push(`看了 ${n.movies} 部电影`);
-  if (n.music > 0) parts.push(`听了 ${n.music} 首歌`);
-  if (n.games > 0) parts.push(`进了 ${n.games} 次游戏`);
+  if (n.movies > 0) parts.push(t("dashboard.story_movie_count", { n: n.movies }));
+  if (n.music > 0) parts.push(t("dashboard.story_music_count", { n: n.music }));
+  if (n.games > 0) parts.push(t("dashboard.story_game_count", { n: n.games }));
   const body = parts.join("、");
 
   const items = [
-    { k: "movies", v: n.movies, e: "🎬", tail: "影迷本色" },
-    { k: "music", v: n.music, e: "🎵", tail: "耳朵很忙" },
-    { k: "games", v: n.games, e: "🎮", tail: "游戏时间称王" },
+    { k: "movies", v: n.movies, e: "🎬", tail: t("dashboard.persona_movie") },
+    { k: "music", v: n.music, e: "🎵", tail: t("dashboard.persona_music") },
+    { k: "games", v: n.games, e: "🎮", tail: t("dashboard.persona_game") },
   ].filter((x) => x.v > 0);
   let tail = ""; let emoji = "✨";
   if (items.length === 1) {
@@ -116,35 +116,42 @@ function weeklyStory(stats: Stats): { text: string; emoji: string } {
     const max = sorted[0].v;
     if (sorted[1].v === max) {
       const tied = items.filter((x) => x.v === max).map((x) => x.k);
-      if (tied.length >= 3) { tail = "雨露均沾"; emoji = "🎯"; }
-      else if (tied.includes("movies") && tied.includes("music")) { tail = "影音双修"; emoji = "🎬"; }
-      else if (tied.includes("movies") && tied.includes("games")) { tail = "边看边打"; emoji = "🎮"; }
-      else if (tied.includes("music") && tied.includes("games")) { tail = "肝帝配乐"; emoji = "🎵"; }
+      if (tied.length >= 3) { tail = t("dashboard.persona_all"); emoji = "🎯"; }
+      else if (tied.includes("movies") && tied.includes("music")) { tail = t("dashboard.persona_movie_music"); emoji = "🎬"; }
+      else if (tied.includes("movies") && tied.includes("games")) { tail = t("dashboard.persona_movie_game"); emoji = "🎮"; }
+      else if (tied.includes("music") && tied.includes("games")) { tail = t("dashboard.persona_music_game"); emoji = "🎵"; }
     } else {
       tail = sorted[0].tail; emoji = sorted[0].e;
     }
   }
 
-const trend = prevTotal === 0 ? ""
-    : total > prevTotal * 1.5 ? "比上周投入多了不少"
-    : total > prevTotal ? "比上周更来劲了"
-    : total < prevTotal / 2 ? "比上周收敛许多，忙起来了？"
-    : total < prevTotal ? "比上周悠着点了"
-    : "和上周旗鼓相当";
+  const trends: Record<string, string> = {
+    up_big: t("dashboard.trend_up_big"),
+    up: t("dashboard.trend_up"),
+    down_big: t("dashboard.trend_down_big"),
+    down: t("dashboard.trend_down"),
+    same: t("dashboard.trend_same"),
+  };
+  const trend = prevTotal === 0 ? ""
+    : total > prevTotal * 1.5 ? trends.up_big
+    : total > prevTotal ? trends.up
+    : total < prevTotal / 2 ? trends.down_big
+    : total < prevTotal ? trends.down
+    : trends.same;
 
-  return { text: `这周你${body} — ${tail}${trend ? `，${trend}` : ""}`, emoji };
+  return { text: `${t("dashboard.story_this_week")}${body} — ${tail}${trend ? `，${trend}` : ""}`, emoji };
 }
 
 // ── 时段风格标签（四种，取活动最多的时段）──
-function hourPersona(hourly: number[]): string {
+function hourPersona(hourly: number[], t: (k: string) => string): string {
   const total = hourly.reduce((a, b) => a + b, 0);
   if (total < 5) return "";
   const sum = (a: number, b: number) => hourly.slice(a, b).reduce((x, y) => x + y, 0);
   const zones = [
-    { label: "🌙 深夜党 — 凌晨是你的主场", v: sum(0, 6) },
-    { label: "🌅 早起鸟 — 一日之计在于晨", v: sum(6, 12) },
-    { label: "☀️ 午后型 — 下午的时光最惬意", v: sum(12, 18) },
-    { label: "🌆 夜猫子 — 晚间黄金档选手", v: sum(18, 24) },
+    { label: t("dashboard.hourly_night"), v: sum(0, 6) },
+    { label: t("dashboard.hourly_morning"), v: sum(6, 12) },
+    { label: t("dashboard.hourly_afternoon"), v: sum(12, 18) },
+    { label: t("dashboard.hourly_evening"), v: sum(18, 24) },
   ];
   return zones.reduce((a, b) => (b.v > a.v ? b : a)).label;
 }
@@ -199,7 +206,7 @@ export default function HomeDashboard() {
   const hourlyData = useMemo(() =>
     (stats?.hourly || new Array(24).fill(0)).map((v, h) => ({ h, v, label: `${h}:00` })),
   [stats]);
-  const persona = stats ? hourPersona(stats.hourly) : "";
+  const persona = stats ? hourPersona(stats.hourly, t) : "";
 
   // 内容构成
   const composition = stats ? [
@@ -231,7 +238,7 @@ export default function HomeDashboard() {
 
       {/* ── 一句话周报 ── */}
       {stats && (() => {
-        const story = weeklyStory(stats);
+        const story = weeklyStory(stats, t);
         return (
           <div className={`${panelClass} flex items-center gap-3`} style={panelStyle}>
             <span className="text-xl shrink-0">{story.emoji}</span>
@@ -243,14 +250,14 @@ export default function HomeDashboard() {
       {/* ── 时段 + 构成：各半行 ── */}
       <div className="grid grid-cols-2 gap-4">
         <div className={panelClass} style={panelStyle}>
-          <p className="text-[11px] text-[#9ab8d4] mb-1">时段习惯</p>
+          <p className="text-[11px] text-[#9ab8d4] mb-1">{t("dashboard.hourly_title")}</p>
           <div className="h-16">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={hourlyData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
                 <XAxis dataKey="h" ticks={[0, 6, 12, 18, 23]} tick={{ fontSize: 9, fill: colors.fontSecondary || "#6a8aa8" }} axisLine={{ stroke: colors.fontSecondary || "#6a8aa8", strokeWidth: 1, opacity: 0.2 }} tickLine={false} interval={0} />
                 <Tooltip cursor={{ fill: "rgba(255,255,255,0.06)" }}
                   contentStyle={{ background: "rgba(8,12,20,0.92)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 11 }}
-                  labelFormatter={(h) => `${h}:00 - ${h}:59`} formatter={(v) => [`${v} 次`, "活动"]} />
+                  labelFormatter={(h) => `${h}:00 - ${h}:59`} formatter={(v) => [`${v} ${t("dashboard.times")}`, t("dashboard.activity")]} />
                 <Bar dataKey="v" radius={[2, 2, 0, 0]} animationDuration={800}>
                   {hourlyData.map((d, i) => (
                     <Cell key={i} fill={withAlpha(colors.primary, d.v > 0 ? 0.85 : 0.15)} />
@@ -262,7 +269,7 @@ export default function HomeDashboard() {
         </div>
 
         <div className={panelClass} style={panelStyle}>
-          <p className="text-[11px] text-[#9ab8d4] mb-2">媒体库构成</p>
+          <p className="text-[11px] text-[#9ab8d4] mb-2">{t("dashboard.library_title")}</p>
           <div className="flex h-2.5 rounded-full overflow-hidden gap-[2px] mb-2.5">
             {composition.filter((c) => c.value > 0).map((c) => (
               <div key={c.key} className="transition-all duration-700" style={{ width: `${(c.value / compTotal) * 100}%`, background: c.color, minWidth: 6 }} />
@@ -284,8 +291,8 @@ export default function HomeDashboard() {
       {/* ── Steam 热门 ── */}
       <div className={panelClass} style={panelStyle}>
         <div className="flex items-center justify-between mb-2">
-          <p className="text-[11px] text-[#9ab8d4]">🔥 Steam 热销榜</p>
-          <p className="text-[10px] text-[#8aa8c4]">数据来自 Steam 官方</p>
+          <p className="text-[11px] text-[#9ab8d4]">{t("dashboard.steam_title")}</p>
+          <p className="text-[10px] text-[#8aa8c4]">{t("dashboard.steam_source")}</p>
         </div>
         <div className="flex flex-wrap gap-1.5 mb-3">
           {TRENDING_TAGS.map((t) => (
@@ -316,7 +323,7 @@ export default function HomeDashboard() {
           </div>
         ) : (
           <div className="flex items-center justify-center py-5 rounded-lg border border-white/5 bg-surface/30">
-            <p className="text-[11px] text-[#6a8aa8]">Steam 热销榜暂不可用，稍后再来</p>
+            <p className="text-[11px] text-[#6a8aa8]">{t("dashboard.steam_unavailable")}</p>
           </div>
         )}
       </div>
@@ -327,7 +334,7 @@ export default function HomeDashboard() {
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
             <Music className="h-3.5 w-3.5 text-primary-light" />
-            <span className="text-[11px] text-[#9ab8d4]">最常播放</span>
+            <span className="text-[11px] text-[#9ab8d4]">{t("dashboard.top_played")}</span>
           </div>
           {stats && stats.topMusic.length > 0 ? (
             <div className="space-y-0.5">
@@ -337,12 +344,12 @@ export default function HomeDashboard() {
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
-                  <span className="text-[10px] text-[#8aa8c4] tabular-nums shrink-0">{m.count} 次</span>
+                  <span className="text-[10px] text-[#8aa8c4] tabular-nums shrink-0">{m.count} {t("dashboard.times")}</span>
                 </button>
               ))}
             </div>
           ) : (
-            <p className="text-[10px] text-[#8aa8c4] py-4 text-center">{stats ? "播放后出现在这里" : "加载中…"}</p>
+            <p className="text-[10px] text-[#8aa8c4] py-4 text-center">{stats ? t("dashboard.empty_played") : t("dashboard.loading")}</p>
           )}
         </div>
 
@@ -350,7 +357,7 @@ export default function HomeDashboard() {
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
             <Film className="h-3.5 w-3.5 text-primary-light" />
-            <span className="text-[11px] text-[#9ab8d4]">最近观看</span>
+            <span className="text-[11px] text-[#9ab8d4]">{t("dashboard.recent_watched")}</span>
           </div>
           {recentWatched.length > 0 ? (
             <div className="space-y-0.5">
@@ -365,7 +372,7 @@ export default function HomeDashboard() {
               ))}
             </div>
           ) : (
-            <p className="text-[10px] text-[#8aa8c4] py-4 text-center">播放电影或音乐后出现在这里</p>
+            <p className="text-[10px] text-[#8aa8c4] py-4 text-center">{t("dashboard.empty_watched")}</p>
           )}
         </div>
       </div>
@@ -376,8 +383,8 @@ export default function HomeDashboard() {
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
             <Music className="h-3.5 w-3.5 text-primary-light/50" />
-            <span className="text-[11px] text-[#9ab8d4]">本周热歌</span>
-            <span className="text-[9px] text-[#6a8aa8] ml-auto">网易云</span>
+            <span className="text-[11px] text-[#9ab8d4]">{t("dashboard.trending_music")}</span>
+            <span className="text-[9px] text-[#6a8aa8] ml-auto">{t("dashboard.netease")}</span>
           </div>
           {recMusic.length > 0 ? (
             <div className="space-y-0.5">
@@ -407,8 +414,8 @@ export default function HomeDashboard() {
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
             <Film className="h-3.5 w-3.5 text-primary-light/50" />
-            <span className="text-[11px] text-[#9ab8d4]">本周热映</span>
-            <span className="text-[9px] text-[#6a8aa8] ml-auto">TMDB</span>
+            <span className="text-[11px] text-[#9ab8d4]">{t("dashboard.trending_movies")}</span>
+            <span className="text-[9px] text-[#6a8aa8] ml-auto">{t("dashboard.tmdb")}</span>
           </div>
           {recMovies.length > 0 ? (
             <div className="space-y-0.5">
@@ -441,7 +448,7 @@ export default function HomeDashboard() {
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
             <RotateCcw className="h-3.5 w-3.5 text-primary-light" />
-            <span className="text-xs text-primary-light tracking-wide">好久不见 — 你收藏过的</span>
+            <span className="text-xs text-primary-light tracking-wide">{t("dashboard.revisit_title")}</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {stats.revisit.map((r) => (
@@ -450,7 +457,7 @@ export default function HomeDashboard() {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary/20 text-xs text-[#c8ddf0] hover:bg-primary/10 hover:text-white transition-colors">
                 {r.itemType === "movie" ? <Film className="h-3 w-3 text-primary-light" /> : <Music className="h-3 w-3 text-primary-light" />}
                 <span className="max-w-[160px] truncate">{r.name}</span>
-                {r.daysSince > 0 && <span className="text-[10px] text-[#8aa8c4]">{r.daysSince}天前</span>}
+                {r.daysSince > 0 && <span className="text-[10px] text-[#8aa8c4]">{r.daysSince}{t("dashboard.days_ago")}</span>}
               </button>
             ))}
           </div>
