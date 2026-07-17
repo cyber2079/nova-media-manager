@@ -335,46 +335,49 @@ export default function HomeDashboard() {
         </div>
       )}
 
-      {/* ── Steam 热门 ── */}
-      {(trending || trendLoading) && (
-        <div className={panelClass} style={panelStyle}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[11px] text-[#9ab8d4]">🔥 Steam 热销榜</p>
-            <p className="text-[10px] text-[#8aa8c4]">数据来自 Steam 官方 · 点击查看商店页</p>
-          </div>
-          {/* 类型筛选 chips */}
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {TRENDING_TAGS.map((t) => (
-              <button key={t.tag} onClick={() => setTrendTag(t.tag)}
-                className={`px-2.5 py-1 rounded-full text-[10px] border transition-all ${
-                  trendTag === t.tag
-                    ? "bg-primary/15 border-primary/40 text-primary-light font-semibold"
-                    : "border-white/10 text-[#8aa8c4] hover:text-white hover:bg-white/5"
-                }`}>
-                {t.label}
-              </button>
+      {/* ── Steam 热门（始终显示，离线/503 时保留 chips + 兜底文案）── */}
+      <div className={panelClass} style={panelStyle}>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[11px] text-[#9ab8d4]">🔥 Steam 热销榜</p>
+          <p className="text-[10px] text-[#8aa8c4]">数据来自 Steam 官方 · 点击查看商店页</p>
+        </div>
+        {/* 类型筛选 chips — 永不下架 */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {TRENDING_TAGS.map((t) => (
+            <button key={t.tag} onClick={() => setTrendTag(t.tag)}
+              className={`px-2.5 py-1 rounded-full text-[10px] border transition-all ${
+                trendTag === t.tag
+                  ? "bg-primary/15 border-primary/40 text-primary-light font-semibold"
+                  : "border-white/10 text-[#8aa8c4] hover:text-white hover:bg-white/5"
+              }`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {trendLoading ? (
+          /* 骨架占位：高度与卡片一致，切换不跳动 */
+          <div className="flex gap-3 overflow-hidden pb-1 -mx-1 px-1">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="shrink-0 w-40">
+                <div className="rounded-lg bg-surface-lighter animate-pulse aspect-[460/215] mb-1.5" />
+                <div className="h-3 w-24 rounded bg-surface-lighter animate-pulse" />
+              </div>
             ))}
           </div>
-          {!trending ? (
-            /* 骨架占位：高度与卡片一致，切换不跳动 */
-            <div className="flex gap-3 overflow-hidden pb-1 -mx-1 px-1">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="shrink-0 w-40">
-                  <div className="rounded-lg bg-surface-lighter animate-pulse aspect-[460/215] mb-1.5" />
-                  <div className="h-3 w-24 rounded bg-surface-lighter animate-pulse" />
-                </div>
-              ))}
-            </div>
-          ) : (
+        ) : trending ? (
           /* key=trendTag：整条原子替换，杜绝新旧榜逐卡 diff 残影 */
           <div key={trendTag} className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
             {trending.games.map((g, i) => (
               <TrendingCard key={g.id} g={g} delay={i * 40} onOpen={() => openSteamPage(g.id)} />
             ))}
           </div>
-          )}
-        </div>
-      )}
+        ) : (
+          /* 服务端不可达 / 503 / 超时 — 区域不消失，给用户交代 */
+          <div className="flex items-center justify-center py-5 rounded-lg border border-white/5 bg-surface/30">
+            <p className="text-[11px] text-[#6a8aa8]">Steam 热销榜暂不可用，稍后再来</p>
+          </div>
+        )}
+      </div>
 
       {/* ── 重温推荐 ── */}
       {stats && stats.revisit.length > 0 && (

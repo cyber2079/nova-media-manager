@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 const KEY = "home-dashboard-mode";
 type Mode = "strip" | "full";
 
-let _mode: Mode = (localStorage.getItem(KEY) as Mode) || "strip";
+let _mode: Mode = (localStorage.getItem(KEY) as Mode) || "full";
 let _listeners: Array<() => void> = [];
 
 export function getHomeMode(): Mode {
