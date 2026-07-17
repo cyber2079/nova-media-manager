@@ -90,23 +90,21 @@ fn process_video(video_path: &str, cover_output: &str) -> (f64, String, String, 
     let ffmpeg_bin = crate::commands::ffmpeg_helper::ffmpeg_path();
     let cover_path = if ffmpeg_bin.exists() {
         let mut cover = String::new();
-        // 智能起截点：时长15% 跳过片头黑场/logo；thumbnail 滤镜从该点解码30帧，
-        // 按直方图选最有代表性的一帧（纯黑/纯色帧天然被淘汰）。
-        // 失败再回退固定点位链（损坏/极短视频）。
+        // 智能起截点：时长15% 跳过片头黑场/logo，直接 seek+resize→JPEG 800px
         let smart_offset = duration * 0.15;
         let mut attempts: Vec<(f64, &str)> = Vec::new();
         if smart_offset > 0.0 {
-            attempts.push((smart_offset, "thumbnail=n=30,scale=400:-1"));
+            attempts.push((smart_offset, "scale=800:-1"));
         }
-        attempts.push((0.0, "thumbnail=n=30,scale=400:-1"));
+        attempts.push((0.0, "scale=800:-1"));
         for off in [15u32, 30, 60, 120] {
-            attempts.push((off as f64, "scale=400:-1"));
+            attempts.push((off as f64, "scale=800:-1"));
         }
         for (offset, vf) in attempts {
             let out = Command::new(&ffmpeg_bin)
                 .args([
                     "-y", "-ss", &format!("{:.2}", offset), "-i", video_path,
-                    "-vframes", "1", "-q:v", "4",
+                    "-vframes", "1", "-q:v", "2", "-vcodec", "mjpeg",
                     "-vf", vf,
                     cover_output,
                 ])
@@ -146,7 +144,7 @@ fn spawn_video_processing(app: AppHandle, movie_id: String, path: String) {
             let covers_dir = app.path().app_data_dir().unwrap().join("data").join("covers");
             std::fs::create_dir_all(&covers_dir).ok();
             // 时间戳文件名：路径变化让前端绕过旧封面缓存（重新生成时必需）
-            let cover_out = covers_dir.join(format!("{}_{}.png", movie_id, chrono::Utc::now().timestamp()));
+            let cover_out = covers_dir.join(format!("{}_{}.jpg", movie_id, chrono::Utc::now().timestamp()));
             let cover_out_str = cover_out.to_string_lossy().to_string();
 
             eprintln!("[bg] processing video: {}", path);

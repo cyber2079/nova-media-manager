@@ -8,8 +8,7 @@ import { useGate } from "@/lib/useGate";
 const RELEASES_URL = "https://github.com/cyber2079/nova-media-manager/releases";
 
 export default function UpdateChecker() {
-  const { t, i18n } = useTranslation();
-  const isZh = i18n.language.startsWith("zh");
+  const { t } = useTranslation();
   const canUpdate = useGate("auto-update"); // Pro+ → auto-download; Free → notify only
   const [update, setUpdate] = useState<{
     version: string;
@@ -80,7 +79,7 @@ export default function UpdateChecker() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-white">
-            {isZh ? "发现新版本" : "Update Available"}
+            {t("updateChecker.new_version")}
           </h3>
           <p className="text-xs text-gray-400">
             v{update.version} &middot; {update.date}
@@ -114,18 +113,18 @@ export default function UpdateChecker() {
       {/* Action */}
       {!downloading && canUpdate && (
         <button onClick={handleDownload} className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-sm font-medium">
-          <Download className="h-4 w-4" />{isZh ? "立即更新" : "Update Now"}
+          <Download className="h-4 w-4" />{t("updateChecker.update_now")}
         </button>
       )}
       {downloading && (
         <div className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary/50 text-white/50 text-sm font-medium">
-          <Loader2 className="h-4 w-4 animate-spin" />{isZh ? "正在下载..." : "Downloading..."}
+          <Loader2 className="h-4 w-4 animate-spin" />{t("updateChecker.downloading")}
         </div>
       )}
       {!canUpdate && (
         <a href={RELEASES_URL} target="_blank" rel="noopener noreferrer"
           className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary/15 text-primary-light hover:bg-primary/25 transition-colors text-sm font-medium">
-          <ExternalLink className="h-4 w-4" />{isZh ? "手动下载 · GitHub" : "Download from GitHub"}
+          <ExternalLink className="h-4 w-4" />{t("updateChecker.manual_download")}
         </a>
       )}
     </div>

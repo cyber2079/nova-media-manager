@@ -216,7 +216,7 @@ function SystemTools() {
   const [sysMuted, setSysMuted] = useState(false);
   const [volLoaded, setVolLoaded] = useState(false);
   const [confirming, setConfirming] = useState<ToolItem | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pendingVol = useRef<{ level: number; muted: boolean } | null>(null);
 
   useEffect(() => {

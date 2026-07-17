@@ -43,7 +43,7 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
         <FavoriteStar active={!!favorited} onToggle={onToggleFav || (() => {})} />
         {showExtBadge && (
           <div className="absolute top-2 right-2 z-10 rounded bg-black/70 px-1.5 py-0.5 text-[9px] text-white/80 backdrop-blur-sm">
-            {extPlayer.path ? "外部播放" : "需外部播放器"}
+            {extPlayer.path ? t("movie.external_player") : t("movie.need_external_player")}
           </div>
         )}
         {isProcessing ? (
@@ -90,7 +90,7 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
         {/* 已看角标 */}
         {movie.watched && (
           <div className="absolute bottom-2 left-2 rounded bg-primary/80 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
-            已看
+            {t("movie.watched")}
           </div>
         )}
 
@@ -148,7 +148,7 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
             <button
               className={cn("flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors",
                 compact ? "h-6 w-6" : "h-8 w-8")}
-              onClick={(e) => { e.stopPropagation(); onSetWallpaper(movie.filePath); }} title="设为背景">
+              onClick={(e) => { e.stopPropagation(); onSetWallpaper(movie.filePath); }} title={t("movie.set_wallpaper")}>
               <Monitor className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
             </button>
           )}
@@ -160,7 +160,7 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
           )}
           {onRegenCover && !isProcessing && (
             <button className="h-8 w-8 flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors"
-              onClick={(e) => { e.stopPropagation(); onRegenCover(); }} title="重新生成封面">
+              onClick={(e) => { e.stopPropagation(); onRegenCover(); }} title={t("movie.regen_cover")}>
               <RefreshCw className="h-3.5 w-3.5" />
             </button>
           )}

@@ -1,51 +1,43 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import LanguageDetector from "i18next-browser-languagedetector";
 import zh from "./locales/zh.json";
 import en from "./locales/en.json";
+import ja from "./locales/ja.json";
+import ko from "./locales/ko.json";
+import de from "./locales/de.json";
+import fr from "./locales/fr.json";
+import it from "./locales/it.json";
 
-// Statically load zh (fallback) + en (most common). Other 5 languages loaded on-demand.
-const eagerResources = { zh: { translation: zh }, en: { translation: en } };
-
-const localeLoaders: Record<string, () => Promise<any>> = {
-  fr: () => import("./locales/fr.json"),
-  it: () => import("./locales/it.json"),
-  de: () => import("./locales/de.json"),
-  ja: () => import("./locales/ja.json"),
-  ko: () => import("./locales/ko.json"),
+// All 7 languages eager-loaded (~200 KB total — negligible).
+// Avoids init-time fallback-to-zh caused by lazy-load race on saved language.
+const resources = {
+  zh: { translation: zh },
+  en: { translation: en },
+  ja: { translation: ja },
+  ko: { translation: ko },
+  de: { translation: de },
+  fr: { translation: fr },
+  it: { translation: it },
 };
 
+// 单一真相来源：app-lang，手动管理
 const saved = localStorage.getItem("app-lang") || "zh";
 
-i18n.use(LanguageDetector).use(initReactI18next).init({
-  resources: eagerResources,
+i18n.use(initReactI18next).init({
+  resources,
   lng: saved,
   fallbackLng: "zh",
   interpolation: { escapeValue: false },
-  detection: { order: ["localStorage"], lookupLocalStorage: "app-lang" },
-});
-
-// Lazy-load missing locale bundles on language change
-i18n.on("languageChanged", (lng) => {
-  if (!i18n.hasResourceBundle(lng, "translation")) {
-    const loader = localeLoaders[lng];
-    if (loader) {
-      loader().then((mod) => {
-        i18n.addResourceBundle(lng, "translation", mod.default, true, true);
-        i18n.changeLanguage(lng); // re-render with new bundle
-      });
-    }
-  }
 });
 
 export const languages = [
-  { code: "zh", label: "中文" },
-  { code: "en", label: "English" },
-  { code: "fr", label: "Français" },
-  { code: "it", label: "Italiano" },
-  { code: "de", label: "Deutsch" },
-  { code: "ja", label: "日本語" },
-  { code: "ko", label: "한국어" },
+  { code: "zh", label: "中文", i18nKey: "languages.zh" },
+  { code: "en", label: "English", i18nKey: "languages.en" },
+  { code: "fr", label: "Français", i18nKey: "languages.fr" },
+  { code: "it", label: "Italiano", i18nKey: "languages.it" },
+  { code: "de", label: "Deutsch", i18nKey: "languages.de" },
+  { code: "ja", label: "日本語", i18nKey: "languages.ja" },
+  { code: "ko", label: "한국어", i18nKey: "languages.ko" },
 ];
 
 export default i18n;

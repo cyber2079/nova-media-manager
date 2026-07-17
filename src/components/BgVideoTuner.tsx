@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSettingsStore, type BgVideoLoopConfig } from "@/stores/settingsStore";
 import { SlidersHorizontal, X, RotateCcw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const DEFAULTS: BgVideoLoopConfig = {
   enabled: true,
@@ -14,12 +15,13 @@ const DEFAULTS: BgVideoLoopConfig = {
 };
 
 export default function BgVideoTuner({ visible, onToggle }: { visible: boolean; onToggle: () => void }) {
+  const { t } = useTranslation();
   const cfg = useSettingsStore((s) => s.bgVideoLoop);
   const set = useSettingsStore((s) => s.setBgVideoLoop);
 
   if (!visible) return null;
 
-  const f = (k: keyof BgVideoLoopConfig) => cfg[k];
+  const f = (k: Exclude<keyof BgVideoLoopConfig, "enabled">) => cfg[k];
   const u = (k: keyof BgVideoLoopConfig, v: number | boolean) => set({ [k]: v });
 
   return (
@@ -28,10 +30,10 @@ export default function BgVideoTuner({ visible, onToggle }: { visible: boolean; 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-4 w-4 text-primary-light" />
-          <span className="text-sm font-semibold text-white">背景视频调参</span>
+          <span className="text-sm font-semibold text-white">{t("bgTuner.title")}</span>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={() => set(DEFAULTS)} className="text-gray-500 hover:text-white p-1" title="重置默认">
+          <button onClick={() => set(DEFAULTS)} className="text-gray-500 hover:text-white p-1" title={t("bgTuner.reset_default")}>
             <RotateCcw className="h-3.5 w-3.5" />
           </button>
           <button onClick={onToggle} className="text-gray-500 hover:text-white p-1">
@@ -42,40 +44,40 @@ export default function BgVideoTuner({ visible, onToggle }: { visible: boolean; 
 
       <div className="space-y-3.5">
         {/* Playback Rate */}
-        <Row label="播放速率" value={f("playbackRate")} unit="x" min={0.25} max={2} step={0.05}
-          onChange={(v) => u("playbackRate", v)} />
+        <Row label={t("bgTuner.playback_rate")} value={f("playbackRate")} unit="x" min={0.25} max={2} step={0.05}
+          onChange={(v) => u("playbackRate", v)} t={t} />
 
         {/* First Play Start */}
-        <Row label="首次开始" value={f("firstPlayStart")} unit="s" min={0} max={60} step={0.5}
-          hint="0=从头" onChange={(v) => u("firstPlayStart", v)} />
+        <Row label={t("bgTuner.first_start")} value={f("firstPlayStart")} unit="s" min={0} max={60} step={0.5}
+          hint={t("bgTuner.first_start_hint")} onChange={(v) => u("firstPlayStart", v)} t={t} />
 
         {/* First Play End */}
-        <Row label="首次结束" value={f("firstPlayEnd")} unit="s" min={0} max={120} step={0.5}
-          hint="0=播完" onChange={(v) => u("firstPlayEnd", v)} />
+        <Row label={t("bgTuner.first_end")} value={f("firstPlayEnd")} unit="s" min={0} max={120} step={0.5}
+          hint={t("bgTuner.first_end_hint")} onChange={(v) => u("firstPlayEnd", v)} t={t} />
 
         {/* Loop Start */}
-        <Row label="循环起点" value={f("loopStart")} unit="s" min={0} max={60} step={0.5}
-          hint="每次循环从第几秒开始" onChange={(v) => u("loopStart", v)} />
+        <Row label={t("bgTuner.loop_start")} value={f("loopStart")} unit="s" min={0} max={60} step={0.5}
+          hint={t("bgTuner.loop_start_hint")} onChange={(v) => u("loopStart", v)} t={t} />
 
         {/* Loop Duration */}
-        <Row label="循环时长" value={f("loopDuration")} unit="s" min={1} max={30} step={0.5}
-          hint="每次循环播放多少秒" onChange={(v) => u("loopDuration", v)} />
+        <Row label={t("bgTuner.loop_duration")} value={f("loopDuration")} unit="s" min={1} max={30} step={0.5}
+          hint={t("bgTuner.loop_duration_hint")} onChange={(v) => u("loopDuration", v)} t={t} />
 
         {/* Transition Ms */}
-        <Row label="过渡时长" value={f("transitionMs")} unit="ms" min={0} max={2000} step={50}
-          hint="两段视频交叉淡入淡出" onChange={(v) => u("transitionMs", v)} />
+        <Row label={t("bgTuner.transition")} value={f("transitionMs")} unit="ms" min={0} max={2000} step={50}
+          hint={t("bgTuner.transition_hint")} onChange={(v) => u("transitionMs", v)} t={t} />
 
         {/* Loop Count */}
-        <Row label="循环次数" value={f("loopCount")} unit="次" min={0} max={50} step={1}
-          hint="0=无限循环" onChange={(v) => u("loopCount", v)} />
+        <Row label={t("bgTuner.loop_count")} value={f("loopCount")} unit={t("bgTuner.loop_count_unit")} min={0} max={50} step={1}
+          hint={t("bgTuner.loop_count_hint")} onChange={(v) => u("loopCount", v)} t={t} />
       </div>
     </div>
   );
 }
 
-function Row({ label, value, unit, min, max, step, hint, onChange }: {
+function Row({ label, value, unit, min, max, step, hint, onChange, t }: {
   label: string; value: number; unit: string; min: number; max: number; step: number;
-  hint?: string; onChange: (v: number) => void;
+  hint?: string; onChange: (v: number) => void; t?: any;
 }) {
   const pct = ((value - min) / (max - min)) * 100;
   const display = step < 1 ? value.toFixed(2) : value;

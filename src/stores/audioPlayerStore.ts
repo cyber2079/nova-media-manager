@@ -112,7 +112,6 @@ interface AudioPlayerState {
   play: (track: MusicType) => Promise<void>;
   toggle: () => void;
   pause: () => void;
-  resume: () => void;
   stop: () => void;
   seek: (pct: number) => void;
   setVolume: (v: number) => void;

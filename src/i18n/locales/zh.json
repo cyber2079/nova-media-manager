@@ -4,6 +4,13 @@
     "subtitle": "让桌面配得上你的热爱"
   },
   "batch": {
+    "selected_count": "已选 {{n}} 项",
+    "select_all": "全选",
+    "invert": "反选",
+    "batch_tags": "批量标签",
+    "batch_delete": "批量删除",
+    "cancel": "取消",
+    "items_suffix": " 个项目",
     "enter": "批量操作",
     "exit": "退出批量"
   },
@@ -149,13 +156,21 @@
     "all_tags": "全部",
     "no_movies": "暂无电影",
     "no_movies_hint": "点击添加电影导入本地视频文件",
+    "processing": "处理中...",
+    "unit": "部",
+    "set_wallpaper": "设为壁纸",
+    "resume_text": "已从 {{min}}:{{sec}} 继续 · 点击从头播放",
+    "watched": "已看",
+    "external_player": "外部播放",
+    "need_external_player": "需外部播放器",
+    "regen_cover": "重新生成封面",
     "sort_label": "排序：",
     "edit_tags": "编辑标签",
     "new_tag": "新标签",
     "add_tag": "添加",
-    "processing": "处理中...",
     "batch_tags": "批量标签操作",
-    "discover": "发现"
+    "discover": "发现",
+    "add_folder": "选择文件夹导入"
   },
   "image": {
     "confirm_delete": "确定要删除这张图片吗？此操作不可撤销。",
@@ -163,7 +178,14 @@
     "title": "图片库",
     "add": "添加图片",
     "no_images": "暂无图片",
-    "no_images_hint": "点击添加图片导入本地图片文件"
+    "no_images_hint": "点击添加图片导入本地图片文件",
+    "search": "搜索图片...",
+    "exit_fullscreen": "退出全屏 / Esc",
+    "tauri_only": "请使用 Tauri 桌面环境运行",
+    "select_folder": "选择文件夹导入",
+    "set_wallpaper": "设为壁纸",
+    "unit": "张",
+    "edit_tags": "编辑标签"
   },
   "game": {
     "confirm_delete": "确定要删除这个游戏吗？此操作不可撤销。",
@@ -171,7 +193,12 @@
     "title": "游戏库",
     "add": "添加游戏",
     "no_games": "暂无游戏",
-    "no_games_hint": "点击添加游戏导入本地游戏可执行文件"
+    "no_games_hint": "点击添加游戏导入本地游戏可执行文件",
+    "search": "搜索游戏...",
+    "add_failed": "添加游戏失败",
+    "scan_steam": "扫描 Steam 游戏",
+    "close": "关闭",
+    "edit_tags": "编辑标签"
   },
   "theme": {
     "switch_hint": "当前: {{theme}} | 点击切换"
@@ -276,7 +303,9 @@
     "play_mode_repeat_one": "单曲循环",
     "play_mode_repeat_list": "列表循环",
     "play_mode_shuffle": "随机",
-    "recent_plays": "最近播放"
+    "recent_plays": "最近播放",
+    "select_folder": "选择文件夹导入",
+    "unit": "首"
   },
   "video": {
     "play": "播放"
@@ -318,6 +347,13 @@
     "story_game_count": "进了 {{n}} 次游戏",
     "story_this_week": "这周你",
     "weekly_activity": "本周 {{n}} 次",
+    "active_newcomer": "初来乍到",
+    "active_regular": "常客",
+    "active_devoted": "离不开",
+    "active_legend": "已是我生活的一部分",
+    "streak_hot": "连续活跃",
+    "streak_week": "一周全勤",
+    "streak_on_fire": "根本停不下来",
     "persona_movie": "影迷本色",
     "persona_music": "耳朵很忙",
     "persona_game": "游戏时间称王",
@@ -443,6 +479,9 @@
     "custom_color_preset": "预设颜色",
     "hide_title_bar": "隐藏 Windows 标题栏",
     "hide_title_bar_hint": "不显示窗口标题栏及边框",
+    "hardware_accel": "硬件加速",
+    "hardware_accel_toggle": "启用 GPU 硬件加速",
+    "hardware_accel_hint": "使用显卡加速页面渲染与视频解码。关闭可解决部分老显卡的兼容问题。修改后需重启应用生效。",
     "font_colors": "字体颜色",
     "font_primary": "主字体色",
     "font_secondary": "辅助字体色",
@@ -515,6 +554,182 @@
     "cg_text_color": "文字颜色",
     "cg_text_xs": "小",
     "cg_text_sm": "中",
-    "cg_text_base": "大"
+    "cg_text_base": "大",
+    "wallpaper_title": "自定义壁纸",
+    "wallpaper_off": "默认",
+    "wallpaper_single": "单张",
+    "wallpaper_folder": "文件夹",
+    "wallpaper_slideshow": "幻灯片",
+    "wallpaper_shuffle": "随机",
+    "wallpaper_interval": "间隔",
+    "wallpaper_fit": "填充",
+    "wallpaper_fit_none": "正常",
+    "wallpaper_fit_cover": "填充",
+    "wallpaper_fit_contain": "完整",
+    "wallpaper_fit_fill": "拉伸"
+  },
+  "license": {
+    "title": "许可证",
+    "free_tier": "社区版",
+    "custom_tier": "定制版",
+    "permanent": "永久",
+    "monthly": "月付",
+    "yearly": "年付",
+    "expired": "已过期",
+    "remaining_days": "剩余 {{n}} 天",
+    "enter_code": "输入激活码",
+    "unbind": "解除绑定",
+    "unbind_confirm": "确定要解除此设备的绑定吗？\n激活码将被释放，可在其他设备上使用。",
+    "unbind_failed": "解绑失败: {{error}}"
+  },
+  "activation": {
+    "title": "激活许可证",
+    "invalid_format": "激活码格式不正确",
+    "placeholder_hint": "请输入您的激活码（格式：XXXX-XXXX-XXXX-XXXX）",
+    "verifying": "验证中...",
+    "activate": "激活",
+    "buy_hint": "激活码购买地址：请联系开发者或在爱发电获取",
+    "success": "激活成功！",
+    "success_detail": "专业版功能已解锁"
+  },
+  "onboarding": {
+    "invalid_format": "激活码格式不正确",
+    "title": "欢迎使用 Nova",
+    "description": "一站式管理你的电影、音乐、图片和游戏。精美主题，沉浸体验。全功能免费，没有任何限制。",
+    "start_free": "免费使用",
+    "i_have_code": "我有激活码",
+    "enter_code": "输入激活码",
+    "code_hint": "请输入爱发电订单页中的激活码",
+    "back": "返回",
+    "verifying": "验证中...",
+    "confirm_activate": "确认激活",
+    "unlocking_themes": "正在解锁 Premium 主题...",
+    "auto_enter": "全部就绪后将自动进入主界面",
+    "activated": "激活成功！",
+    "themes_ready": "Premium 主题已就绪"
+  },
+  "themeManager": {
+    "license_denied": "您的许可证不支持该主题",
+    "downloading_installing": "正在下载安装...",
+    "install_success": "安装成功！",
+    "trigger_button": "主题包",
+    "dialog_title": "主题包管理",
+    "install_local": "从本地安装",
+    "installing": "正在安装...",
+    "install": "安装",
+    "installed_themes": "已安装的主题",
+    "no_installed": "暂无已安装的主题包",
+    "available_themes": "可下载的主题",
+    "download": "下载"
+  },
+  "player": {
+    "title": "外接播放器",
+    "description": "HEVC/MKV/外挂字幕等内置引擎播放不了的格式，交给专业播放器。支持续播定位；mpv 可回传观看进度。",
+    "mode_auto": "智能分流",
+    "mode_auto_desc": "MKV/AVI 等内置放不了的走外接",
+    "mode_always": "全部外接",
+    "mode_always_desc": "所有视频都用外接播放器",
+    "mode_never": "全部内置",
+    "mode_never_desc": "不使用外接播放器",
+    "filter_name": "播放器",
+    "no_detected": "未检测到常见播放器（PotPlayer / VLC / mpv / MPC-HC），可手动选择",
+    "detecting": "检测中...",
+    "redetect": "重新检测",
+    "choose_exe": "手动选择 exe",
+    "custom_path": "自定义：{{path}}"
+  },
+  "fonts": {
+    "source_han_sans": "思源黑体",
+    "source_han_serif": "思源宋体",
+    "lxgw_wenkai": "霞鹜文楷",
+    "chinese_glitch": "中文故障",
+    "cyberpunk": "赛博朋克",
+    "english_broken": "英文破碎"
+  },
+  "colors": {
+    "navy": "藏蓝",
+    "wine": "酒红",
+    "brown": "深棕",
+    "dark_purple": "暗紫",
+    "teal": "青绿",
+    "amber": "琥珀",
+    "rose": "玫红",
+    "indigo": "靛蓝",
+    "crimson": "绯红",
+    "orange": "橙色",
+    "lime": "草绿",
+    "emerald": "翠绿",
+    "sky": "天蓝",
+    "violet": "紫罗兰",
+    "fuchsia": "品红",
+    "slate": "岩灰",
+    "black": "纯黑",
+    "white": "纯白"
+  },
+  "languages": {
+    "zh": "中文",
+    "en": "English",
+    "fr": "Français",
+    "it": "Italiano",
+    "de": "Deutsch",
+    "ja": "日本語",
+    "ko": "한국어"
+  },
+  "mediaScan": {
+    "no_new_media": "没有发现新媒体（已入库的自动跳过）",
+    "imported_n": "已导入 {{n}} {{unit}}",
+    "truncated": "（达单次 2000 上限，可再导一次）"
+  },
+  "bgTuner": {
+    "title": "背景视频调参",
+    "reset_default": "重置默认",
+    "playback_rate": "播放速率",
+    "first_start": "首次开始",
+    "first_start_hint": "0=从头",
+    "first_end": "首次结束",
+    "first_end_hint": "0=播完",
+    "loop_start": "循环起点",
+    "loop_start_hint": "每次循环从第几秒开始",
+    "loop_duration": "循环时长",
+    "loop_duration_hint": "每次循环播放多少秒",
+    "transition": "过渡时长",
+    "transition_hint": "两段视频交叉淡入淡出",
+    "loop_count": "循环次数",
+    "loop_count_hint": "0=无限循环",
+    "loop_count_unit": "次"
+  },
+  "privacy": {
+    "title": "帮助我们改进产品",
+    "description": "我们想收集匿名的使用数据来改进应用体验。这些数据仅包括：",
+    "item_themes": "您使用的主题和切换频率",
+    "item_usage": "各个功能的使用情况",
+    "item_crash": "应用崩溃和错误报告",
+    "disclaimer": "我们不会收集任何个人信息、文件内容或播放记录。所有数据完全匿名，仅用于优化产品体验。您可以随时在设置中更改此选项。",
+    "agree": "同意",
+    "decline": "拒绝"
+  },
+  "updateChecker": {
+    "new_version": "发现新版本",
+    "update_now": "立即更新",
+    "downloading": "正在下载...",
+    "manual_download": "手动下载 · GitHub"
+  },
+  "checkin": {
+    "title": "签到福利",
+    "active_days_label": "天活跃",
+    "streak_label": "天连续活跃",
+    "today_done": "今日已签到 ✓",
+    "day_unit": "天",
+    "claim": "领取",
+    "free_hint": "升级会员解锁签到福利，累计活跃可兑换续期天数"
+  },
+  "common": {
+    "set_wallpaper": "设为壁纸",
+    "tauri_only": "请使用 Tauri 桌面环境运行",
+    "dont_ask_again": "不再提示",
+    "player_bg_color": "播放器背景颜色",
+    "player_bg_disabled_hint": "请在设置 → 音乐 → 播放器背景中开启自定义",
+    "clear": "清除",
+    "opacity": "透明度"
   }
 }

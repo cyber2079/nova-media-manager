@@ -26,7 +26,7 @@ export default function QuickLaunchBar() {
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [icons, setIcons] = useState<Record<string, string>>({});
   const [runningIds, setRunningIds] = useState<Set<string>>(new Set());
-  const checkTimer = useRef<ReturnType<typeof setInterval>>();
+  const checkTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   useEffect(() => { load(); }, []);
 

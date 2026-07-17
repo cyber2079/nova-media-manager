@@ -93,6 +93,45 @@ select, select option {
   color: #e2e8f0 !important;
 }
 
+/* ═══════════ GPU 硬件加速层 ═══════════ */
+
+/* 主内容滚动区 — 独立 GPU 合成层，滚动不走 CPU */
+[data-route="page"] > div {
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+/* 卡片网格 item — hover scale 不触发全局 layout */
+.grid > *,
+[class*="grid-cols-"] > * {
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* 首页面板 — GPU 合成 */
+[data-route="home"] > div > [class*="rounded-2xl"] {
+  transform: translateZ(0);
+}
+
+/* 背景视频 — GPU 解码 + 独立合成层 */
+video, .bg-video, .ice-bg-video {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* ── 图片库滚动性能：virtual-scroll via CSS ── */
+.image-card-grid-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* ── 禁止拖出应用（images / links / selected text）── */
+img, a, svg, canvas, video {
+  -webkit-user-drag: none;
+}
+
 body {
   @apply bg-surface antialiased;
   color: var(--font-primary);

@@ -115,7 +115,7 @@ export default function MusicLibrary() {
 
     _motion.onCanvasDraw = (inst) => {
       const raw = inst.getBars();
-      const clean = raw.map((b: { value: number }) => (isFinite(b.value) ? b.value : 0.01));
+      const clean = raw.map((b) => (isFinite(b.value[0]) ? b.value[0] : 0.01));
       useAudioPlayerStore.setState({ visualizerBars: clean });
     };
 
@@ -172,7 +172,7 @@ export default function MusicLibrary() {
   const handleDropImport = useCallback(async (paths: string[]) => {
     try {
       const r = await importMediaPaths(paths, "music");
-      toast(importSummaryText(r, "首"), r.added > 0 ? "success" : "info");
+      toast(importSummaryText(r, t("music.unit"), t), r.added > 0 ? "success" : "info");
     } catch { await addMusic(paths); }
   }, [addMusic]);
 
@@ -187,7 +187,7 @@ export default function MusicLibrary() {
   const handleAddFolder = useCallback(async () => {
     try {
       const r = await pickFolderAndImport("music");
-      if (r) toast(importSummaryText(r, "首"), r.added > 0 ? "success" : "info");
+      if (r) toast(importSummaryText(r, t("music.unit"), t), r.added > 0 ? "success" : "info");
     } catch { toast(t("music.toast_tauri_only"), "error"); }
   }, []);
 
@@ -355,7 +355,7 @@ export default function MusicLibrary() {
             <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
             <button onClick={() => { setShowPlaylists(true); setSelectedPlaylist(playlists[0]?.id ?? null); }} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", "border-primary text-gray-500 hover:border-primary-light/30 hover:text-primary-light")} title={t("music.show_playlists")}><ListMusic className="h-4 w-4" /></button>
             <Button onClick={handleAdd} className="h-8 w-8 p-0" title={t("music.add")}><Upload className="h-4 w-4" /></Button>
-            <Button variant="outline" onClick={handleAddFolder} className="h-8 w-8 p-0" title="选择文件夹导入"><FolderOpen className="h-4 w-4" /></Button>
+            <Button variant="outline" onClick={handleAddFolder} className="h-8 w-8 p-0" title={t("music.select_folder")}><FolderOpen className="h-4 w-4" /></Button>
             {!batch.showCheckboxes ? (
               <Button variant="outline" onClick={batch.enterBatchMode} className="h-8 w-8 p-0" title={t("batch.enter")}><CheckSquare className="h-4 w-4" /></Button>
             ) : (
@@ -959,6 +959,7 @@ function parseHex(c: string): string {
 }
 
 function ColorPickerBtn({ color, onChange, disabled }: { color: string; onChange: (v: string) => void; disabled?: boolean }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const hex = parseHex(color);
   const alpha = parseAlpha(color);
@@ -978,7 +979,7 @@ function ColorPickerBtn({ color, onChange, disabled }: { color: string; onChange
     <div ref={ref} className="relative shrink-0">
       <button onClick={() => { if (!disabled) setOpen((v) => !v); }}
         className={`p-1 transition-colors ${disabled ? "text-gray-700 cursor-not-allowed" : "text-gray-500 hover:text-primary-light"}`}
-        title={disabled ? "请在设置 → 音乐 → 播放器背景中开启自定义" : "播放器背景颜色"}>
+        title={disabled ? t("common.player_bg_disabled_hint") : t("common.player_bg_color")}>
         <Palette className="h-3.5 w-3.5" />
       </button>
       {open && (
@@ -990,11 +991,11 @@ function ColorPickerBtn({ color, onChange, disabled }: { color: string; onChange
             <span className="text-xs text-gray-300">{hex}</span>
             {color && (
               <button onClick={() => { onChange(""); setOpen(false); }}
-                className="text-[10px] text-gray-500 hover:text-red-400 ml-auto">清除</button>
+                className="text-[10px] text-gray-500 hover:text-red-400 ml-auto">{t("common.clear")}</button>
             )}
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-gray-500 shrink-0">透明度</span>
+            <span className="text-[10px] text-gray-500 shrink-0">{t("common.opacity")}</span>
             <input type="range" min="10" max="100" value={Math.round(alpha * 100)}
               onChange={(e) => apply(hex, Number(e.target.value) / 100)}
               className="flex-1 h-1 accent-primary-light" />

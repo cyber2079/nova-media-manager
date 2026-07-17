@@ -115,14 +115,14 @@ export default function MovieLibrary() {
         await addMovies(paths);
       }
     } catch {
-      alert("Please run in Tauri desktop environment");
+      alert(t("common.tauri_only"));
     }
   }, [addMovies]);
 
   const handleAddFolder = useCallback(async () => {
     try {
       const r = await pickFolderAndImport("movies");
-      if (r) toast(importSummaryText(r, "部"), r.added > 0 ? "success" : "info");
+      if (r) toast(importSummaryText(r, t("movie.unit"), t), r.added > 0 ? "success" : "info");
     } catch { /* not in Tauri */ }
   }, []);
 
@@ -130,7 +130,7 @@ export default function MovieLibrary() {
   const handleDropImport = useCallback(async (paths: string[]) => {
     try {
       const r = await importMediaPaths(paths, "movies");
-      toast(importSummaryText(r, "部"), r.added > 0 ? "success" : "info");
+      toast(importSummaryText(r, t("movie.unit"), t), r.added > 0 ? "success" : "info");
     } catch { await addMovies(paths); }
   }, [addMovies]);
 
@@ -296,7 +296,7 @@ export default function MovieLibrary() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button onClick={(e) => { e.stopPropagation(); handleSetWallpaper(movie.filePath); }}
-                      className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title="设为背景">
+                      className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title={t("movie.set_wallpaper")}>
                       <Monitor className="h-4 w-4" />
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); toggleFavorite(movie.id, "movie"); }}
@@ -352,7 +352,7 @@ export default function MovieLibrary() {
                   onClick={() => { if (videoRef.current) videoRef.current.currentTime = 0; setResumedFrom(0); lastSavedRef.current = 0; }}
                   className="absolute top-3 left-3 rounded-full bg-black/70 px-3 py-1.5 text-xs text-white hover:bg-black/90 transition-colors backdrop-blur-sm"
                 >
-                  已从 {Math.floor(resumedFrom / 60)}:{String(Math.floor(resumedFrom % 60)).padStart(2, "0")} 继续 · 点击从头播放
+                  {t("movie.resume_text", { min: Math.floor(resumedFrom / 60), sec: String(Math.floor(resumedFrom % 60)).padStart(2, "0") })}
                 </button>
               )}
             </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import SafeImage from "@/components/SafeImage";
@@ -19,6 +20,7 @@ interface ImageCardProps {
 }
 
 export default memo(function ImageCard({ image, onDelete, onClick, onEditTags, onSetWallpaper, compact, favorited, onToggleFav }: ImageCardProps) {
+  const { t } = useTranslation();
 
   return (
     <Card
@@ -71,7 +73,7 @@ export default memo(function ImageCard({ image, onDelete, onClick, onEditTags, o
             <button
               className={cn("flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors",
                 compact ? "h-6 w-6" : "h-8 w-8")}
-              onClick={(e) => { e.stopPropagation(); onSetWallpaper(image.filePath); }} title="设为壁纸">
+              onClick={(e) => { e.stopPropagation(); onSetWallpaper(image.filePath); }} title={t("image.set_wallpaper")}>
               <Monitor className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
             </button>
           )}

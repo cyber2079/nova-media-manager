@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useImageStore } from "@/stores/imageStore";
 import ImageCard from "@/components/ImageCard";
 import { Button } from "@/components/ui/button";
-import SafeImage from "@/components/SafeImage";
+import SafeImage, { toCachedBlob } from "@/components/SafeImage";
 import TagFilterBar from "@/components/TagFilterBar";
 import TagEditDialog from "@/components/TagEditDialog";
 import type { ImageItem } from "@/types/image";
@@ -19,7 +19,7 @@ import { tagColor } from "@/lib/tagColor";
 import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useThemeStore } from "@/stores/themeStore";
-import { readFileSafe } from "@/lib/readFileSafe";
+
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, X, Upload, Loader2, Star, Image, ImageIcon, Trash2, Tag, CheckSquare, Maximize2, Minimize2, Search, Monitor } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
@@ -31,21 +31,17 @@ import { useToast } from "@/components/Toast";
 import { importMediaPaths, pickFolderAndImport, importSummaryText } from "@/lib/mediaScan";
 import { FolderOpen } from "lucide-react";
 
-async function toBlobUrl(filePath: string): Promise<string> {
+async function readerBlobUrl(filePath: string): Promise<string> {
   if (filePath.startsWith("http://") || filePath.startsWith("https://") || filePath.startsWith("blob:") || filePath.startsWith("data:") || filePath.startsWith("/themes/")) {
     return filePath;
   }
-  const clean = filePath.replace(/^file:\/\/\//, "").replace(/^file:\/\//, "");
-  try {
-    const data = await readFileSafe(clean);
-    const ext = (clean.split(".").pop() || "png").toLowerCase();
-    const m: Record<string,string> = { png:"image/png", jpg:"image/jpeg", jpeg:"image/jpeg", gif:"image/gif", webp:"image/webp", bmp:"image/bmp", svg:"image/svg+xml", ico:"image/x-icon" };
-    return URL.createObjectURL(new Blob([data], { type: m[ext] || "image/png" }));
-  } catch { return filePath; }
+  const url = await toCachedBlob(filePath.replace(/^file:\/\/\//, "").replace(/^file:\/\//, ""));
+  return url || filePath;
 }
 
 // ── Fullscreen auto-hide hint ──
 function FullscreenHint({ onExit }: { onExit: () => void }) {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
@@ -66,7 +62,7 @@ function FullscreenHint({ onExit }: { onExit: () => void }) {
     >
       <button onClick={onExit}
         className="text-white/50 hover:text-white text-xs bg-black/50 rounded-full px-4 py-2">
-        <Minimize2 className="h-3.5 w-3.5 inline mr-1" />退出全屏 / Esc
+        <Minimize2 className="h-3.5 w-3.5 inline mr-1" />{t("image.exit_fullscreen")}
       </button>
     </div>
   );
@@ -214,31 +210,46 @@ export default function ImageLibrary() {
   const { images, isLoading, loadImages, addImages, deleteImage, updateTags } = useImageStore();
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [favOnly, setFavOnly] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ msg: string; onOk: () => void } | null>(null);
   const [tagEditItem, setTagEditItem] = useState<ImageItem | null>(null);
   const [layoutMode, setLayoutMode] = useLayoutMode("layout-images", "card");
   const { getByType, toggleFavorite, isFavorite } = useFavoritesStore();
 
   const [previewIdx, setPreviewIdx] = useState(-1);
-  const [blobUrls, setBlobUrls] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
 
+  // 预热 SafeImage 模块级 blob 缓存（toCachedBlob 内部去重 + 缓存）
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const map: Record<string, string> = {};
-      for (const img of images) {
-        if (cancelled) return;
-        if (!blobUrls[img.coverPath]) map[img.coverPath] = await toBlobUrl(img.coverPath);
+      const BATCH = 8;
+      for (let i = 0; i < images.length && !cancelled; i += BATCH) {
+        const batch = images.slice(i, i + BATCH)
+          .filter((img) => img.coverPath)
+          .map((img) => readerBlobUrl(img.coverPath));
+        await Promise.allSettled(batch);
       }
-      if (!cancelled && Object.keys(map).length) setBlobUrls((p) => ({ ...p, ...map }));
     })();
     return () => { cancelled = true; };
   }, [images]);
 
-  useEffect(() => { loadImages(); }, []);
+  const getThumbSrc = (coverPath: string) => coverPath;
 
-  const confirmThen = (msg, fn) => setConfirmDelete({ msg, onOk: fn });
+  useEffect(() => { loadImages(); }, []);
+  // 后台补建缩略图（仅一次，kv 标记）
+  useEffect(() => {
+    const KEY = "img_thumb_backfill_v2";
+    if (localStorage.getItem(KEY) === "1") return;
+    import("@tauri-apps/api/core").then(async ({ invoke }) => {
+      try {
+        const n = await invoke<number>("backfill_image_thumbnails");
+        if (n > 0) loadImages();
+        localStorage.setItem(KEY, "1");
+      } catch {}
+    });
+  }, []);
+
+  const confirmThen = (msg: string, fn: () => void) => setConfirmDelete({ msg, onOk: fn });
 
   const handleSetWallpaper = useCallback((filePath: string) => {
     useSettingsStore.getState().setWallpaperConfig({ mode: "single", path: filePath });
@@ -267,20 +278,39 @@ export default function ImageLibrary() {
   }, [images]);
 
   const tagNames = useMemo(() => allTags.map(([tag]) => tag), [allTags]);
-  const viewerSrcs = useMemo(() => filtered.map((img) => blobUrls[img.coverPath] || img.coverPath), [filtered, blobUrls]);
+  // 全屏查看器：利用模块级缓存加载原图 blob URL
+  const [viewerBlobMap, setViewerBlobMap] = useState<Record<number, string>>({});
+  useEffect(() => {
+    if (previewIdx < 0) return;
+    const toLoad = [previewIdx, previewIdx - 1, previewIdx + 1];
+    Promise.all(
+      toLoad.map(async (i) => {
+        const img = filtered[i];
+        if (!img) return;
+        const url = await readerBlobUrl(img.filePath);
+        setViewerBlobMap((c) => (c[i] ? c : { ...c, [i]: url }));
+      })
+    ).catch(() => {});
+  }, [previewIdx, filtered]);
+
+  const viewerImages = useMemo(() => {
+    return filtered.map((img, i) => viewerBlobMap[i] || img.filePath);
+  }, [filtered, viewerBlobMap]);
+
+  // 列表/卡片用缩略图（blob cached）
 
   // 拖入的可能是文件或文件夹 — Rust 自动识别、递归展开、与库去重
   const handleDropImport = useCallback(async (paths: string[]) => {
     try {
       const r = await importMediaPaths(paths, "images");
-      toast(importSummaryText(r, "张"), r.added > 0 ? "success" : "info");
+      toast(importSummaryText(r, t("image.unit"), t), r.added > 0 ? "success" : "info");
     } catch { await addImages(paths); }
   }, [addImages]);
 
   const handleAddFolder = useCallback(async () => {
     try {
       const r = await pickFolderAndImport("images");
-      if (r) toast(importSummaryText(r, "张"), r.added > 0 ? "success" : "info");
+      if (r) toast(importSummaryText(r, t("image.unit"), t), r.added > 0 ? "success" : "info");
     } catch { /* not in Tauri */ }
   }, []);
   const handleAddImages = useCallback(async () => {
@@ -288,7 +318,7 @@ export default function ImageLibrary() {
       const { open } = await import("@tauri-apps/plugin-dialog");
       const selected = await open({ multiple: true, filters: [{ name: "Images", extensions: ["png","jpg","jpeg","gif","webp","bmp"] }] });
       if (selected) await addImages(Array.isArray(selected) ? selected : [selected]);
-    } catch { toast("请使用 Tauri 桌面环境运行", "error"); }
+    } catch { toast(t("image.tauri_only"), "error"); }
   }, [addImages]);
   const handleBatchDelete = useCallback(() => { confirmThen(t("image.confirm_batch_delete", { n: batch.selected.size }), async () => { for (const id of batch.selected) await deleteImage(id); batch.clear(); }); }, [batch, deleteImage, t]);
   const handleBatchTag = useCallback(async (tags: string[]) => { for (const id of batch.selected) await updateTags(id, tags); batch.clear(); }, [batch, updateTags]);
@@ -306,12 +336,12 @@ export default function ImageLibrary() {
         <h1 className="text-2xl font-bold">{t("image.title")}</h1>
         <div className="flex-1" />
         <div className="relative w-64">
-          <Input placeholder={t("image.search", "搜索图片...")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pr-7" />
+          <Input placeholder={t("image.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pr-7" />
           {searchQuery && <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-0.5"><X className="h-3.5 w-3.5" /></button>}
         </div>
         <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
         <Button onClick={handleAddImages} className="h-8 w-8 p-0" title={t("image.add")}><Upload className="h-4 w-4" /></Button>
-        <Button variant="outline" onClick={handleAddFolder} className="h-8 w-8 p-0" title="选择文件夹导入"><FolderOpen className="h-4 w-4" /></Button>
+        <Button variant="outline" onClick={handleAddFolder} className="h-8 w-8 p-0" title={t("image.select_folder")}><FolderOpen className="h-4 w-4" /></Button>
         {!batch.showCheckboxes ? (
           <Button variant="outline" onClick={batch.enterBatchMode} className="h-8 w-8 p-0" title={t("batch.enter")}><CheckSquare className="h-4 w-4" /></Button>
         ) : (
@@ -332,7 +362,7 @@ export default function ImageLibrary() {
                     <BatchCheckbox inline checked={batch.selected.has(img.id)} onToggle={() => batch.toggle(img.id)} />
                   )}
                   <div className="w-16 h-12 rounded overflow-hidden bg-surface-lighter shrink-0">
-                    <SafeImage src={img.coverPath} alt={img.name} className="w-full h-full object-cover"
+                    <SafeImage src={getThumbSrc(img.coverPath)} alt={img.name} className="w-full h-full object-cover"
                       fallback={<div className="flex h-full items-center justify-center"><ImageIcon className="h-4 w-4 text-gray-600" /></div>} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -348,7 +378,7 @@ export default function ImageLibrary() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <button onClick={(e) => { e.stopPropagation(); handleSetWallpaper(img.filePath); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title="设为壁纸"><Monitor className="h-4 w-4" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); handleSetWallpaper(img.filePath); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title={t("image.set_wallpaper")}><Monitor className="h-4 w-4" /></button>
                     <button onClick={(e) => { e.stopPropagation(); toggleFavorite(img.id, "image"); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-yellow-400 hover:bg-surface-lighter/50 transition-colors">
                       <Star className={cn("h-4 w-4", isFavorite(img.id) ? "fill-yellow-400 text-yellow-400" : "")} />
                     </button>
@@ -361,7 +391,7 @@ export default function ImageLibrary() {
           ) : (
             <div className={layoutMode === "card" ? "grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10"}>
               {paginated.map((img) => (
-                <div key={img.id} className="relative group cursor-pointer" onClick={() => { if (!batch.showCheckboxes) openViewer(img); }}>
+                <div key={img.id} className="image-card-grid-item relative group cursor-pointer" onClick={() => { if (!batch.showCheckboxes) openViewer(img); }}>
                   {batch.showCheckboxes && (
                     <div onClick={(e) => e.stopPropagation()} className="absolute top-2 right-2 z-10">
                       <BatchCheckbox checked={batch.selected.has(img.id)} onToggle={() => batch.toggle(img.id)} />
@@ -382,8 +412,8 @@ export default function ImageLibrary() {
     </div>
     </DropZone>
     {batch.showCheckboxes && <BatchBar selected={Array.from(batch.selected)} selectAll={batch.selectAll} clear={batch.leaveBatchMode} invert={batch.invert} onDelete={handleBatchDelete} allTags={tagNames} onBatchTag={handleBatchTag} t={t} />}
-    {previewIdx >= 0 && viewerSrcs[previewIdx] && (
-      <ImageViewer images={viewerSrcs} index={previewIdx} onClose={() => setPreviewIdx(-1)} onIndex={setPreviewIdx} />
+    {previewIdx >= 0 && filtered[previewIdx] && (
+      <ImageViewer images={viewerImages} index={previewIdx} onClose={() => setPreviewIdx(-1)} onIndex={setPreviewIdx} />
     )}
     </>
   );

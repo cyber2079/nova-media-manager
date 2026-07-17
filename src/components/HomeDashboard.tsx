@@ -5,12 +5,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
-import { Film, Music, Gamepad2, Image as ImageIcon, RotateCcw, Clock } from "lucide-react";
+import { Film, Music, Gamepad2, Image as ImageIcon, RotateCcw, Clock, Sunrise, Sun, Moon, Calendar } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useChartColors } from "@/lib/useChartColors";
 import { usePlayHistoryStore } from "@/stores/playHistoryStore";
 import { getTrending, fmtPrice, TRENDING_TAGS, type TrendingData, type TrendingGame } from "@/lib/trending";
 import { getRecommendMovies, getRecommendMusic, type RecItem } from "@/lib/recommend";
+import { useCheckInStore } from "@/stores/checkinStore";
 import SafeImage from "@/components/SafeImage";
 
 // ── 类型（对应 Rust DashboardStats）──
@@ -169,6 +170,7 @@ export default function HomeDashboard() {
 
   useEffect(() => {
     invoke<Stats>("dashboard_stats").then(setStats).catch(() => {});
+    useCheckInStore.getState().init(); // auto sign-in
   }, []);
 
   // 类型切换：立即清空旧榜（避免逐卡 diff 的"延迟移除"残影），骨架过渡，新榜整条替换
@@ -206,7 +208,24 @@ export default function HomeDashboard() {
     (stats?.hourly || new Array(24).fill(0)).map((v, h) => ({ h, v, label: `${h}:00` })),
   [stats]);
   const persona = stats ? hourPersona(stats.hourly, t) : "";
-  const weekTotal = stats ? stats.weekNow.movies + stats.weekNow.music + stats.weekNow.games : 0;
+
+  // ── 签到活跃数据（来自 Rust SQLite check_in 表）──
+  const checkInStats = useCheckInStore((s) => s.stats);
+  const activeDays = checkInStats?.activeDays ?? 0;
+  const streakDays = checkInStats?.streakDays ?? 0;
+  const activeDaysLabel = useMemo(() => {
+    if (!activeDays) return "";
+    if (activeDays <= 7) return t("dashboard.active_newcomer");
+    if (activeDays <= 30) return t("dashboard.active_regular");
+    if (activeDays <= 60) return t("dashboard.active_devoted");
+    return t("dashboard.active_legend");
+  }, [activeDays, t]);
+  const streakLabel = useMemo(() => {
+    if (streakDays >= 30) return t("dashboard.streak_on_fire");
+    if (streakDays >= 7) return t("dashboard.streak_week");
+    if (streakDays >= 3) return t("dashboard.streak_hot");
+    return "";
+  }, [streakDays, t]);
 
   // 内容构成
   const composition = stats ? [
@@ -227,58 +246,92 @@ export default function HomeDashboard() {
             {persona}
           </span>
         )}
-        {weekTotal > 0 && (
+        {activeDays > 0 && (
           <span className="flex items-center gap-1.5 rounded-full border border-primary/20 px-3 py-1.5 text-xs text-[#c8ddf0]">
-            <Film className="h-3.5 w-3.5 text-primary-light/50" />
-            <span className="tabular-nums font-semibold text-white">{weekTotal}</span>
-            <span className="text-[#8aa8c4]">{t("dashboard.weekly_activity", { n: weekTotal })}</span>
+            <Calendar className="h-3.5 w-3.5 text-primary-light" />
+            <span className="tabular-nums font-semibold text-white">{activeDays}</span>
+            <span className="text-[#8aa8c4]">{activeDaysLabel}</span>
           </span>
         )}
+        {streakDays >= 3 && streakLabel && (
+          <span className="flex items-center gap-1.5 rounded-full border border-amber-400/20 px-3 py-1.5 text-xs text-amber-300/90">
+            <span className="text-base">{streakDays >= 30 ? "🔥" : "⚡"}</span>
+            <span className="tabular-nums font-semibold text-amber-200">{streakDays}</span>
+            <span className="text-amber-400/70">{streakLabel}</span>
+          </span>
+        )}
+        {/* ── 一句话周报（合并到 chip 行）── */}
+        {stats && (() => {
+          const story = weeklyStory(stats, t);
+          return (
+            <span className="text-xs text-[#8aa8c4] leading-relaxed">&nbsp;·&nbsp;{story.text}</span>
+          );
+        })()}
       </div>
-
-      {/* ── 一句话周报 ── */}
-      {stats && (() => {
-        const story = weeklyStory(stats, t);
-        return (
-          <div className={`${panelClass} flex items-center gap-3`} style={panelStyle}>
-            <span className="text-xl shrink-0">{story.emoji}</span>
-            <p className="text-sm text-[#c8ddf0] leading-relaxed">{story.text}</p>
-          </div>
-        );
-      })()}
 
       {/* ── 时段 + 构成：各半行 ── */}
       <div className="grid grid-cols-2 gap-4">
         <div className={panelClass} style={panelStyle}>
           <p className="text-[11px] text-[#9ab8d4] mb-1">{t("dashboard.hourly_title")}</p>
-          {/* 24h 热力图 */}
-          {(() => {
-            const maxV = Math.max(1, ...(stats?.hourly || []));
-            return (
-              <div className="flex gap-[2px] h-16 items-end">
-                {hourlyData.map((d, i) => {
-                  const pct = d.v / maxV;
-                  return (
-                    <div key={i} className="flex-1 relative group cursor-default"
-                      style={{ height: `${Math.max(8, pct * 100)}%` }}>
-                      <div className="rounded-t-sm w-full h-full transition-colors"
-                        style={{
-                          background: d.v > 0
-                            ? `color-mix(in srgb, ${colors.primary} ${Math.round(15 + pct * 85)}%, #1a2530)`
-                            : "rgba(255,255,255,0.04)",
-                        }} />
-                      {/* tooltip on hover */}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-10">
-                        <div className="rounded-md bg-black/90 border border-white/10 px-2 py-1 text-[10px] text-white whitespace-nowrap shadow-lg">
-                          {`${i}:00 - ${i}:59`}: {d.v} {t("dashboard.times")}
+          {/* 24h 热力图 + 时段背景 */}
+          <div className="relative h-16">
+            {/* ── 3 时段背景区块 ── */}
+            {/* 清晨 06:00-12:00 */}
+            <div className="absolute inset-y-0 rounded-md overflow-hidden pointer-events-none"
+              style={{ left: `${(6/24)*100}%`, width: `${(6/24)*100}%` }}>
+              <div className="absolute inset-0"
+                style={{ background: "linear-gradient(180deg, rgba(251,191,36,0.08) 0%, rgba(253,186,116,0.04) 100%)" }} />
+              <Sunrise className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-7 w-7 text-amber-400/12" />
+            </div>
+            {/* 正午 12:00-18:00 */}
+            <div className="absolute inset-y-0 rounded-md overflow-hidden pointer-events-none"
+              style={{ left: `${(12/24)*100}%`, width: `${(6/24)*100}%` }}>
+              <div className="absolute inset-0"
+                style={{ background: "linear-gradient(180deg, rgba(250,204,21,0.10) 0%, rgba(251,146,60,0.05) 100%)" }} />
+              <Sun className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-8 text-yellow-400/10" />
+            </div>
+            {/* 夜晚 00:00-06:00 + 18:00-24:00（两段） */}
+            <div className="absolute inset-y-0 rounded-md overflow-hidden pointer-events-none"
+              style={{ left: 0, width: `${(6/24)*100}%` }}>
+              <div className="absolute inset-0"
+                style={{ background: "linear-gradient(180deg, rgba(99,102,241,0.08) 0%, rgba(88,28,135,0.04) 100%)" }} />
+              <Moon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-indigo-400/10" />
+            </div>
+            <div className="absolute inset-y-0 rounded-md overflow-hidden pointer-events-none"
+              style={{ left: `${(18/24)*100}%`, width: `${(6/24)*100}%` }}>
+              <div className="absolute inset-0"
+                style={{ background: "linear-gradient(180deg, rgba(99,102,241,0.08) 0%, rgba(88,28,135,0.04) 100%)" }} />
+              <Moon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-indigo-400/10" />
+            </div>
+            {/* ── 24h 热力图竖条 ── */}
+            {(() => {
+              const maxV = Math.max(1, ...(stats?.hourly || []));
+              return (
+                <div className="flex gap-[2px] h-full items-end relative z-10">
+                  {hourlyData.map((d, i) => {
+                    const pct = d.v / maxV;
+                    return (
+                      <div key={i} className="flex-1 relative group cursor-default"
+                        style={{ height: `${Math.max(8, pct * 100)}%` }}>
+                        <div className="rounded-t-sm w-full h-full transition-colors"
+                          style={{
+                            background: d.v > 0
+                              ? `color-mix(in srgb, ${colors.primary} ${Math.round(15 + pct * 85)}%, #1a2530)`
+                              : "rgba(255,255,255,0.04)",
+                          }} />
+                        {/* tooltip on hover */}
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-10">
+                          <div className="rounded-md bg-black/90 border border-white/10 px-2 py-1 text-[10px] text-white whitespace-nowrap shadow-lg">
+                            {`${i}:00 - ${i}:59`}: {d.v} {t("dashboard.times")}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
         </div>
 
         <div className={panelClass} style={panelStyle}>

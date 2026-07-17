@@ -1,12 +1,20 @@
 import { useEffect } from "react";
 
 /**
- * Production security hardening — blocks F12, context menu, drag-to-save.
- * Dev mode (.env VITE_LICENSE_TIER) completely skips all blocks.
+ * Security hardening — blocks F12, context menu, drag-out.
+ * Dev mode skips key blocks but NOT drag prevention.
  */
 export function useSecurity() {
   useEffect(() => {
-    if ((import.meta as any).env?.VITE_LICENSE_TIER) return;
+    if ((import.meta as any).env?.VITE_LICENSE_TIER) {
+      // Dev mode: only block drag-out; skip F12/context-menu/key blocks
+      const blockDrag = (e: DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+      };
+      document.addEventListener("dragstart", blockDrag, true);
+      return () => document.removeEventListener("dragstart", blockDrag, true);
+    }
 
     const block = (e: Event) => e.preventDefault();
     document.addEventListener("contextmenu", block);

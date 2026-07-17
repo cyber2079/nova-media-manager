@@ -14,8 +14,7 @@ export function isOnboardingDone(): boolean {
 type Phase = "welcome" | "activating" | "downloading" | "done";
 
 export default function OnboardingDialog() {
-  const { t, i18n } = useTranslation();
-  const isZh = i18n.language.startsWith("zh");
+  const { t } = useTranslation();
   const { activate } = useLicenseStore();
   const { fetchAvailable, installFromServer } = useThemePackStore();
   const [open, setOpen] = useState(false);
@@ -55,7 +54,7 @@ export default function OnboardingDialog() {
   const handleActivate = async () => {
     const clean = code.replace(/\s/g, "").toUpperCase();
     if (clean.length < 16) {
-      setError(isZh ? "激活码格式不正确" : "Invalid code format");
+      setError(t("onboarding.invalid_format"));
       return;
     }
     setLoading(true);
@@ -137,13 +136,11 @@ export default function OnboardingDialog() {
             </div>
 
             <DialogTitle className="text-2xl font-bold">
-              {isZh ? "欢迎使用 Nova" : "Welcome to Nova"}
+              {t("onboarding.title")}
             </DialogTitle>
 
             <p className="text-sm text-gray-400 leading-relaxed">
-              {isZh
-                ? "一站式管理你的电影、音乐、图片和游戏。精美主题，沉浸体验。全功能免费，没有任何限制。"
-                : "Movies, music, images, games — all in one place. Premium themes, immersive experience. Free with all features included."}
+              {t("onboarding.description")}
             </p>
 
             <div className="flex flex-col gap-3 pt-2">
@@ -151,13 +148,13 @@ export default function OnboardingDialog() {
                 onClick={handleFree}
                 className="w-full py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:brightness-110 transition-all active:scale-[0.98]"
               >
-                {isZh ? "免费使用" : "Start Free"}
+                {t("onboarding.start_free")}
               </button>
               <button
                 onClick={handleStartActivation}
                 className="w-full py-3 rounded-xl border border-white/10 text-gray-300 font-medium text-sm hover:bg-white/5 transition-all active:scale-[0.98]"
               >
-                {isZh ? "我有激活码" : "I Have a Code"}
+                {t("onboarding.i_have_code")}
               </button>
             </div>
           </div>
@@ -166,13 +163,11 @@ export default function OnboardingDialog() {
         {phase === "activating" && (
           <div className="p-8 space-y-5">
             <DialogTitle className="text-lg font-semibold">
-              {isZh ? "输入激活码" : "Enter Activation Code"}
+              {t("onboarding.enter_code")}
             </DialogTitle>
 
             <p className="text-sm text-gray-400">
-              {isZh
-                ? "请输入爱发电订单页中的激活码"
-                : "Enter the code from your Afdian order page"}
+              {t("onboarding.code_hint")}
             </p>
 
             <input
@@ -198,7 +193,7 @@ export default function OnboardingDialog() {
                 onClick={() => { setPhase("welcome"); setError(null); setCode(""); }}
                 className="flex-1 py-2.5 rounded-lg border border-white/10 text-gray-400 text-sm hover:bg-white/5 transition-colors"
               >
-                {isZh ? "返回" : "Back"}
+                {t("onboarding.back")}
               </button>
               <button
                 onClick={handleActivate}
@@ -206,7 +201,7 @@ export default function OnboardingDialog() {
                 className="flex-1 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:brightness-110 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
               >
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {loading ? (isZh ? "验证中..." : "Verifying...") : (isZh ? "确认激活" : "Activate")}
+                {loading ? t("onboarding.verifying") : t("onboarding.confirm_activate")}
               </button>
             </div>
           </div>
@@ -220,7 +215,7 @@ export default function OnboardingDialog() {
             </div>
 
             <DialogTitle className="text-xl font-bold">
-              {isZh ? "正在解锁 Premium 主题..." : "Unlocking Premium Themes..."}
+              {t("onboarding.unlocking_themes")}
             </DialogTitle>
 
             {/* Progress bar */}
@@ -239,9 +234,7 @@ export default function OnboardingDialog() {
             </div>
 
             <p className="text-xs text-gray-500">
-              {isZh
-                ? "全部就绪后将自动进入主界面"
-                : "The app will open automatically when ready"}
+              {t("onboarding.auto_enter")}
             </p>
           </div>
         )}
@@ -250,10 +243,10 @@ export default function OnboardingDialog() {
           <div className="p-8 flex flex-col items-center gap-4 py-12">
             <CheckCircle className="h-14 w-14 text-green-400" />
             <p className="text-green-400 font-bold text-lg">
-              {isZh ? "激活成功！" : "Activated!"}
+              {t("onboarding.activated")}
             </p>
             <p className="text-sm text-gray-400">
-              {isZh ? "Premium 主题已就绪" : "Premium themes ready"}
+              {t("onboarding.themes_ready")}
             </p>
           </div>
         )}

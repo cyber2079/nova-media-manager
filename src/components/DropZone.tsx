@@ -11,7 +11,7 @@ interface DropZoneProps {
   className?: string;
 }
 
-export default memo(function DropZone({ onDrop, accept, allowFolders, children, className }: DropZoneProps) {
+const DropZone = memo(function DropZone({ onDrop, accept, allowFolders, children, className }: DropZoneProps) {
   const { t } = useTranslation();
   const [dragging, setDragging] = useState(false);
   const counter = useRef(0);
@@ -113,6 +113,8 @@ export default memo(function DropZone({ onDrop, accept, allowFolders, children, 
     </div>
   );
 });
+
+export default DropZone;
 
 /** wrap a page with drop-to-import */
 export function useDropImport(onDrop: (paths: string[]) => void, accept?: string) {

@@ -37,7 +37,8 @@ export async function pickFolderAndImport(kind: MediaKind): Promise<ImportSummar
 }
 
 /** 导入结果的 toast 文案 */
-export function importSummaryText(r: ImportSummary, unit: string): string {
-  if (r.added === 0) return "没有发现新媒体（已入库的自动跳过）";
-  return `已导入 ${r.added} ${unit}${r.truncated ? "（达单次 2000 上限，可再导一次）" : ""}`;
+export function importSummaryText(r: ImportSummary, unit: string, t: (key: string, vars?: Record<string, any>) => string): string {
+  if (r.added === 0) return t("mediaScan.no_new_media");
+  const base = t("mediaScan.imported_n", { n: r.added, unit });
+  return r.truncated ? base + t("mediaScan.truncated") : base;
 }

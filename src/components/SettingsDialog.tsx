@@ -12,7 +12,8 @@ import ThemeManager from "@/components/ThemeManager";
 import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown, FolderOpen, ImageIcon, Shuffle, Home } from "lucide-react";
 import { ThemeAssets } from "@/lib/themeBase";
 import { useLicenseStore, isPro, isUltra } from "@/stores/licenseStore";
-import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS } from "@/stores/settingsStore";
+import { useCheckInStore } from "@/stores/checkinStore";
+import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS, type WallpaperFit } from "@/stores/settingsStore";
 import { useWidgetStore, pageKeys } from "@/stores/widgetStore";
 import type { PageKey } from "@/stores/widgetStore";
 
@@ -81,7 +82,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
     cyberBgmEnabled, setCyberBgmEnabled,
     cgTextSize, cgTextColor, setCgTextSize, setCgTextColor,
     paletteAccent, paletteSaturation, paletteContrast, paletteCustomized, setPaletteAccent, setPaletteSaturation, setPaletteContrast, resetPaletteToTheme,
-    dashboardMode, setDashboardMode,
+    dashboardMode, setDashboardMode, hardwareAcceleration, setHardwareAcceleration,
   } = useSettingsStore();
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages, setEnabled, setPosition, setMyComputerMode, setGlobalWidgets, setPageWidget, setCountdown } = useWidgetStore();
   const [autoLoading, setAutoLoading] = useState(false);
@@ -245,9 +246,11 @@ export default function SettingsDialog({ open, onClose }: Props) {
             {/* ═══ General Tab ═══ */}
             {activeTab === "general" && (
               <>
-                <LicenseSection t={t} i18n={i18n} />
+                <LicenseSection t={t} />
+                <CheckInSection t={t} />
                 <LanguageSection {...{ t, language, handleLanguage, languages }} />
                 <StartupSection {...{ t, autoStart, autoLoading, handleAutoStart, startFullscreen, setStartFullscreen }} />
+                <HardwareAccelSection {...{ t, hardwareAcceleration, setHardwareAcceleration }} />
                 <DataSection t={t} />
                 <FeedbackSection t={t} />
                 <ResetButton tab="general" t={t} onReset={() => setConfirmReset("general")} />
@@ -271,7 +274,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
                           <button key={a.value} onClick={() => setPaletteAccent(a.value)}
                             className={cn("w-8 h-8 rounded-full border-2 transition-all",
                               paletteAccent === a.value ? "border-white scale-110 shadow-lg" : "border-transparent hover:scale-105")}
-                            style={{ background: a.value }} title={a.label} />
+                            style={{ background: a.value }} title={t(a.i18nKey)} />
                         ))}
                       </div>
                     </div>
@@ -437,7 +440,7 @@ function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onCo
 
 // ── Extracted section components ──
 
-function ResetButton({ tab, t, onReset }: { tab: string; t: (k: string) => string; onReset: () => void }) {
+function ResetButton({ tab, t, onReset }: { tab: string; t: (k: string, options?: Record<string, unknown>) => string; onReset: () => void }) {
   return (
     <div className="pt-2 border-t border-white/5">
       <Button variant="ghost" size="sm" onClick={onReset} className="gap-1.5 text-xs text-gray-400">
@@ -447,32 +450,30 @@ function ResetButton({ tab, t, onReset }: { tab: string; t: (k: string) => strin
   );
 }
 
-function LicenseSection({ t, i18n }: { t: any; i18n: any }) {
-  const isZh = i18n.language?.startsWith("zh");
+function LicenseSection({ t }: { t: any }) {
   const { license, openActivation, unbind } = useLicenseStore();
   const tier = license.tier;
 
-  const tierLabel = (t: string) => {
-    if (t === "free") return isZh ? "社区版" : "Community";
-    if (t === "pro") return "Pro";
-    if (t === "ultra") return "Ultra";
-    if (t === "custom") return isZh ? "定制版" : "Custom";
-    return t;
+  const tierLabel = (tier: string) => {
+    if (tier === "free") return t("license.free_tier");
+    if (tier === "pro") return "Pro";
+    if (tier === "ultra") return "Ultra";
+    if (tier === "custom") return t("license.custom_tier");
+    return tier;
   };
 
   const durLabel = (d: string) => {
-    if (d === "permanent") return isZh ? "永久" : "Permanent";
-    if (d === "monthly") return isZh ? "月付" : "Monthly";
-    if (d === "yearly") return isZh ? "年付" : "Yearly";
+    if (d === "permanent") return t("license.permanent");
+    if (d === "monthly") return t("license.monthly");
+    if (d === "yearly") return t("license.yearly");
     return d;
   };
 
-  // Countdown: "剩余 15 天" or HH:MM:SS when < 24h
   const expiryDisplay = (exp: string): string => {
     const diff = new Date(exp).getTime() - Date.now();
-    if (diff <= 0) return isZh ? "已过期" : "Expired";
+    if (diff <= 0) return t("license.expired");
     const days = Math.floor(diff / (24 * 60 * 60 * 1000));
-    if (days > 1) return `${isZh ? "剩余" : ""} ${days} ${isZh ? "天" : "d"}`;
+    if (days > 1) return t("license.remaining_days", { n: days });
     const h = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
     const m = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
     const s = Math.floor((diff % (60 * 1000)) / 1000);
@@ -482,7 +483,7 @@ function LicenseSection({ t, i18n }: { t: any; i18n: any }) {
   return (
     <section>
       <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-        {isZh ? "许可证" : "License"}
+        {t("license.title")}
       </h4>
       <div className="flex items-center justify-between p-4 rounded-xl border border-white/5"
         style={{ background: "color-mix(in srgb, var(--color-primary) 4%, transparent)" }}>
@@ -513,25 +514,115 @@ function LicenseSection({ t, i18n }: { t: any; i18n: any }) {
             onClick={openActivation}
             className="px-3 py-1.5 rounded-lg border border-primary/40 text-primary-light text-xs font-medium hover:bg-primary/10 transition-colors"
           >
-            {isZh ? "输入激活码" : "Enter Code"}
+            {t("license.enter_code")}
           </button>
         ) : (
           <button
             onClick={async () => {
-              if (!confirm(isZh
-                ? "确定要解除此设备的绑定吗？\n激活码将被释放，可在其他设备上使用。"
-                : "Unbind this device?\nThe activation code will be released for use on another device."
-              )) return;
+              if (!confirm(t("license.unbind_confirm"))) return;
               try {
                 await unbind();
               } catch (e) {
-                alert(isZh ? `解绑失败: ${e}` : `Unbind failed: ${e}`);
+                alert(t("license.unbind_failed", { error: String(e) }));
               }
             }}
             className="px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-xs font-medium hover:bg-white/5 transition-colors"
           >
-            {isZh ? "解除绑定" : "Unbind"}
+            {t("license.unbind")}
           </button>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function CheckInSection({ t }: { t: any }) {
+  const checkInStats = useCheckInStore((s) => s.stats);
+  const redeeming = useCheckInStore((s) => s.redeeming);
+  const redeem = useCheckInStore((s) => s.redeem);
+  const init = useCheckInStore((s) => s.init);
+  const { license } = useLicenseStore();
+  const [redeemMsg, setRedeemMsg] = useState("");
+
+  useEffect(() => { init(); }, []);
+
+  if (!checkInStats) return null;
+
+  const nextMilestone = checkInStats.milestones.find((m) => !m.claimed);
+  const activeDays = checkInStats.activeDays;
+
+  const handleRedeem = async (days: number) => {
+    setRedeemMsg("");
+    const err = await redeem(days);
+    if (err) setRedeemMsg(err);
+  };
+
+  return (
+    <section>
+      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+        🎁 {t("checkin.title")}
+      </h4>
+      <div className="p-4 rounded-xl border border-white/5 space-y-3"
+        style={{ background: "color-mix(in srgb, var(--color-primary) 4%, transparent)" }}>
+        {/* ── Stats row ── */}
+        <div className="flex items-center gap-4 text-xs text-gray-400">
+          <span>
+            <span className="text-white font-semibold">{activeDays}</span> {t("checkin.active_days_label")}
+          </span>
+          {checkInStats.streakDays >= 3 && (
+            <span className="text-amber-300/80">
+              🔥 <span className="font-semibold">{checkInStats.streakDays}</span> {t("checkin.streak_label")}
+            </span>
+          )}
+          {checkInStats.todayChecked && (
+            <span className="text-green-400/70">{t("checkin.today_done")}</span>
+          )}
+        </div>
+
+        {/* ── Milestone progress ── */}
+        {checkInStats.tier !== "free" && checkInStats.milestones.length > 0 && (
+          <div className="space-y-1.5">
+            {checkInStats.milestones.map((m) => {
+              const pct = Math.min(100, Math.round((activeDays / m.days) * 100));
+              return (
+                <div key={m.days} className="flex items-center gap-2">
+                  <span className="text-[10px] text-gray-500 w-12 text-right shrink-0">
+                    {m.days}{t("checkin.day_unit")}
+                  </span>
+                  <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <div
+                      className={cn("h-full rounded-full transition-all duration-700",
+                        m.claimed ? "bg-green-500/50" : "bg-primary/60")}
+                      style={{ width: `${Math.max(m.claimed ? 100 : 0, pct)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-gray-500 w-12 shrink-0">
+                    {m.claimed
+                      ? `✓ +${m.rewardDays}d`
+                      : `+${m.rewardDays}${t("checkin.day_unit")}`}
+                  </span>
+                  {!m.claimed && activeDays >= m.days && (
+                    <button
+                      onClick={() => handleRedeem(m.days)}
+                      disabled={redeeming === m.days}
+                      className="text-[10px] px-1.5 py-0.5 rounded bg-primary/20 text-primary-light hover:bg-primary/30 disabled:opacity-50 shrink-0 transition-colors"
+                    >
+                      {redeeming === m.days ? "..." : t("checkin.claim")}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── Free tier hint ── */}
+        {checkInStats.tier === "free" && activeDays > 0 && (
+          <p className="text-[10px] text-gray-500">{t("checkin.free_hint")}</p>
+        )}
+
+        {redeemMsg && (
+          <p className="text-xs text-red-400">{redeemMsg}</p>
         )}
       </div>
     </section>
@@ -576,6 +667,26 @@ function FeedbackSection({ t }: { t: any }) {
       >
         {sent ? "✓" : t("settings.feedback_send")}
       </button>
+    </section>
+  );
+}
+
+function HardwareAccelSection({ t, hardwareAcceleration, setHardwareAcceleration }: any) {
+  return (
+    <section>
+      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{t("settings.hardware_accel")}</h4>
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={hardwareAcceleration}
+            onChange={(e) => setHardwareAcceleration(e.target.checked)}
+            className="h-4 w-4 rounded accent-[var(--color-primary)]"
+          />
+          <span className="text-sm text-gray-300">{t("settings.hardware_accel_toggle")}</span>
+        </label>
+        <p className="text-[10px] text-gray-500">{t("settings.hardware_accel_hint")}</p>
+      </div>
     </section>
   );
 }
@@ -650,7 +761,7 @@ function LanguageSection({ t, language, handleLanguage, languages }: any) {
           <button key={lang.code} onClick={() => handleLanguage(lang.code)}
             className={cn("text-left px-4 py-3 rounded-lg text-sm transition-all duration-200 border",
               language === lang.code ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
-            {lang.label}
+            {lang.i18nKey ? t(lang.i18nKey) : lang.label}
           </button>
         ))}
       </div>
@@ -884,6 +995,7 @@ function ImageWheelSection({ t, imageWheelMode, setImageWheelMode }: any) {
 
 // ── 外接播放器设置（电影 Tab）──
 function ExternalPlayerSection() {
+  const { t } = useTranslation();
   const externalPlayer = useSettingsStore((s) => s.externalPlayer);
   const setExternalPlayer = useSettingsStore((s) => s.setExternalPlayer);
   const [detected, setDetected] = useState<{ kind: string; name: string; path: string }[]>([]);
@@ -904,21 +1016,21 @@ function ExternalPlayerSection() {
   const pickCustom = async () => {
     try {
       const { open } = await import("@tauri-apps/plugin-dialog");
-      const sel = await open({ multiple: false, filters: [{ name: "播放器", extensions: ["exe"] }] });
+      const sel = await open({ multiple: false, filters: [{ name: t("player.filter_name"), extensions: ["exe"] }] });
       if (typeof sel === "string") setExternalPlayer({ kind: "custom", path: sel });
     } catch {}
   };
 
   const modes: { v: "auto" | "always" | "never"; label: string; desc: string }[] = [
-    { v: "auto", label: "智能分流", desc: "MKV/AVI 等内置放不了的走外接" },
-    { v: "always", label: "全部外接", desc: "所有视频都用外接播放器" },
-    { v: "never", label: "全部内置", desc: "不使用外接播放器" },
+    { v: "auto", label: t("player.mode_auto"), desc: t("player.mode_auto_desc") },
+    { v: "always", label: t("player.mode_always"), desc: t("player.mode_always_desc") },
+    { v: "never", label: t("player.mode_never"), desc: t("player.mode_never_desc") },
   ];
 
   return (
     <section>
-      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">外接播放器</h4>
-      <p className="text-xs text-gray-500 mb-4">HEVC/MKV/外挂字幕等内置引擎播放不了的格式，交给专业播放器。支持续播定位；mpv 可回传观看进度。</p>
+      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{t("player.title")}</h4>
+      <p className="text-xs text-gray-500 mb-4">{t("player.description")}</p>
 
       <div className="grid grid-cols-3 gap-2 mb-5">
         {modes.map((m) => (
@@ -944,17 +1056,17 @@ function ExternalPlayerSection() {
               </button>
             ))}
             {!detecting && detected.length === 0 && (
-              <p className="text-xs text-gray-500 px-1">未检测到常见播放器（PotPlayer / VLC / mpv / MPC-HC），可手动选择</p>
+              <p className="text-xs text-gray-500 px-1">{t("player.no_detected")}</p>
             )}
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={detect} disabled={detecting} className="text-xs">
-              {detecting ? "检测中..." : "重新检测"}
+              {detecting ? t("player.detecting") : t("player.redetect")}
             </Button>
-            <Button variant="outline" size="sm" onClick={pickCustom} className="text-xs">手动选择 exe</Button>
+            <Button variant="outline" size="sm" onClick={pickCustom} className="text-xs">{t("player.choose_exe")}</Button>
           </div>
           {externalPlayer.kind === "custom" && externalPlayer.path && (
-            <p className="text-[10px] text-gray-500 mt-2 truncate">自定义：{externalPlayer.path}</p>
+            <p className="text-[10px] text-gray-500 mt-2 truncate">{t("player.custom_path", { path: externalPlayer.path })}</p>
           )}
         </>
       )}
@@ -1153,12 +1265,12 @@ function FontFamilySection({ t, fontFamily, setFontFamily }: any) {
       <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.font_family")}</h4>
       <div className="grid grid-cols-2 gap-2">
         {FONT_LIST.map((f) => {
-          const v = f.value, label = f.label;
+          const v = f.value, displayLabel = f.i18nKey ? t(f.i18nKey) : f.label;
           return (
             <button key={v} onClick={() => setFontFamily(v)}
               className={cn("px-3 py-2 rounded-lg text-xs border transition-all duration-200 text-left truncate",
                 fontFamily === v ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
-              {label}
+              {displayLabel}
             </button>
           );
         })}
@@ -1192,23 +1304,23 @@ function WallpaperSection({ t }: { t: any }) {
 
   return (
     <section>
-      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.wallpaper_title", "自定义壁纸")}</h4>
+      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.wallpaper_title")}</h4>
       <div className="space-y-3">
         <div className="flex gap-2">
           <button onClick={() => setWallpaperConfig({ mode: "none" })}
             className={cn("flex-1 py-1.5 rounded-lg text-xs border transition-colors",
               wallpaper.mode === "none" ? "bg-primary/15 border-primary/40 text-primary-light" : "border-white/5 text-gray-400 hover:text-white")}>
-            {t("settings.wallpaper_off", "默认")}
+            {t("settings.wallpaper_off")}
           </button>
           <button onClick={pickFile}
             className={cn("flex-1 py-1.5 rounded-lg text-xs border transition-colors flex items-center justify-center gap-1",
               wallpaper.mode === "single" ? "bg-primary/15 border-primary/40 text-primary-light" : "border-white/5 text-gray-400 hover:text-white")}>
-            <ImageIcon className="h-3 w-3" /> {t("settings.wallpaper_single", "单张")}
+            <ImageIcon className="h-3 w-3" /> {t("settings.wallpaper_single")}
           </button>
           <button onClick={pickFolder}
             className={cn("flex-1 py-1.5 rounded-lg text-xs border transition-colors flex items-center justify-center gap-1",
               wallpaper.mode === "folder" ? "bg-primary/15 border-primary/40 text-primary-light" : "border-white/5 text-gray-400 hover:text-white")}>
-            <FolderOpen className="h-3 w-3" /> {t("settings.wallpaper_folder", "文件夹")}
+            <FolderOpen className="h-3 w-3" /> {t("settings.wallpaper_folder")}
           </button>
         </div>
         {(wallpaper.mode !== "none" && wallpaper.path) ? (
@@ -1216,16 +1328,16 @@ function WallpaperSection({ t }: { t: any }) {
         ) : null}
         {wallpaper.mode === "folder" && (<>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">{t("settings.wallpaper_slideshow", "幻灯片")}</span>
+            <span className="text-xs text-gray-400">{t("settings.wallpaper_slideshow")}</span>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={wallpaper.shuffle === "random"}
                 onChange={(e) => setWallpaperConfig({ shuffle: e.target.checked ? "random" : "sequential" })}
                 className="h-4 w-4 rounded accent-[var(--color-primary)]" />
-              <span className="text-xs text-gray-300 flex items-center gap-1"><Shuffle className="h-3 w-3" />{t("settings.wallpaper_shuffle", "随机")}</span>
+              <span className="text-xs text-gray-300 flex items-center gap-1"><Shuffle className="h-3 w-3" />{t("settings.wallpaper_shuffle")}</span>
             </label>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-400 shrink-0">{t("settings.wallpaper_interval", "间隔")}</span>
+            <span className="text-xs text-gray-400 shrink-0">{t("settings.wallpaper_interval")}</span>
             <input type="range" min={5} max={300} value={wallpaper.interval}
               onChange={(e) => setWallpaperConfig({ interval: Number(e.target.value) })}
               className="flex-1 h-1 accent-[var(--color-primary)]" />
@@ -1234,13 +1346,13 @@ function WallpaperSection({ t }: { t: any }) {
         </>)}
         {wallpaper.mode !== "none" && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">{t("settings.wallpaper_fit", "填充")}</span>
+            <span className="text-xs text-gray-400">{t("settings.wallpaper_fit")}</span>
             <select value={wallpaper.fit} onChange={(e) => setWallpaperConfig({ fit: e.target.value as WallpaperFit })}
               className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none">
-              <option value="none">{t("settings.wallpaper_fit_none", "正常")}</option>
-              <option value="cover">{t("settings.wallpaper_fit_cover", "填充")}</option>
-              <option value="contain">{t("settings.wallpaper_fit_contain", "完整")}</option>
-              <option value="fill">{t("settings.wallpaper_fit_fill", "拉伸")}</option>
+              <option value="none">{t("settings.wallpaper_fit_none")}</option>
+              <option value="cover">{t("settings.wallpaper_fit_cover")}</option>
+              <option value="contain">{t("settings.wallpaper_fit_contain")}</option>
+              <option value="fill">{t("settings.wallpaper_fit_fill")}</option>
             </select>
           </div>
         )}

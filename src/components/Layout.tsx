@@ -92,6 +92,10 @@ export default function Layout() {
   const [stripOpen, setStripOpen] = useState(false);
   const pageKey = isHome ? "home" : (location.pathname.replace("/", "") as string) || "home";
   const [pageMinimized, setPageMinimized] = useState(useSettingsStore.getState().contentMinimized[pageKey]);
+  // 切换页面时同步 pageMinimized（订阅只监听 store 变更，pageKey 变更需手动同步）
+  useEffect(() => {
+    setPageMinimized(!!useSettingsStore.getState().contentMinimized[pageKey]);
+  }, [pageKey]);
   useEffect(() => {
     const unsub = useSettingsStore.subscribe((s, prev) => {
       const now = s.contentMinimized[pageKey];
@@ -628,7 +632,15 @@ export default function Layout() {
                 <NavLink key={item.to} to={item.to} className={cn(
                   "flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all duration-300 active:scale-95",
                   isActive ? "bg-primary/15 text-primary-light " : "text-[#b8d0e8] hover:bg-primary/10 hover:text-primary-light ",
-                )}>
+                )}
+                onClick={() => {
+                  // 导航切换时，确保目标页面是可见的
+                  const key = item.to === "/" ? "home" : item.to.replace("/", "");
+                  const s = useSettingsStore.getState();
+                  if (s.contentMinimized[key]) {
+                    s.toggleContentMinimized(key);
+                  }
+                }}>
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full overflow-hidden">
                     {charIcon ? (
                       <img src={themeUrl(theme, `icons/${charIcon}`)} alt="" className="h-full w-full object-cover" />
@@ -673,16 +685,16 @@ export default function Layout() {
           pageMinimized && "!opacity-0 !pointer-events-none",
         )}
         style={(() => {
-          if (isHomeStrip) return { height: "auto", marginTop: 0, background: "transparent", borderColor: "transparent" } as React.CSSProperties;
-          if (isHome && !isDefault) return { height: "auto", marginTop: 0 };
-          return { height: "calc(100vh - 5rem - 3rem)", marginTop: "5rem" };
+          if (isHomeStrip) return { height: "auto", marginTop: 0, background: "transparent", borderColor: "transparent", zIndex: 48 } as React.CSSProperties;
+          if (isHome && !isDefault) return { height: "auto", marginTop: 0, zIndex: 48 };
+          return { height: "calc(100vh - 5rem - 3rem - 1.5rem)", marginTop: "5rem", marginBottom: "1.5rem", zIndex: 48 };
         })()}
         data-route={isHome ? "home" : "page"}>
         <div className={cn(
-          "relative z-[1]",
+          "relative z-[48]",
           isHome && !isDefault
             ? "overflow-visible [&>*]:pointer-events-auto"
-            : "h-full overflow-y-auto overscroll-contain px-0 pt-6",
+            : "h-full overflow-y-auto overscroll-contain px-0 pt-6 pb-6",
         )}>
           <Outlet />
           <ScrollFade height={isHome ? 0 : 56} />
@@ -759,7 +771,7 @@ export default function Layout() {
             <p className="text-sm text-gray-400 mb-4">{t("music.bg_playback_prompt")}</p>
             <label className="flex items-center gap-2 mb-5 cursor-pointer select-none">
               <input type="checkbox" checked={bgDontAsk} onChange={(e) => setBgDontAsk(e.target.checked)} className="w-3.5 h-3.5 rounded border-gray-500 bg-transparent accent-primary-light cursor-pointer" />
-              <span className="text-xs text-gray-500">不再提示</span>
+              <span className="text-xs text-gray-500">{t("common.dont_ask_again")}</span>
             </label>
             <div className="flex gap-3 justify-end">
               <button onClick={handleBgNo} className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-surface-lighter transition-colors">{t("music.bg_playback_no")}</button>

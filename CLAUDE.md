@@ -112,8 +112,10 @@ scp -i ~/.ssh/ecs_nova src-tauri/target/release/bundle/msi/*.msi root@39.104.55.
 npm run tauri:dev          # 启动
 npm run pull               # 拉取公库+私库
 npm run push "描述"         # add + commit + push
-npx tsc --noEmit           # 编译检查（commit 前必须过）
+npm run typecheck          # 编译检查（commit 前必须过）— 即 tsc --noEmit -p tsconfig.app.json
 ```
+
+> ⚠️ 不要用裸 `npx tsc --noEmit`：根 tsconfig.json 是 `files: []` + references，裸命令检查 0 个文件、永远退出 0。
 
 ## 已知 Bug
 
@@ -122,3 +124,9 @@ npx tsc --noEmit           # 编译检查（commit 前必须过）
 ## 记忆系统
 
 `~/.claude/projects/d--nova-media-manager/memory/` — 跨会话持久记忆，包含主题架构、安全分离、数据同步、分层规划、已知 Bug 等。详见 MEMORY.md。
+
+### 多机同步约定
+
+- **仓库内知识**（开发规则、教训、门禁命令）→ 写进 CLAUDE.md / DEVELOPMENT.md，随 `npm run push` / `npm run pull` 在台式机与笔记本间同步，两边的 Claude 自动读取。
+- **Claude 记忆目录**是本机文件，另一台机器读不到 → 用 Syncthing 把 memory 文件夹加为同步共享（和主题素材同一套方案）。前提：两台机器仓库路径都必须是 `D:\nova-media-manager`，记忆目录名 `d--nova-media-manager` 由该路径推导，路径不同则记忆不会被加载。
+- **⚠️ 红线**：memory 里的 secrets.md / ecs-ssh.md / afdian.md 含密钥（JWT_SECRET、ADMIN_KEY、GitHub PAT 等），**绝不能进公库**（本仓库是公开 AGPL）。含密钥的记忆只走 Syncthing 点对点或私库 nova-proprietary；能进公库的只有纯方法论。

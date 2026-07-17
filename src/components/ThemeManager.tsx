@@ -11,8 +11,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Package, Download, Trash2, Loader2, FolderOpen } from "lucide-react";
 
 export default function ThemeManager() {
-  const { t, i18n } = useTranslation();
-  const isZh = i18n.language.startsWith("zh");
+  const { t } = useTranslation();
   const { installedThemes, availableThemes, loading, refresh, installFromFile, installFromServer, remove, fetchAvailable } = useThemePackStore();
   const { license } = useLicenseStore();
   const [open, setOpen] = useState(false);
@@ -32,15 +31,15 @@ export default function ThemeManager() {
       || isUltra(license.tier);
     if (!ok) {
       setStatus("error");
-      setStatusMsg(isZh ? "您的许可证不支持该主题" : "Your license doesn't support this theme");
+      setStatusMsg(t("themeManager.license_denied"));
       return;
     }
     setStatus("loading");
-    setStatusMsg(isZh ? "正在下载安装..." : "Downloading...");
+    setStatusMsg(t("themeManager.downloading_installing"));
     try {
       await installFromServer(info.id);
       setStatus("ok");
-      setStatusMsg(isZh ? "安装成功！" : "Installed!");
+      setStatusMsg(t("themeManager.install_success"));
     } catch (e) {
       setStatus("error");
       setStatusMsg(String(e));
@@ -55,14 +54,14 @@ export default function ThemeManager() {
     <button onClick={() => setOpen(true)}
       className="text-gray-400 hover:text-white flex items-center gap-1.5 text-xs font-medium transition-colors">
       <Package className="h-3.5 w-3.5" />
-      {isZh ? "主题包" : "Themes"}
+      {t("themeManager.trigger_button")}
     </button>
 
     <Dialog open={open} onOpenChange={(o) => { if (!o) setOpen(false); }}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto p-6 rounded-2xl bg-surface-light/98 backdrop-blur-xl border border-primary/30">
         <DialogTitle className="flex items-center gap-2 text-lg font-semibold mb-6">
           <Package className="h-5 w-5 text-primary-light" />
-          {isZh ? "主题包管理" : "Theme Manager"}
+          {t("themeManager.dialog_title")}
         </DialogTitle>
 
         {/* ── Status ── */}
@@ -76,31 +75,31 @@ export default function ThemeManager() {
         {/* ── Install from file ── */}
         <div className="mb-6 p-4 rounded-xl bg-surface-lighter/50 border border-white/5">
           <h4 className="text-sm font-semibold text-white mb-3">
-            {isZh ? "从本地安装" : "Install from disk"}
+            {t("themeManager.install_local")}
           </h4>
           <div className="flex gap-2">
             <input type="text" value={filePath} onChange={(e) => setFilePath(e.target.value)}
-              placeholder={isZh ? "D:\\themes\\my-theme.nvtp" : "D:\\themes\\my-theme.nvtp"}
+              placeholder="D:\\themes\\my-theme.nvtp"
               className="flex-1 px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white text-xs focus:outline-none focus:border-primary/50" />
             <button onClick={async () => {
               if (!filePath) return;
               setStatus("loading");
-              setStatusMsg(isZh ? "正在安装..." : "Installing...");
-              try { await installFromFile(filePath); setStatus("ok"); setStatusMsg(isZh ? "安装成功！" : "Installed!"); setFilePath(""); }
+              setStatusMsg(t("themeManager.installing"));
+              try { await installFromFile(filePath); setStatus("ok"); setStatusMsg(t("themeManager.install_success")); setFilePath(""); }
               catch (e) { setStatus("error"); setStatusMsg(String(e)); }
             }} disabled={loading} className="px-4 py-2 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 disabled:opacity-50 whitespace-nowrap">
               <FolderOpen className="h-3.5 w-3.5 inline mr-1" />
-              {isZh ? "安装" : "Install"}
+              {t("themeManager.install")}
             </button>
           </div>
         </div>
 
         {/* ── Installed themes ── */}
         <h4 className="text-sm font-semibold text-white mb-3">
-          {isZh ? "已安装的主题" : "Installed Themes"} ({installedThemes.length})
+          {t("themeManager.installed_themes")} ({installedThemes.length})
         </h4>
         {installedThemes.length === 0 && (
-          <p className="text-xs text-gray-500 mb-4">{isZh ? "暂无已安装的主题包" : "No theme packs installed"}</p>
+          <p className="text-xs text-gray-500 mb-4">{t("themeManager.no_installed")}</p>
         )}
         <div className="space-y-2 mb-6">
           {installedThemes.map((theme) => (
@@ -120,7 +119,7 @@ export default function ThemeManager() {
         {isPro(license.tier) && (
           <>
             <h4 className="text-sm font-semibold text-white mb-3">
-              {isZh ? "可下载的主题" : "Available Themes"} ({availableThemes.length})
+              {t("themeManager.available_themes")} ({availableThemes.length})
             </h4>
             <div className="space-y-2">
               {availableThemes.map((info) => (
@@ -132,7 +131,7 @@ export default function ThemeManager() {
                   <button onClick={() => handleInstallFromServer(info)} disabled={loading}
                     className="px-3 py-1.5 rounded-lg bg-primary/15 text-primary-light hover:bg-primary/25 text-xs font-medium transition-colors disabled:opacity-50">
                     <Download className="h-3.5 w-3.5 inline mr-1" />
-                    {isZh ? "下载" : "Download"}
+                    {t("themeManager.download")}
                   </button>
                 </div>
               ))}

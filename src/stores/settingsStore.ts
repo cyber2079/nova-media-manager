@@ -43,19 +43,19 @@ export function iconSizeScale(v: IconSize): number {
 
 export type ImageWheelMode = "prevNext" | "zoom";
 
-export const FONT_LIST: { value: string; label: string; css: string; google?: string }[] = [
-  { value: "inter", label: "Inter", css: '"Inter", system-ui, sans-serif' },
-  { value: "noto-sans-sc", label: "思源黑体", css: '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif', google: "Noto+Sans+SC:wght@400;500;600;700" },
-  { value: "noto-serif-sc", label: "思源宋体", css: '"Noto Serif SC", "STSong", "SimSun", serif', google: "Noto+Serif+SC:wght@400;600;700" },
-  { value: "lxgw", label: "霞鹜文楷", css: '"LXGW WenKai", "楷体", "KaiTi", serif', google: "LXGW+WenKai:wght@400;700" },
-  { value: "jetbrains-mono", label: "JetBrains Mono", css: '"JetBrains Mono", "Fira Code", monospace', google: "JetBrains+Mono:wght@400;500;600;700" },
-  { value: "source-han-sans", label: "Source Han Sans", css: '"Source Han Sans SC", "Noto Sans SC", sans-serif' },
-  { value: "playfair", label: "Playfair Display", css: '"Playfair Display", "Times New Roman", serif', google: "Playfair+Display:wght@400;600;700" },
-  { value: "dm-sans", label: "DM Sans", css: '"DM Sans", system-ui, sans-serif', google: "DM+Sans:wght@400;500;600;700" },
-  { value: "space-grotesk", label: "Space Grotesk", css: '"Space Grotesk", system-ui, sans-serif', google: "Space+Grotesk:wght@400;500;600;700" },
-  { value: "maoken-glitch", label: "中文故障", css: '"Maoken Glitch Sans", "PingFang SC", "Microsoft YaHei", sans-serif' },
-  { value: "maoken-defectica", label: "赛博朋克", css: '"Defectica", "Maoken Glitch Sans", "PingFang SC", "Microsoft YaHei", sans-serif' },
-  { value: "defectica", label: "英文破碎", css: '"Defectica", "PingFang SC", "Microsoft YaHei", sans-serif' },
+export const FONT_LIST: { value: string; label: string; i18nKey: string; css: string; google?: string }[] = [
+  { value: "inter", label: "Inter", i18nKey: "inter", css: '"Inter", system-ui, sans-serif' },
+  { value: "noto-sans-sc", label: "思源黑体", i18nKey: "fonts.source_han_sans", css: '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif', google: "Noto+Sans+SC:wght@400;500;600;700" },
+  { value: "noto-serif-sc", label: "思源宋体", i18nKey: "fonts.source_han_serif", css: '"Noto Serif SC", "STSong", "SimSun", serif', google: "Noto+Serif+SC:wght@400;600;700" },
+  { value: "lxgw", label: "霞鹜文楷", i18nKey: "fonts.lxgw_wenkai", css: '"LXGW WenKai", "楷体", "KaiTi", serif', google: "LXGW+WenKai:wght@400;700" },
+  { value: "jetbrains-mono", label: "JetBrains Mono", i18nKey: "jetbrains-mono", css: '"JetBrains Mono", "Fira Code", monospace', google: "JetBrains+Mono:wght@400;500;600;700" },
+  { value: "source-han-sans", label: "Source Han Sans", i18nKey: "source-han-sans", css: '"Source Han Sans SC", "Noto Sans SC", sans-serif' },
+  { value: "playfair", label: "Playfair Display", i18nKey: "playfair", css: '"Playfair Display", "Times New Roman", serif', google: "Playfair+Display:wght@400;600;700" },
+  { value: "dm-sans", label: "DM Sans", i18nKey: "dm-sans", css: '"DM Sans", system-ui, sans-serif', google: "DM+Sans:wght@400;500;600;700" },
+  { value: "space-grotesk", label: "Space Grotesk", i18nKey: "space-grotesk", css: '"Space Grotesk", system-ui, sans-serif', google: "Space+Grotesk:wght@400;500;600;700" },
+  { value: "maoken-glitch", label: "中文故障", i18nKey: "fonts.chinese_glitch", css: '"Maoken Glitch Sans", "PingFang SC", "Microsoft YaHei", sans-serif' },
+  { value: "maoken-defectica", label: "赛博朋克", i18nKey: "fonts.cyberpunk", css: '"Defectica", "Maoken Glitch Sans", "PingFang SC", "Microsoft YaHei", sans-serif' },
+  { value: "defectica", label: "英文破碎", i18nKey: "fonts.english_broken", css: '"Defectica", "PingFang SC", "Microsoft YaHei", sans-serif' },
 ];
 
 // ═══════════════ PER-THEME PALETTE DEFAULTS ═══════════════
@@ -69,14 +69,24 @@ export interface PaletteConfig {
 }
 
 export const ACCENT_OPTIONS = [
-  { value: "#4788f0", label: "藏蓝" },
-  { value: "#c0394a", label: "酒红" },
-  { value: "#c2861c", label: "深棕" },
-  { value: "#7c6ff0", label: "暗紫" },
-  { value: "#06b6d4", label: "青绿" },
-  { value: "#f59e0b", label: "琥珀" },
-  { value: "#ec4899", label: "玫红" },
-  { value: "#6366f1", label: "靛蓝" },
+  { value: "#4788f0", label: "藏蓝", i18nKey: "colors.navy" },
+  { value: "#c0394a", label: "酒红", i18nKey: "colors.wine" },
+  { value: "#c2861c", label: "深棕", i18nKey: "colors.brown" },
+  { value: "#7c6ff0", label: "暗紫", i18nKey: "colors.dark_purple" },
+  { value: "#06b6d4", label: "青绿", i18nKey: "colors.teal" },
+  { value: "#f59e0b", label: "琥珀", i18nKey: "colors.amber" },
+  { value: "#ec4899", label: "玫红", i18nKey: "colors.rose" },
+  { value: "#6366f1", label: "靛蓝", i18nKey: "colors.indigo" },
+  { value: "#ef4444", label: "绯红", i18nKey: "colors.crimson" },
+  { value: "#f97316", label: "橙色", i18nKey: "colors.orange" },
+  { value: "#84cc16", label: "草绿", i18nKey: "colors.lime" },
+  { value: "#10b981", label: "翠绿", i18nKey: "colors.emerald" },
+  { value: "#0ea5e9", label: "天蓝", i18nKey: "colors.sky" },
+  { value: "#a855f7", label: "紫罗兰", i18nKey: "colors.violet" },
+  { value: "#d946ef", label: "品红", i18nKey: "colors.fuchsia" },
+  { value: "#64748b", label: "岩灰", i18nKey: "colors.slate" },
+  { value: "#171717", label: "纯黑", i18nKey: "colors.black" },
+  { value: "#f5f5f5", label: "纯白", i18nKey: "colors.white" },
 ];
 
 export const THEME_PALETTE_DEFAULTS: Record<ThemeName, PaletteConfig> = {
@@ -178,10 +188,10 @@ export type SettingsState = {
   setPlayerBgColor: (v: string) => void;
   setPlayerBgMode: (v: "follow" | "custom") => void;
   setCyberBgmEnabled: (v: boolean) => void;
-  setCompactMode: (v: boolean) => void;
-  setLayoutMode: (v: string) => void;
   setCgTextSize: (v: "xs" | "sm" | "base") => void;
   setCgTextColor: (v: string) => void;
+  setCgTextBgColor: (v: string) => void;
+  setCgTextBgOpacity: (v: number) => void;
   setFontFamily: (v: string) => void;
   setPaletteAccent: (v: string) => void;
   setPaletteSaturation: (v: number) => void;
@@ -189,6 +199,8 @@ export type SettingsState = {
   setWallpaperConfig: (cfg: Partial<WallpaperConfig>) => void;
   setExternalPlayer: (cfg: Partial<ExternalPlayerConfig>) => void;
   resetPaletteToTheme: (theme: ThemeName) => void;
+  hardwareAcceleration: boolean;
+  setHardwareAcceleration: (v: boolean) => void;
 };
 
 const STORAGE_KEY = "app-settings";
@@ -367,7 +379,7 @@ async function persist(s: SettingsState) {
     visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
     headerOpacity: s.headerOpacity, footerOpacity: s.footerOpacity,
     surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
-    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
+    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
   });
   // Write to both: SQLite (primary) + localStorage (fast sync fallback)
   localStorage.setItem(STORAGE_KEY, payload);
@@ -468,6 +480,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     paletteSaturation: (saved as any).paletteSaturation ?? ((saved as any).paletteVibrancy != null ? (saved as any).paletteVibrancy * 10 : 50),
     paletteContrast: (saved as any).paletteContrast || "dark",
     paletteCustomized: (saved as any).paletteCustomized || false,
+    hardwareAcceleration: (saved as any).hardwareAcceleration ?? true,
     dashboardMode: (saved as any).dashboardMode || "full",
     contentMinimized: (saved as any).contentMinimized || {},
 
@@ -517,7 +530,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             paletteAccent: (s.paletteAccent as string) ?? get().paletteAccent,
             paletteSaturation: (s.paletteSaturation as number) ?? ((s as any).paletteVibrancy != null ? (s as any).paletteVibrancy * 10 : get().paletteSaturation),
             paletteContrast: (s.paletteContrast as any) ?? get().paletteContrast,
-            paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized, wallpaper: s.wallpaper ?? get().wallpaper,
+            paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized, hardwareAcceleration: (s.hardwareAcceleration as boolean) ?? get().hardwareAcceleration, wallpaper: s.wallpaper ?? get().wallpaper,
             externalPlayer: s.externalPlayer ?? get().externalPlayer,
             dashboardMode: (s.dashboardMode as any) ?? get().dashboardMode,
             contentMinimized: (s.contentMinimized as any) ?? get().contentMinimized,
@@ -537,6 +550,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     },
     setStartFullscreen(on) { set({ startFullscreen: on }); outdate(); persist(get()); },
     setDashboardMode(m) { set({ dashboardMode: m }); outdate(); persist(get()); },
+    setHardwareAcceleration(v) { set({ hardwareAcceleration: v }); outdate(); persist(get()); },
     toggleContentMinimized(page) { set((s) => ({ contentMinimized: { ...s.contentMinimized, [page]: !s.contentMinimized[page] } })); outdate(); persist(get()); },
     setAutoHideHeader(on) { set({ autoHideHeader: on }); outdate(); persist(get()); },
     setAutoHideFooter(on) { set({ autoHideFooter: on }); outdate(); persist(get()); },

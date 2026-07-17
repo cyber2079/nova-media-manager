@@ -1,4 +1,4 @@
-# npm run push "your commit message"
+﻿# npm run push "your commit message"
 $msg = $args -join " "
 if (-not $msg) { $msg = "update" }
 

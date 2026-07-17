@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && node scripts/check-themes.mjs && vite build",
-    "typecheck": "tsc --noEmit",
-    "check": "tsc --noEmit && node scripts/check-themes.mjs && npx vite build --logLevel error",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "check": "tsc --noEmit -p tsconfig.app.json && node scripts/check-themes.mjs && npx vite build --logLevel error",
     "parsecheck": "npx vite build --logLevel error",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -15,7 +15,7 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "tauri:build:release": "npm run tauri:build && bash scripts/pack-release.sh",
-    "push": "powershell -ExecutionPolicy Bypass -File scripts/push.ps1 -msg",
+    "push": "powershell -ExecutionPolicy Bypass -File scripts/push.ps1",
     "pull": "powershell -ExecutionPolicy Bypass -File scripts/pull.ps1"
   },
   "dependencies": {

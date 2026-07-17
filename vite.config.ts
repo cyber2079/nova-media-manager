@@ -35,7 +35,6 @@ export default defineConfig({
     watch: {
       ignored: ["**/src-tauri/**"],
     },
-    force: true,
     hmr: { overlay: false },
   },
   build: {

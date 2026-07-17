@@ -5,8 +5,7 @@ import { useLicenseStore } from "@/stores/licenseStore";
 import { Key, Loader2, CheckCircle, XCircle } from "lucide-react";
 
 export default function ActivationDialog() {
-  const { t, i18n } = useTranslation();
-  const isZh = i18n.language.startsWith("zh");
+  const { t } = useTranslation();
   const { activationOpen, closeActivation, activate } = useLicenseStore();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,7 +15,7 @@ export default function ActivationDialog() {
   const handleActivate = async () => {
     const clean = code.replace(/\s/g, "").toUpperCase();
     if (clean.length < 16) {
-      setError(isZh ? "激活码格式不正确" : "Invalid activation code format");
+      setError(t("activation.invalid_format"));
       return;
     }
     setLoading(true);
@@ -45,16 +44,14 @@ export default function ActivationDialog() {
       <DialogContent className="max-w-md p-6 rounded-2xl bg-surface-light/98 backdrop-blur-xl border border-primary/30">
         <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
           <Key className="h-5 w-5 text-primary-light" />
-          {isZh ? "激活许可证" : "Activate License"}
+          {t("activation.title")}
         </DialogTitle>
 
         <div className="space-y-4 mt-4">
           {!success ? (
             <>
               <p className="text-sm text-gray-400">
-                {isZh
-                  ? "请输入您的激活码（格式：XXXX-XXXX-XXXX-XXXX）"
-                  : "Enter your activation code (format: XXXX-XXXX-XXXX-XXXX)"}
+                {t("activation.placeholder_hint")}
               </p>
               <input
                 type="text"
@@ -78,22 +75,20 @@ export default function ActivationDialog() {
                 className="w-full py-2.5 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-colors text-sm font-medium flex items-center justify-center gap-2"
               >
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {loading ? (isZh ? "验证中..." : "Verifying...") : (isZh ? "激活" : "Activate")}
+                {loading ? t("activation.verifying") : t("activation.activate")}
               </button>
               <p className="text-xs text-gray-500 text-center">
-                {isZh
-                  ? "激活码购买地址：请联系开发者或在爱发电获取"
-                  : "Purchase activation codes on Afdian or contact developer"}
+                {t("activation.buy_hint")}
               </p>
             </>
           ) : (
             <div className="flex flex-col items-center gap-3 py-4">
               <CheckCircle className="h-12 w-12 text-green-400" />
               <p className="text-green-400 font-semibold">
-                {isZh ? "激活成功！" : "Activated!"}
+                {t("activation.success")}
               </p>
               <p className="text-sm text-gray-400">
-                {isZh ? "专业版功能已解锁" : "Pro features unlocked"}
+                {t("activation.success_detail")}
               </p>
             </div>
           )}

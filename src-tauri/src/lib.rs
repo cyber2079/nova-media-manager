@@ -96,6 +96,22 @@ pub fn run() {
     anti_debug_check();
     verify_frontend_integrity();
 
+    // ── WebView2 GPU 硬件加速（可开关，需重启生效）──
+    #[cfg(target_os = "windows")]
+    {
+        let hw_accel_enabled = read_hw_accel_setting().unwrap_or(true);
+        if hw_accel_enabled {
+            std::env::set_var(
+                "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
+                "--enable-gpu-rasterization \
+                 --enable-zero-copy \
+                 --ignore-gpu-blocklist \
+                 --disable-software-rasterizer \
+                 --enable-features=AcceleratedVideoDecode,D3D11VideoDecoder,ZeroCopyVideoCapture",
+            );
+        }
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
@@ -167,10 +183,14 @@ pub fn run() {
             commands::external_player::launch_external_player,
             commands::folder_scan::expand_media_paths,
             commands::dashboard_stats::dashboard_stats,
+            commands::checkin::auto_checkin,
+            commands::checkin::get_checkin_stats,
+            commands::checkin::redeem_milestone,
             commands::image::get_all_images,
             commands::image::add_images,
             commands::image::delete_image,
             commands::image::update_image_tags,
+            commands::image::backfill_image_thumbnails,
             commands::game::get_all_games,
             commands::game::add_game,
             commands::game::delete_game,
@@ -274,3 +294,25 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(target_os = "windows")]
+fn read_hw_accel_setting() -> Option<bool> {
+    use rusqlite::Connection;
+    use std::path::PathBuf;
+    // Same path logic as db.rs::Database::new — app_data_dir + "data/media_library.db"
+    let app_data = std::env::var("APPDATA").ok().map(PathBuf::from)
+        .unwrap_or_else(|| dirs::data_dir().unwrap_or_default())
+        .join("com.media-manager.app");
+    let db_path = app_data.join("data").join("media_library.db");
+    if !db_path.exists() { return None; }
+    let conn = Connection::open(db_path).ok()?;
+    let json: String = conn
+        .query_row("SELECT value FROM kv_store WHERE key='app-settings'", [], |r| r.get(0))
+        .ok()?;
+    let v: serde_json::Value = serde_json::from_str(&json).ok()?;
+    v.get("hardwareAcceleration")
+        .and_then(|h| h.as_bool())
+        .or(Some(true)) // default: enabled
+}
+#[cfg(not(target_os = "windows"))]
+fn read_hw_accel_setting() -> Option<bool> { None }

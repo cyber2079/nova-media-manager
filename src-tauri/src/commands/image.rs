@@ -39,11 +39,13 @@ pub fn get_all_images(db: State<Database>) -> Result<Vec<ImageItem>, String> {
     .filter_map(|r| r.ok())
     .collect();
 
-    // Validate cover file existence
+    // Validate cover file existence — fall back to original if missing
     for img in images.iter_mut() {
-        if !img.cover_path.is_empty() && !std::path::Path::new(&img.cover_path).exists() {
-            img.cover_path.clear();
-            let _ = conn.execute("UPDATE images SET cover_path='' WHERE id=?1", rusqlite::params![img.id]);
+        if img.cover_path.is_empty() {
+            img.cover_path = img.file_path.clone();
+        } else if !std::path::Path::new(&img.cover_path).exists() {
+            img.cover_path = img.file_path.clone();
+            let _ = conn.execute("UPDATE images SET cover_path=?1 WHERE id=?2", rusqlite::params![img.file_path, img.id]);
         }
     }
 
@@ -52,6 +54,16 @@ pub fn get_all_images(db: State<Database>) -> Result<Vec<ImageItem>, String> {
 
 #[tauri::command]
 pub fn add_images(db: State<Database>, paths: Vec<String>) -> Result<Vec<ImageItem>, String> {
+    let data_dir = db.data_dir().to_path_buf();
+    let covers_dir = data_dir.join("covers");
+    std::fs::create_dir_all(&covers_dir).ok();
+
+    // Ensure ffmpeg available
+    let ffmpeg_bin = crate::commands::ffmpeg_helper::ffmpeg_path();
+    if !ffmpeg_bin.exists() {
+        ffmpeg_sidecar::download::auto_download().ok();
+    }
+
     let mut images = Vec::new();
     for path in &paths {
         let fp = Path::new(path);
@@ -63,9 +75,24 @@ pub fn add_images(db: State<Database>, paths: Vec<String>) -> Result<Vec<ImageIt
         let id = uuid::Uuid::new_v4().to_string();
         let add_time = chrono::Utc::now().to_rfc3339();
 
+        // ── 缩略图：JPEG 800px 高品质，单图约 150-300KB ──
+        let thumb_path = covers_dir.join(format!("img_{}.jpg", id));
+        let cover_path = if ffmpeg_bin.exists() {
+            let _ = Command::new(&ffmpeg_bin)
+                .args(["-y", "-i", path, "-vf", "scale=800:-1", "-q:v", "2", "-frames:v", "1"])
+                .arg(thumb_path.to_str().unwrap_or(""))
+                .arg(thumb_path.to_str().unwrap_or(""))
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .status();
+            if thumb_path.exists() { thumb_path.to_string_lossy().to_string() } else { path.clone() }
+        } else {
+            path.clone()
+        };
+
         let img = ImageItem {
             id: id.clone(), name, file_path: path.clone(),
-            cover_path: path.clone(), resolution,
+            cover_path, resolution,
             file_size: size, width, height, tags: vec![], add_time,
         };
 
@@ -115,4 +142,66 @@ pub fn update_image_tags(db: State<Database>, id: String, tags: Vec<String>) -> 
     conn.execute("UPDATE images SET tags = ?1 WHERE id = ?2", rusqlite::params![tags_json, id])
         .map_err(|e| e.to_string())?;
     Ok(true)
+}
+
+/// 重建所有图片缩略图（后台异步调用，不阻塞 UI）
+#[tauri::command]
+pub fn backfill_image_thumbnails(db: State<Database>) -> Result<i64, String> {
+    let data_dir = db.data_dir().to_path_buf();
+    let covers_dir = data_dir.join("covers");
+    std::fs::create_dir_all(&covers_dir).ok();
+
+    let ffmpeg_bin = crate::commands::ffmpeg_helper::ffmpeg_path();
+    if !ffmpeg_bin.exists() {
+        ffmpeg_sidecar::download::auto_download().ok();
+    }
+    if !ffmpeg_bin.exists() {
+        return Err("ffmpeg not available".to_string());
+    }
+
+    let conn = db.conn();
+    // 全量重建（包括首次生成 + 替换旧的低品质 webp）
+    let mut stmt = conn
+        .prepare("SELECT id, file_path FROM images")
+        .map_err(|e| e.to_string())?;
+
+    let rows: Vec<(String, String)> = stmt
+        .query_map([], |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)))
+        .map_err(|e| e.to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+    drop(stmt);
+
+    let mut count: i64 = 0;
+    for (id, file_path) in rows {
+        if !std::path::Path::new(&file_path).exists() {
+            continue;
+        }
+        // 先清理旧的 webp 缩略图（如果存在）
+        let old_webp = covers_dir.join(format!("img_{}.webp", id));
+        if old_webp.exists() {
+            let _ = std::fs::remove_file(&old_webp);
+        }
+        let old_jpg = covers_dir.join(format!("img_{}.jpg", id));
+        if old_jpg.exists() {
+            let _ = std::fs::remove_file(&old_jpg);
+        }
+
+        let thumb_path = covers_dir.join(format!("img_{}.jpg", id));
+        let ok = Command::new(&ffmpeg_bin)
+            .args(["-y", "-i", &file_path, "-vf", "scale=800:-1", "-q:v", "2", "-frames:v", "1"])
+            .arg(thumb_path.to_str().unwrap_or(""))
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+
+        if ok && thumb_path.exists() {
+            let thumb = thumb_path.to_string_lossy().to_string();
+            let _ = conn.execute("UPDATE images SET cover_path=?1 WHERE id=?2", rusqlite::params![thumb, id]);
+            count += 1;
+        }
+    }
+    Ok(count)
 }

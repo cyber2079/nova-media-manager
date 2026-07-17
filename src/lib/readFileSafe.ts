@@ -5,7 +5,7 @@
  * reading, which prevents SmartScreen "此文件是否来自可靠来源？" prompts
  * when the file was downloaded from the internet.
  */
-export async function readFileSafe(filePath: string): Promise<Uint8Array> {
+export async function readFileSafe(filePath: string): Promise<Uint8Array<ArrayBuffer>> {
   // Unblock the file first (no-op if Zone.Identifier ADS doesn't exist)
   try {
     const { invoke } = await import("@tauri-apps/api/core");
@@ -16,5 +16,7 @@ export async function readFileSafe(filePath: string): Promise<Uint8Array> {
   }
 
   const { readFile } = await import("@tauri-apps/plugin-fs");
-  return readFile(filePath);
+  // plugin-fs types the result as Uint8Array<ArrayBufferLike>, but the buffer
+  // is always a plain ArrayBuffer — narrow it so callers can pass it to Blob.
+  return (await readFile(filePath)) as Uint8Array<ArrayBuffer>;
 }

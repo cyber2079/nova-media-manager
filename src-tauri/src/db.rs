@@ -117,6 +117,15 @@ impl Database {
              WHERE NOT EXISTS (SELECT 1 FROM play_events LIMIT 1)",
             [],
         );
+
+        // ── 签到活跃表：每日首次活动自动签入 ──
+        let _ = conn.execute_batch(
+            "CREATE TABLE IF NOT EXISTS check_in (
+                date TEXT PRIMARY KEY,          -- '2026-07-17' (local)
+                play_count INTEGER DEFAULT 1,   -- 当天活动次数
+                created_at TEXT NOT NULL         -- ISO timestamp
+            );"
+        );
         Ok(Database { conn: Mutex::new(conn), data_dir, app_data_dir })
     }
 

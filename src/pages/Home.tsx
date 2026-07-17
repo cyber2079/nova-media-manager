@@ -146,7 +146,7 @@ function CgSkillShowcase({ t, cgSceneIdx, textClass, textColor }: { t: any; cgSc
   );
 }
 
-function CgTypewriter({ text, speed = 55, delay = 0, className }: { text: string; speed?: number; delay?: number; className?: string }) {
+function CgTypewriter({ text, speed = 55, delay = 0, className, style }: { text: string; speed?: number; delay?: number; className?: string; style?: React.CSSProperties }) {
   const [displayed, setDisplayed] = useState("");
   const [typing, setTyping] = useState(false);
   useEffect(() => {
@@ -164,7 +164,7 @@ function CgTypewriter({ text, speed = 55, delay = 0, className }: { text: string
     }, delay);
     return () => clearTimeout(startTimer);
   }, [text, speed, delay]);
-  return <p className={className}>{displayed || " "}{typing && <span className="inline-block w-0.5 h-3.5 bg-[#e890ff]/60 ml-0.5 align-middle animate-pulse" />}</p>;
+  return <p className={className} style={style}>{displayed || " "}{typing && <span className="inline-block w-0.5 h-3.5 bg-[#e890ff]/60 ml-0.5 align-middle animate-pulse" />}</p>;
 }
 
 /** Load manifest.script from Rust for premium themes */

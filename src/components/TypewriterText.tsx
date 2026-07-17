@@ -29,8 +29,8 @@ export default function TypewriterText({ quotes, speed = 70, pause = 1000, class
   speedRef.current = speed;
   const pauseRef = useRef(pause);
   pauseRef.current = pause;
-  const typingTimer = useRef<ReturnType<typeof setInterval>>();
-  const waitTimer = useRef<ReturnType<typeof setTimeout>>();
+  const typingTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const waitTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const startedRef = useRef(false);
 
   const shuffleRef = useRef<QuoteItem[]>([]); // shuffled queue

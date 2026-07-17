@@ -33,14 +33,14 @@ export default function GameLibrary() {
   const { getByType, toggleFavorite, isFavorite } = useFavoritesStore();
   const [favOnly, setFavOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ msg: string; onOk: () => void } | null>(null);
   const [tagEditItem, setTagEditItem] = useState<Game | null>(null);
   const [layoutMode, setLayoutMode] = useLayoutMode("layout-games", "list");
   const { onContext, menu } = useContextMenu();
 
   useEffect(() => { loadGames(); }, []);
 
-  const confirmThen = (msg, fn) => setConfirmDelete({ msg, onOk: fn });
+  const confirmThen = (msg: string, fn: () => void) => setConfirmDelete({ msg, onOk: fn });
 
   // Auto-clear scan result
   useEffect(() => {
@@ -100,7 +100,7 @@ export default function GameLibrary() {
       const { open } = await import("@tauri-apps/plugin-dialog");
       const selected = await open({ multiple: false, filters: [{ name: "Executable", extensions: ["exe","lnk","app","sh","desktop"] }] });
       if (selected) await addGame(selected as string);
-    } catch (e) { console.error("addGame failed:", e); toast("添加游戏失败", "error"); }
+    } catch (e) { console.error("addGame failed:", e); toast(t("game.add_failed"), "error"); }
   }, [addGame]);
 
   const handleBatchDelete = useCallback(() => {
@@ -123,7 +123,7 @@ export default function GameLibrary() {
         <h1 className="font-bold text-2xl transition-all duration-500">{t("game.title")}</h1>
         <div className="flex-1" />
         <div className="relative w-64">
-          <Input placeholder={t("game.search", "搜索游戏...")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pr-7" />
+          <Input placeholder={t("game.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pr-7" />
           {searchQuery && <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-0.5"><X className="h-3.5 w-3.5" /></button>}
         </div>
         {scanResult && (
@@ -132,7 +132,7 @@ export default function GameLibrary() {
         <button onClick={scanSteam} disabled={isScanning}
           className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center",
             "border-blue-500/30 text-blue-400 hover:bg-blue-500/10 disabled:opacity-50")}
-          title="扫描 Steam 游戏">
+          title={t("game.scan_steam")}>
           {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gamepad2 className="h-4 w-4" />}
         </button>
         <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
@@ -156,7 +156,7 @@ export default function GameLibrary() {
             <button
               onClick={dismissDiag}
               className="h-5 w-5 flex items-center justify-center rounded transition-colors text-primary-light/60 hover:text-primary-light hover:bg-primary-light/20"
-              title="关闭"
+              title={t("game.close")}
             >
               <X className="h-3 w-3" />
             </button>
