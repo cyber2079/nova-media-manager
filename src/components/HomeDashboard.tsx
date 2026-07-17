@@ -290,115 +290,119 @@ export default function HomeDashboard() {
         </div>
       </div>
 
-      {/* ── 最常播放 Top5 + 继续观看/热门电影 ── */}
-      {(stats && stats.topMusic.length > 0) && (
-        <div className="grid grid-cols-2 gap-4 items-start">
-          {/* 左：最常播放 */}
-          <div className={panelClass} style={panelStyle}>
-            <p className="text-[11px] text-[#9ab8d4] mb-2">最常播放</p>
+
+      <div className="grid grid-cols-2 gap-4 items-start">
+        {/* 左上：最常播放（本地） */}
+        <div className={panelClass} style={panelStyle}>
+          <p className="text-[11px] text-[#9ab8d4] mb-2">最常播放</p>
+          {stats && stats.topMusic.length > 0 ? (
             <div className="space-y-0.5">
               {stats.topMusic.slice(0, 5).map((m, i) => (
                 <button key={m.id} onClick={() => navigate("/music")}
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up"
-                  style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
-                  <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
+                  style={{ animationDelay: , animationFillMode: "forwards", minHeight: 28 }}>
+                  <span className={}>{i + 1}</span>
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
                   <span className="text-[10px] text-[#8aa8c4] tabular-nums shrink-0">{m.count} 次</span>
                 </button>
               ))}
             </div>
-          </div>
+          ) : (
+            <p className="text-[10px] text-[#8aa8c4] py-4 text-center">{stats ? "播放后出现在这里" : "加载中…"}</p>
+          )}
+        </div>
 
-          {/* 右：继续观看（优先）或 TMDB 热榜 */}
+        {/* 右上：继续观看 */}
+        <div className={panelClass} style={panelStyle}>
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="h-3.5 w-3.5 text-primary-light" />
+            <span className="text-[11px] text-[#9ab8d4]">继续观看</span>
+          </div>
           {continueWatching.length > 0 ? (
-            <div className={panelClass} style={panelStyle}>
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="h-3.5 w-3.5 text-primary-light" />
-                <span className="text-[11px] text-[#9ab8d4]">继续观看</span>
-              </div>
-              <div className="space-y-0.5">
-                {continueWatching.slice(0, 5).map((m) => {
-                  const pct = m.durationSeconds > 0 ? Math.min(100, (m.watchPosition / m.durationSeconds) * 100) : 0;
-                  return (
-                    <button key={m.id} onClick={() => navigate("/movies", { state: { playId: m.id } })}
-                      className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors">
-                      <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" style={{ filter: "brightness(1.2)" }} />
-                      <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
-                      <div className="w-14 h-1 rounded-full bg-white/10 shrink-0 overflow-hidden">
-                        <div className="h-full bg-primary-light" style={{ width: `${pct}%` }} />
-                      </div>
-                      <span className="text-[9px] text-[#8aa8c4] shrink-0 w-8 text-right">{Math.round(pct)}%</span>
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="space-y-0.5">
+              {continueWatching.slice(0, 5).map((m) => {
+                const pct = m.durationSeconds > 0 ? Math.min(100, (m.watchPosition / m.durationSeconds) * 100) : 0;
+                return (
+                  <button key={m.id} onClick={() => navigate("/movies", { state: { playId: m.id } })}
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors"
+                    style={{ minHeight: 28 }}>
+                    <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" style={{ filter: "brightness(1.2)" }} />
+                    <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
+                    <div className="w-14 h-1 rounded-full bg-white/10 shrink-0 overflow-hidden">
+                      <div className="h-full bg-primary-light" style={{ width:  }} />
+                    </div>
+                    <span className="text-[9px] text-[#8aa8c4] shrink-0 w-8 text-right">{Math.round(pct)}%</span>
+                  </button>
+                );
+              })}
             </div>
           ) : (
-            /* 无继续观看 → 左右并排 TMDB 热映 + 网易云热歌 */
-            <>
-              <div className={panelClass} style={panelStyle}>
-                <div className="flex items-center gap-2 mb-2">
-                  <Film className="h-3.5 w-3.5 text-primary-light" />
-                  <span className="text-[11px] text-[#9ab8d4]">🔥 本周热映</span>
-                  <span className="text-[9px] text-[#6a8aa8] ml-auto">TMDB</span>
+            <p className="text-[10px] text-[#8aa8c4] py-4 text-center">看电影自动续播</p>
+          )}
+        </div>
+
+        {/* 左下：本周热映 */}
+        <div className={panelClass} style={panelStyle}>
+          <div className="flex items-center gap-2 mb-2">
+            <Film className="h-3.5 w-3.5 text-primary-light" />
+            <span className="text-[11px] text-[#9ab8d4]">🔥 本周热映</span>
+            <span className="text-[9px] text-[#6a8aa8] ml-auto">TMDB</span>
+          </div>
+          {recMovies.length > 0 ? (
+            <div className="space-y-0.5">
+              {recMovies.slice(0, 5).map((m, i) => (
+                <a key={m.id} href={m.url} target="_blank" rel="noopener"
+                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
+                  style={{ animationDelay: , animationFillMode: "forwards", minHeight: 28 }}>
+                  <span className={}>{i + 1}</span>
+                  <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
+                  {m.meta && <span className="text-[10px] text-[#8aa8c4] shrink-0 tabular-nums">{m.meta}</span>}
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-1.5 py-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded bg-surface-lighter animate-pulse shrink-0" />
+                  <div className="h-3 flex-1 rounded bg-surface-lighter animate-pulse" style={{ animationDelay:  }} />
                 </div>
-                {recMovies.length > 0 ? (
-                  <div className="space-y-0.5">
-                    {recMovies.slice(0, 5).map((m, i) => (
-                      <a key={m.id} href={m.url} target="_blank" rel="noopener"
-                        className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
-                        style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
-                        <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                        <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
-                        {m.meta && <span className="text-[10px] text-[#8aa8c4] shrink-0 tabular-nums">{m.meta}</span>}
-                      </a>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-1.5 py-2">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded bg-surface-lighter animate-pulse shrink-0" />
-                        <div className="h-3 flex-1 rounded bg-surface-lighter animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className={panelClass} style={panelStyle}>
-                <div className="flex items-center gap-2 mb-2">
-                  <Music className="h-3.5 w-3.5 text-primary-light" />
-                  <span className="text-[11px] text-[#9ab8d4]">🎧 本周热歌</span>
-                  <span className="text-[9px] text-[#6a8aa8] ml-auto">网易云</span>
-                </div>
-                {recMusic.length > 0 ? (
-                  <div className="space-y-0.5">
-                    {recMusic.slice(0, 5).map((m, i) => (
-                      <a key={m.id} href={m.url} target="_blank" rel="noopener"
-                        className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
-                        style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
-                        <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                        <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
-                        <span className="text-[10px] text-[#8aa8c4] shrink-0 truncate max-w-[72px]">{m.subtitle}</span>
-                      </a>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-1.5 py-2">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded bg-surface-lighter animate-pulse shrink-0" />
-                        <div className="h-3 flex-1 rounded bg-surface-lighter animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
+              ))}
             </div>
           )}
         </div>
-      )}
+
+        {/* 右下：本周热歌 */}
+        <div className={panelClass} style={panelStyle}>
+          <div className="flex items-center gap-2 mb-2">
+            <Music className="h-3.5 w-3.5 text-primary-light" />
+            <span className="text-[11px] text-[#9ab8d4]">🎧 本周热歌</span>
+            <span className="text-[9px] text-[#6a8aa8] ml-auto">网易云</span>
+          </div>
+          {recMusic.length > 0 ? (
+            <div className="space-y-0.5">
+              {recMusic.slice(0, 5).map((m, i) => (
+                <a key={m.id} href={m.url} target="_blank" rel="noopener"
+                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
+                  style={{ animationDelay: , animationFillMode: "forwards", minHeight: 28 }}>
+                  <span className={}>{i + 1}</span>
+                  <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
+                  <span className="text-[10px] text-[#8aa8c4] shrink-0 truncate max-w-[72px]">{m.subtitle}</span>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-1.5 py-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded bg-surface-lighter animate-pulse shrink-0" />
+                  <div className="h-3 flex-1 rounded bg-surface-lighter animate-pulse" style={{ animationDelay:  }} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* ── Steam 热门（始终显示，离线/503 时保留 chips + 兜底文案）── */}
       <div className={panelClass} style={panelStyle}>
