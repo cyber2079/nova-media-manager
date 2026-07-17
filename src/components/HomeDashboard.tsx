@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { setHomeMode } from "@/lib/homeMode";
 import { useChartColors, withAlpha } from "@/lib/useChartColors";
 import { getTrending, fmtPrice, TRENDING_TAGS, type TrendingData, type TrendingGame } from "@/lib/trending";
+import { getRecommendMovies, type RecItem } from "@/lib/recommend";
 import SafeImage from "@/components/SafeImage";
 
 // ── 类型（对应 Rust DashboardStats）──
@@ -119,14 +120,14 @@ function weeklyStory(stats: Stats): { text: string; emoji: string } {
   return { text: `这周你${body} — ${dom.tail}，${trend}`, emoji: dom.e };
 }
 
-// ── 时段人格标签 ──
+// ── 时段风格标签（四种，取活动最多的时段）──
 function hourPersona(hourly: number[]): string {
   const total = hourly.reduce((a, b) => a + b, 0);
   if (total < 5) return "";
   const sum = (a: number, b: number) => hourly.slice(a, b).reduce((x, y) => x + y, 0);
   const zones = [
     { label: "🌙 深夜党 — 凌晨是你的主场", v: sum(0, 6) },
-    { label: "🌅 晨型人 — 一日之计在于晨", v: sum(6, 12) },
+    { label: "🌅 早起鸟 — 一日之计在于晨", v: sum(6, 12) },
     { label: "☀️ 午后型 — 下午的时光最惬意", v: sum(12, 18) },
     { label: "🌆 夜猫子 — 晚间黄金档选手", v: sum(18, 24) },
   ];
@@ -143,6 +144,7 @@ export default function HomeDashboard() {
   const [trending, setTrending] = useState<TrendingData | null>(null);
   const [trendLoading, setTrendLoading] = useState(true);
   const [trendTag, setTrendTag] = useState(() => localStorage.getItem("trending-tag") || "");
+  const [recMovies, setRecMovies] = useState<RecItem[]>([]);
 
   useEffect(() => {
     invoke<Stats>("dashboard_stats").then(setStats).catch(() => {});
@@ -160,6 +162,8 @@ export default function HomeDashboard() {
       .finally(() => { if (!cancelled) setTrendLoading(false); });
     return () => { cancelled = true; };
   }, [trendTag]);
+
+  useEffect(() => { getRecommendMovies().then(setRecMovies).catch(() => {}); }, []);
 
   const openSteamPage = (appId: number) => {
     import("@tauri-apps/plugin-shell")
@@ -284,31 +288,31 @@ export default function HomeDashboard() {
         </div>
       </div>
 
-      {/* ── 最常播放 Top5 + 继续观看：并排 ── */}
-      {((stats && stats.topMusic.length > 0) || continueWatching.length > 0) && (
+      {/* ── 最常播放 Top5 + 继续观看/热门电影 ── */}
+      {(stats && stats.topMusic.length > 0) && (
         <div className="grid grid-cols-2 gap-4 items-start">
-          {stats && stats.topMusic.length > 0 && (
-            <div className={panelClass} style={panelStyle}>
-              <p className="text-[11px] text-[#9ab8d4] mb-2">最常播放</p>
-              <div className="space-y-0.5">
-                {stats.topMusic.slice(0, 5).map((m, i) => (
-                  <button key={m.id} onClick={() => navigate("/music")}
-                    className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up"
-                    style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards" }}>
-                    <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                    <div className="w-6 h-6 rounded overflow-hidden bg-surface-lighter shrink-0">
-                      <SafeImage src={m.coverPath} alt="" className="w-full h-full object-cover"
-                        fallback={<div className="flex h-full items-center justify-center"><Music className="h-3 w-3 text-gray-600" /></div>} />
-                    </div>
-                    <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
-                    <span className="text-[10px] text-[#8aa8c4] tabular-nums shrink-0">{m.count} 次</span>
-                  </button>
-                ))}
-              </div>
+          {/* 左：最常播放 */}
+          <div className={panelClass} style={panelStyle}>
+            <p className="text-[11px] text-[#9ab8d4] mb-2">最常播放</p>
+            <div className="space-y-0.5">
+              {stats.topMusic.slice(0, 5).map((m, i) => (
+                <button key={m.id} onClick={() => navigate("/music")}
+                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up"
+                  style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards" }}>
+                  <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
+                  <div className="w-6 h-6 rounded overflow-hidden bg-surface-lighter shrink-0">
+                    <SafeImage src={m.coverPath} alt="" className="w-full h-full object-cover"
+                      fallback={<div className="flex h-full items-center justify-center"><Music className="h-3 w-3 text-gray-600" /></div>} />
+                  </div>
+                  <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
+                  <span className="text-[10px] text-[#8aa8c4] tabular-nums shrink-0">{m.count} 次</span>
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
-          {continueWatching.length > 0 && (
+          {/* 右：继续观看（优先）或 TMDB 热榜 */}
+          {continueWatching.length > 0 ? (
             <div className={panelClass} style={panelStyle}>
               <div className="flex items-center gap-2 mb-2">
                 <Clock className="h-3.5 w-3.5 text-primary-light" />
@@ -330,6 +334,36 @@ export default function HomeDashboard() {
                   );
                 })}
               </div>
+            </div>
+          ) : (
+            <div className={panelClass} style={panelStyle}>
+              <div className="flex items-center gap-2 mb-2">
+                <Film className="h-3.5 w-3.5 text-primary-light" />
+                <span className="text-[11px] text-[#9ab8d4]">🔥 本周热映</span>
+                <span className="text-[9px] text-[#6a8aa8] ml-auto">TMDB</span>
+              </div>
+              {recMovies.length > 0 ? (
+                <div className="space-y-0.5">
+                  {recMovies.slice(0, 5).map((m, i) => (
+                    <a key={m.id} href={m.url} target="_blank" rel="noopener"
+                      className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
+                      style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards" }}>
+                      <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" />
+                      <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
+                      {m.meta && <span className="text-[10px] text-[#8aa8c4] shrink-0">{m.meta}</span>}
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-1.5 py-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded bg-surface-lighter animate-pulse shrink-0" />
+                      <div className="h-3 flex-1 rounded bg-surface-lighter animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
