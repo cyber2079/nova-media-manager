@@ -700,22 +700,6 @@ export default function Layout() {
         }}
       >
         <div className="flex items-center justify-center gap-2.5 h-full px-4">
-          {/* 页面内容显隐切换 — 所有页面始终可用 */}
-          <button
-            onClick={() => {
-              const pageKey = isHome ? "home" : location.pathname.replace("/", "") || "home";
-              useSettingsStore.getState().toggleContentMinimized(pageKey);
-            }}
-            className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
-            title={t("settings.toggle_page")}
-          >
-            {(() => {
-              const pageKey = isHome ? "home" : location.pathname.replace("/", "") || "home";
-              const minimized = useSettingsStore.getState().contentMinimized[pageKey];
-              return minimized ? <Gauge className="h-4 w-4" /> : <Gauge className="h-4 w-4" />;
-            })()}
-          </button>
-
           {/* QuickHub trigger button (all pages) */}
           {showQuickHub && (
             <button
@@ -730,8 +714,20 @@ export default function Layout() {
             </button>
           )}
 
-          {/* Divider between trigger and QuickLaunch */}
-          {showQuickHub && <div className="w-px h-5 bg-white/[0.08] shrink-0" />}
+          {/* 页面内容显隐切换 — 所有页面始终可用 */}
+          <button
+            onClick={() => {
+              const pageKey = isHome ? "home" : location.pathname.replace("/", "") || "home";
+              useSettingsStore.getState().toggleContentMinimized(pageKey);
+            }}
+            className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+            title={t("settings.toggle_page")}
+          >
+            <Gauge className="h-4 w-4" />
+          </button>
+
+          {/* Divider between Gauge and QuickLaunch */}
+          <div className="w-px h-5 bg-white/[0.08] shrink-0" />
 
           {/* QuickLaunch apps */}
           <QuickLaunchBar />

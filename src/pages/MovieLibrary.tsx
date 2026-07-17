@@ -235,18 +235,12 @@ export default function MovieLibrary() {
             </button>
           )}
         </div>
-        <Button onClick={handleAddMovies} className="gap-2"><Upload className="h-4 w-4" />{t("movie.add")}</Button>
-        <Button variant="outline" onClick={handleAddFolder} className="gap-2" title="选择文件夹，递归扫描新增影片入库"><FolderOpen className="h-4 w-4" />文件夹</Button>
+        <Button onClick={handleAddMovies} className="h-8 w-8 p-0" title={t("movie.add")}><Upload className="h-4 w-4" /></Button>
+        <Button variant="outline" onClick={handleAddFolder} className="h-8 w-8 p-0" title={t("movie.add_folder")}><FolderOpen className="h-4 w-4" /></Button>
         {!batch.showCheckboxes ? (
-          <Button variant="outline" size="sm" onClick={batch.enterBatchMode} className="gap-1.5 text-xs">
-            <CheckSquare className="h-3.5 w-3.5" />
-            {t("batch.enter")}
-          </Button>
+          <Button variant="outline" onClick={batch.enterBatchMode} className="h-8 w-8 p-0" title={t("batch.enter")}><CheckSquare className="h-4 w-4" /></Button>
         ) : (
-          <Button variant="outline" size="sm" onClick={batch.leaveBatchMode} className="gap-1.5 text-xs">
-            <X className="h-3.5 w-3.5" />
-            {t("batch.exit")}
-          </Button>
+          <Button variant="outline" onClick={batch.leaveBatchMode} className="h-8 w-8 p-0" title={t("batch.exit")}><X className="h-4 w-4" /></Button>
         )}
         <LayoutSwitch mode={layoutMode} onChange={setLayoutMode} />
       </div>

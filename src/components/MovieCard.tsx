@@ -148,9 +148,10 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
         {/* 操作按钮行 */}
         <div className="flex items-center gap-1">
           {onSetWallpaper && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light"
+            <Button variant="ghost" size="icon"
+              className={cn("text-gray-500 hover:text-primary-light", compact ? "h-6 w-6" : "h-8 w-8")}
               onClick={(e) => { e.stopPropagation(); onSetWallpaper(movie.filePath); }} title="设为背景">
-              <Monitor className="h-3.5 w-3.5" />
+              <Monitor className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
             </Button>
           )}
           {onEditTags && (

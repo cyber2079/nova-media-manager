@@ -44,7 +44,6 @@ export function iconSizeScale(v: IconSize): number {
 export type ImageWheelMode = "prevNext" | "zoom";
 
 export const FONT_LIST: { value: string; label: string; css: string; google?: string }[] = [
-  { value: "system", label: "系统默认", css: 'var(--font-display), "Inter", system-ui, sans-serif' },
   { value: "inter", label: "Inter", css: '"Inter", system-ui, sans-serif' },
   { value: "noto-sans-sc", label: "思源黑体", css: '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif', google: "Noto+Sans+SC:wght@400;500;600;700" },
   { value: "noto-serif-sc", label: "思源宋体", css: '"Noto Serif SC", "STSong", "SimSun", serif', google: "Noto+Serif+SC:wght@400;600;700" },
@@ -443,7 +442,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     lyricFillColor: (saved as any).lyricFillColor || "#ffb6c1",
     fontSize: (saved as any).fontSize || "normal",
     iconSize: (saved as any).iconSize || "normal",
-    fontFamily: (saved as any).fontFamily || "system",
+    fontFamily: (saved as any).fontFamily || "inter",
     visualizerMode: (saved as any).visualizerMode || "bars",
     imageWheelMode: (saved as any).imageWheelMode || "prevNext",
     headerOpacity: (saved as any).headerOpacity ?? 30,

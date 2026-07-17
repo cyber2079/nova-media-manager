@@ -42,7 +42,7 @@ const tabs: { id: TabId; icon: typeof Settings; labelKey: string }[] = [
 // ── Default values (used by reset) ──
 const DEFAULTS = {
   general: { language: "zh", autoStart: true, startFullscreen: true, autoHideHeader: false, autoHideFooter: false, hideTitleBar: true },
-  appearance: { theme: "path-of-exile" as ThemeName, bgVideoMode: "fill" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "system", paletteAccent: "#4788f0", paletteSaturation: 50, paletteContrast: "dark" as const, paletteCustomized: false },
+  appearance: { theme: "path-of-exile" as ThemeName, bgVideoMode: "fill" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "inter", paletteAccent: "#4788f0", paletteSaturation: 50, paletteContrast: "dark" as const, paletteCustomized: false },
   music: { previewOffset: 0.5, lyricFontSize: "normal" as const, lyricUseCustomColor: false as const, lyricCurrentColor: "#ffffff", lyricOtherColor: "#8899aa", lyricFillColor: "#ffb6c1", playerBgMode: "follow" as const, playerBgColor: "", cyberBgmEnabled: true },
   images: { imageWheelMode: "prevNext" as ImageWheelMode },
   widgets: {

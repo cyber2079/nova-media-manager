@@ -52,7 +52,9 @@ export default function QuickHub({ onClose }: QuickHubProps) {
       </div>
 
       <MediaNav />
+      <div className="mx-3 h-px bg-white/[0.06]" />
       <HubMusicPlayer />
+      <div className="mx-3 h-px bg-white/[0.06]" />
       <SystemTools />
     </div>
   );

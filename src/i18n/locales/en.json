@@ -300,6 +300,7 @@
     "story_music_count": "listened to {{n}} song(s)",
     "story_game_count": "played {{n}} game(s)",
     "story_this_week": "This week you ",
+    "weekly_activity": "{{n}} plays this week",
     "persona_movie": "Movie Buff",
     "persona_music": "Melophile",
     "persona_game": "Game Master",

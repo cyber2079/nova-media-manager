@@ -130,23 +130,17 @@ export default function GameLibrary() {
           <span className="text-xs text-primary-light/80">{scanResult}</span>
         )}
         <button onClick={scanSteam} disabled={isScanning}
-          className={cn("h-8 px-3 rounded-md border transition-colors flex items-center gap-1.5 text-xs",
-            "border-blue-500/30 text-blue-400 hover:bg-blue-500/10 disabled:opacity-50")}>
-          {isScanning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
-          扫描 Steam
+          className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center",
+            "border-blue-500/30 text-blue-400 hover:bg-blue-500/10 disabled:opacity-50")}
+          title="扫描 Steam 游戏">
+          {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
         </button>
         <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
-        <Button onClick={handleAddGame} className="gap-2"><Upload className="h-4 w-4" />{t("game.add")}</Button>
+        <Button onClick={handleAddGame} className="h-8 w-8 p-0" title={t("game.add")}><Upload className="h-4 w-4" /></Button>
         {!batch.showCheckboxes ? (
-          <Button variant="outline" size="sm" onClick={batch.enterBatchMode} className="gap-1.5 text-xs">
-            <CheckSquare className="h-3.5 w-3.5" />
-            {t("batch.enter")}
-          </Button>
+          <Button variant="outline" onClick={batch.enterBatchMode} className="h-8 w-8 p-0" title={t("batch.enter")}><CheckSquare className="h-4 w-4" /></Button>
         ) : (
-          <Button variant="outline" size="sm" onClick={batch.leaveBatchMode} className="gap-1.5 text-xs">
-            <X className="h-3.5 w-3.5" />
-            {t("batch.exit")}
-          </Button>
+          <Button variant="outline" onClick={batch.leaveBatchMode} className="h-8 w-8 p-0" title={t("batch.exit")}><X className="h-4 w-4" /></Button>
         )}
         <LayoutSwitch mode={layoutMode} onChange={setLayoutMode} />
       </div>

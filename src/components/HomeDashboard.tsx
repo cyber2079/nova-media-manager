@@ -5,10 +5,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
-import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, Cell } from "recharts";
-import { Film, Music, Gamepad2, Image as ImageIcon, RotateCcw } from "lucide-react";
+import { Film, Music, Gamepad2, Image as ImageIcon, RotateCcw, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useChartColors, withAlpha } from "@/lib/useChartColors";
+import { useChartColors } from "@/lib/useChartColors";
 import { usePlayHistoryStore } from "@/stores/playHistoryStore";
 import { getTrending, fmtPrice, TRENDING_TAGS, type TrendingData, type TrendingGame } from "@/lib/trending";
 import { getRecommendMovies, getRecommendMusic, type RecItem } from "@/lib/recommend";
@@ -207,6 +206,7 @@ export default function HomeDashboard() {
     (stats?.hourly || new Array(24).fill(0)).map((v, h) => ({ h, v, label: `${h}:00` })),
   [stats]);
   const persona = stats ? hourPersona(stats.hourly, t) : "";
+  const weekTotal = stats ? stats.weekNow.movies + stats.weekNow.music + stats.weekNow.games : 0;
 
   // 内容构成
   const composition = stats ? [
@@ -219,19 +219,19 @@ export default function HomeDashboard() {
 
   return (
     <div className="space-y-5">
-      {/* ── 媒体库快览 chips ── */}
+      {/* ── 状态 chips ── */}
       <div className="flex flex-wrap items-center gap-3">
-        {composition.map((c) => (
-          <button key={c.key} onClick={() => navigate(`/${c.key}`)}
-            className="flex items-center gap-1.5 rounded-full border border-primary/20 px-3 py-1.5 text-xs text-[#c8ddf0] hover:border-primary/40 hover:bg-primary/5 transition-colors">
-            <c.icon className="h-3.5 w-3.5" style={{ color: c.color }} />
-            <span className="tabular-nums font-semibold text-white">{c.value}</span>
-            <span className="text-[#8aa8c4]">{c.label}</span>
-          </button>
-        ))}
         {persona && (
-          <span className="flex items-center gap-1 rounded-full border border-primary/20 px-3 py-1.5 text-xs text-primary-light">
+          <span className="flex items-center gap-1.5 rounded-full border border-primary/20 px-3 py-1.5 text-xs text-primary-light">
+            <Clock className="h-3.5 w-3.5" />
             {persona}
+          </span>
+        )}
+        {weekTotal > 0 && (
+          <span className="flex items-center gap-1.5 rounded-full border border-primary/20 px-3 py-1.5 text-xs text-[#c8ddf0]">
+            <Film className="h-3.5 w-3.5 text-primary-light/50" />
+            <span className="tabular-nums font-semibold text-white">{weekTotal}</span>
+            <span className="text-[#8aa8c4]">{t("dashboard.weekly_activity", { n: weekTotal })}</span>
           </span>
         )}
       </div>
@@ -251,21 +251,34 @@ export default function HomeDashboard() {
       <div className="grid grid-cols-2 gap-4">
         <div className={panelClass} style={panelStyle}>
           <p className="text-[11px] text-[#9ab8d4] mb-1">{t("dashboard.hourly_title")}</p>
-          <div className="h-16">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={hourlyData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-                <XAxis dataKey="h" ticks={[0, 6, 12, 18, 23]} tick={{ fontSize: 9, fill: colors.fontSecondary || "#6a8aa8" }} axisLine={{ stroke: colors.fontSecondary || "#6a8aa8", strokeWidth: 1, opacity: 0.2 }} tickLine={false} interval={0} />
-                <Tooltip cursor={{ fill: "rgba(255,255,255,0.06)" }}
-                  contentStyle={{ background: "rgba(8,12,20,0.92)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 11 }}
-                  labelFormatter={(h) => `${h}:00 - ${h}:59`} formatter={(v) => [`${v} ${t("dashboard.times")}`, t("dashboard.activity")]} />
-                <Bar dataKey="v" radius={[2, 2, 0, 0]} animationDuration={800}>
-                  {hourlyData.map((d, i) => (
-                    <Cell key={i} fill={withAlpha(colors.primary, d.v > 0 ? 0.85 : 0.15)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {/* 24h 热力图 */}
+          {(() => {
+            const maxV = Math.max(1, ...(stats?.hourly || []));
+            return (
+              <div className="flex gap-[2px] h-16 items-end">
+                {hourlyData.map((d, i) => {
+                  const pct = d.v / maxV;
+                  return (
+                    <div key={i} className="flex-1 relative group cursor-default"
+                      style={{ height: `${Math.max(8, pct * 100)}%` }}>
+                      <div className="rounded-t-sm w-full h-full transition-colors"
+                        style={{
+                          background: d.v > 0
+                            ? `color-mix(in srgb, ${colors.primary} ${Math.round(15 + pct * 85)}%, #1a2530)`
+                            : "rgba(255,255,255,0.04)",
+                        }} />
+                      {/* tooltip on hover */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-10">
+                        <div className="rounded-md bg-black/90 border border-white/10 px-2 py-1 text-[10px] text-white whitespace-nowrap shadow-lg">
+                          {`${i}:00 - ${i}:59`}: {d.v} {t("dashboard.times")}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
 
         <div className={panelClass} style={panelStyle}>
