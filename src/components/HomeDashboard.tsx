@@ -103,20 +103,36 @@ function weeklyStory(stats: Stats): { text: string; emoji: string } {
   if (n.games > 0) parts.push(`进了 ${n.games} 次游戏`);
   const body = parts.join("、");
 
-  const dom = [
+  const items = [
     { k: "movies", v: n.movies, e: "🎬", tail: "影迷本色" },
     { k: "music", v: n.music, e: "🎵", tail: "耳朵很忙" },
     { k: "games", v: n.games, e: "🎮", tail: "游戏时间称王" },
-  ].sort((a, b) => b.v - a.v)[0];
+  ].filter((x) => x.v > 0);
+  let tail = ""; let emoji = "✨";
+  if (items.length === 1) {
+    tail = items[0].tail; emoji = items[0].e;
+  } else if (items.length >= 2) {
+    const sorted = [...items].sort((a, b) => b.v - a.v);
+    const max = sorted[0].v;
+    if (sorted[1].v === max) {
+      const tied = items.filter((x) => x.v === max).map((x) => x.k);
+      if (tied.length >= 3) { tail = "雨露均沾"; emoji = "🎯"; }
+      else if (tied.includes("movies") && tied.includes("music")) { tail = "影音双修"; emoji = "🎬"; }
+      else if (tied.includes("movies") && tied.includes("games")) { tail = "边看边打"; emoji = "🎮"; }
+      else if (tied.includes("music") && tied.includes("games")) { tail = "肝帝配乐"; emoji = "🎵"; }
+    } else {
+      tail = sorted[0].tail; emoji = sorted[0].e;
+    }
+  }
 
-  const trend = prevTotal === 0 ? ""
+const trend = prevTotal === 0 ? ""
     : total > prevTotal * 1.5 ? "比上周投入多了不少"
     : total > prevTotal ? "比上周更来劲了"
     : total < prevTotal / 2 ? "比上周收敛许多，忙起来了？"
     : total < prevTotal ? "比上周悠着点了"
     : "和上周旗鼓相当";
 
-  return { text: `这周你${body} — ${dom.tail}${trend ? `，${trend}` : ""}`, emoji: dom.e };
+  return { text: `这周你${body} — ${tail}${trend ? `，${trend}` : ""}`, emoji };
 }
 
 // ── 时段风格标签（四种，取活动最多的时段）──
