@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
-import { Film, Music, Gamepad2, Image as ImageIcon, Clock, Minimize2, RotateCcw } from "lucide-react";
+import { Film, Music, Gamepad2, Image as ImageIcon, Minimize2, RotateCcw } from "lucide-react";
 import { useMovieStore } from "@/stores/movieStore";
 import { useTranslation } from "react-i18next";
 import { setHomeMode } from "@/lib/homeMode";
@@ -294,7 +294,10 @@ export default function HomeDashboard() {
       <div className="grid grid-cols-2 gap-4 items-start">
         {/* 左上：最常播放 */}
         <div className={panelClass} style={panelStyle}>
-          <p className="text-[11px] text-[#9ab8d4] mb-2">最常播放</p>
+          <div className="flex items-center gap-2 mb-2">
+            <Music className="h-3.5 w-3.5 text-primary-light" />
+            <span className="text-[11px] text-[#9ab8d4]">最常播放</span>
+          </div>
           {stats && stats.topMusic.length > 0 ? (
             <div className="space-y-0.5">
               {stats.topMusic.slice(0, 5).map((m, i) => (
@@ -302,7 +305,7 @@ export default function HomeDashboard() {
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up"
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                  <Music className="h-3 w-3 shrink-0 text-primary-light" />
+                  <Music className="h-3.5 w-3.5 shrink-0 text-primary-light" />
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
                   <span className="text-[10px] text-[#8aa8c4] tabular-nums shrink-0">{m.count} 次</span>
                 </button>
@@ -316,20 +319,21 @@ export default function HomeDashboard() {
         {/* 右上：继续观看 */}
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
-            <Clock className="h-3.5 w-3.5 text-primary-light" />
+            <Film className="h-3.5 w-3.5 text-primary-light" />
             <span className="text-[11px] text-[#9ab8d4]">继续观看</span>
           </div>
           {continueWatching.length > 0 ? (
             <div className="space-y-0.5">
-              {continueWatching.slice(0, 5).map((m) => {
+              {continueWatching.slice(0, 5).map((m, i) => {
                 const pct = m.durationSeconds > 0 ? Math.min(100, (m.watchPosition / m.durationSeconds) * 100) : 0;
                 return (
                   <button key={m.id} onClick={() => navigate("/movies", { state: { playId: m.id } })}
-                    className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors"
-                    style={{ minHeight: 28 }}>
-                    <Film className="h-3 w-3 shrink-0 text-primary-light" style={{ filter: "brightness(1.2)" }} />
+                    className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up"
+                    style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
+                    <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
+                    <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" />
                     <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
-                    <span className="text-[10px] text-[#8aa8c4] shrink-0 tabular-nums w-8 text-right">{Math.round(pct)}%</span>
+                    <span className="text-[10px] text-[#8aa8c4] shrink-0 tabular-nums">{Math.round(pct)}%</span>
                   </button>
                 );
               })}
@@ -356,7 +360,7 @@ export default function HomeDashboard() {
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                  <Film className="h-3 w-3 shrink-0 text-primary-light" />
+                  <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" />
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
                   {m.meta && <span className="text-[10px] text-[#8aa8c4] shrink-0 tabular-nums">{m.meta}</span>}
                 </a>
@@ -377,6 +381,7 @@ export default function HomeDashboard() {
         {/* 右下：本周热歌 */}
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
+            <Music className="h-3.5 w-3.5 text-primary-light" />
             <span className="text-[11px] text-[#9ab8d4]">本周热歌</span>
             <span className="text-[9px] text-[#6a8aa8] ml-auto">网易云</span>
           </div>
@@ -387,7 +392,7 @@ export default function HomeDashboard() {
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                  <Music className="h-3 w-3 shrink-0 text-primary-light" />
+                  <Music className="h-3.5 w-3.5 shrink-0 text-primary-light" />
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
                   <span className="text-[10px] text-[#8aa8c4] shrink-0 truncate max-w-[72px]">{m.subtitle}</span>
                 </a>
