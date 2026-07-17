@@ -227,6 +227,14 @@ export default function MovieLibrary() {
           {t("movie.title")}
         </h1>
         <div className="flex-1" />
+        <div className="relative w-64">
+          <Input placeholder={t("movie.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pr-7" />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-0.5">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
         <Button onClick={handleAddMovies} className="h-8 w-8 p-0" title={t("movie.add")}><Upload className="h-4 w-4" /></Button>
         <Button variant="outline" onClick={handleAddFolder} className="h-8 w-8 p-0" title={t("movie.add_folder")}><FolderOpen className="h-4 w-4" /></Button>
         {!batch.showCheckboxes ? (

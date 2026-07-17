@@ -344,6 +344,14 @@ export default function MusicLibrary() {
           </Button>
         ) : (
           <>
+            <div className="relative w-64">
+              <Input placeholder={t("music.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pr-7" />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-0.5">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
             <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
             <button onClick={() => { setShowPlaylists(true); setSelectedPlaylist(playlists[0]?.id ?? null); }} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", "border-primary text-gray-500 hover:border-primary-light/30 hover:text-primary-light")} title={t("music.show_playlists")}><ListMusic className="h-4 w-4" /></button>
             <Button onClick={handleAdd} className="h-8 w-8 p-0" title={t("music.add")}><Upload className="h-4 w-4" /></Button>
