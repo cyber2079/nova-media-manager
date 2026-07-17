@@ -9,7 +9,7 @@ import { languages } from "@/i18n";
 import { cn } from "@/lib/utils";
 import ScrollFade from "@/components/ScrollFade";
 import ThemeManager from "@/components/ThemeManager";
-import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown, FolderOpen, ImageIcon, Shuffle } from "lucide-react";
+import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown, FolderOpen, ImageIcon, Shuffle, Home } from "lucide-react";
 import { ThemeAssets } from "@/lib/themeBase";
 import { useLicenseStore, isPro, isUltra } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS } from "@/stores/settingsStore";
@@ -680,7 +680,7 @@ function ThemeSection({ t, theme, themeList, handleTheme }: any) {
           <button key={item.key} onClick={() => handleTheme(item.key)}
             className={cn("flex flex-col items-center gap-2 px-3 py-4 rounded-lg text-xs border transition-all duration-200",
               theme === item.key ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
-            {item.image ? <img src={item.image} alt="" className="w-14 h-14 rounded-full object-cover" /> : <span className="text-xl">{item.emoji}</span>}
+            {item.image ? <img src={item.image} alt="" className="w-14 h-14 rounded-full object-cover" /> : item.key === "default" ? <Home className="h-7 w-7" /> : <span className="text-xl">{item.emoji}</span>}
             <span>{t(item.labelKey)}</span>
           </button>
         ))}

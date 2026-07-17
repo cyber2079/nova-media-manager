@@ -291,7 +291,7 @@ export default function HomeDashboard() {
       <div className={panelClass} style={panelStyle}>
         <div className="flex items-center justify-between mb-2">
           <p className="text-[11px] text-[#9ab8d4]">🔥 Steam 热销榜</p>
-          <p className="text-[10px] text-[#8aa8c4]">数据来自 Steam 官方 · 点击查看商店页</p>
+          <p className="text-[10px] text-[#8aa8c4]">数据来自 Steam 官方</p>
         </div>
         <div className="flex flex-wrap gap-1.5 mb-3">
           {TRENDING_TAGS.map((t) => (
