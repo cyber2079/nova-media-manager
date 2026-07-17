@@ -1,7 +1,6 @@
-// ── 推荐聚合（ECS 服务端缓存）──
-// /api/recommend/movies — TMDB trending/week（每天 7:00/19:00 刷新）
-// /api/recommend/music  — 网易云热歌榜
-// localhost:1420 dev 时走 http://localhost:3000/api/... 本地服务
+// ── 推荐数据前端缓存 ──
+// 本地 localStorage 缓存（24h TTL），每天只请求 ECS 一次。
+// 有缓存直接渲染，无缓存时静默请求不阻塞 UI。
 
 export interface RecItem {
   id: string;
@@ -12,20 +11,63 @@ export interface RecItem {
   meta?: string;
 }
 
+const TTL = 24 * 60 * 60 * 1000; // 24h
 const BASE = "https://scm-think.cn";
 
-export async function getRecommendMovies(): Promise<RecItem[]> {
+function readCache(key: string): RecItem[] | null {
   try {
-    const resp = await fetch(`${BASE}/api/recommend/movies`, { signal: AbortSignal.timeout(8000) });
+    const raw = localStorage.getItem(`rec-${key}`);
+    if (!raw) return null;
+    const { at, data } = JSON.parse(raw);
+    if (Date.now() - at > TTL) return null; // 过期
+    return data as RecItem[];
+  } catch { return null; }
+}
+
+function writeCache(key: string, data: RecItem[]) {
+  localStorage.setItem(`rec-${key}`, JSON.stringify({ at: Date.now(), data }));
+}
+
+async function fetchAndCache(key: string): Promise<RecItem[]> {
+  try {
+    const resp = await fetch(`${BASE}/api/recommend/${key}`, { signal: AbortSignal.timeout(8000) });
     if (!resp.ok) throw new Error(`${resp.status}`);
-    return (await resp.json()) as RecItem[];
+    const data = (await resp.json()) as RecItem[];
+    if (data.length > 0) writeCache(key, data);
+    return data;
   } catch { return []; }
 }
 
+// 电影推荐：缓存优先，后台静默刷新
+let _moviesPromise: Promise<RecItem[]> | null = null;
+export async function getRecommendMovies(): Promise<RecItem[]> {
+  const cached = readCache("movies");
+  if (cached) {
+    // 有缓存立刻返回，后台静默更新
+    if (!_moviesPromise) {
+      _moviesPromise = fetchAndCache("movies").finally(() => { _moviesPromise = null; });
+    }
+    return cached;
+  }
+  // 无缓存 → 必须等
+  if (!_moviesPromise) {
+    _moviesPromise = fetchAndCache("movies").finally(() => { _moviesPromise = null; });
+  }
+  return _moviesPromise;
+}
+
+// 音乐推荐：同上
+let _musicPromise: Promise<RecItem[]> | null = null;
 export async function getRecommendMusic(): Promise<RecItem[]> {
-  try {
-    const resp = await fetch(`${BASE}/api/recommend/music`, { signal: AbortSignal.timeout(8000) });
-    if (!resp.ok) throw new Error(`${resp.status}`);
-    return (await resp.json()) as RecItem[];
-  } catch { return []; }
+  const cached = readCache("music");
+  if (cached) {
+    if (!_musicPromise) {
+      _musicPromise = fetchAndCache("music").finally(() => { _musicPromise = null; });
+    }
+    return cached;
+  }
+  if (!_musicPromise) {
+    _musicPromise = fetchAndCache("music").finally(() => { _musicPromise = null; });
+  }
+  return _musicPromise;
 }

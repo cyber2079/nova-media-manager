@@ -325,14 +325,11 @@ export default function HomeDashboard() {
                 const pct = m.durationSeconds > 0 ? Math.min(100, (m.watchPosition / m.durationSeconds) * 100) : 0;
                 return (
                   <button key={m.id} onClick={() => navigate("/movies", { state: { playId: m.id } })}
-                    className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors"
                     style={{ minHeight: 28 }}>
-                    <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" style={{ filter: "brightness(1.2)" }} />
+                    <Film className="h-3 w-3 shrink-0 text-primary-light" style={{ filter: "brightness(1.2)" }} />
                     <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
-                    <div className="w-14 h-1 rounded-full bg-white/10 shrink-0 overflow-hidden">
-                      <div className="h-full bg-primary-light" style={{ width: `${pct}%` }} />
-                    </div>
-                    <span className="text-[9px] text-[#8aa8c4] shrink-0 w-8 text-right">{Math.round(pct)}%</span>
+                    <span className="text-[10px] text-[#8aa8c4] shrink-0 tabular-nums w-8 text-right">{Math.round(pct)}%</span>
                   </button>
                 );
               })}
@@ -359,6 +356,7 @@ export default function HomeDashboard() {
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
+                  <Film className="h-3 w-3 shrink-0 text-primary-light" />
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
                   {m.meta && <span className="text-[10px] text-[#8aa8c4] shrink-0 tabular-nums">{m.meta}</span>}
                 </a>
@@ -389,6 +387,7 @@ export default function HomeDashboard() {
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
+                  <Music className="h-3 w-3 shrink-0 text-primary-light" />
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
                   <span className="text-[10px] text-[#8aa8c4] shrink-0 truncate max-w-[72px]">{m.subtitle}</span>
                 </a>
