@@ -7,10 +7,10 @@ import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
 import { Film, Music, Gamepad2, Image as ImageIcon, Minimize2, RotateCcw } from "lucide-react";
-import { useMovieStore } from "@/stores/movieStore";
 import { useTranslation } from "react-i18next";
-import { setHomeMode } from "@/lib/homeMode";
+import { useSettingsStore } from "@/stores/settingsStore";
 import { useChartColors, withAlpha } from "@/lib/useChartColors";
+import { usePlayHistoryStore } from "@/stores/playHistoryStore";
 import { getTrending, fmtPrice, TRENDING_TAGS, type TrendingData, type TrendingGame } from "@/lib/trending";
 import { getRecommendMovies, getRecommendMusic, type RecItem } from "@/lib/recommend";
 import SafeImage from "@/components/SafeImage";
@@ -139,7 +139,6 @@ export default function HomeDashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const colors = useChartColors();
-  const movies = useMovieStore((s) => s.movies);
   const [stats, setStats] = useState<Stats | null>(null);
   const [trending, setTrending] = useState<TrendingData | null>(null);
   const [trendLoading, setTrendLoading] = useState(true);
@@ -173,13 +172,11 @@ export default function HomeDashboard() {
       .catch(() => {});
   };
 
-  // 继续观看（复用 P0-3 数据）
-  const continueWatching = useMemo(() =>
-    movies
-      .filter((m) => !m.watched && m.watchPosition > 0 && m.status === "ready")
-      .sort((a, b) => (b.watchUpdatedAt || "").localeCompare(a.watchUpdatedAt || ""))
-      .slice(0, 6),
-  [movies]);
+  // 最近观看：从播放历史取最近 5 条电影+音乐+游戏
+  const playHistory = usePlayHistoryStore((s) => s.recent);
+  const recentWatched = useMemo(() =>
+    playHistory.slice(0, 5),
+  [playHistory]);
 
   const total = stats ? stats.library.movies + stats.library.music + stats.library.games + stats.imagesCount : 0;
   const totalUp = useCountUp(total);
@@ -207,7 +204,7 @@ export default function HomeDashboard() {
             {t("home.total_count", { count: totalUp })}
           </p>
         </div>
-        <button onClick={() => setHomeMode("strip")}
+        <button onClick={() => useSettingsStore.getState().setDashboardMode("strip")}
           className="shrink-0 h-10 w-10 flex items-center justify-center rounded-full text-gray-500 hover:text-white hover:bg-surface-lighter transition-colors border border-primary/10"
           title="收缩为迷你条">
           <Minimize2 className="h-4 w-4" />
@@ -290,9 +287,49 @@ export default function HomeDashboard() {
         </div>
       </div>
 
-      {/* ── 2×2：最常播放 | 继续观看 ── */}
+      {/* ── Steam 热门 ── */}
+      <div className={panelClass} style={panelStyle}>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[11px] text-[#9ab8d4]">🔥 Steam 热销榜</p>
+          <p className="text-[10px] text-[#8aa8c4]">数据来自 Steam 官方 · 点击查看商店页</p>
+        </div>
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {TRENDING_TAGS.map((t) => (
+            <button key={t.tag} onClick={() => setTrendTag(t.tag)}
+              className={`px-2.5 py-1 rounded-full text-[10px] border transition-all ${
+                trendTag === t.tag
+                  ? "bg-primary/15 border-primary/40 text-primary-light font-semibold"
+                  : "border-white/10 text-[#8aa8c4] hover:text-white hover:bg-white/5"
+              }`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {trendLoading ? (
+          <div className="flex gap-3 overflow-hidden pb-1 -mx-1 px-1">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="shrink-0 w-40">
+                <div className="rounded-lg bg-surface-lighter animate-pulse aspect-[460/215] mb-1.5" />
+                <div className="h-3 w-24 rounded bg-surface-lighter animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : trending ? (
+          <div key={trendTag} className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+            {trending.games.map((g, i) => (
+              <TrendingCard key={g.id} g={g} delay={i * 40} onOpen={() => openSteamPage(g.id)} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center py-5 rounded-lg border border-white/5 bg-surface/30">
+            <p className="text-[11px] text-[#6a8aa8]">Steam 热销榜暂不可用，稍后再来</p>
+          </div>
+        )}
+      </div>
+
+      {/* ── 2×2：最常播放 | 最近观看 ── */}
       <div className="grid grid-cols-2 gap-4 items-stretch">
-        {/* 左上：最常播放 */}
+        {/* 最常播放（本地） */}
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
             <Music className="h-3.5 w-3.5 text-primary-light" />
@@ -316,72 +353,40 @@ export default function HomeDashboard() {
           )}
         </div>
 
-        {/* 右上：继续观看 */}
+        {/* 最近观看（本地播放历史） */}
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
             <Film className="h-3.5 w-3.5 text-primary-light" />
-            <span className="text-[11px] text-[#9ab8d4]">继续观看</span>
+            <span className="text-[11px] text-[#9ab8d4]">最近观看</span>
           </div>
-          {continueWatching.length > 0 ? (
+          {recentWatched.length > 0 ? (
             <div className="space-y-0.5">
-              {continueWatching.slice(0, 5).map((m, i) => {
-                const pct = m.durationSeconds > 0 ? Math.min(100, (m.watchPosition / m.durationSeconds) * 100) : 0;
-                return (
-                  <button key={m.id} onClick={() => navigate("/movies", { state: { playId: m.id } })}
-                    className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up"
-                    style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
-                    <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                    <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" />
-                    <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
-                    <span className="text-[10px] text-[#8aa8c4] shrink-0 tabular-nums">{Math.round(pct)}%</span>
-                  </button>
-                );
-              })}
+              {recentWatched.map((e, i) => (
+                <button key={`${e.type}-${e.id}-${e.time}`}
+                  onClick={() => navigate(e.type === "movie" ? "/movies" : e.type === "music" ? "/music" : "/games")}
+                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up"
+                  style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
+                  <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
+                  {e.type === "movie" ? <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" />
+                    : e.type === "music" ? <Music className="h-3.5 w-3.5 shrink-0 text-primary-light" />
+                    : <Gamepad2 className="h-3.5 w-3.5 shrink-0 text-primary-light" />}
+                  <span className="flex-1 text-xs text-[#c8ddf0] truncate">{e.name}</span>
+                  <span className="text-[10px] text-[#8aa8c4] shrink-0">{e.type === "movie" ? "电影" : e.type === "music" ? "音乐" : "游戏"}</span>
+                </button>
+              ))}
             </div>
           ) : (
-            <p className="text-[10px] text-[#8aa8c4] py-4 text-center">看电影自动续播</p>
+            <p className="text-[10px] text-[#8aa8c4] py-4 text-center">播放电影或音乐后出现在这里</p>
           )}
         </div>
       </div>
 
-      {/* ── 2×2：本周热映 | 本周热歌 ── */}
+      {/* ── 2×2：本周热歌 | 本周热映 ── */}
       <div className="grid grid-cols-2 gap-4 items-stretch">
-        {/* 左下：本周热映 */}
+        {/* 本周热歌（服务端推荐） */}
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
-            <Film className="h-3.5 w-3.5 text-primary-light" />
-            <span className="text-[11px] text-[#9ab8d4]">本周热映</span>
-            <span className="text-[9px] text-[#6a8aa8] ml-auto">TMDB</span>
-          </div>
-          {recMovies.length > 0 ? (
-            <div className="space-y-0.5">
-              {recMovies.slice(0, 5).map((m, i) => (
-                <a key={m.id} href={m.url} target="_blank" rel="noopener"
-                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
-                  style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
-                  <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                  <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" />
-                  <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
-                  {m.meta && <span className="text-[10px] text-[#8aa8c4] shrink-0 tabular-nums">{m.meta}</span>}
-                </a>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-1.5 py-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded bg-surface-lighter animate-pulse shrink-0" />
-                  <div className="h-3 flex-1 rounded bg-surface-lighter animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* 右下：本周热歌 */}
-        <div className={panelClass} style={panelStyle}>
-          <div className="flex items-center gap-2 mb-2">
-            <Music className="h-3.5 w-3.5 text-primary-light" />
+            <Music className="h-3.5 w-3.5 text-primary-light/50" />
             <span className="text-[11px] text-[#9ab8d4]">本周热歌</span>
             <span className="text-[9px] text-[#6a8aa8] ml-auto">网易云</span>
           </div>
@@ -392,7 +397,7 @@ export default function HomeDashboard() {
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                  <Music className="h-3.5 w-3.5 shrink-0 text-primary-light" />
+                  <Music className="h-3.5 w-3.5 shrink-0 text-primary-light/50" />
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
                   <span className="text-[10px] text-[#8aa8c4] shrink-0 truncate max-w-[72px]">{m.subtitle}</span>
                 </a>
@@ -409,50 +414,38 @@ export default function HomeDashboard() {
             </div>
           )}
         </div>
-      </div>
 
-      {/* ── Steam 热门（始终显示，离线/503 时保留 chips + 兜底文案）── */}
-      <div className={panelClass} style={panelStyle}>
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-[11px] text-[#9ab8d4]">🔥 Steam 热销榜</p>
-          <p className="text-[10px] text-[#8aa8c4]">数据来自 Steam 官方 · 点击查看商店页</p>
+        {/* 本周热映（服务端推荐） */}
+        <div className={panelClass} style={panelStyle}>
+          <div className="flex items-center gap-2 mb-2">
+            <Film className="h-3.5 w-3.5 text-primary-light/50" />
+            <span className="text-[11px] text-[#9ab8d4]">本周热映</span>
+            <span className="text-[9px] text-[#6a8aa8] ml-auto">TMDB</span>
+          </div>
+          {recMovies.length > 0 ? (
+            <div className="space-y-0.5">
+              {recMovies.slice(0, 5).map((m, i) => (
+                <a key={m.id} href={m.url} target="_blank" rel="noopener"
+                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
+                  style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
+                  <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
+                  <Film className="h-3.5 w-3.5 shrink-0 text-primary-light/50" />
+                  <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
+                  {m.meta && <span className="text-[10px] text-[#8aa8c4] shrink-0 tabular-nums">{m.meta}</span>}
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-1.5 py-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded bg-surface-lighter animate-pulse shrink-0" />
+                  <div className="h-3 flex-1 rounded bg-surface-lighter animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        {/* 类型筛选 chips — 永不下架 */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {TRENDING_TAGS.map((t) => (
-            <button key={t.tag} onClick={() => setTrendTag(t.tag)}
-              className={`px-2.5 py-1 rounded-full text-[10px] border transition-all ${
-                trendTag === t.tag
-                  ? "bg-primary/15 border-primary/40 text-primary-light font-semibold"
-                  : "border-white/10 text-[#8aa8c4] hover:text-white hover:bg-white/5"
-              }`}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-        {trendLoading ? (
-          /* 骨架占位：高度与卡片一致，切换不跳动 */
-          <div className="flex gap-3 overflow-hidden pb-1 -mx-1 px-1">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="shrink-0 w-40">
-                <div className="rounded-lg bg-surface-lighter animate-pulse aspect-[460/215] mb-1.5" />
-                <div className="h-3 w-24 rounded bg-surface-lighter animate-pulse" />
-              </div>
-            ))}
-          </div>
-        ) : trending ? (
-          /* key=trendTag：整条原子替换，杜绝新旧榜逐卡 diff 残影 */
-          <div key={trendTag} className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
-            {trending.games.map((g, i) => (
-              <TrendingCard key={g.id} g={g} delay={i * 40} onOpen={() => openSteamPage(g.id)} />
-            ))}
-          </div>
-        ) : (
-          /* 服务端不可达 / 503 / 超时 — 区域不消失，给用户交代 */
-          <div className="flex items-center justify-center py-5 rounded-lg border border-white/5 bg-surface/30">
-            <p className="text-[11px] text-[#6a8aa8]">Steam 热销榜暂不可用，稍后再来</p>
-          </div>
-        )}
       </div>
 
       {/* ── 重温推荐 ── */}

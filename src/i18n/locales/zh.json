@@ -334,6 +334,7 @@
     "start_fullscreen": "启动时全屏",
     "auto_hide_header": "自动隐藏顶栏",
     "auto_hide_footer": "自动隐藏底栏",
+    "dashboard_mode": "仪表盘默认方式",
     "theme": "主题",
     "custom_color": "自定义主题色",
     "use_custom_color": "启用自定义主题色",

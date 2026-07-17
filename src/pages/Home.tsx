@@ -46,7 +46,6 @@ import { useMusicStore } from "@/stores/musicStore";
 import { usePlayHistoryStore } from "@/stores/playHistoryStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { Film, Image, Gamepad2, Clock, Music, Minimize2 } from "lucide-react";
-import { useHomeMode, setHomeMode } from "@/lib/homeMode";
 import { useNavigate } from "react-router-dom";
 import HomeDashboard from "@/components/HomeDashboard";
 
@@ -92,7 +91,7 @@ function CharImg({ iconPath, fallbackSrc, className }: { iconPath: string; fallb
 
 /** Switches between full dashboard and compact MediaStrip */
 function DashBoardOrStrip() {
-  const [mode] = useHomeMode();
+  const mode = useSettingsStore((s) => s.dashboardMode);
   if (mode === "full") return <HomeDashboard />;
   return null; // MediaStrip is rendered in Layout.tsx at the bottom
 }

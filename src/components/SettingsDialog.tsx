@@ -81,6 +81,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
     cyberBgmEnabled, setCyberBgmEnabled,
     cgTextSize, cgTextColor, setCgTextSize, setCgTextColor,
     paletteAccent, paletteSaturation, paletteContrast, paletteCustomized, setPaletteAccent, setPaletteSaturation, setPaletteContrast, resetPaletteToTheme,
+    dashboardMode, setDashboardMode,
   } = useSettingsStore();
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages, setEnabled, setPosition, setMyComputerMode, setGlobalWidgets, setPageWidget, setCountdown } = useWidgetStore();
   const [autoLoading, setAutoLoading] = useState(false);
@@ -319,6 +320,19 @@ export default function SettingsDialog({ open, onClose }: Props) {
                       <input type="checkbox" checked={autoHideFooter} onChange={(e) => setAutoHideFooter(e.target.checked)} className="h-4 w-4 rounded accent-[var(--color-primary)]" />
                       <span className="text-sm text-gray-300">{t("settings.auto_hide_footer")}</span>
                     </label>
+                    <div>
+                      <p className="text-xs text-gray-400 mb-2">{t("settings.dashboard_mode")}</p>
+                      <div className="flex gap-2">
+                        <button onClick={() => setDashboardMode("full")}
+                          className={cn("px-3 py-1.5 text-xs rounded-md border transition-colors",
+                            dashboardMode === "full" ? "bg-white/10 border-white/30 text-white" : "border-white/5 text-gray-400 hover:text-gray-200")}>
+                          正常</button>
+                        <button onClick={() => setDashboardMode("strip")}
+                          className={cn("px-3 py-1.5 text-xs rounded-md border transition-colors",
+                            dashboardMode === "strip" ? "bg-white/10 border-white/30 text-white" : "border-white/5 text-gray-400 hover:text-gray-200")}>
+                          最小化</button>
+                      </div>
+                    </div>
                   </div>
                 </section>
 

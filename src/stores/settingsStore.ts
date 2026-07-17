@@ -139,8 +139,11 @@ export type SettingsState = {
   /** Whether user has manually adjusted palette from theme default */
   paletteCustomized: boolean;
 
+  dashboardMode: "full" | "strip";
+
   // Init from persistent store
   init: () => Promise<void>;
+  setDashboardMode: (m: "full" | "strip") => void;
   setLanguage: (lang: string) => void;
   setAutoStart: (on: boolean) => Promise<void>;
   setStartFullscreen: (on: boolean) => void;
@@ -464,6 +467,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     paletteSaturation: (saved as any).paletteSaturation ?? ((saved as any).paletteVibrancy != null ? (saved as any).paletteVibrancy * 10 : 50),
     paletteContrast: (saved as any).paletteContrast || "dark",
     paletteCustomized: (saved as any).paletteCustomized || false,
+    dashboardMode: (saved as any).dashboardMode || "full",
 
     init: async () => {
       const raw = await kv.get(STORAGE_KEY);
@@ -513,6 +517,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             paletteContrast: (s.paletteContrast as any) ?? get().paletteContrast,
             paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized, wallpaper: s.wallpaper ?? get().wallpaper,
             externalPlayer: s.externalPlayer ?? get().externalPlayer,
+            dashboardMode: (s.dashboardMode as any) ?? get().dashboardMode,
           });
           applyPalette(); applySurface();
           applyFontColors();
@@ -528,6 +533,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       set({ autoStart: on }); outdate(); persist(get());
     },
     setStartFullscreen(on) { set({ startFullscreen: on }); outdate(); persist(get()); },
+    setDashboardMode(m) { set({ dashboardMode: m }); outdate(); persist(get()); },
     setAutoHideHeader(on) { set({ autoHideHeader: on }); outdate(); persist(get()); },
     setAutoHideFooter(on) { set({ autoHideFooter: on }); outdate(); persist(get()); },
     setCustomColor(color) { set({ customColor: color }); outdate(); persist(get()); },
