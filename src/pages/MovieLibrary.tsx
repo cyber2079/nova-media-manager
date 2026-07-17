@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Upload, Loader2, Video, Tag, Play, Pause, Clock, Maximize, Trash2, X, Star, CheckSquare } from "lucide-react";
+import { Upload, Loader2, Video, Tag, Play, Pause, Clock, Maximize, Trash2, X, Star, CheckSquare, Monitor } from "lucide-react";
 import TagFilterBar from "@/components/TagFilterBar";
 import TagEditDialog from "@/components/TagEditDialog";
 import LayoutSwitch, { type LayoutMode } from "@/components/LayoutSwitch";
@@ -295,6 +295,10 @@ export default function MovieLibrary() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    <button onClick={(e) => { e.stopPropagation(); handleSetWallpaper(movie.filePath); }}
+                      className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title="设为背景">
+                      <Monitor className="h-4 w-4" />
+                    </button>
                     <button onClick={(e) => { e.stopPropagation(); toggleFavorite(movie.id, "movie"); }}
                       className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-yellow-400 hover:bg-surface-lighter/50 transition-colors">
                       <Star className={cn("h-4 w-4", isFavorite(movie.id) ? "fill-yellow-400 text-yellow-400" : "")} />
