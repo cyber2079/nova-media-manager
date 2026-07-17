@@ -172,10 +172,10 @@ export default function HomeDashboard() {
       .catch(() => {});
   };
 
-  // 最近观看：从播放历史取最近 5 条电影+音乐+游戏
+  // 最近观看：播放历史中只取电影
   const playHistory = usePlayHistoryStore((s) => s.recent);
   const recentWatched = useMemo(() =>
-    playHistory.slice(0, 5),
+    playHistory.filter((e) => e.type === "movie").slice(0, 5),
   [playHistory]);
 
   const total = stats ? stats.library.movies + stats.library.music + stats.library.games + stats.imagesCount : 0;
@@ -363,15 +363,12 @@ export default function HomeDashboard() {
             <div className="space-y-0.5">
               {recentWatched.map((e, i) => (
                 <button key={`${e.type}-${e.id}-${e.time}`}
-                  onClick={() => navigate(e.type === "movie" ? "/movies" : e.type === "music" ? "/music" : "/games")}
+                  onClick={() => navigate("/movies", { state: { playId: e.id } })}
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up"
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                  {e.type === "movie" ? <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" />
-                    : e.type === "music" ? <Music className="h-3.5 w-3.5 shrink-0 text-primary-light" />
-                    : <Gamepad2 className="h-3.5 w-3.5 shrink-0 text-primary-light" />}
+                  <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" />
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{e.name}</span>
-                  <span className="text-[10px] text-[#8aa8c4] shrink-0">{e.type === "movie" ? "电影" : e.type === "music" ? "音乐" : "游戏"}</span>
                 </button>
               ))}
             </div>

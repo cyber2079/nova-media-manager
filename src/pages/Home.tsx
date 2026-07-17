@@ -172,7 +172,8 @@ interface RuntimeScriptNode { id: string; label: string; background: string; fac
 function useThemeScript(theme: string) {
   const [script, setScript] = useState<RuntimeScriptNode[]>([]);
   useEffect(() => {
-    if (theme === "default") { setScript([]); return; }
+    setScript([]); // 立即清除旧主题数据
+    if (theme === "default") return;
     let cancelled = false;
     invoke<RuntimeScriptNode[]>("theme_get_script", { themeId: theme })
       .then(s => { if (!cancelled) setScript(s); })
@@ -204,6 +205,13 @@ export default function Home() {
   const [iceBgVisible, setIceBgVisible] = useState(false);
   const [iceFace, setIceFace] = useState("");
   const [cgSceneIdx, setCgSceneIdx] = useState(0);
+
+  // 主题切换时重置状态
+  useEffect(() => {
+    setIceBgVisible(false);
+    setIceFace("");
+    setCgSceneIdx(0);
+  }, [theme]);
 
   // Build dynamic quotes from script
   const dynamicQuotes = useMemo(() => (themeType === "dynamic" ? script.map(node => ({
