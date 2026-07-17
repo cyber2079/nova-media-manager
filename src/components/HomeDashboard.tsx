@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import { setHomeMode } from "@/lib/homeMode";
 import { useChartColors, withAlpha } from "@/lib/useChartColors";
 import { getTrending, fmtPrice, TRENDING_TAGS, type TrendingData, type TrendingGame } from "@/lib/trending";
-import { getRecommendMovies, type RecItem } from "@/lib/recommend";
+import { getRecommendMovies, getRecommendMusic, type RecItem } from "@/lib/recommend";
 import SafeImage from "@/components/SafeImage";
 
 // ── 类型（对应 Rust DashboardStats）──
@@ -145,6 +145,7 @@ export default function HomeDashboard() {
   const [trendLoading, setTrendLoading] = useState(true);
   const [trendTag, setTrendTag] = useState(() => localStorage.getItem("trending-tag") || "");
   const [recMovies, setRecMovies] = useState<RecItem[]>([]);
+  const [recMusic, setRecMusic] = useState<RecItem[]>([]);
 
   useEffect(() => {
     invoke<Stats>("dashboard_stats").then(setStats).catch(() => {});
@@ -164,6 +165,7 @@ export default function HomeDashboard() {
   }, [trendTag]);
 
   useEffect(() => { getRecommendMovies().then(setRecMovies).catch(() => {}); }, []);
+  useEffect(() => { getRecommendMusic().then(setRecMusic).catch(() => {}); }, []);
 
   const openSteamPage = (appId: number) => {
     import("@tauri-apps/plugin-shell")
@@ -298,12 +300,8 @@ export default function HomeDashboard() {
               {stats.topMusic.slice(0, 5).map((m, i) => (
                 <button key={m.id} onClick={() => navigate("/music")}
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up"
-                  style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards" }}>
+                  style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                  <div className="w-6 h-6 rounded overflow-hidden bg-surface-lighter shrink-0">
-                    <SafeImage src={m.coverPath} alt="" className="w-full h-full object-cover"
-                      fallback={<div className="flex h-full items-center justify-center"><Music className="h-3 w-3 text-gray-600" /></div>} />
-                  </div>
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.name}</span>
                   <span className="text-[10px] text-[#8aa8c4] tabular-nums shrink-0">{m.count} 次</span>
                 </button>
@@ -336,34 +334,67 @@ export default function HomeDashboard() {
               </div>
             </div>
           ) : (
-            <div className={panelClass} style={panelStyle}>
-              <div className="flex items-center gap-2 mb-2">
-                <Film className="h-3.5 w-3.5 text-primary-light" />
-                <span className="text-[11px] text-[#9ab8d4]">🔥 本周热映</span>
-                <span className="text-[9px] text-[#6a8aa8] ml-auto">TMDB</span>
+            /* 无继续观看 → 左右并排 TMDB 热映 + 网易云热歌 */
+            <>
+              <div className={panelClass} style={panelStyle}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Film className="h-3.5 w-3.5 text-primary-light" />
+                  <span className="text-[11px] text-[#9ab8d4]">🔥 本周热映</span>
+                  <span className="text-[9px] text-[#6a8aa8] ml-auto">TMDB</span>
+                </div>
+                {recMovies.length > 0 ? (
+                  <div className="space-y-0.5">
+                    {recMovies.slice(0, 5).map((m, i) => (
+                      <a key={m.id} href={m.url} target="_blank" rel="noopener"
+                        className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
+                        style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
+                        <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
+                        <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
+                        {m.meta && <span className="text-[10px] text-[#8aa8c4] shrink-0 tabular-nums">{m.meta}</span>}
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 py-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="h-3 w-3 rounded bg-surface-lighter animate-pulse shrink-0" />
+                        <div className="h-3 flex-1 rounded bg-surface-lighter animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              {recMovies.length > 0 ? (
-                <div className="space-y-0.5">
-                  {recMovies.slice(0, 5).map((m, i) => (
-                    <a key={m.id} href={m.url} target="_blank" rel="noopener"
-                      className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
-                      style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards" }}>
-                      <Film className="h-3.5 w-3.5 shrink-0 text-primary-light" />
-                      <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
-                      {m.meta && <span className="text-[10px] text-[#8aa8c4] shrink-0">{m.meta}</span>}
-                    </a>
-                  ))}
+              <div className={panelClass} style={panelStyle}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Music className="h-3.5 w-3.5 text-primary-light" />
+                  <span className="text-[11px] text-[#9ab8d4]">🎧 本周热歌</span>
+                  <span className="text-[9px] text-[#6a8aa8] ml-auto">网易云</span>
                 </div>
-              ) : (
-                <div className="space-y-1.5 py-2">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded bg-surface-lighter animate-pulse shrink-0" />
-                      <div className="h-3 flex-1 rounded bg-surface-lighter animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
-                    </div>
-                  ))}
-                </div>
-              )}
+                {recMusic.length > 0 ? (
+                  <div className="space-y-0.5">
+                    {recMusic.slice(0, 5).map((m, i) => (
+                      <a key={m.id} href={m.url} target="_blank" rel="noopener"
+                        className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
+                        style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
+                        <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
+                        <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
+                        <span className="text-[10px] text-[#8aa8c4] shrink-0 truncate max-w-[72px]">{m.subtitle}</span>
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 py-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="h-3 w-3 rounded bg-surface-lighter animate-pulse shrink-0" />
+                        <div className="h-3 flex-1 rounded bg-surface-lighter animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
             </div>
           )}
         </div>

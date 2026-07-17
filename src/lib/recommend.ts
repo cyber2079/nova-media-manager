@@ -12,7 +12,7 @@ export interface RecItem {
   meta?: string;
 }
 
-const BASE = import.meta.env.DEV ? "http://localhost:3000" : "https://scm-think.cn";
+const BASE = "https://scm-think.cn";
 
 export async function getRecommendMovies(): Promise<RecItem[]> {
   try {
