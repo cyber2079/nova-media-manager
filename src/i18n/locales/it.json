@@ -423,36 +423,10 @@
     "days_ago": "gg fa",
     "tmdb": "TMDB",
     "netease": "NetEase",
-    "story_empty": "Guarda film, ascolta musica, gioca ― la tua settimana prende forma qui",
-    "story_idle": "Una settimana tranquilla. I preferiti della scorsa settimana ti aspettano",
-    "story_movie_count": "visto {{n}} film",
-    "story_music_count": "ascoltato {{n}} brani",
-    "story_game_count": "giocato {{n}} volte",
-    "story_this_week": "Questa settimana hai",
-    "weekly_activity": "{{n}} sessioni questa settimana",
-    "persona_movie": "Cinefilo",
-    "persona_music": "Audiofilo",
-    "persona_game": "Re del gaming",
-    "persona_movie_music": "Cinefilo & Audiofilo",
-    "persona_movie_game": "Cinema & Gaming",
-    "persona_music_game": "Colonna sonora & Grind",
-    "persona_all": "Eclettico",
-    "trend_up_big": "molto più della scorsa settimana",
-    "trend_up": "più della scorsa settimana",
-    "trend_down_big": "molto meno della scorsa settimana ― impegnato?",
-    "trend_down": "un po' meno della scorsa settimana",
-    "trend_same": "stesso ritmo della scorsa settimana",
     "hourly_night": "🌙 Nottambulo ― le ore piccole sono tue",
     "hourly_morning": "🌅 Mattiniero ― il mattino è d'oro",
     "hourly_afternoon": "☀️ Pomeridiano ― il pomeriggio è perfetto",
-    "hourly_evening": "🌆 Serale ― dopo il lavoro inizia la vita",
-    "active_newcomer": "Novizio",
-    "active_regular": "Cliente abituale",
-    "active_devoted": "Non posso farne a meno",
-    "active_legend": "Parte della mia vita",
-    "streak_hot": "Serie",
-    "streak_week": "Serie settimanale",
-    "streak_on_fire": "Inarrestabile"
+    "hourly_evening": "🌆 Serale ― dopo il lavoro inizia la vita"
   },
   "music": {
     "title": "Musica",
@@ -538,6 +512,7 @@
     "wraeclast": "Era di Wraeclast",
     "days": "gg",
     "day_n": "Giorno {{n}}",
+    "month_start": "1°",
     "countdown": "Conto alla rovescia",
     "countdown_title": "Impostazioni conto alla rovescia",
     "countdown_hours": "o",
@@ -563,8 +538,6 @@
   },
   "license": {
     "title": "Licenza",
-    "free_tier": "Community",
-    "custom_tier": "Personalizzato",
     "permanent": "Permanente",
     "monthly": "Mensile",
     "yearly": "Annuale",
@@ -573,7 +546,12 @@
     "enter_code": "Inserisci codice",
     "unbind": "Scollega",
     "unbind_confirm": "Scollegare questo dispositivo?\nIl codice di attivazione sarà rilasciato per l'uso su un altro dispositivo.",
-    "unbind_failed": "Scollegamento fallito: {{error}}"
+    "unbind_failed": "Scollegamento fallito: {{error}}",
+    "free": "Gratuito",
+    "member": "Member",
+    "member_price": "3€/mese",
+    "pro": "Pro",
+    "pro_price": "11€/anno"
   },
   "activation": {
     "title": "Attiva licenza",
@@ -741,11 +719,7 @@
   },
   "checkin": {
     "title": "Premi check-in",
-    "active_days_label": "giorni attivi",
-    "streak_label": "giorni consecutivi",
-    "today_done": "Check-in fatto ✓",
-    "day_unit": "gg",
-    "claim": "Riscatta",
-    "free_hint": "Passa a Member per sbloccare i premi check-in"
+    "active_days_label": "gg di check-in",
+    "streak_label": "giorni consecutivi"
   }
 }

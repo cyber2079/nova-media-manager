@@ -4,7 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 const SERVER_URL = "https://scm-think.cn";
 
 export interface LicenseInfo {
-  tier: "free" | "pro" | "ultra" | "custom";
+  tier: "free" | "member" | "pro";
   duration: "monthly" | "yearly" | "permanent";
   expiresAt: string | null;
   activatedAt?: string;
@@ -41,7 +41,7 @@ function devLicense(): LicenseInfo | null {
   const tier = import.meta.env?.VITE_LICENSE_TIER as string | undefined;
   if (!tier || tier === "free") return null;
   return {
-    tier: tier as "pro" | "ultra" | "custom",
+    tier: tier as "member" | "pro",
     duration: "permanent",
     expiresAt: null,
     maxDevices: 99,
@@ -95,12 +95,17 @@ export const useLicenseStore = create<LicenseState>((set, get) => ({
   closeActivation: () => set({ activationOpen: false }),
 }));
 
-/** Helper: is the current license Pro or higher? */
-export function isPro(tier: string): boolean {
-  return tier === "pro" || tier === "ultra" || tier === "custom";
+/** Helper: is any paid tier? (member or pro) */
+export function isPaid(tier: string): boolean {
+  return tier === "member" || tier === "pro";
 }
 
-/** Helper: is the current license Ultra or higher? */
-export function isUltra(tier: string): boolean {
-  return tier === "ultra" || tier === "custom";
+/** @deprecated use isPaid */
+export function isPro(tier: string): boolean {
+  return tier === "member" || tier === "pro";
+}
+
+/** Helper: is Pro tier? */
+export function isProTier(tier: string): boolean {
+  return tier === "pro";
 }

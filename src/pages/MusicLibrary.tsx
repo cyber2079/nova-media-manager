@@ -29,6 +29,7 @@ import { usePagination } from "@/lib/usePagination";
 import { useToast } from "@/components/Toast";
 import { importMediaPaths, pickFolderAndImport, importSummaryText } from "@/lib/mediaScan";
 import { FolderOpen } from "lucide-react";
+import CountBadge from "@/components/CountBadge";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { usePlaylistStore } from "@/stores/playlistStore";
 import type { Music as MusicType } from "@/types/music";
@@ -334,8 +335,9 @@ export default function MusicLibrary() {
     <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-4">
-        <h1 className="font-bold text-2xl transition-all duration-500">
+        <h1 className="font-bold text-2xl transition-all duration-500 relative">
           {showPlaylists ? t("music.playlists") : t("music.title")}
+          {!showPlaylists && <CountBadge n={music.length} />}
         </h1>
         <div className="flex-1" />
         {showPlaylists ? (

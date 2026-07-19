@@ -30,6 +30,7 @@ import { usePagination } from "@/lib/usePagination";
 import { useToast } from "@/components/Toast";
 import { importMediaPaths, pickFolderAndImport, importSummaryText } from "@/lib/mediaScan";
 import { FolderOpen } from "lucide-react";
+import CountBadge from "@/components/CountBadge";
 
 async function readerBlobUrl(filePath: string): Promise<string> {
   if (filePath.startsWith("http://") || filePath.startsWith("https://") || filePath.startsWith("blob:") || filePath.startsWith("data:") || filePath.startsWith("/themes/")) {
@@ -333,7 +334,7 @@ export default function ImageLibrary() {
     <DropZone onDrop={handleDropImport} accept={".png,.jpg,.jpeg,.gif,.webp,.bmp"} allowFolders>
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex items-center gap-4">
-        <h1 className="text-2xl font-bold">{t("image.title")}</h1>
+        <h1 className="text-2xl font-bold relative">{t("image.title")}<CountBadge n={images.length} /></h1>
         <div className="flex-1" />
         <div className="relative w-64">
           <Input placeholder={t("image.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pr-7" />

@@ -423,36 +423,10 @@
     "days_ago": "j",
     "tmdb": "TMDB",
     "netease": "NetEase",
-    "story_empty": "Regardez des films, écoutez de la musique, jouez ― votre semaine s'écrit ici",
-    "story_idle": "Une semaine calme. Vos favoris de la semaine dernière vous attendent",
-    "story_movie_count": "{{n}} film(s) regardé(s)",
-    "story_music_count": "{{n}} morceau(x) écouté(s)",
-    "story_game_count": "{{n}} partie(s) jouée(s)",
-    "story_this_week": "Cette semaine vous avez",
-    "weekly_activity": "{{n}} lectures cette semaine",
-    "persona_movie": "Cinéphile",
-    "persona_music": "Mélomane",
-    "persona_game": "Roi du jeu",
-    "persona_movie_music": "Cinéphile & Mélomane",
-    "persona_movie_game": "Cinéphile & Joueur",
-    "persona_music_game": "Bande-son & Grind",
-    "persona_all": "Touche-à-tout",
-    "trend_up_big": "bien plus que la semaine dernière",
-    "trend_up": "plus que la semaine dernière",
-    "trend_down_big": "beaucoup moins ― occupé ?",
-    "trend_down": "un peu moins que la semaine dernière",
-    "trend_same": "même rythme que la semaine dernière",
     "hourly_night": "🌙 Oiseau de nuit ― les heures calmes sont à vous",
     "hourly_morning": "🌅 Lève-tôt ― le matin est d'or",
     "hourly_afternoon": "☀️ Après-midi ― le moment parfait",
-    "hourly_evening": "🌆 Soirée ― après le travail, la vie",
-    "active_newcomer": "Nouveau",
-    "active_regular": "Habitué",
-    "active_devoted": "Indispensable",
-    "active_legend": "Fait partie de ma vie",
-    "streak_hot": "Série",
-    "streak_week": "Série d'une semaine",
-    "streak_on_fire": "Inarrêtable"
+    "hourly_evening": "🌆 Soirée ― après le travail, la vie"
   },
   "music": {
     "title": "Musique",
@@ -538,6 +512,7 @@
     "wraeclast": "Ère de Wraeclast",
     "days": "j",
     "day_n": "Jour {{n}}",
+    "month_start": "1er",
     "countdown": "Compte à rebours",
     "countdown_title": "Paramètres du compte à rebours",
     "countdown_hours": "h",
@@ -563,8 +538,6 @@
   },
   "license": {
     "title": "Licence",
-    "free_tier": "Communauté",
-    "custom_tier": "Personnalisé",
     "permanent": "Permanent",
     "monthly": "Mensuel",
     "yearly": "Annuel",
@@ -573,7 +546,12 @@
     "enter_code": "Entrer le code",
     "unbind": "Dissocier",
     "unbind_confirm": "Dissocier cet appareil ?\nLe code d'activation sera libéré pour un autre appareil.",
-    "unbind_failed": "Échec de la dissociation : {{error}}"
+    "unbind_failed": "Échec de la dissociation : {{error}}",
+    "free": "Gratuit",
+    "member": "Member",
+    "member_price": "3€/mois",
+    "pro": "Pro",
+    "pro_price": "11€/an"
   },
   "activation": {
     "title": "Activer la licence",
@@ -741,11 +719,7 @@
   },
   "checkin": {
     "title": "Récompenses de connexion",
-    "active_days_label": "jours actifs",
-    "streak_label": "jours consécutifs",
-    "today_done": "Connecté aujourd'hui ✓",
-    "day_unit": "j",
-    "claim": "Récupérer",
-    "free_hint": "Passez au niveau supérieur pour débloquer les récompenses"
+    "active_days_label": "j connecté",
+    "streak_label": "jours consécutifs"
   }
 }

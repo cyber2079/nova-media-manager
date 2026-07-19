@@ -185,7 +185,6 @@ pub fn run() {
             commands::dashboard_stats::dashboard_stats,
             commands::checkin::auto_checkin,
             commands::checkin::get_checkin_stats,
-            commands::checkin::redeem_milestone,
             commands::image::get_all_images,
             commands::image::add_images,
             commands::image::delete_image,

@@ -32,6 +32,7 @@ import DropZone from "@/components/DropZone";
 import { useToast } from "@/components/Toast";
 import { importMediaPaths, pickFolderAndImport, importSummaryText } from "@/lib/mediaScan";
 import { FolderOpen } from "lucide-react";
+import CountBadge from "@/components/CountBadge";
 
 export default function MovieLibrary() {
   const { t } = useTranslation();
@@ -223,8 +224,9 @@ export default function MovieLibrary() {
     <DropZone onDrop={handleDropImport} accept={".mp4,.avi,.mov,.mkv,.flv,.wmv,.webm,.m4v,.ts,.rmvb"} allowFolders>
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-4">
-        <h1 className="font-bold text-2xl transition-all duration-500">
+        <h1 className="font-bold text-2xl transition-all duration-500 relative">
           {t("movie.title")}
+          <CountBadge n={movies.length} />
         </h1>
         <div className="flex-1" />
         <div className="relative w-64">

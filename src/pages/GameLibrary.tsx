@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useFavoritesStore } from "@/stores/favoritesStore";
 import { tagColor } from "@/lib/tagColor";
 import { Upload, Gamepad2, Loader2, Star, Play, Monitor, Trash2, Tag, Search, X, CheckSquare } from "lucide-react";
+import CountBadge from "@/components/CountBadge";
 import EmptyState from "@/components/EmptyState";
 import LayoutSwitch, { type LayoutMode } from "@/components/LayoutSwitch";
 import { useLayoutMode } from "@/lib/useLayoutMode";
@@ -120,7 +121,7 @@ export default function GameLibrary() {
     <DropZone onDrop={handleDropImport} accept={".exe,.lnk,.app,.sh,.desktop,.bat,.cmd,.com"}>
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex items-center gap-4">
-        <h1 className="font-bold text-2xl transition-all duration-500">{t("game.title")}</h1>
+        <h1 className="font-bold text-2xl transition-all duration-500 relative">{t("game.title")}<CountBadge n={games.length} /></h1>
         <div className="flex-1" />
         <div className="relative w-64">
           <Input placeholder={t("game.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pr-7" />

@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemePackStore, type InstalledTheme, type ThemePackInfo } from "@/stores/themePackStore";
-import { useLicenseStore, isPro, isUltra } from "@/stores/licenseStore";
+import { useLicenseStore, isPaid, isProTier } from "@/stores/licenseStore";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Package, Download, Trash2, Loader2, FolderOpen } from "lucide-react";
 
@@ -22,13 +22,13 @@ export default function ThemeManager() {
   useEffect(() => {
     if (open) {
       refresh();
-      if (isPro(license.tier)) fetchAvailable();
+      if (isPaid(license.tier)) fetchAvailable();
     }
   }, [open]);
 
   const handleInstallFromServer = async (info: ThemePackInfo) => {
-    const ok = isPro(license.tier) && info.requires_license !== "ultra"
-      || isUltra(license.tier);
+    const ok = isPaid(license.tier) && info.requires_license !== "pro"
+      || isProTier(license.tier);
     if (!ok) {
       setStatus("error");
       setStatusMsg(t("themeManager.license_denied"));
@@ -116,7 +116,7 @@ export default function ThemeManager() {
         </div>
 
         {/* ── Available themes (server) ── */}
-        {isPro(license.tier) && (
+        {isPaid(license.tier) && (
           <>
             <h4 className="text-sm font-semibold text-white mb-3">
               {t("themeManager.available_themes")} ({availableThemes.length})

@@ -29,7 +29,7 @@ import BgVideoTuner from "@/components/BgVideoTuner";
 import CyberGirlBgSwitcher from "@/components/CyberGirlBgSwitcher";
 import UpdateChecker from "@/components/UpdateChecker";
 import WallpaperEngine from "@/components/WallpaperEngine";
-import { useLicenseStore, isPro } from "@/stores/licenseStore";
+import { useLicenseStore, isPaid } from "@/stores/licenseStore";
 import { useThemePackStore } from "@/stores/themePackStore";
 import { analytics, useAnalyticsPageView } from "@/lib/analytics";
 import { invoke } from "@tauri-apps/api/core";
@@ -154,7 +154,23 @@ export default function Layout() {
     // Run on startup, then every 7 days
     const t = setTimeout(doCheck, 3000); // 3s after mount so init() completes
     const interval = setInterval(doCheck, CHECK_INTERVAL);
-    return () => { clearTimeout(t); clearInterval(interval); };
+
+    // 每次切回前台时即时检查本地过期（不依赖服务端轮询）
+    const onVisible = () => {
+      if (document.hidden) return;
+      const { license } = useLicenseStore.getState();
+      if (license.tier !== "free" && license.expiresAt && Date.now() > new Date(license.expiresAt).getTime()) {
+        useLicenseStore.setState({
+          license: { tier: "free" as const, duration: "permanent" as const, expiresAt: null, maxDevices: 1 },
+        });
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearTimeout(t);
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
 
   // Resume: Pro+ but premium themes not yet downloaded (e.g. app closed mid-download)
@@ -162,7 +178,7 @@ export default function Layout() {
   useEffect(() => {
     const checkAndResume = async () => {
       const license = useLicenseStore.getState().license;
-      if (!isPro(license.tier)) return;
+      if (!isPaid(license.tier)) return;
 
       const { fetchAvailable, installFromServer, refresh } = useThemePackStore.getState();
       await refresh();

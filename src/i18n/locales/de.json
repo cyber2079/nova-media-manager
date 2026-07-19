@@ -423,36 +423,10 @@
     "days_ago": "T.",
     "tmdb": "TMDB",
     "netease": "NetEase",
-    "story_empty": "Schau Filme, hör Musik oder spiel Spiele ― deine Woche beginnt hier",
-    "story_idle": "Eine ruhige Woche. Die Favoriten von letzter Woche warten auf dich",
-    "story_movie_count": "{{n}} Filme gesehen",
-    "story_music_count": "{{n}} Songs gehört",
-    "story_game_count": "{{n}} Spiele gestartet",
-    "story_this_week": "Diese Woche hast du",
-    "weekly_activity": "{{n}} Mal diese Woche",
-    "persona_movie": "Filmfan",
-    "persona_music": "Musikliebhaber",
-    "persona_game": "Spielemeister",
-    "persona_movie_music": "Film & Musik",
-    "persona_movie_game": "Film & Spiele",
-    "persona_music_game": "Soundtrack-Gamer",
-    "persona_all": "Allrounder",
-    "trend_up_big": "deutlich mehr als letzte Woche",
-    "trend_up": "mehr als letzte Woche",
-    "trend_down_big": "viel weniger als letzte Woche ― beschäftigt?",
-    "trend_down": "etwas weniger als letzte Woche",
-    "trend_same": "gleiches Tempo wie letzte Woche",
     "hourly_night": "🌙 Nachteule ― die stillen Stunden sind deine",
     "hourly_morning": "🌅 Frühaufsteher ― der Morgen ist golden",
     "hourly_afternoon": "☀️ Nachmittagstyp ― perfekt für eine Pause",
-    "hourly_evening": "🌆 Prime Time ― nach der Arbeit ist Leben",
-    "active_newcomer": "Neuling",
-    "active_regular": "Stammgast",
-    "active_devoted": "Unverzichtbar",
-    "active_legend": "Teil meines Lebens",
-    "streak_hot": "Serie",
-    "streak_week": "Wochenserie",
-    "streak_on_fire": "Nicht zu bremsen"
+    "hourly_evening": "🌆 Prime Time ― nach der Arbeit ist Leben"
   },
   "music": {
     "title": "Musik",
@@ -538,6 +512,7 @@
     "wraeclast": "Wraeclast-Ära",
     "days": "T",
     "day_n": "Tag {{n}}",
+    "month_start": "1.",
     "countdown": "Countdown",
     "countdown_title": "Countdown-Einstellungen",
     "countdown_hours": "Std",
@@ -563,8 +538,6 @@
   },
   "license": {
     "title": "Lizenz",
-    "free_tier": "Community",
-    "custom_tier": "Benutzerdefiniert",
     "permanent": "Dauerhaft",
     "monthly": "Monatlich",
     "yearly": "Jährlich",
@@ -573,7 +546,12 @@
     "enter_code": "Code eingeben",
     "unbind": "Trennen",
     "unbind_confirm": "Dieses Gerät trennen?\nDer Aktivierungscode wird freigegeben und kann auf einem anderen Gerät verwendet werden.",
-    "unbind_failed": "Trennung fehlgeschlagen: {{error}}"
+    "unbind_failed": "Trennung fehlgeschlagen: {{error}}",
+    "free": "Kostenlos",
+    "member": "Member",
+    "member_price": "3€/Monat",
+    "pro": "Pro",
+    "pro_price": "11€/Jahr"
   },
   "activation": {
     "title": "Lizenz aktivieren",
@@ -741,11 +719,7 @@
   },
   "checkin": {
     "title": "Check-In-Belohnungen",
-    "active_days_label": "Tage aktiv",
-    "streak_label": "Tage in Folge",
-    "today_done": "Heute eingecheckt ✓",
-    "day_unit": "T",
-    "claim": "Einlösen",
-    "free_hint": "Upgrade für Check-In-Belohnungen — sammle Extratage"
+    "active_days_label": "Tage eingecheckt",
+    "streak_label": "Tage in Folge"
   }
 }

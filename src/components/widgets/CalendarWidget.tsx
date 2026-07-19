@@ -3,35 +3,9 @@ import { useTranslation } from "react-i18next";
 import DesktopWidget from "@/components/DesktopWidget";
 import type { WidgetConfig } from "@/stores/widgetStore";
 
-// Theme-aware colors — 3 distinct hues, same pattern as ClockWidget & SystemMonitorWidget
+// Theme-aware colors
 const primaryColor = "var(--color-primary)";
-const lightColor = "var(--color-primary-light)";
 const accentColor = "var(--color-accent)";
-
-function Snowflake({ cx, cy, size }: { cx: number; cy: number; size: number }) {
-  const s = size;
-  return (
-    <g transform={`translate(${cx},${cy})`}>
-      {[0, 60, 120].map((deg) => (
-        <line key={"a" + deg} x1={0} y1={0} x2={0} y2={-s}
-          stroke={lightColor} strokeWidth="0.8" strokeLinecap="round" style={{ filter: "brightness(1.2)" }} />
-      ))}
-      {[0, 60, 120, 180, 240, 300].map((deg) => (
-        <g key={"b" + deg} transform={`rotate(${deg})`}>
-          <line x1={0} y1={-s * 0.5} x2={s * 0.3} y2={-s * 0.7}
-            stroke={lightColor} strokeWidth="0.6" strokeLinecap="round" style={{ filter: "brightness(1.2)" }} />
-          <line x1={0} y1={-s * 0.5} x2={-s * 0.3} y2={-s * 0.7}
-            stroke={lightColor} strokeWidth="0.6" strokeLinecap="round" style={{ filter: "brightness(1.2)" }} />
-          <line x1={0} y1={-s * 0.75} x2={s * 0.2} y2={-s * 0.9}
-            stroke={lightColor} strokeWidth="0.5" strokeLinecap="round" style={{ filter: "brightness(1.2)" }} />
-          <line x1={0} y1={-s * 0.75} x2={-s * 0.2} y2={-s * 0.9}
-            stroke={lightColor} strokeWidth="0.5" strokeLinecap="round" style={{ filter: "brightness(1.2)" }} />
-        </g>
-      ))}
-      <circle cx="0" cy="0" r="2.5" fill={primaryColor} style={{ filter: `drop-shadow(0 0 5px ${primaryColor}) brightness(1.3)` }} />
-    </g>
-  );
-}
 
 export default function CalendarWidget({ config }: { config: WidgetConfig }) {
   const { t, i18n } = useTranslation();
@@ -76,8 +50,8 @@ export default function CalendarWidget({ config }: { config: WidgetConfig }) {
             <line x1="40" y1={cy} x2="40" y2={barBot}
               stroke={primaryColor} strokeWidth="2" strokeLinecap="round" style={{ filter: "brightness(1.3)" }} />
 
-            {/* Snowflake — uses lightColor internally */}
-            <Snowflake cx={40} cy={cy} size={8} />
+            {/* 当前日期圆点 */}
+            <circle cx="40" cy={cy} r="4" fill={primaryColor} style={{ filter: `drop-shadow(0 0 4px ${primaryColor}) brightness(1.3)` }} />
 
             {/* Top ornament — accent color */}
             <circle cx="40" cy={barTop - 4} r="2.5" fill={accentColor} style={{ filter: "brightness(1.2)" }} />
@@ -85,18 +59,18 @@ export default function CalendarWidget({ config }: { config: WidgetConfig }) {
             <circle cx="40" cy={barBot + 4} r="2.5" fill={primaryColor} style={{ filter: "brightness(1.2)" }} />
           </svg>
 
-          {/* Day number — primary color, same as SystemMonitorWidget center text */}
-          <div className="absolute inset-0 flex flex-col items-start justify-center pointer-events-none"
-            style={{ left: "62px", top: (cy - 8) + "px" }}>
-            <span className="text-[11px] font-bold" style={{ color: "var(--font-widget)", filter: "brightness(1.3)" }}>
+          {/* 当前日期 — 跟随圆点垂直居中 */}
+          <div className="absolute flex items-center pointer-events-none"
+            style={{ left: "60px", top: cy + "px", transform: "translateY(-50%)" }}>
+            <span className="text-[11px] font-bold leading-none" style={{ color: "var(--font-widget)", filter: "brightness(1.3)" }}>
               {day}
             </span>
           </div>
         </div>
 
-        {/* Bottom label — light color */}
+        {/* 月初标记 — 始终显示第1天 */}
         <span className="text-[9px] tracking-wider" style={{ color: "var(--font-widget)", filter: "brightness(1.2)", opacity: 0.7 }}>
-          {t("widget.day_n", { n: day })}
+          {t("widget.month_start")}
         </span>
       </div>
     </DesktopWidget>

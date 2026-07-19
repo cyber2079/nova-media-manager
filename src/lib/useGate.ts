@@ -1,34 +1,31 @@
 import { useLicenseStore } from "@/stores/licenseStore";
 
-/**
- * Feature flags gated by license tier.
- *
- * Gating philosophy:
- * - Free users get a complete, non-crippled media manager.
- * - Paid tiers unlock content (premium themes) and infrastructure
- *   (cloud sync, auto-update).
- * - Never gate basic tool features — those are table stakes.
- * - One-code-one-machine is enforced server-side, not via feature flag.
- */
 export type FeatureFlag =
-  | "premium-theme"    // non-default themes (ice-girl, cyber-girl, …)
-  | "auto-update"      // staged-rollout update channel
-  | "cloud-sync";       // cross-device data sync
+  | "premium-theme"
+  | "auto-update"
+  | "cloud-sync";
 
-/**
- * Returns true when the current license tier is entitled to `feature`.
- * Purely reactive — re-renders when the license store changes.
- */
+/** 本地即时过期校验（不依赖服务端轮询） */
+function isExpiredLocally(expiresAt: string | null): boolean {
+  if (!expiresAt) return false;
+  return Date.now() > new Date(expiresAt).getTime();
+}
+
 export function useGate(feature: FeatureFlag): boolean {
-  const tier = useLicenseStore((s) => s.license.tier);
+  const license = useLicenseStore((s) => s.license);
+
+  // 先检查本地过期（即时降级，不等 7 天轮询）
+  if (license.tier !== "free" && isExpiredLocally(license.expiresAt)) {
+    return false;
+  }
 
   switch (feature) {
     case "premium-theme":
     case "auto-update":
-      return tier !== "free";
+      return license.tier !== "free";
 
     case "cloud-sync":
-      return tier === "ultra" || tier === "custom";
+      return license.tier === "pro";
 
     default:
       return false;

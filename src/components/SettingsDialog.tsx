@@ -11,8 +11,7 @@ import ScrollFade from "@/components/ScrollFade";
 import ThemeManager from "@/components/ThemeManager";
 import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown, FolderOpen, ImageIcon, Shuffle, Home } from "lucide-react";
 import { ThemeAssets } from "@/lib/themeBase";
-import { useLicenseStore, isPro, isUltra } from "@/stores/licenseStore";
-import { useCheckInStore } from "@/stores/checkinStore";
+import { useLicenseStore } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS, type WallpaperFit } from "@/stores/settingsStore";
 import { useWidgetStore, pageKeys } from "@/stores/widgetStore";
 import type { PageKey } from "@/stores/widgetStore";
@@ -247,7 +246,6 @@ export default function SettingsDialog({ open, onClose }: Props) {
             {activeTab === "general" && (
               <>
                 <LicenseSection t={t} />
-                <CheckInSection t={t} />
                 <LanguageSection {...{ t, language, handleLanguage, languages }} />
                 <StartupSection {...{ t, autoStart, autoLoading, handleAutoStart, startFullscreen, setStartFullscreen }} />
                 <HardwareAccelSection {...{ t, hardwareAcceleration, setHardwareAcceleration }} />
@@ -455,11 +453,16 @@ function LicenseSection({ t }: { t: any }) {
   const tier = license.tier;
 
   const tierLabel = (tier: string) => {
-    if (tier === "free") return t("license.free_tier");
-    if (tier === "pro") return "Pro";
-    if (tier === "ultra") return "Ultra";
-    if (tier === "custom") return t("license.custom_tier");
+    if (tier === "free") return t("license.free");
+    if (tier === "member") return t("license.member");
+    if (tier === "pro") return t("license.pro");
     return tier;
+  };
+
+  const tierPricing = (tier: string) => {
+    if (tier === "member") return t("license.member_price");
+    if (tier === "pro") return t("license.pro_price");
+    return "";
   };
 
   const durLabel = (d: string) => {
@@ -498,7 +501,7 @@ function LicenseSection({ t }: { t: any }) {
               {tierLabel(tier)}
               {tier !== "free" && (
                 <span className="ml-1.5 text-[11px] text-gray-400 font-normal">
-                  {durLabel(license.duration)}
+                  {tierPricing(tier)}
                 </span>
               )}
             </p>
@@ -530,99 +533,6 @@ function LicenseSection({ t }: { t: any }) {
           >
             {t("license.unbind")}
           </button>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function CheckInSection({ t }: { t: any }) {
-  const checkInStats = useCheckInStore((s) => s.stats);
-  const redeeming = useCheckInStore((s) => s.redeeming);
-  const redeem = useCheckInStore((s) => s.redeem);
-  const init = useCheckInStore((s) => s.init);
-  const { license } = useLicenseStore();
-  const [redeemMsg, setRedeemMsg] = useState("");
-
-  useEffect(() => { init(); }, []);
-
-  if (!checkInStats) return null;
-
-  const nextMilestone = checkInStats.milestones.find((m) => !m.claimed);
-  const activeDays = checkInStats.activeDays;
-
-  const handleRedeem = async (days: number) => {
-    setRedeemMsg("");
-    const err = await redeem(days);
-    if (err) setRedeemMsg(err);
-  };
-
-  return (
-    <section>
-      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-        🎁 {t("checkin.title")}
-      </h4>
-      <div className="p-4 rounded-xl border border-white/5 space-y-3"
-        style={{ background: "color-mix(in srgb, var(--color-primary) 4%, transparent)" }}>
-        {/* ── Stats row ── */}
-        <div className="flex items-center gap-4 text-xs text-gray-400">
-          <span>
-            <span className="text-white font-semibold">{activeDays}</span> {t("checkin.active_days_label")}
-          </span>
-          {checkInStats.streakDays >= 3 && (
-            <span className="text-amber-300/80">
-              🔥 <span className="font-semibold">{checkInStats.streakDays}</span> {t("checkin.streak_label")}
-            </span>
-          )}
-          {checkInStats.todayChecked && (
-            <span className="text-green-400/70">{t("checkin.today_done")}</span>
-          )}
-        </div>
-
-        {/* ── Milestone progress ── */}
-        {checkInStats.tier !== "free" && checkInStats.milestones.length > 0 && (
-          <div className="space-y-1.5">
-            {checkInStats.milestones.map((m) => {
-              const pct = Math.min(100, Math.round((activeDays / m.days) * 100));
-              return (
-                <div key={m.days} className="flex items-center gap-2">
-                  <span className="text-[10px] text-gray-500 w-12 text-right shrink-0">
-                    {m.days}{t("checkin.day_unit")}
-                  </span>
-                  <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className={cn("h-full rounded-full transition-all duration-700",
-                        m.claimed ? "bg-green-500/50" : "bg-primary/60")}
-                      style={{ width: `${Math.max(m.claimed ? 100 : 0, pct)}%` }}
-                    />
-                  </div>
-                  <span className="text-[10px] text-gray-500 w-12 shrink-0">
-                    {m.claimed
-                      ? `✓ +${m.rewardDays}d`
-                      : `+${m.rewardDays}${t("checkin.day_unit")}`}
-                  </span>
-                  {!m.claimed && activeDays >= m.days && (
-                    <button
-                      onClick={() => handleRedeem(m.days)}
-                      disabled={redeeming === m.days}
-                      className="text-[10px] px-1.5 py-0.5 rounded bg-primary/20 text-primary-light hover:bg-primary/30 disabled:opacity-50 shrink-0 transition-colors"
-                    >
-                      {redeeming === m.days ? "..." : t("checkin.claim")}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* ── Free tier hint ── */}
-        {checkInStats.tier === "free" && activeDays > 0 && (
-          <p className="text-[10px] text-gray-500">{t("checkin.free_hint")}</p>
-        )}
-
-        {redeemMsg && (
-          <p className="text-xs text-red-400">{redeemMsg}</p>
         )}
       </div>
     </section>

@@ -423,36 +423,10 @@
     "days_ago": "일 전",
     "tmdb": "TMDB",
     "netease": "NetEase",
-    "story_empty": "영화를 보거나 음악을 듣거나 게임을 시작하면, 이곳에 당신의 한 주가 기록됩니다",
-    "story_idle": "이번 주는 조용하네요. 지난주의 즐겨찾기가 당신을 기다리고 있어요",
-    "story_movie_count": "영화 {{n}}편 시청",
-    "story_music_count": "노래 {{n}}곡 청취",
-    "story_game_count": "게임 {{n}}회 실행",
-    "story_this_week": "이번 주 당신은",
-    "weekly_activity": "이번 주 {{n}}회",
-    "persona_movie": "영화광",
-    "persona_music": "음악 중독",
-    "persona_game": "게임왕",
-    "persona_movie_music": "영화음악 겸비",
-    "persona_movie_game": "영화와 게임 사이",
-    "persona_music_game": "게임음악 올인",
-    "persona_all": "만능 엔터테이너",
-    "trend_up_big": "지난주보다 훨씬 빠져들었어요",
-    "trend_up": "지난주보다 더 즐기고 있어요",
-    "trend_down_big": "지난주보다 많이 줄었어요, 바쁘신가요?",
-    "trend_down": "지난주보다 조금 줄었어요",
-    "trend_same": "지난주와 비슷해요",
     "hourly_night": "🌙 늦은 밤형 ― 새벽이 당신의 시간",
     "hourly_morning": "🌅 아침형 ― 아침이 가장 소중해요",
     "hourly_afternoon": "☀️ 오후형 ― 오후가 가장 여유로워요",
-    "hourly_evening": "🌆 저녁형 ― 저녁이 골든타임",
-    "active_newcomer": "새내기",
-    "active_regular": "단골",
-    "active_devoted": "없으면 안 돼",
-    "active_legend": "내 삶의 일부",
-    "streak_hot": "연속 중",
-    "streak_week": "주간 연속",
-    "streak_on_fire": "멈출 수 없어"
+    "hourly_evening": "🌆 저녁형 ― 저녁이 골든타임"
   },
   "music": {
     "title": "음악",
@@ -538,6 +512,7 @@
     "wraeclast": "레이클라스트",
     "days": "일",
     "day_n": "이번 달 {{n}}일째",
+    "month_start": "1일",
     "countdown": "카운트다운",
     "countdown_title": "카운트다운 설정",
     "countdown_hours": "시",
@@ -563,8 +538,6 @@
   },
   "license": {
     "title": "라이선스",
-    "free_tier": "커뮤니티",
-    "custom_tier": "커스텀",
     "permanent": "영구",
     "monthly": "월간",
     "yearly": "연간",
@@ -573,7 +546,12 @@
     "enter_code": "코드 입력",
     "unbind": "해제",
     "unbind_confirm": "이 기기의 바인딩을 해제하시겠습니까?\n활성화 코드가 해제되어 다른 기기에서 사용할 수 있습니다.",
-    "unbind_failed": "해제 실패: {{error}}"
+    "unbind_failed": "해제 실패: {{error}}",
+    "free": "무료",
+    "member": "Member",
+    "member_price": "₩2,900/월",
+    "pro": "Pro",
+    "pro_price": "₩11,000/년"
   },
   "activation": {
     "title": "라이선스 활성화",
@@ -741,11 +719,7 @@
   },
   "checkin": {
     "title": "출석 보상",
-    "active_days_label": "일 활동",
-    "streak_label": "일 연속",
-    "today_done": "오늘 출석 완료 ✓",
-    "day_unit": "일",
-    "claim": "받기",
-    "free_hint": "멤버십으로 업그레이드하여 출석 보상을 받으세요"
+    "active_days_label": "일 출석",
+    "streak_label": "일 연속"
   }
 }

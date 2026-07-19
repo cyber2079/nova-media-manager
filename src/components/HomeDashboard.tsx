@@ -11,7 +11,7 @@ import { useChartColors } from "@/lib/useChartColors";
 import { usePlayHistoryStore } from "@/stores/playHistoryStore";
 import { getTrending, fmtPrice, TRENDING_TAGS, type TrendingData, type TrendingGame } from "@/lib/trending";
 import { getRecommendMovies, getRecommendMusic, type RecItem } from "@/lib/recommend";
-import { useCheckInStore } from "@/stores/checkinStore";
+import { useCheckInStats } from "@/stores/checkinStore";
 import SafeImage from "@/components/SafeImage";
 
 // ── 类型（对应 Rust DashboardStats）──
@@ -85,63 +85,6 @@ function TrendingCard({ g, delay, onOpen }: { g: TrendingGame; delay: number; on
   );
 }
 
-// ── 一句话周报：模板按数据特征确定性选择（同数据同句，不随机跳）──
-function weeklyStory(stats: Stats, t: (k: string, o?: any) => string): { text: string; emoji: string } {
-  const n = stats.weekNow, p = stats.weekPrev;
-  const total = n.movies + n.music + n.games;
-  const prevTotal = p.movies + p.music + p.games;
-
-  if (total === 0) {
-    return prevTotal > 0
-      ? { text: t("dashboard.story_idle"), emoji: "🍿" }
-      : { text: t("dashboard.story_empty"), emoji: "✨" };
-  }
-
-  const parts: string[] = [];
-  if (n.movies > 0) parts.push(t("dashboard.story_movie_count", { n: n.movies }));
-  if (n.music > 0) parts.push(t("dashboard.story_music_count", { n: n.music }));
-  if (n.games > 0) parts.push(t("dashboard.story_game_count", { n: n.games }));
-  const body = parts.join("、");
-
-  const items = [
-    { k: "movies", v: n.movies, e: "🎬", tail: t("dashboard.persona_movie") },
-    { k: "music", v: n.music, e: "🎵", tail: t("dashboard.persona_music") },
-    { k: "games", v: n.games, e: "🎮", tail: t("dashboard.persona_game") },
-  ].filter((x) => x.v > 0);
-  let tail = ""; let emoji = "✨";
-  if (items.length === 1) {
-    tail = items[0].tail; emoji = items[0].e;
-  } else if (items.length >= 2) {
-    const sorted = [...items].sort((a, b) => b.v - a.v);
-    const max = sorted[0].v;
-    if (sorted[1].v === max) {
-      const tied = items.filter((x) => x.v === max).map((x) => x.k);
-      if (tied.length >= 3) { tail = t("dashboard.persona_all"); emoji = "🎯"; }
-      else if (tied.includes("movies") && tied.includes("music")) { tail = t("dashboard.persona_movie_music"); emoji = "🎬"; }
-      else if (tied.includes("movies") && tied.includes("games")) { tail = t("dashboard.persona_movie_game"); emoji = "🎮"; }
-      else if (tied.includes("music") && tied.includes("games")) { tail = t("dashboard.persona_music_game"); emoji = "🎵"; }
-    } else {
-      tail = sorted[0].tail; emoji = sorted[0].e;
-    }
-  }
-
-  const trends: Record<string, string> = {
-    up_big: t("dashboard.trend_up_big"),
-    up: t("dashboard.trend_up"),
-    down_big: t("dashboard.trend_down_big"),
-    down: t("dashboard.trend_down"),
-    same: t("dashboard.trend_same"),
-  };
-  const trend = prevTotal === 0 ? ""
-    : total > prevTotal * 1.5 ? trends.up_big
-    : total > prevTotal ? trends.up
-    : total < prevTotal / 2 ? trends.down_big
-    : total < prevTotal ? trends.down
-    : trends.same;
-
-  return { text: `${t("dashboard.story_this_week")}${body} — ${tail}${trend ? `，${trend}` : ""}`, emoji };
-}
-
 // ── 时段风格标签（四种，取活动最多的时段）──
 function hourPersona(hourly: number[], t: (k: string) => string): string {
   const total = hourly.reduce((a, b) => a + b, 0);
@@ -170,7 +113,6 @@ export default function HomeDashboard() {
 
   useEffect(() => {
     invoke<Stats>("dashboard_stats").then(setStats).catch(() => {});
-    useCheckInStore.getState().init(); // auto sign-in
   }, []);
 
   // 类型切换：立即清空旧榜（避免逐卡 diff 的"延迟移除"残影），骨架过渡，新榜整条替换
@@ -209,23 +151,10 @@ export default function HomeDashboard() {
   [stats]);
   const persona = stats ? hourPersona(stats.hourly, t) : "";
 
-  // ── 签到活跃数据（来自 Rust SQLite check_in 表）──
-  const checkInStats = useCheckInStore((s) => s.stats);
-  const activeDays = checkInStats?.activeDays ?? 0;
+  // ── 签到数据 ──
+  const checkInStats = useCheckInStats();
+  const totalActiveDays = checkInStats?.totalActiveDays ?? 0;
   const streakDays = checkInStats?.streakDays ?? 0;
-  const activeDaysLabel = useMemo(() => {
-    if (!activeDays) return "";
-    if (activeDays <= 7) return t("dashboard.active_newcomer");
-    if (activeDays <= 30) return t("dashboard.active_regular");
-    if (activeDays <= 60) return t("dashboard.active_devoted");
-    return t("dashboard.active_legend");
-  }, [activeDays, t]);
-  const streakLabel = useMemo(() => {
-    if (streakDays >= 30) return t("dashboard.streak_on_fire");
-    if (streakDays >= 7) return t("dashboard.streak_week");
-    if (streakDays >= 3) return t("dashboard.streak_hot");
-    return "";
-  }, [streakDays, t]);
 
   // 内容构成
   const composition = stats ? [
@@ -246,27 +175,20 @@ export default function HomeDashboard() {
             {persona}
           </span>
         )}
-        {activeDays > 0 && (
+        {totalActiveDays > 0 && (
           <span className="flex items-center gap-1.5 rounded-full border border-primary/20 px-3 py-1.5 text-xs text-[#c8ddf0]">
             <Calendar className="h-3.5 w-3.5 text-primary-light" />
-            <span className="tabular-nums font-semibold text-white">{activeDays}</span>
-            <span className="text-[#8aa8c4]">{activeDaysLabel}</span>
+            <span className="tabular-nums font-semibold text-white">{totalActiveDays}</span>
+            <span className="text-[#8aa8c4]">{t("checkin.active_days_label")}</span>
           </span>
         )}
-        {streakDays >= 3 && streakLabel && (
+        {streakDays >= 3 && (
           <span className="flex items-center gap-1.5 rounded-full border border-amber-400/20 px-3 py-1.5 text-xs text-amber-300/90">
-            <span className="text-base">{streakDays >= 30 ? "🔥" : "⚡"}</span>
+            {streakDays >= 30 ? "🔥" : "⚡"}
             <span className="tabular-nums font-semibold text-amber-200">{streakDays}</span>
-            <span className="text-amber-400/70">{streakLabel}</span>
+            <span className="text-amber-400/70">{t("checkin.streak_label")}</span>
           </span>
         )}
-        {/* ── 一句话周报（合并到 chip 行）── */}
-        {stats && (() => {
-          const story = weeklyStory(stats, t);
-          return (
-            <span className="text-xs text-[#8aa8c4] leading-relaxed">&nbsp;·&nbsp;{story.text}</span>
-          );
-        })()}
       </div>
 
       {/* ── 时段 + 构成：各半行 ── */}
