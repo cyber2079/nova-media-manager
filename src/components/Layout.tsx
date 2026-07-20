@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Film, Image, Gamepad2, Home, Music, Sun, Sword, Shield, Swords, Maximize2, Minimize2, Search, Settings, Globe, Sparkles, SlidersHorizontal, X, LayoutGrid, Gauge } from "lucide-react";
+import { Film, Image, Gamepad2, Home, Music, Maximize2, Minimize2, Search, Settings, X, LayoutGrid, Gauge } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { cn } from "@/lib/utils";
 import { kv } from "@/lib/sqliteStore";
@@ -12,7 +12,7 @@ import QuickHub from "@/components/QuickHub";
 import SettingsDialog from "@/components/SettingsDialog";
 import GlobalSearch from "@/components/GlobalSearch";
 import KeyboardHelp from "@/components/KeyboardHelp";
-import { useSettingsStore, computeThemeColors, fontSizeScale, iconSizeScale, applySurface, applyFontFamily, applyFontColors } from "@/stores/settingsStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 import { useAudioPlayerStore } from "@/stores/audioPlayerStore";
 import { useWidgetStore } from "@/stores/widgetStore";
 import MyComputerWidget from "@/components/widgets/MyComputerWidget";
@@ -25,13 +25,20 @@ import CountdownAlert from "@/components/CountdownAlert";
 import ActivationDialog from "@/components/ActivationDialog";
 import OnboardingDialog from "@/components/OnboardingDialog";
 import PrivacyConsent from "@/components/PrivacyConsent";
-import BgVideoTuner from "@/components/BgVideoTuner";
 import CyberGirlBgSwitcher from "@/components/CyberGirlBgSwitcher";
 import UpdateChecker from "@/components/UpdateChecker";
 import WallpaperEngine from "@/components/WallpaperEngine";
+import GlobalConfirmDialog from "@/components/GlobalConfirmDialog";
+import { useGameStore } from "@/stores/gameStore";
+import { useImageStore } from "@/stores/imageStore";
+import { useMovieStore } from "@/stores/movieStore";
+import { useMusicStore } from "@/stores/musicStore";
+import { ImportOverlay } from "@/components/ImportOverlay";
 import { useLicenseStore, isPaid } from "@/stores/licenseStore";
 import { useThemePackStore } from "@/stores/themePackStore";
-import { analytics, useAnalyticsPageView } from "@/lib/analytics";
+import { useIceBackgroundVideo } from "@/hooks/useIceBackgroundVideo";
+import { useThemeEffects } from "@/hooks/useThemeEffects";
+import { useAnalyticsPageView } from "@/lib/analytics";
 import { invoke } from "@tauri-apps/api/core";
 import { compareVersions } from "@/lib/compareVersions";
 import { useSecurity } from "@/lib/useSecurity";
@@ -49,19 +56,17 @@ const navItems = [
 const iceIcons: Record<string, string> = { "/": "home.webp", "/movies": "movie.webp", "/images": "pic.webp", "/music": "music.webp", "/games": "game.webp" };
 const iceNames: Record<string, string> = { "/": "home.ice_icestorm_name", "/movies": "home.ice_icestorm_name", "/images": "home.ice_icestorm_name", "/music": "home.ice_icestorm_name", "/games": "home.ice_icestorm_name" };
 const iceColors: Record<string, string> = { "/": "#87ceeb", "/movies": "#b0e0e6", "/images": "#00bfff", "/music": "#4488ff", "/games": "#6a5acd" };
-const iceLabels: Record<string, string> = { "/": "home.ice_icestorm_name", "/movies": "home.ice_icestorm_name", "/images": "home.ice_icestorm_name", "/music": "home.ice_icestorm_name", "/games": "home.ice_icestorm_name" };
 
 // Cyber Girl nav icons
 const cgIcons: Record<string, string> = { "/": "home.webp", "/movies": "movie.webp", "/images": "pic.webp", "/music": "music.webp", "/games": "game.webp" };
 const cgNames: Record<string, string> = { "/": "home.cg_skill1_name", "/movies": "home.cg_skill2_name", "/images": "home.cg_skill3_name", "/music": "home.cg_skill4_name", "/games": "home.cg_skill5_name" };
 const cgColors: Record<string, string> = { "/": "#ff69b4", "/movies": "#da70d6", "/images": "#ff1493", "/music": "#00bfff", "/games": "#ff6347" };
-const cgLabels: Record<string, string> = { "/": "home.cg_skill1_name", "/movies": "home.cg_skill2_name", "/images": "home.cg_skill3_name", "/music": "home.cg_skill4_name", "/games": "home.cg_skill5_name" };
 
 const noIcons: Record<string,string> = {};
 const themeMeta: Record<ThemeName, { heroIcons: Record<string,string>; heroNames: Record<string,string>; heroColors: Record<string,string>; heroLabels: Record<string,string> }> = {
   default: { heroIcons: noIcons, heroNames: noIcons, heroColors: noIcons, heroLabels: noIcons },
-  "ice-girl": { heroIcons: iceIcons, heroNames: iceNames, heroColors: iceColors, heroLabels: iceLabels },
-  "cyber-girl": { heroIcons: cgIcons, heroNames: cgNames, heroColors: cgColors, heroLabels: cgLabels },
+  "ice-girl": { heroIcons: iceIcons, heroNames: iceNames, heroColors: iceColors, heroLabels: iceNames },
+  "cyber-girl": { heroIcons: cgIcons, heroNames: cgNames, heroColors: cgColors, heroLabels: cgNames },
 };
 
 function layoutBandHue(theme: string, idx: number, total: number): number {
@@ -81,6 +86,11 @@ export default function Layout() {
   const isDefault = theme === "default";
   const isCG = theme === "cyber-girl";
   const dashboardMode = useSettingsStore((s) => s.dashboardMode);
+  const isImportingAny = useGameStore(s => s.isImporting || s.isScanning) || useImageStore(s => s.isImporting) || useMovieStore(s => s.isImporting) || useMusicStore(s => s.isImporting);
+  const perfReduceAnimations = useSettingsStore((s) => s.perfReduceAnimations);
+  const cacheCleanupDays = useSettingsStore((s) => s.cacheCleanupDays);
+  const cacheCleanupLastRun = useSettingsStore((s) => s.cacheCleanupLastRun);
+  const setCacheCleanupLastRun = useSettingsStore((s) => s.setCacheCleanupLastRun);
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();
   const bgVideoMode = useSettingsStore((s) => s.bgVideoMode);
   const bgOverlayOpacity = useSettingsStore((s) => s.bgOverlayOpacity);
@@ -105,8 +115,9 @@ export default function Layout() {
     return unsub;
   }, [pageKey]);
   const showWidgets = globalWidgets || (widgetPages[pageKey] ?? false);
-  const [isFS, setIsFS] = useState(true);
-  const wantsFS = useRef(true);
+  // Start with a safe default; actual state is read from the Tauri window on mount.
+  const [isFS, setIsFS] = useState(false);
+  const wantsFS = useRef(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -120,6 +131,16 @@ export default function Layout() {
     import("@/lib/usePerformance").then((m) => {
       m.initPerformance();
       m.usePerformanceMonitor();
+    });
+  }, []);
+
+  // ── Auto-install HEVC video extension on startup ──
+  // WebView2 (Chromium) doesn't include HEVC (H.265) decoding by default.
+  // For high-resolution video wallpapers to work, the system needs the
+  // Microsoft HEVC Video Extension. We bundle it and install silently once.
+  useEffect(() => {
+    import("@tauri-apps/api/core").then(({ invoke }) => {
+      invoke("install_hevc_if_needed").catch(() => {});
     });
   }, []);
 
@@ -181,6 +202,31 @@ export default function Layout() {
     };
   }, []);
 
+  // ── Scheduled cache cleanup ──
+  useEffect(() => {
+    const days = cacheCleanupDays;
+    if (days <= 0) return;
+
+    const doCleanup = async () => {
+      // Read fresh from store (not closure) to avoid stale value after init() completes
+      const lastRun = useSettingsStore.getState().cacheCleanupLastRun;
+      if (lastRun) {
+        const elapsed = Date.now() - new Date(lastRun).getTime();
+        if (elapsed < days * 24 * 60 * 60 * 1000) return;
+      }
+      try {
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("cleanup_invalid_covers");
+        setCacheCleanupLastRun(new Date().toISOString());
+      } catch (e) {
+        console.error("[cache-cleanup] Failed:", e);
+      }
+    };
+
+    const t = setTimeout(doCleanup, 5000);
+    return () => clearTimeout(t);
+  }, [cacheCleanupDays]); // cacheCleanupLastRun read fresh via getState() — no need in deps
+
   // Resume: Pro+ but premium themes not yet downloaded (e.g. app closed mid-download)
   // Uses version comparison: server list vs local registry
   useEffect(() => {
@@ -221,18 +267,42 @@ export default function Layout() {
 
   const [headerVisible, setHeaderVisible] = useState(true);
 
-  // Mouse parallax
+  // Mouse parallax + auto-hide header/footer — merged single RAF-throttled listener
   useEffect(() => {
     const el = appRef.current;
-    if (!el) return;
+    let raf = 0;
+
     const onMove = (e: MouseEvent) => {
-      const cx = (e.clientX / window.innerWidth) * 2 - 1;
-      const cy = (e.clientY / window.innerHeight) * 2 - 1;
-      el.style.setProperty("--px", cx.toFixed(3));
-      el.style.setProperty("--py", cy.toFixed(3));
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        // Parallax
+        if (el) {
+          el.style.setProperty("--px", (e.clientX / window.innerWidth * 2 - 1).toFixed(3));
+          el.style.setProperty("--py", (e.clientY / window.innerHeight * 2 - 1).toFixed(3));
+        }
+        // Auto-hide
+        const { autoHideHeader, autoHideFooter } = useSettingsStore.getState();
+        if (!autoHideHeader) setHeaderVisible(true);
+        else setHeaderVisible(e.clientY <= 60);
+        if (!autoHideFooter) setFooterVisible(true);
+        else setFooterVisible(e.clientY >= window.innerHeight - 50);
+      });
     };
+
     window.addEventListener("mousemove", onMove, { passive: true });
-    return () => window.removeEventListener("mousemove", onMove);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  // Auto-hide: when user turns off autoHideHeader/Footer in settings, force visibility
+  useEffect(() => {
+    const unsub = useSettingsStore.subscribe((s) => {
+      if (!s.autoHideHeader) setHeaderVisible(true);
+      if (!s.autoHideFooter) setFooterVisible(true);
+    });
+    return unsub;
   }, []);
 
   // ? key
@@ -249,9 +319,7 @@ export default function Layout() {
   const [footerVisible, setFooterVisible] = useState(true);
   const [bgMusicConfirm, setBgMusicConfirm] = useState<string | null>(null);
   const [bgDontAsk, setBgDontAsk] = useState(false);
-  const [showVideoTuner, setShowVideoTuner] = useState(false);
-  const iceVidRef = useRef<HTMLVideoElement>(null);
-  const iceVidBRef = useRef<HTMLVideoElement>(null);
+  const { iceVidRef, iceVidBRef } = useIceBackgroundVideo(isIce);
 
   const playerTrack = useAudioPlayerStore((s) => s.track);
   const playerIsPlaying = useAudioPlayerStore((s) => s.isPlaying);
@@ -298,173 +366,22 @@ export default function Layout() {
     };
   }, []);
 
-  // Ice Girl background video — A/B roll with configurable loop parameters
-  useEffect(() => {
-    const vidA = iceVidRef.current;
-    const vidB = iceVidBRef.current;
-    if (!vidA || !vidB) return;
-
-    let canvas: HTMLCanvasElement | null = null;
-    let ctx: CanvasRenderingContext2D | null = null;
-    let raf = 0;
-    let active: HTMLVideoElement;
-    let chaser: HTMLVideoElement;
-    let snap: HTMLCanvasElement | null = null;
-    let switching = false;
-    let blendF = 0;
-    let blendFrames = 27;
-    let loopCount = 0;
-    let firstPlayDone = false;
-    let loopEndTimeout: ReturnType<typeof setTimeout> | null = null;
-
-    const getCfg = () => useSettingsStore.getState().bgVideoLoop;
-    const readCfg = () => { const c = getCfg(); blendFrames = Math.max(1, Math.round(c.transitionMs / (1000 / 60))); };
-    readCfg();
-
-    let resizeTimer: ReturnType<typeof setTimeout>;
-    const resize = () => {
-      if (resizeTimer) clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        if (!canvas) return;
-        const w = window.innerWidth, h = window.innerHeight;
-        canvas.width = w; canvas.height = h;
-        if (snap) { snap.width = w; snap.height = h; }
-      }, 150);
-    };
-
-    const nextLoopTime = (vid: HTMLVideoElement): number => {
-      const c = getCfg();
-      const dur = vid.duration || 30;
-      let t = c.loopStart;
-      if (c.loopDuration > 0 && t + c.loopDuration < dur) t = Math.min(t, dur - c.loopDuration);
-      return Math.max(0, Math.min(t, dur - 0.1));
-    };
-
-    const capSnapshot = () => {
-      if (!canvas) return;
-      if (!snap) snap = document.createElement('canvas');
-      snap.width = canvas.width; snap.height = canvas.height;
-      snap.getContext('2d')!.drawImage(canvas, 0, 0);
-    };
-
-    const scheduleLoopEnd = (vid: HTMLVideoElement) => {
-      if (loopEndTimeout) clearTimeout(loopEndTimeout);
-      const c = getCfg();
-      if (c.loopDuration <= 0) return;
-      loopEndTimeout = setTimeout(() => { readCfg(); if (loopCount !== 1) doSwitch(); }, c.loopDuration * 1000);
-    };
-
-    const doSwitch = () => {
-      const c = getCfg(); readCfg();
-      if (!firstPlayDone) { firstPlayDone = true; if (c.loopCount === 1) return; }
-      else { if (c.loopCount > 0) { loopCount--; if (loopCount <= 0) return; } }
-      capSnapshot(); switching = true; blendF = 0;
-      const old = active; active = chaser; chaser = old; chaser.pause();
-      if (firstPlayDone) chaser.currentTime = nextLoopTime(chaser);
-      requestAnimationFrame(() => { active.play().catch(() => {}); scheduleLoopEnd(active); });
-    };
-
-    const setup = () => {
-      const c = getCfg(); readCfg();
-      canvas = document.createElement('canvas');
-      canvas.className = 'ice-bg-video';
-      canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;';
-      vidA.parentNode?.insertBefore(canvas, vidA);
-      vidA.style.opacity = '0'; vidA.style.pointerEvents = 'none';
-      vidB.style.opacity = '0'; vidB.style.pointerEvents = 'none';
-      ctx = canvas.getContext('2d')!;
-      resize();
-      window.addEventListener('resize', resize);
-      const rate = c.playbackRate;
-      vidA.playbackRate = rate; vidB.playbackRate = rate;
-      active = vidA; chaser = vidB; loopCount = c.loopCount;
-      if (c.firstPlayStart > 0 && vidA.duration > c.firstPlayStart) {
-        vidA.currentTime = c.firstPlayStart;
-        if (c.firstPlayEnd > c.firstPlayStart)
-          setTimeout(() => doSwitch(), (c.firstPlayEnd - c.firstPlayStart) * 1000);
-      }
-      chaser.currentTime = nextLoopTime(chaser);
-      scheduleLoopEnd(active);
-    };
-
-    const draw = () => {
-      if (!ctx || !canvas) return;
-      const w = canvas.width, h = canvas.height;
-      const mode = useSettingsStore.getState().bgVideoMode || "fill";
-      const isPortrait = h > w;
-      const hasVideoDims = active.videoWidth > 0 && active.videoHeight > 0;
-      let dx = 0, dy = 0, dw = w, dh = h;
-      let needsBg = false;
-      if (mode === "stretch") { dx = 0; dy = 0; dw = w; dh = h; }
-      else if (mode === "fill") {
-        if (hasVideoDims) {
-          const vw = active.videoWidth, vh = active.videoHeight;
-          const scale = Math.max(w / vw, h / vh);
-          const sw = vw * scale, sh = vh * scale;
-          dx = (w - sw) / 2; dy = (h - sh) / 2; dw = sw; dh = sh;
-        }
-      } else {
-        if (isPortrait && hasVideoDims) {
-          const vw = active.videoWidth, vh = active.videoHeight;
-          const scale = Math.min(w / vw, h / vh);
-          dw = vw * scale; dh = vh * scale;
-          dx = (w - dw) / 2; dy = (h - dh) / 2; needsBg = true;
-        }
-      }
-      if (needsBg) {
-        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-surface').trim() || '#0f172a';
-        ctx.fillRect(0, 0, w, h);
-      }
-      if (switching) {
-        blendF++;
-        const alpha = Math.min(1, blendF / blendFrames);
-        if (alpha >= 1) switching = false;
-        if (snap) { ctx.globalAlpha = 1; ctx.drawImage(snap, 0, 0, w, h); }
-        if (alpha > 0.005) { ctx.globalAlpha = alpha; ctx.drawImage(active, dx, dy, dw, dh); ctx.globalAlpha = 1; }
-      } else { ctx.drawImage(active, dx, dy, dw, dh); }
-      raf = requestAnimationFrame(draw);
-    };
-
-    const onEnded = () => { doSwitch(); };
-
-    const unsub = useSettingsStore.subscribe((s, prev) => {
-      if (s.bgVideoLoop.playbackRate !== prev.bgVideoLoop.playbackRate) {
-        vidA.playbackRate = s.bgVideoLoop.playbackRate;
-        vidB.playbackRate = s.bgVideoLoop.playbackRate;
-      }
-    });
-
-    if (vidA.readyState >= 1) { setup(); draw(); }
-    else vidA.addEventListener('loadedmetadata', () => { setup(); draw(); }, { once: true });
-    vidA.addEventListener('ended', onEnded);
-    vidB.addEventListener('ended', onEnded);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      if (loopEndTimeout) clearTimeout(loopEndTimeout);
-      unsub();
-      vidA.removeEventListener('ended', onEnded);
-      vidB.removeEventListener('ended', onEnded);
-      window.removeEventListener('resize', resize);
-      canvas?.remove();
-      vidA.style.opacity = ''; vidA.style.pointerEvents = '';
-      vidB.style.opacity = ''; vidB.style.pointerEvents = '';
-    };
-  }, [isIce]);
-
   // Background music check on leaving music page
   useEffect(() => {
     const leavingMusic = prevPath.current === "/music" && location.pathname !== "/music";
+    // Update ref FIRST to prevent re-triggering if navigate fires synchronously
+    prevPath.current = location.pathname;
+
     if (leavingMusic && playerIsPlaying && !playerIsBg) {
       const noAsk = localStorage.getItem("music-bg-no-ask") === "1";
       if (noAsk) {
         playerSetBg(true);
       } else {
-        navigate("/music", { replace: true });
         setBgMusicConfirm(location.pathname);
+        // Defer navigate to avoid React Router state conflict
+        setTimeout(() => navigate("/music", { replace: true }), 0);
       }
     }
-    prevPath.current = location.pathname;
   }, [location.pathname, playerIsPlaying, playerIsBg]);
 
   const handleBgYes = () => {
@@ -475,74 +392,8 @@ export default function Layout() {
   };
   const handleBgNo = () => { playerStop(); setBgMusicConfirm(null); setBgDontAsk(false); };
 
-  // Auto-hide header & footer
-  useEffect(() => {
-    const unsub = useSettingsStore.subscribe((s) => {
-      if (!s.autoHideHeader) setHeaderVisible(true);
-      if (!s.autoHideFooter) setFooterVisible(true);
-    });
-    const onMove = (e: MouseEvent) => {
-      const { autoHideHeader, autoHideFooter } = useSettingsStore.getState();
-      if (!autoHideHeader) setHeaderVisible(true); else setHeaderVisible(e.clientY <= 60);
-      if (!autoHideFooter) setFooterVisible(true); else setFooterVisible(e.clientY >= window.innerHeight - 50);
-    };
-    window.addEventListener("mousemove", onMove, { passive: true });
-    return () => { window.removeEventListener("mousemove", onMove); unsub(); };
-  }, []);
-
-  // Custom theme color injection
-  useEffect(() => {
-    const apply = () => {
-      const { useCustomColor, customColor } = useSettingsStore.getState();
-      const el = document.documentElement;
-      if (useCustomColor) {
-        const c = computeThemeColors(customColor);
-        el.style.setProperty("--color-primary", c.primary);
-        el.style.setProperty("--color-primary-light", c.light);
-        el.style.setProperty("--color-primary-dark", c.dark);
-        el.setAttribute("data-custom-theme", "true");
-      } else {
-        ["primary","primary-light","primary-dark"].forEach(k => el.style.removeProperty("--color-" + k));
-        el.removeAttribute("data-custom-theme");
-      }
-      applySurface();
-    };
-    apply();
-    return useSettingsStore.subscribe((s, prev) => {
-      if (s.useCustomColor !== prev.useCustomColor || s.customColor !== prev.customColor) apply();
-    });
-  }, []);
-
-  // Font + icon size
-  useEffect(() => {
-    const apply = () => {
-      const { fontSize, iconSize } = useSettingsStore.getState();
-      document.documentElement.style.setProperty("--app-font-scale", String(fontSizeScale(fontSize)));
-      document.documentElement.style.setProperty("--app-icon-scale", String(iconSizeScale(iconSize)));
-    };
-    apply();
-    return useSettingsStore.subscribe((s, prev) => {
-      if (s.fontSize !== prev.fontSize || s.iconSize !== prev.iconSize) apply();
-    });
-  }, []);
-
-  // Font family
-  useEffect(() => {
-    applyFontFamily();
-    return useSettingsStore.subscribe((s, prev) => {
-      if (s.fontFamily !== prev.fontFamily) applyFontFamily(s.fontFamily);
-    });
-  }, []);
-
-  // Font color — applyFontColors 统一写入 --font-primary/secondary/widget
-  // （此前手写两个变量漏了 --font-widget，刷新后小组件颜色丢失）
-  useEffect(() => {
-    applyFontColors();
-    return useSettingsStore.subscribe((s, prev) => {
-      if (s.fontPrimaryColor !== prev.fontPrimaryColor || s.fontSecondaryColor !== prev.fontSecondaryColor
-        || s.widgetTextColor !== prev.widgetTextColor) applyFontColors();
-    });
-  }, []);
+  // ── Theme CSS-variable effects (color / font / icon / font-family / font-color) ──
+  useThemeEffects();
 
   // Title bar
   useEffect(() => {
@@ -558,11 +409,19 @@ export default function Layout() {
   }, []);
 
   // Start fullscreen + language
+  // sessionStorage survives Ctrl+R but NOT app close → only enter fullscreen
+  // on the first mount of a session, never on a page refresh.
   useEffect(() => {
     const { startFullscreen, language } = useSettingsStore.getState();
-    if (startFullscreen) {
-      getCurrentWindow().setFullscreen(true).catch(() => {});
-    } else { setIsFS(false); }
+    const alreadyDecided = sessionStorage.getItem('nv-fs-decided') === '1';
+    if (!alreadyDecided) {
+      sessionStorage.setItem('nv-fs-decided', '1');
+      if (startFullscreen) {
+        getCurrentWindow().setFullscreen(true).catch(() => {});
+        setIsFS(true);
+        wantsFS.current = true;
+      }
+    }
     if (language && language !== i18n.language) {
       i18n.changeLanguage(language);
       localStorage.setItem("app-lang", language);
@@ -570,22 +429,29 @@ export default function Layout() {
     }
   }, []);
 
-  // Decorations guard
+  // Decorations guard — prevent title bar from reappearing after resize
   useEffect(() => {
-    let mounted = true;
+    let unlistenFn: (() => void) | null = null;
+    let cancelled = false;
+
     (async () => {
       try {
         const win = getCurrentWindow();
         const { hideTitleBar } = useSettingsStore.getState();
         if (!hideTitleBar) return;
-        const unlisten = await win.onResized(() => {
+        unlistenFn = await win.onResized(() => {
+          if (cancelled) return;
           requestAnimationFrame(() => { win.setDecorations(false).catch(() => {}); });
         });
-        if (!mounted) unlisten();
-        return () => { unlisten(); };
+        // If component unmounted while await was in-flight, clean up immediately
+        if (cancelled) { unlistenFn(); unlistenFn = null; }
       } catch {}
     })();
-    return () => { mounted = false; };
+
+    return () => {
+      cancelled = true;
+      unlistenFn?.();
+    };
   }, []);
 
   // Fullscreen restore
@@ -685,19 +551,9 @@ export default function Layout() {
             <button onClick={() => setSearchOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={`${t("search.placeholder")} (Ctrl+K)`}>
               <Search className="h-4 w-4 text-gray-400" />
             </button>
-            {import.meta.env?.VITE_LICENSE_TIER && (
-              <button onClick={() => navigate("/studio")} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={t("settings.theme_studio")}>
-                <Sparkles className="h-4 w-4 text-purple-400" />
-              </button>
-            )}
             <button onClick={() => setSettingsOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={t("settings.title")}>
               <Settings className="h-4 w-4 text-gray-400" />
             </button>
-            {isIce && (
-              <button onClick={() => setShowVideoTuner((v) => !v)} className={cn("flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-300", showVideoTuner ? "bg-primary/20 text-primary-light" : "hover:bg-surface-lighter text-gray-400")} title={t("settings.bg_tuner")}>
-                <SlidersHorizontal className="h-4 w-4" />
-              </button>
-            )}
           </div>
         </div>
       </header>
@@ -711,7 +567,7 @@ export default function Layout() {
         style={(() => {
           if (isHomeStrip) return { height: "auto", marginTop: 0, background: "transparent", borderColor: "transparent", zIndex: 48 } as React.CSSProperties;
           if (isHome && !isDefault) return { height: "auto", marginTop: 0, zIndex: 48 };
-          return { height: "calc(100vh - 5rem - 3rem - 1.5rem)", marginTop: "5rem", marginBottom: "1.5rem", zIndex: 48 };
+          return { height: "calc(100vh - 5rem - 3rem - 1rem)", marginTop: "5rem", marginBottom: "1rem", zIndex: 48 };
         })()}
         data-route={isHome ? "home" : "page"}>
         <div className={cn(
@@ -719,6 +575,7 @@ export default function Layout() {
           isHome && !isDefault
             ? "overflow-visible [&>*]:pointer-events-auto"
             : "h-full overflow-y-auto overscroll-contain px-0 pt-6 pb-6",
+          perfReduceAnimations && "reduce-motion",
         )}>
           <Outlet />
           <ScrollFade height={isHome ? 0 : 56} />
@@ -820,7 +677,8 @@ export default function Layout() {
       <PrivacyConsent />
       <UpdateChecker />
 
-      <BgVideoTuner visible={showVideoTuner} onToggle={() => setShowVideoTuner(false)} />
+      <GlobalConfirmDialog />
+      <ImportOverlay isOpen={isImportingAny} />
     </div>
   );
 }

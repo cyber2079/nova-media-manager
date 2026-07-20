@@ -5,6 +5,7 @@ import { invoke } from "@/lib/tauriInvoke";
 interface GameState {
   games: Game[];
   isLoading: boolean;
+  isImporting: boolean;
   isScanning: boolean;
   scanResult: string | null;
   scanDiagnostic: string[];
@@ -21,6 +22,7 @@ interface GameState {
 export const useGameStore = create<GameState>((set, get) => ({
   games: [],
   isLoading: false,
+  isImporting: false,
   isScanning: false,
   scanResult: null,
   scanDiagnostic: [],
@@ -38,32 +40,32 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   addGame: async (path: string) => {
-    set({ isLoading: true });
+    set({ isImporting: true });
     try {
-      const result = await invoke("add_game", { executablePath: path });
-      if (result) set({ games: [...(result as Game[]), ...get().games], isLoading: false });
+      await invoke("add_game", { executablePath: path });
+      // Reload full list to avoid duplicates (Rust backend returns full list, not delta)
+      const all = await invoke("get_all_games");
+      if (all) set({ games: all as Game[], isImporting: false });
+      else set({ isImporting: false });
     } catch {
-      set({ isLoading: false });
+      set({ isImporting: false });
     }
   },
 
   deleteGame: async (id: string) => {
     try {
-      // 直接调 Tauri invoke 而不走 tauriInvoke wrapper（它会吞掉错误返回null）
-      const { invoke: rawInvoke } = await import("@tauri-apps/api/core");
-      const result = await rawInvoke("delete_game", { id });
+      const result = await invoke("delete_game", { id, raw: true });
       if (result === true) {
         set({ games: get().games.filter((g) => g.id !== id) });
       } else {
         // Fallback: reload from DB to sync state
-        const all = await rawInvoke("get_all_games");
+        const all = await invoke("get_all_games", { raw: true });
         if (all) set({ games: all as Game[] });
       }
     } catch {
       // On error, reload to ensure state is correct
       try {
-        const { invoke: rawInvoke } = await import("@tauri-apps/api/core");
-        const all = await rawInvoke("get_all_games");
+        const all = await invoke("get_all_games", { raw: true });
         if (all) set({ games: all as Game[] });
       } catch {}
     }

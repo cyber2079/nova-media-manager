@@ -52,6 +52,7 @@ function useFolderImages(path: string, shuffle: boolean, intervalSec: number): s
 export default function WallpaperEngine() {
   const wp = useSettingsStore((s) => s.wallpaper);
   const [singleSrc, setSingleSrc] = useState<string | null>(null);
+  const [videoFailed, setVideoFailed] = useState(false);
   const folderSrc = useFolderImages(
     wp.mode === "folder" ? wp.path : "",
     wp.shuffle === "random",
@@ -89,14 +90,19 @@ export default function WallpaperEngine() {
     return { width: "100%", height: "100%", objectFit: wp.fit === "contain" ? "contain" : wp.fit === "fill" ? "fill" : "cover" } as React.CSSProperties;
   })();
 
+  // 视频加载失败（如 HEVC 编码无解码器）→ 隐藏，让默认背景色透出
+  if (isVideo && videoFailed) return null;
+
   const fullStyle = { ...baseStyle, ...fitStyle };
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
       {isVideo ? (
-        <video key={src.slice(-20)} src={src} autoPlay loop muted playsInline style={fullStyle} />
+        <video key={src.slice(-20)} src={src} autoPlay loop muted playsInline style={fullStyle}
+          onError={() => setVideoFailed(true)} />
       ) : (
-        <img key={src.slice(-20)} src={src} alt="" style={fullStyle} />
+        <img key={src.slice(-20)} src={src} alt="" style={fullStyle}
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
       )}
     </div>
   );

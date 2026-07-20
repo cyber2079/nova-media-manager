@@ -40,6 +40,8 @@ server/
 # ══ Theme assets (large files, hosted on ECS / bundled in installer) ══
 public/themes/
 public/fonts/maoken-glitch-sans.otf
+public/plugins/
+src-tauri/plugins/
 
 # ══ Local env (dev-only license override, theme asset paths) ══
 .env

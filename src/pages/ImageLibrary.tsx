@@ -9,7 +9,6 @@ import TagEditDialog from "@/components/TagEditDialog";
 import type { ImageItem } from "@/types/image";
 import { useBatchSelect } from "@/lib/useBatchSelect";
 import { useSearchJump } from "@/lib/searchJump";
-import ConfirmDialog from '@/components/ConfirmDialog';
 import BatchBar from "@/components/BatchBar";
 import BatchCheckbox from "@/components/BatchCheckbox";
 import DropZone from "@/components/DropZone";
@@ -32,6 +31,8 @@ import { useToast } from "@/components/Toast";
 import { importMediaPaths, pickFolderAndImport, importSummaryText } from "@/lib/mediaScan";
 import { FolderOpen } from "lucide-react";
 import CountBadge from "@/components/CountBadge";
+import { useAllTags } from "@/hooks/useAllTags";
+import { useConfirmStore } from "@/stores/confirmStore";
 
 async function readerBlobUrl(filePath: string): Promise<string> {
   if (filePath.startsWith("http://") || filePath.startsWith("https://") || filePath.startsWith("blob:") || filePath.startsWith("data:") || filePath.startsWith("/themes/")) {
@@ -47,8 +48,8 @@ function FullscreenHint({ onExit }: { onExit: () => void }) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(false), 3000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setVisible(false), 3000);
+    return () => clearTimeout(timer);
   }, []);
 
   // Reset timer on mouse enter, hide on leave
@@ -209,34 +210,19 @@ function ImageViewer({ images, index, onClose, onIndex }: { images: string[]; in
 export default function ImageLibrary() {
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { images, isLoading, sortConfig, loadImages, addImages, deleteImage, updateTags, setSortConfig } = useImageStore();
+  const { images, isLoading, isImporting, sortConfig, loadImages, addImages, deleteImage, updateTags, setSortConfig } = useImageStore();
   const sortOptions = useNameSortOptions();
   const { animating, triggerSort } = useSortAnim();
   const handleSort = useCallback((key: string) => triggerSort(() => setSortConfig(key)), [triggerSort, setSortConfig]);
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [favOnly, setFavOnly] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState<{ msg: string; onOk: () => void } | null>(null);
   const [tagEditItem, setTagEditItem] = useState<ImageItem | null>(null);
+  const confirm = useConfirmStore((s) => s.confirm);
   const [layoutMode, setLayoutMode] = useLayoutMode("layout-images", "card");
   const { getByType, toggleFavorite, isFavorite } = useFavoritesStore();
 
   const [previewIdx, setPreviewIdx] = useState(-1);
   const [searchQuery, setSearchQuery] = useState("");
-
-  // 预热 SafeImage 模块级 blob 缓存（toCachedBlob 内部去重 + 缓存）
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const BATCH = 8;
-      for (let i = 0; i < images.length && !cancelled; i += BATCH) {
-        const batch = images.slice(i, i + BATCH)
-          .filter((img) => img.coverPath)
-          .map((img) => readerBlobUrl(img.coverPath));
-        await Promise.allSettled(batch);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [images]);
 
   const getThumbSrc = (coverPath: string) => coverPath;
 
@@ -253,8 +239,6 @@ export default function ImageLibrary() {
       } catch {}
     });
   }, []);
-
-  const confirmThen = (msg: string, fn: () => void) => setConfirmDelete({ msg, onOk: fn });
 
   const handleSetWallpaper = useCallback((filePath: string) => {
     useSettingsStore.getState().setWallpaperConfig({ mode: "single", path: filePath });
@@ -277,16 +261,22 @@ export default function ImageLibrary() {
   const { page, setPage, totalPages, paginated } = usePagination(filtered, pageSize);
   useSearchJump(filtered, pageSize, setPage);
 
+  // 预热 SafeImage 模块级 blob 缓存 — 仅预热当前可见页，避免千图 I/O 风暴
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      for (const img of paginated) {
+        if (cancelled || !img.coverPath) continue;
+        await readerBlobUrl(img.coverPath).catch(() => {});
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [paginated]);
+
   const allIds = useMemo(() => paginated.map((x) => x.id), [paginated]);
   const batch = useBatchSelect(allIds);
 
-  const allTags = useMemo(() => {
-    const tc = new Map<string, number>();
-    images.forEach((i) => i.tags?.forEach((t) => tc.set(t, (tc.get(t)||0)+1)));
-    return Array.from(tc.entries()).sort((a,b) => b[1]-a[1]);
-  }, [images]);
-
-  const tagNames = useMemo(() => allTags.map(([tag]) => tag), [allTags]);
+  const [allTags, tagNames] = useAllTags(images);
   // 全屏查看器：利用模块级缓存加载原图 blob URL
   const [viewerBlobMap, setViewerBlobMap] = useState<Record<number, string>>({});
   useEffect(() => {
@@ -329,7 +319,7 @@ export default function ImageLibrary() {
       if (selected) await addImages(Array.isArray(selected) ? selected : [selected]);
     } catch { toast(t("image.tauri_only"), "error"); }
   }, [addImages]);
-  const handleBatchDelete = useCallback(() => { confirmThen(t("image.confirm_batch_delete", { n: batch.selected.size }), async () => { for (const id of batch.selected) await deleteImage(id); batch.clear(); }); }, [batch, deleteImage, t]);
+  const handleBatchDelete = useCallback(() => { confirm(t("image.confirm_batch_delete", { n: batch.selected.size }), async () => { for (const id of batch.selected) await deleteImage(id); batch.clear(); }); }, [batch, deleteImage, t]);
   const handleBatchTag = useCallback(async (tags: string[]) => { for (const id of batch.selected) await updateTags(id, tags); batch.clear(); }, [batch, updateTags]);
 
   const openViewer = useCallback((img: ImageItem) => {
@@ -393,7 +383,7 @@ export default function ImageLibrary() {
                       <Star className={cn("h-4 w-4", isFavorite(img.id) ? "fill-yellow-400 text-yellow-400" : "")} />
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setTagEditItem(img); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors"><Tag className="h-4 w-4" /></button>
-                    <button onClick={(e) => { e.stopPropagation(); confirmThen(t("image.confirm_delete"), () => deleteImage(img.id)); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-400 hover:bg-surface-lighter/50 transition-colors"><Trash2 className="h-4 w-4" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); confirm(t("image.confirm_delete"), () => deleteImage(img.id)); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-400 hover:bg-surface-lighter/50 transition-colors"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
               ))}
@@ -407,7 +397,7 @@ export default function ImageLibrary() {
                       <BatchCheckbox checked={batch.selected.has(img.id)} onToggle={() => batch.toggle(img.id)} />
                     </div>
                   )}
-                  <ImageCard image={img} onDelete={(id) => confirmThen(t("image.confirm_delete"), () => deleteImage(id))} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagEditItem(img)} compact={layoutMode === "small"} favorited={isFavorite(img.id)} onToggleFav={() => toggleFavorite(img.id, "image")} />
+                  <ImageCard image={img} onDelete={(id) => confirm(t("image.confirm_delete"), () => deleteImage(id))} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagEditItem(img)} compact={layoutMode === "small"} favorited={isFavorite(img.id)} onToggleFav={() => toggleFavorite(img.id, "image")} />
                 </div>
               ))}
             </div>
@@ -417,7 +407,6 @@ export default function ImageLibrary() {
       ) : !isLoading && (
         <EmptyState icon={<Image className="h-16 w-16" />} title={t("image.no_images")} hint={t("image.no_images_hint")} />
       )}
-      {confirmDelete && <ConfirmDialog open={!!confirmDelete} message={confirmDelete?.msg || ''} onConfirm={() => { confirmDelete?.onOk(); setConfirmDelete(null); }} onCancel={() => setConfirmDelete(null)} />}
           {tagEditItem && <TagEditDialog open={true} onClose={() => setTagEditItem(null)} itemName={tagEditItem.name} tags={tagEditItem.tags || []} allTags={tagNames} onSave={(ts) => updateTags(tagEditItem.id, ts)} t={t} />}
     </div>
     </DropZone>

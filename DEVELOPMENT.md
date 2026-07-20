@@ -9,7 +9,7 @@
 | 原则 | 说明 |
 |---|---|
 | **一次只做一个改动** | 每个 commit 对应一个明确的变更 |
-| **TypeScript 零错误** | `npx tsc --noEmit` 通过才能 commit |
+| **TypeScript 零错误** | `npm run typecheck` 通过才能 commit |
 | **i18n 同步** | 新增的中文字符串，至少同步 en.json |
 | **不落死代码** | 删功能时连带删除相关 i18n key、store 字段、import |
 | **先计划后实施** | 涉及 >2 个文件的改动，先写入 DIFFERENTIATION-PLAN.md 或直接让 Claude Code 进入计划模式 |
@@ -208,7 +208,7 @@ STEP 7  发布
         测试: 在 App 中激活 → 下载 → 切换主题
 ```
 
-### 3.3 更新已有主题
+### 3.7 更新已有主题
 
 ```
 修改素材 → 重新生成对应 scene
@@ -237,7 +237,7 @@ STEP 7  发布
    你: 确认每个 Edit 的结果
 
 ④ 编译验证
-   npx tsc --noEmit
+   npm run typecheck
    零错误才算过
 
 ⑤ 功能验证
@@ -331,7 +331,7 @@ scp -i ~/.ssh/ecs_nova src-tauri/target/release/bundle/msi/*.msi root@39.104.55.
 
 每个 commit 前：
 
-- [ ] `npx tsc --noEmit` 零错误
+- [ ] `npm run typecheck` 零错误
 - [ ] 新增的中文字符串已在 `zh.json` 和 `en.json` 中定义
 - [ ] 删除的功能已清理对应的 i18n key、store 字段、import
 - [ ] 无 `console.log` / `TODO` / 硬编码的调试代码

@@ -26,7 +26,6 @@ import { tagColor } from "@/lib/tagColor";
 import { useBatchSelect } from "@/lib/useBatchSelect";
 import { useSearchJump } from "@/lib/searchJump";
 import BatchCheckbox from "@/components/BatchCheckbox";
-import ConfirmDialog from '@/components/ConfirmDialog';
 import BatchBar from "@/components/BatchBar";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import DropZone from "@/components/DropZone";
@@ -34,12 +33,14 @@ import { useToast } from "@/components/Toast";
 import { importMediaPaths, pickFolderAndImport, importSummaryText } from "@/lib/mediaScan";
 import { FolderOpen } from "lucide-react";
 import CountBadge from "@/components/CountBadge";
+import { useAllTags } from "@/hooks/useAllTags";
+import { useConfirmStore } from "@/stores/confirmStore";
 
 export default function MovieLibrary() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const {
-    movies, isLoading, searchQuery, activeTags, sortConfig,
+    movies, isLoading, isImporting, searchQuery, activeTags, sortConfig,
     loadMovies, addMovies, deleteMovie, setSearchQuery, toggleTag, setSortConfig, updateMovie, updateMovieTags,
   } = useMovieStore();
 
@@ -52,8 +53,7 @@ export default function MovieLibrary() {
   const [videoSrc, setVideoSrc] = useState<string>("");
   const [tagDialogMovie, setTagDialogMovie] = useState<Movie | null>(null);
   const [tagEditItem, setTagEditItem] = useState<Movie | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<{ msg: string; onOk: () => void } | null>(null);
-  const confirmThen = (msg: string, fn: () => void) => setConfirmDelete({ msg, onOk: fn });
+  const confirm = useConfirmStore((s) => s.confirm);
 
   const handleSetWallpaper = useCallback((filePath: string) => {
     useSettingsStore.getState().setWallpaperConfig({ mode: "single", path: filePath });
@@ -103,13 +103,7 @@ export default function MovieLibrary() {
   const { page, setPage, totalPages, paginated } = usePagination(filteredMovies, pageSize);
   useSearchJump(filteredMovies, pageSize, setPage);
 
-  const allTags = useMemo(() => {
-    const tagCount = new Map<string, number>();
-    movies.forEach((m) => m.tags.forEach((t) => tagCount.set(t, (tagCount.get(t) || 0) + 1)));
-    return Array.from(tagCount.entries()).sort((a, b) => b[1] - a[1]);
-  }, [movies]);
-
-  const tagNames = useMemo(() => allTags.map(([tag]) => tag), [allTags]);
+  const [allTags, tagNames] = useAllTags(movies);
 
   const handleAddMovies = useCallback(async () => {
     try {
@@ -216,7 +210,7 @@ export default function MovieLibrary() {
   }, [movies, location.state]);
 
   const handleBatchDelete = useCallback(() => {
-    confirmThen(t("movie.confirm_batch_delete", { n: batch.selected.size }), async () => {
+    confirm(t("movie.confirm_batch_delete", { n: batch.selected.size }), async () => {
       for (const id of batch.selected) { await deleteMovie(id); }
       batch.clear();
     });
@@ -228,6 +222,7 @@ export default function MovieLibrary() {
   }, [batch, updateMovieTags]);
 
   return (
+    <>
     <DropZone onDrop={handleDropImport} accept={".mp4,.avi,.mov,.mkv,.flv,.wmv,.webm,.m4v,.ts,.rmvb"} allowFolders>
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-4">
@@ -309,7 +304,7 @@ export default function MovieLibrary() {
                     className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-surface-lighter/50 transition-colors">
                     <Play className="h-4 w-4 ml-0.5" />
                   </button>
-                  <button onClick={(e) => { e.stopPropagation(); confirmThen(t("movie.confirm_delete"), () => deleteMovie(movie.id)); }}
+                  <button onClick={(e) => { e.stopPropagation(); confirm(t("movie.confirm_delete"), () => deleteMovie(movie.id)); }}
                     className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-400 hover:bg-surface-lighter/50 transition-colors">
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -326,7 +321,7 @@ export default function MovieLibrary() {
                 <div key={movie.id} className="relative group"
                   onClick={() => { if (batch.showCheckboxes) batch.toggle(movie.id); }}>
                   {batch.showCheckboxes && <BatchCheckbox checked={batch.selected.has(movie.id)} onToggle={() => batch.toggle(movie.id)} />}
-                  <MovieCard movie={movie} onDelete={(id) => confirmThen(t("movie.confirm_delete"), () => deleteMovie(id))} onPlay={batch.showCheckboxes ? () => {} : handlePlayMovie} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagDialogMovie(movie)} onRegenCover={() => useMovieStore.getState().regenerateCover(movie.id).catch(() => {})} compact={layoutMode === "small"} favorited={isFavorite(movie.id)} onToggleFav={() => toggleFavorite(movie.id, "movie")} />
+                  <MovieCard movie={movie} onDelete={(id) => confirm(t("movie.confirm_delete"), () => deleteMovie(id))} onPlay={batch.showCheckboxes ? () => {} : handlePlayMovie} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagDialogMovie(movie)} onRegenCover={() => useMovieStore.getState().regenerateCover(movie.id).catch(() => {})} compact={layoutMode === "small"} favorited={isFavorite(movie.id)} onToggleFav={() => toggleFavorite(movie.id, "movie")} />
                 </div>
               ))}
             </div>
@@ -370,8 +365,8 @@ export default function MovieLibrary() {
       )}
 
       {batch.showCheckboxes && <BatchBar selected={Array.from(batch.selected)} selectAll={batch.selectAll} clear={batch.leaveBatchMode} invert={batch.invert} onDelete={handleBatchDelete} allTags={tagNames} onBatchTag={handleBatchTag} t={t} />}
-      <ConfirmDialog open={!!confirmDelete} message={confirmDelete?.msg || ""} onConfirm={() => { confirmDelete?.onOk(); setConfirmDelete(null); }} onCancel={() => setConfirmDelete(null)} />
     </div>
     </DropZone>
+    </>
   );
 }

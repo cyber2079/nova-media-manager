@@ -31,7 +31,8 @@ import { useToast } from "@/components/Toast";
 import { importMediaPaths, pickFolderAndImport, importSummaryText } from "@/lib/mediaScan";
 import { FolderOpen } from "lucide-react";
 import CountBadge from "@/components/CountBadge";
-import ConfirmDialog from "@/components/ConfirmDialog";
+import { useAllTags } from "@/hooks/useAllTags";
+import { useConfirmStore } from "@/stores/confirmStore";
 import { usePlaylistStore } from "@/stores/playlistStore";
 import type { Music as MusicType } from "@/types/music";
 import { AudioMotionAnalyzer } from "audiomotion-analyzer";
@@ -43,7 +44,7 @@ let _motionInited = false;
 export default function MusicLibrary() {
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { music, isLoading, searchQuery, activeTags, sortConfig, loadMusic, addMusic, deleteMusic, setSearchQuery, toggleTag, setActiveTags, updateTags, setSortConfig } = useMusicStore();
+  const { music, isLoading, isImporting, searchQuery, activeTags, sortConfig, loadMusic, addMusic, deleteMusic, setSearchQuery, toggleTag, setActiveTags, updateTags, setSortConfig } = useMusicStore();
   const sortOptions = useNameSortOptions();
   const { animating, triggerSort } = useSortAnim();
   const handleSort = useCallback((key: string) => triggerSort(() => setSortConfig(key)), [triggerSort, setSortConfig]);
@@ -93,7 +94,7 @@ export default function MusicLibrary() {
   // playlist rename
   const [renamePlId, setRenamePlId] = useState<string | null>(null);
   const [renamePlName, setRenamePlName] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState<{ msg: string; onOk: () => void } | null>(null);
+  const confirm = useConfirmStore((s) => s.confirm);
 
   // ── audioMotion 频谱分析器（只输出数据，不渲染画布） ──
   const vizCanvasRef = useRef<HTMLDivElement>(null);
@@ -131,6 +132,10 @@ export default function MusicLibrary() {
 
     return () => {
       document.removeEventListener("visibilitychange", visibilityHandler);
+      // Do NOT destroy the singleton here — React Strict Mode double-invokes
+      // effects, and createMediaElementSource() can only be called once per
+      // <audio> element. The module-level singleton + _motionInited flag already
+      // protects against duplicate creation.
     };
   }, []);
 
@@ -147,8 +152,6 @@ export default function MusicLibrary() {
 
   // Clear background flag when on music page
   useEffect(() => { setBackground(false); }, []);
-
-  const confirmThen = (msg: string, fn: () => void) => setConfirmDelete({ msg, onOk: fn });
 
   const filtered = useMemo(() => {
     let result = [...music];
@@ -169,13 +172,7 @@ export default function MusicLibrary() {
   const allIds = useMemo(() => filtered.map((x) => x.id), [filtered]);
   const batch = useBatchSelect(allIds);
 
-  const allTags = useMemo(() => {
-    const tc = new Map<string, number>();
-    music.forEach((m) => m.tags.forEach((t) => tc.set(t, (tc.get(t) || 0) + 1)));
-    return Array.from(tc.entries()).sort((a, b) => b[1] - a[1]);
-  }, [music]);
-
-  const tagNames = useMemo(() => allTags.map(([tag]) => tag), [allTags]);
+  const [allTags, tagNames] = useAllTags(music);
 
   // 拖入的可能是文件或文件夹 — Rust 自动识别、递归展开、与库去重
   const handleDropImport = useCallback(async (paths: string[]) => {
@@ -201,7 +198,7 @@ export default function MusicLibrary() {
   }, []);
 
   const handleBatchDelete = useCallback(() => {
-    confirmThen(t("music.confirm_batch_delete", { n: batch.selected.size }), async () => {
+    confirm(t("music.confirm_batch_delete", { n: batch.selected.size }), async () => {
       for (const id of batch.selected) { await deleteMusic(id); }
       batch.clear();
     });
@@ -471,7 +468,7 @@ export default function MusicLibrary() {
                         {t("music.playlist_playing")}
                       </button>
                     )}
-                    <button onClick={() => confirmThen(t("music.confirm_delete_playlist"), () => { remove(selectedPlData.id); setSelectedPlaylist(null); setPlaylistContext(null); })}
+                    <button onClick={() => confirm(t("music.confirm_delete_playlist"), () => { remove(selectedPlData.id); setSelectedPlaylist(null); setPlaylistContext(null); })}
                       className="flex items-center gap-1 text-xs text-red-400/60 hover:text-red-400 transition-colors px-2 py-1 rounded" title={t("music.delete_playlist")}>
                       <Trash2 className="h-3 w-3" />{t("music.delete_playlist")}
                     </button>
@@ -488,7 +485,7 @@ export default function MusicLibrary() {
                 {plBatch.size > 0 && (
                   <div className="flex items-center gap-3 mb-3 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 text-xs">
                     <span className="text-white font-medium">{t("music.selected_count", { n: plBatch.size })}</span>
-                    <button onClick={() => confirmThen(t("music.confirm_remove_songs", { n: plBatch.size }), () => { removeSongs(selectedPlData.id, Array.from(plBatch)); setPlBatch(new Set()); })}
+                    <button onClick={() => confirm(t("music.confirm_remove_songs", { n: plBatch.size }), () => { removeSongs(selectedPlData.id, Array.from(plBatch)); setPlBatch(new Set()); })}
                       className="text-red-400 hover:text-red-300 transition-colors">{t("music.remove_selected")}</button>
                     <button onClick={() => setPlBatch(new Set())} className="text-gray-500 hover:text-white transition-colors">{t("settings.cancel")}</button>
                   </div>
@@ -536,7 +533,7 @@ export default function MusicLibrary() {
                               className="h-7 w-7 flex items-center justify-center rounded-full text-gray-500 hover:text-white hover:bg-primary/20 transition-colors shrink-0 opacity-0 group-hover:opacity-100">
                               {playing?.id === m.id && isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 ml-0.5" />}
                             </button>
-                            <button onClick={() => confirmThen(t("music.confirm_remove_song"), () => removeSong(selectedPlData.id, id))}
+                            <button onClick={() => confirm(t("music.confirm_remove_song"), () => removeSong(selectedPlData.id, id))}
                               className="h-7 w-7 flex items-center justify-center rounded-full text-gray-600 hover:text-red-400 hover:bg-red-400/10 transition-colors shrink-0 opacity-0 group-hover:opacity-100" title={t("music.remove_from_playlist")}>
                               <X className="h-3.5 w-3.5" />
                             </button>
@@ -685,7 +682,7 @@ export default function MusicLibrary() {
                           className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-surface-lighter/50 transition-colors">
                           {playing?.id === m.id && isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); confirmThen(t("music.confirm_delete"), () => deleteMusic(m.id)); }}
+                        <button onClick={(e) => { e.stopPropagation(); confirm(t("music.confirm_delete"), () => deleteMusic(m.id)); }}
                           className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-400 hover:bg-surface-lighter/50 transition-colors">
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -702,7 +699,7 @@ export default function MusicLibrary() {
                     <div key={m.id} className="relative group"
                       onClick={() => { if (batch.showCheckboxes) batch.toggle(m.id); }}>
                       {batch.showCheckboxes && <BatchCheckbox checked={batch.selected.has(m.id)} onToggle={() => batch.toggle(m.id)} />}
-                      <MusicCard music={m} onDelete={(id) => confirmThen(t("music.confirm_delete"), () => deleteMusic(id))} onPlay={batch.showCheckboxes ? () => {} : handleGridPlay} onEditTags={() => setTagEditItem(m)} compact={layoutMode === "small"} favorited={isFavorite(m.id)} onToggleFav={() => toggleFavorite(m.id, "music")} />
+                      <MusicCard music={m} onDelete={(id) => confirm(t("music.confirm_delete"), () => deleteMusic(id))} onPlay={batch.showCheckboxes ? () => {} : handleGridPlay} onEditTags={() => setTagEditItem(m)} compact={layoutMode === "small"} favorited={isFavorite(m.id)} onToggleFav={() => toggleFavorite(m.id, "music")} />
                     </div>
                   ))}
                 </div>
@@ -713,7 +710,6 @@ export default function MusicLibrary() {
             <EmptyState icon={<Music className="h-16 w-16" />} title={t("music.no_music")} hint={t("music.no_music_hint")} />
           )}
           {tagEditItem && <TagEditDialog open={true} onClose={() => setTagEditItem(null)} itemName={tagEditItem.name} tags={tagEditItem.tags} allTags={tagNames} onSave={(ts) => updateTags(tagEditItem.id, ts)} t={t} />}
-          <ConfirmDialog open={!!confirmDelete} message={confirmDelete?.msg || ""} onConfirm={() => { confirmDelete?.onOk(); setConfirmDelete(null); }} onCancel={() => setConfirmDelete(null)} />
         </>
       )}
     </div>
@@ -960,16 +956,22 @@ function hexToRgb(h: string): [number, number, number] {
   return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 }
 function rgbaStr(h: string, a: number) { const [r, g, b] = hexToRgb(h); return `rgba(${r},${g},${b},${a})`; }
-function parseAlpha(c: string): number { const m = c.match(/rgba\([\d, ]+,([\d.]+)\)/); return m ? parseFloat(m[1]) : 1; }
+function parseAlpha(c: string): number {
+  // Strict match: only accept valid rgba() with 0-1 alpha
+  const m = c.match(/^rgba\(\d{1,3},\s*\d{1,3},\s*\d{1,3},\s*(0(?:\.\d+)?|1(?:\.0+)?)\)$/);
+  return m ? parseFloat(m[1]) : 1;
+}
 function parseHex(c: string): string {
   if (!c) return "#1a1f2e";
-  // direct hex match
-  const m = c.match(/#[0-9a-fA-F]{6}/);
+  // Strict hex match: exactly # followed by 6 hex digits
+  const m = c.match(/^#[0-9a-fA-F]{6}$/);
   if (m) return m[0];
-  // rgba → hex
-  const rm = c.match(/rgba\((\d+),\s*(\d+),\s*(\d+)/);
-  if (rm) return "#" + [rm[1], rm[2], rm[3]].map((v) => parseInt(v).toString(16).padStart(2, "0")).join("");
-  return "#1a1f2e";
+  // Strict rgba → hex: validate each component is 0-255
+  const rm = c.match(/^rgba\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3}),\s*[\d.]+\)$/);
+  if (rm && [rm[1], rm[2], rm[3]].every((v) => parseInt(v) <= 255)) {
+    return "#" + [rm[1], rm[2], rm[3]].map((v) => parseInt(v).toString(16).padStart(2, "0")).join("");
+  }
+  return "#1a1f2e"; // safe default — reject all unexpected formats
 }
 
 function ColorPickerBtn({ color, onChange, disabled }: { color: string; onChange: (v: string) => void; disabled?: boolean }) {

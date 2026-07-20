@@ -203,12 +203,16 @@ export type SettingsState = {
 
   // ── 性能调优 ──
   perfPriority: "normal" | "above_normal" | "high";
-  perfPowerThrottle: boolean; // true = 禁止降频
   perfIdleReduce: boolean;    // 空闲时降载
-  
+  perfReduceAnimations: boolean; // 减弱动效
+  cacheCleanupDays: number;   // 缓存清理间隔（天），默认 30
+  cacheCleanupLastRun: string | null; // 上次自动清理时间 ISO
+
   setPerfPriority: (v: "normal" | "above_normal" | "high") => void;
-  setPerfPowerThrottle: (v: boolean) => void;
   setPerfIdleReduce: (v: boolean) => void;
+  setPerfReduceAnimations: (v: boolean) => void;
+  setCacheCleanupDays: (v: number) => void;
+  setCacheCleanupLastRun: (v: string) => void;
   applyPerfSettings: () => Promise<void>;
 };
 
@@ -231,7 +235,36 @@ function readSaved(): Partial<SettingsState> {
   } catch { return {}; }
 }
 
-function outdate() { _dirty = true; }
+// localStorage written synchronously (survives app close); kv.set debounced 300ms.
+// Reads fresh state from store inside the timeout — immune to stale closures.
+let _persistTimer: ReturnType<typeof setTimeout> | null = null;
+function schedulePersist() {
+  const s = useSettingsStore.getState();
+  const payload = JSON.stringify({
+    language: s.language, autoStart: s.autoStart, startFullscreen: s.startFullscreen,
+    autoHideHeader: s.autoHideHeader, autoHideFooter: s.autoHideFooter,
+    customColor: s.customColor, useCustomColor: s.useCustomColor,
+    bgVideoMode: s.bgVideoMode, bgVideoLoop: s.bgVideoLoop,
+    lastVolume: s.lastVolume, previewOffset: s.previewOffset,
+    lyricFontSize: s.lyricFontSize, lyricUseCustomColor: s.lyricUseCustomColor,
+    lyricCurrentColor: s.lyricCurrentColor, lyricOtherColor: s.lyricOtherColor, lyricFillColor: s.lyricFillColor,
+    fontSize: s.fontSize, iconSize: s.iconSize, fontFamily: s.fontFamily,
+    visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
+    headerOpacity: s.headerOpacity, footerOpacity: s.footerOpacity,
+    surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
+    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
+    perfPriority: s.perfPriority, perfIdleReduce: s.perfIdleReduce, perfReduceAnimations: s.perfReduceAnimations, cacheCleanupDays: s.cacheCleanupDays, cacheCleanupLastRun: s.cacheCleanupLastRun,
+    dashboardMode: s.dashboardMode, contentMinimized: s.contentMinimized,
+  });
+  localStorage.setItem(STORAGE_KEY, payload);
+  if (_persistTimer) clearTimeout(_persistTimer);
+  _persistTimer = setTimeout(() => {
+    kv.set(STORAGE_KEY, payload).catch(() => {});
+  }, 300);
+}
+
+// persist() — write localStorage synchronously, defer kv.set via debounce.
+function persist() { schedulePersist(); }
 
 /** Derive all --color- CSS vars from the 3-knob palette system.
  *
@@ -367,76 +400,10 @@ export const defaultExternalPlayer = (): ExternalPlayerConfig => ({ mode: "auto"
 /** WebView2 基本放不了的格式 — auto 模式下走外接播放器 */
 export const EXTERNAL_PLAYER_EXTS = ["mkv", "avi", "flv", "wmv", "ts", "m2ts", "rmvb", "iso"];
 
-let _dirty = true;
-let _writing = false;
 
-async function persist(s: SettingsState) {
-  if (!_dirty) return;
-  _dirty = false;
-  if (_writing) return;
-  _writing = true;
-  const payload = JSON.stringify({
-    language: s.language, autoStart: s.autoStart, startFullscreen: s.startFullscreen,
-    autoHideHeader: s.autoHideHeader, autoHideFooter: s.autoHideFooter,
-    customColor: s.customColor, useCustomColor: s.useCustomColor,
-    bgVideoMode: s.bgVideoMode, bgVideoLoop: s.bgVideoLoop,
-    lastVolume: s.lastVolume, previewOffset: s.previewOffset,
-    lyricFontSize: s.lyricFontSize, lyricUseCustomColor: s.lyricUseCustomColor,
-    lyricCurrentColor: s.lyricCurrentColor, lyricOtherColor: s.lyricOtherColor, lyricFillColor: s.lyricFillColor,
-    fontSize: s.fontSize, iconSize: s.iconSize, fontFamily: s.fontFamily,
-    visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
-    headerOpacity: s.headerOpacity, footerOpacity: s.footerOpacity,
-    surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
-    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer});
-  // Write to both: SQLite (primary) + localStorage (fast sync fallback)
-  localStorage.setItem(STORAGE_KEY, payload);
-  await kv.set(STORAGE_KEY, payload).catch(() => {});
-  _writing = false;
-}
-
-function hexToHSL(hex: string): [number, number, number] {
-  let r = 0, g = 0, b = 0;
-  const h = hex.replace("#", "");
-  if (h.length === 3) { r = parseInt(h[0]+h[0],16); g = parseInt(h[1]+h[1],16); b = parseInt(h[2]+h[2],16); }
-  else if (h.length >= 6) { r = parseInt(h.slice(0,2),16); g = parseInt(h.slice(2,4),16); b = parseInt(h.slice(4,6),16); }
-  r /= 255; g /= 255; b /= 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let hue = 0, sat = 0; const lit = (max + min) / 2;
-  if (max !== min) {
-    const d = max - min;
-    sat = lit > 0.5 ? d / (2 - max - min) : d / (max + min);
-    if (max === r) hue = ((g - b) / d + (g < b ? 6 : 0)) / 6;
-    else if (max === g) hue = ((b - r) / d + 2) / 6;
-    else hue = ((r - g) / d + 4) / 6;
-  }
-  return [Math.round(hue * 360), Math.round(sat * 100), Math.round(lit * 100)];
-}
-
-function hslToHex(h: number, s: number, l: number): string {
-  s /= 100; l /= 100;
-  const a = s * Math.min(l, 1 - l);
-  const f = (n: number) => { const k = (n + h / 30) % 12; return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
-  const toHex = (n: number) => Math.round(n * 255).toString(16).padStart(2, "0");
-  return "#" + toHex(f(0)) + toHex(f(8)) + toHex(f(4));
-}
-
-export function computeThemeColors(base: string) {
-  const [h, s, l] = hexToHSL(base);
-  return {
-    primary: hslToHex(h, Math.min(80, s), Math.max(35, Math.min(55, l))),
-    light: hslToHex(h, Math.max(25, s - 10), Math.min(88, l + 22)),
-    dark: hslToHex(h, Math.min(85, s + 8), Math.max(14, l - 14)),
-    surface: hslToHex(h, Math.max(4, s/4), Math.max(6, Math.min(10, l/3))),
-    surfaceLight: hslToHex(h, Math.max(5, s/4), Math.max(10, Math.min(15, l/2.5))),
-    surfaceLighter: hslToHex(h, Math.max(6, s/3), Math.max(14, Math.min(22, l/2))),
-    border: hslToHex(h, Math.max(15, s/3), Math.min(55, l + 8)),
-    accent: hslToHex(h, Math.min(75, s + 5), Math.min(60, l + 5))};
-}
-
-export const COLOR_PRESETS = [
-  "#f59e0b", "#00e5a0", "#4488ff", "#8b5cf6",
-  "#e06040", "#87ceeb", "#ff88cc", "#f99e1a",
-];
+// Re-export from shared color utilities module
+export { hexToHSL, hslToHex, computeThemeColors, COLOR_PRESETS } from "@/lib/colorUtils";
+import { hexToHSL, hslToHex } from "@/lib/colorUtils";
 
 export const useSettingsStore = create<SettingsState>((set, get) => {
   const saved = readSaved();
@@ -488,8 +455,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     paletteCustomized: (saved as any).paletteCustomized || false,
     hardwareAcceleration: (saved as any).hardwareAcceleration ?? true,
     perfPriority: (saved as any).perfPriority || "normal",
-    perfPowerThrottle: (saved as any).perfPowerThrottle || false,
     perfIdleReduce: (saved as any).perfIdleReduce ?? true,
+    perfReduceAnimations: (saved as any).perfReduceAnimations || false,
+    cacheCleanupDays: (saved as any).cacheCleanupDays || 30,
+    cacheCleanupLastRun: (saved as any).cacheCleanupLastRun || null,
     dashboardMode: (saved as any).dashboardMode || "full",
     contentMinimized: (saved as any).contentMinimized || {},
 
@@ -551,69 +520,70 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       } else { applySurface(); applyFontColors(); applyLyricColors(); applyScrollFade(); applyFontFamily(); }
     },
 
-    setLanguage(lang) { set({ language: lang }); outdate(); persist(get()); },
+    setLanguage(lang) { set({ language: lang }); persist(); },
     async setAutoStart(on) {
       try { const { enable, disable } = await import("@tauri-apps/plugin-autostart"); if (on) await enable(); else await disable(); } catch {}
-      set({ autoStart: on }); outdate(); persist(get());
+      set({ autoStart: on }); persist();
     },
-    setStartFullscreen(on) { set({ startFullscreen: on }); outdate(); persist(get()); },
-    setDashboardMode(m) { set({ dashboardMode: m }); outdate(); persist(get()); },
-    setHardwareAcceleration(v) { set({ hardwareAcceleration: v }); outdate(); persist(get()); },
-    setPerfPriority(v) { set({ perfPriority: v }); outdate(); persist(get()); },
-    setPerfPowerThrottle(v) { set({ perfPowerThrottle: v }); outdate(); persist(get()); },
-    setPerfIdleReduce(v) { set({ perfIdleReduce: v }); outdate(); persist(get()); },
+    setStartFullscreen(on) { set({ startFullscreen: on }); persist(); },
+    setDashboardMode(m) { set({ dashboardMode: m }); persist(); },
+    setHardwareAcceleration(v) { set({ hardwareAcceleration: v }); persist(); },
+    setPerfPriority(v) { set({ perfPriority: v }); persist(); },
+    setPerfIdleReduce(v) { set({ perfIdleReduce: v }); persist(); },
+    setPerfReduceAnimations(v) { set({ perfReduceAnimations: v }); persist(); },
+    setCacheCleanupDays(v) { set({ cacheCleanupDays: v }); persist(); },
+    setCacheCleanupLastRun(v) { set({ cacheCleanupLastRun: v }); persist(); },
     async applyPerfSettings() {
-      const { perfPriority, perfPowerThrottle } = get();
+      const { perfPriority } = get();
       try {
         const { invoke } = await import("@tauri-apps/api/core");
         await invoke("set_process_priority", { level: perfPriority });
-        await invoke("set_power_throttling", { disable: perfPowerThrottle });
       } catch {}
     },
-    toggleContentMinimized(page) { set((s) => ({ contentMinimized: { ...s.contentMinimized, [page]: !s.contentMinimized[page] } })); outdate(); persist(get()); },
-    setAutoHideHeader(on) { set({ autoHideHeader: on }); outdate(); persist(get()); },
-    setAutoHideFooter(on) { set({ autoHideFooter: on }); outdate(); persist(get()); },
-    setCustomColor(color) { set({ customColor: color }); outdate(); persist(get()); },
-    setUseCustomColor(on) { set({ useCustomColor: on }); outdate(); persist(get()); },
-    setBgVideoMode(mode) { set({ bgVideoMode: mode }); outdate(); persist(get()); },
-    setBgVideoLoop(cfg) { set((s) => ({ bgVideoLoop: { ...s.bgVideoLoop, ...cfg } })); outdate(); persist(get()); },
-    setLastVolume(v) { set({ lastVolume: v }); outdate(); persist(get()); },
-    setPreviewOffset(v) { set({ previewOffset: v }); outdate(); persist(get()); },
-    setLyricFontSize(v) { set({ lyricFontSize: v }); outdate(); persist(get()); },
-    setLyricUseCustomColor(v) { set({ lyricUseCustomColor: v }); outdate(); persist(get()); applyLyricColors(); },
-    setLyricCurrentColor(v) { set({ lyricCurrentColor: v }); outdate(); persist(get()); applyLyricColors(); },
-    setLyricOtherColor(v) { set({ lyricOtherColor: v }); outdate(); persist(get()); applyLyricColors(); },
-    setLyricFillColor(v) { set({ lyricFillColor: v }); outdate(); persist(get()); applyLyricColors(); },
-    setFontSize(v) { set({ fontSize: v }); outdate(); persist(get()); },
-    setIconSize(v) { set({ iconSize: v }); outdate(); persist(get()); },
-    setVisualizerMode(v) { set({ visualizerMode: v }); outdate(); persist(get()); },
-    setImageWheelMode(v) { set({ imageWheelMode: v }); outdate(); persist(get()); },
-    setHeaderOpacity(v) { set({ headerOpacity: v }); outdate(); persist(get()); applySurface(); },
-    setFooterOpacity(v) { set({ footerOpacity: v }); outdate(); persist(get()); },
-    setSurfaceSaturation(v) { set({ surfaceSaturation: v }); outdate(); persist(get()); applySurface(); },
-    setSurfaceOpacity(v) { set({ surfaceOpacity: v }); outdate(); persist(get()); applySurface(); },
-    setBgOverlayOpacity(v) { set({ bgOverlayOpacity: v }); outdate(); persist(get()); },
-    setHideTitleBar(v) { set({ hideTitleBar: v }); outdate(); persist(get()); applyTitleBar(); },
-    setFontPrimaryColor(v) { set({ fontPrimaryColor: v }); outdate(); persist(get()); applyFontColors(); },
-    setFontSecondaryColor(v) { set({ fontSecondaryColor: v }); outdate(); persist(get()); applyFontColors(); },
-    setWidgetTextColor(v) { set({ widgetTextColor: v }); outdate(); persist(get()); applyFontColors(); },
-    setScrollFadeOpacity(v) { set({ scrollFadeOpacity: v }); outdate(); persist(get()); applyScrollFade(); applyFontFamily(); },
-    setPlayerBgColor(v) { set({ playerBgColor: v }); outdate(); persist(get()); },
-    setPlayerBgMode(v) { set({ playerBgMode: v }); outdate(); persist(get()); },
-    setCyberBgmEnabled(v) { set({ cyberBgmEnabled: v }); outdate(); persist(get()); },
-    setCgTextSize(v) { set({ cgTextSize: v }); outdate(); persist(get()); },
-    setCgTextColor(v) { set({ cgTextColor: v }); outdate(); persist(get()); },
-    setCgTextBgColor(v) { set({ cgTextBgColor: v }); outdate(); persist(get()); },
-    setCgTextBgOpacity(v) { set({ cgTextBgOpacity: v }); outdate(); persist(get()); },
-    setFontFamily(v) { set({ fontFamily: v }); outdate(); persist(get()); applyFontFamily(v); },
-    setPaletteAccent(v) { set({ paletteAccent: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
-    setPaletteSaturation(v) { set({ paletteSaturation: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
-    setPaletteContrast(v) { set({ paletteContrast: v, paletteCustomized: true }); outdate(); persist(get()); applyPalette(); },
-    setWallpaperConfig(cfg) { set((s) => ({ wallpaper: { ...s.wallpaper, ...cfg } })); outdate(); persist(get()); },
-    setExternalPlayer(cfg) { set((s) => ({ externalPlayer: { ...s.externalPlayer, ...cfg } })); outdate(); persist(get()); },
+    toggleContentMinimized(page) { set((s) => ({ contentMinimized: { ...s.contentMinimized, [page]: !s.contentMinimized[page] } })); persist(); },
+    setAutoHideHeader(on) { set({ autoHideHeader: on }); persist(); },
+    setAutoHideFooter(on) { set({ autoHideFooter: on }); persist(); },
+    setCustomColor(color) { set({ customColor: color }); persist(); },
+    setUseCustomColor(on) { set({ useCustomColor: on }); persist(); },
+    setBgVideoMode(mode) { set({ bgVideoMode: mode }); persist(); },
+    setBgVideoLoop(cfg) { set((s) => ({ bgVideoLoop: { ...s.bgVideoLoop, ...cfg } })); persist(); },
+    setLastVolume(v) { set({ lastVolume: v }); persist(); },
+    setPreviewOffset(v) { set({ previewOffset: v }); persist(); },
+    setLyricFontSize(v) { set({ lyricFontSize: v }); persist(); },
+    setLyricUseCustomColor(v) { set({ lyricUseCustomColor: v }); persist(); applyLyricColors(); },
+    setLyricCurrentColor(v) { set({ lyricCurrentColor: v }); persist(); applyLyricColors(); },
+    setLyricOtherColor(v) { set({ lyricOtherColor: v }); persist(); applyLyricColors(); },
+    setLyricFillColor(v) { set({ lyricFillColor: v }); persist(); applyLyricColors(); },
+    setFontSize(v) { set({ fontSize: v }); persist(); },
+    setIconSize(v) { set({ iconSize: v }); persist(); },
+    setVisualizerMode(v) { set({ visualizerMode: v }); persist(); },
+    setImageWheelMode(v) { set({ imageWheelMode: v }); persist(); },
+    setHeaderOpacity(v) { set({ headerOpacity: v }); persist(); applySurface(); },
+    setFooterOpacity(v) { set({ footerOpacity: v }); persist(); },
+    setSurfaceSaturation(v) { set({ surfaceSaturation: v }); persist(); applySurface(); },
+    setSurfaceOpacity(v) { set({ surfaceOpacity: v }); persist(); applySurface(); },
+    setBgOverlayOpacity(v) { set({ bgOverlayOpacity: v }); persist(); },
+    setHideTitleBar(v) { set({ hideTitleBar: v }); persist(); applyTitleBar(); },
+    setFontPrimaryColor(v) { set({ fontPrimaryColor: v }); persist(); applyFontColors(); },
+    setFontSecondaryColor(v) { set({ fontSecondaryColor: v }); persist(); applyFontColors(); },
+    setWidgetTextColor(v) { set({ widgetTextColor: v }); persist(); applyFontColors(); },
+    setScrollFadeOpacity(v) { set({ scrollFadeOpacity: v }); persist(); applyScrollFade(); applyFontFamily(); },
+    setPlayerBgColor(v) { set({ playerBgColor: v }); persist(); },
+    setPlayerBgMode(v) { set({ playerBgMode: v }); persist(); },
+    setCyberBgmEnabled(v) { set({ cyberBgmEnabled: v }); persist(); },
+    setCgTextSize(v) { set({ cgTextSize: v }); persist(); },
+    setCgTextColor(v) { set({ cgTextColor: v }); persist(); },
+    setCgTextBgColor(v) { set({ cgTextBgColor: v }); persist(); },
+    setCgTextBgOpacity(v) { set({ cgTextBgOpacity: v }); persist(); },
+    setFontFamily(v) { set({ fontFamily: v }); persist(); applyFontFamily(v); },
+    setPaletteAccent(v) { set({ paletteAccent: v, paletteCustomized: true }); persist(); applyPalette(); },
+    setPaletteSaturation(v) { set({ paletteSaturation: v, paletteCustomized: true }); persist(); applyPalette(); },
+    setPaletteContrast(v) { set({ paletteContrast: v, paletteCustomized: true }); persist(); applyPalette(); },
+    setWallpaperConfig(cfg) { set((s) => ({ wallpaper: { ...s.wallpaper, ...cfg } })); persist(); },
+    setExternalPlayer(cfg) { set((s) => ({ externalPlayer: { ...s.externalPlayer, ...cfg } })); persist(); },
     resetPaletteToTheme(theme) {
       const def = THEME_PALETTE_DEFAULTS[theme] ?? THEME_PALETTE_DEFAULTS.default;
       set({ paletteAccent: def.accent, paletteSaturation: def.saturation, paletteContrast: def.contrast, paletteCustomized: false });
-      outdate(); persist(get()); applyPalette();
+      persist(); applyPalette();
     }};
 });

@@ -8,7 +8,7 @@ import TagFilterBar from "@/components/TagFilterBar";
 import TagEditDialog from "@/components/TagEditDialog";
 import { useBatchSelect } from "@/lib/useBatchSelect";
 import { useSearchJump } from "@/lib/searchJump";
-import ConfirmDialog from '@/components/ConfirmDialog';
+import { useConfirmStore } from "@/stores/confirmStore";
 import BatchBar from "@/components/BatchBar";
 import BatchCheckbox from "@/components/BatchCheckbox";
 import { useContextMenu } from "@/lib/useContextMenu";
@@ -25,12 +25,13 @@ import { useLayoutMode } from "@/lib/useLayoutMode";
 import PaginationBar from "@/components/PaginationBar";
 import { usePagination } from "@/lib/usePagination";
 import { useToast } from "@/components/Toast";
+import { useAllTags } from "@/hooks/useAllTags";
 import type { Game } from "@/types/game";
 
 export default function GameLibrary() {
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { games, isLoading, sortConfig, loadGames, addGame, deleteGame, launchGame, updateTags, scanSteam, isScanning, scanResult, scanDiagnostic, setSortConfig } = useGameStore();
+  const { games, isLoading, isImporting, sortConfig, loadGames, addGame, deleteGame, launchGame, updateTags, scanSteam, isScanning, scanResult, scanDiagnostic, setSortConfig } = useGameStore();
   const sortOptions = useNameSortOptions();
   const { animating, triggerSort } = useSortAnim();
   const handleSort = useCallback((key: string) => triggerSort(() => setSortConfig(key)), [triggerSort, setSortConfig]);
@@ -38,14 +39,12 @@ export default function GameLibrary() {
   const { getByType, toggleFavorite, isFavorite } = useFavoritesStore();
   const [favOnly, setFavOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState<{ msg: string; onOk: () => void } | null>(null);
   const [tagEditItem, setTagEditItem] = useState<Game | null>(null);
+  const confirm = useConfirmStore((s) => s.confirm);
   const [layoutMode, setLayoutMode] = useLayoutMode("layout-games", "list");
   const { onContext, menu } = useContextMenu();
 
   useEffect(() => { loadGames(); }, []);
-
-  const confirmThen = (msg: string, fn: () => void) => setConfirmDelete({ msg, onOk: fn });
 
   // Auto-clear scan result
   useEffect(() => {
@@ -94,13 +93,7 @@ export default function GameLibrary() {
   const allIds = useMemo(() => paginated.map((g) => g.id), [paginated]);
   const batch = useBatchSelect(allIds);
 
-  const allTags = useMemo(() => {
-    const tc = new Map<string, number>();
-    games.forEach((g) => g.tags?.forEach((t) => tc.set(t, (tc.get(t)||0)+1)));
-    return Array.from(tc.entries()).sort((a,b) => b[1]-a[1]);
-  }, [games]);
-
-  const tagNames = useMemo(() => allTags.map(([tag]) => tag), [allTags]);
+  const [allTags, tagNames] = useAllTags(games);
 
   const handleDropImport = useCallback(async (paths: string[]) => { for (const p of paths) await addGame(p); }, [addGame]);
 
@@ -113,7 +106,7 @@ export default function GameLibrary() {
   }, [addGame]);
 
   const handleBatchDelete = useCallback(() => {
-    confirmThen(t("game.confirm_batch_delete", { n: batch.selected.size }), async () => {
+    confirm(t("game.confirm_batch_delete", { n: batch.selected.size }), async () => {
       for (const id of batch.selected) { await deleteGame(id); }
       batch.clear();
     });
@@ -215,7 +208,7 @@ export default function GameLibrary() {
                       className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-surface-lighter/50 transition-colors">
                       <Play className="h-4 w-4 ml-0.5" />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); confirmThen(t("game.confirm_delete"), () => deleteGame(game.id)); }}
+                    <button onClick={(e) => { e.stopPropagation(); confirm(t("game.confirm_delete"), () => deleteGame(game.id)); }}
                       className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-400 hover:bg-surface-lighter/50 transition-colors">
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -232,7 +225,7 @@ export default function GameLibrary() {
                 <div key={game.id} className="relative group" onContextMenu={(e: React.MouseEvent) => onContext(e, game.executablePath)}
                   onClick={() => { if (batch.showCheckboxes) batch.toggle(game.id); }}>
                   {batch.showCheckboxes && <BatchCheckbox checked={batch.selected.has(game.id)} onToggle={() => batch.toggle(game.id)} />}
-                  <GameCard game={game} onDelete={(id) => confirmThen(t("game.confirm_delete"), () => deleteGame(id))} onLaunch={batch.showCheckboxes ? () => {} : (_g) => launchGame(_g.id)} onEditTags={() => setTagEditItem(game)} compact={layoutMode === "small"} favorited={isFavorite(game.id)} onToggleFav={() => toggleFavorite(game.id, "game")} />
+                  <GameCard game={game} onDelete={(id) => confirm(t("game.confirm_delete"), () => deleteGame(id))} onLaunch={batch.showCheckboxes ? () => {} : (_g) => launchGame(_g.id)} onEditTags={() => setTagEditItem(game)} compact={layoutMode === "small"} favorited={isFavorite(game.id)} onToggleFav={() => toggleFavorite(game.id, "game")} />
                 </div>
               ))}
             </div>
@@ -245,7 +238,6 @@ export default function GameLibrary() {
       {tagEditItem && (
         <TagEditDialog open={true} onClose={() => setTagEditItem(null)} itemName={tagEditItem.name} tags={tagEditItem.tags || []} allTags={tagNames} onSave={(ts) => updateTags(tagEditItem.id, ts)} t={t} />
       )}
-      <ConfirmDialog open={!!confirmDelete} message={confirmDelete?.msg || ""} onConfirm={() => { confirmDelete?.onOk(); setConfirmDelete(null); }} onCancel={() => setConfirmDelete(null)} />
     </div>
     </DropZone>
     {menu}

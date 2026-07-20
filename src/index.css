@@ -1,9 +1,7 @@
 @import "tailwindcss";
 
-/* ICE 背景 Canvas 仅在非冰主题隐藏 — 防止切换残留 */
+/* ICE 背景 Canvas 仅在非冰主题时强制隐藏 — 防止切换残留 */
 html:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
-
-/* ═══════════ Local fonts ═══════════ */
 @font-face {
   font-family: "Maoken Glitch Sans";
   src: url("/fonts/maoken-glitch-sans.otf") format("opentype");
@@ -36,12 +34,7 @@ html:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
   --color-surface-lighter:color-mix(in srgb, var(--color-primary) 8%, #1a1f2a);
 }
 
-/* Premium themes: let the background video/images show through on homepage.
-   Content cards use .theme-card glass for readability. */
-/* Premium 首页：透明背景，视频全见。Content 用 .theme-card 毛玻璃保证可读性 */
-
-/* ICE 背景 Canvas 仅在非冰主题时强制隐藏 — 防止切换残留 */
-html:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
+/* Premium themes: let the background video/images show through on homepage.*/
 
 [data-theme="ice-girl"] main[data-route="home"],
 [data-theme="cyber-girl"] main[data-route="home"] {
@@ -99,6 +92,14 @@ select, select option {
 [data-route="page"] > div {
   transform: translateZ(0);
   will-change: scroll-position;
+}
+
+/* ── 减弱动效（设置面板开关控制）── */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
 }
 
 /* 卡片网格 item — hover scale 不触发全局 layout */

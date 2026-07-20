@@ -19,7 +19,7 @@
         "minHeight": 600,
         "resizable": true,
         "decorations": false,
-        "fullscreen": true,
+        "fullscreen": false,
         "maximized": false
       }
     ],
@@ -45,7 +45,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "resources": ["ffmpeg-bin/ffmpeg.exe", "ffmpeg-bin/ffprobe.exe"],
+    "resources": ["ffmpeg-bin/ffmpeg.exe", "ffmpeg-bin/ffprobe.exe", "plugins/*"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

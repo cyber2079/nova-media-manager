@@ -5,6 +5,7 @@ import { invoke } from "@/lib/tauriInvoke";
 interface ImageState {
   images: ImageItem[];
   isLoading: boolean;
+  isImporting: boolean;
   sortConfig: string;
   loadImages: () => Promise<void>;
   addImages: (paths: string[]) => Promise<void>;
@@ -16,20 +17,31 @@ interface ImageState {
 export const useImageStore = create<ImageState>((set, get) => ({
   images: [],
   isLoading: false,
+  isImporting: false,
   sortConfig: "default",
 
   loadImages: async () => {
     set({ isLoading: true });
-    const result = await invoke("get_all_images");
-    if (result) set({ images: result as ImageItem[], isLoading: false });
-    else set({ isLoading: false });
+    try {
+      const result = await invoke("get_all_images");
+      if (result) set({ images: result as ImageItem[] });
+    } catch {
+      // Tauri通信失败——保持现有数据，避免永久loading
+    }
+    set({ isLoading: false });
   },
 
   addImages: async (paths: string[]) => {
-    set({ isLoading: true });
-    const result = await invoke("add_images", { paths });
-    if (result) {
-      set({ images: [...(result as ImageItem[]), ...get().images], isLoading: false });
+    set({ isImporting: true });
+    try {
+      const result = await invoke("add_images", { paths });
+      if (result) {
+        set({ images: [...(result as ImageItem[]), ...get().images], isImporting: false });
+      } else {
+        set({ isImporting: false });
+      }
+    } catch {
+      set({ isImporting: false });
     }
   },
 

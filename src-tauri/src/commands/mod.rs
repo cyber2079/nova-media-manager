@@ -20,3 +20,4 @@ pub mod steam_scanner;
 pub mod theme_studio;
 pub mod user_data;
 pub mod performance;
+pub mod hevc;

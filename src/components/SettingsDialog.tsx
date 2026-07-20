@@ -9,7 +9,8 @@ import { languages } from "@/i18n";
 import { cn } from "@/lib/utils";
 import ScrollFade from "@/components/ScrollFade";
 import ThemeManager from "@/components/ThemeManager";
-import { Palette, EyeOff, Eye, Copy, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown, FolderOpen, ImageIcon, Shuffle, Home, Check, Gauge } from "lucide-react";
+import BgVideoTuner from "@/components/BgVideoTuner";
+import { Palette, EyeOff, Eye, Copy, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown, FolderOpen, ImageIcon, Shuffle, Home, Check, Gauge, Sparkles } from "lucide-react";
 import { ThemeAssets } from "@/lib/themeBase";
 import { useLicenseStore } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS, type WallpaperFit } from "@/stores/settingsStore";
@@ -54,7 +55,7 @@ const DEFAULTS = {
     clock: { enabled: true, position: "top-right" as const },
     calendar: { enabled: true, position: "top-left" as const },
     countdown: { enabled: false, position: "center-right" as const, displayMode: "full" as const, hours: 0, minutes: 5, seconds: 0, loopCount: 1, alertGlow: false, alertVoice: true, voiceInterval: 30 }},
-  performance: { perfPriority: "normal" as const, perfPowerThrottle: false, perfIdleReduce: true}};
+  performance: { perfPriority: "normal" as const, perfIdleReduce: true, perfReduceAnimations: false, cacheCleanupDays: 30}};
 
 
 export default function SettingsDialog({ open, onClose }: Props) {
@@ -82,8 +83,8 @@ export default function SettingsDialog({ open, onClose }: Props) {
     cgTextSize, cgTextColor, setCgTextSize, setCgTextColor,
     paletteAccent, paletteSaturation, paletteContrast, paletteCustomized, setPaletteAccent, setPaletteSaturation, setPaletteContrast, resetPaletteToTheme,
     dashboardMode, setDashboardMode, hardwareAcceleration, setHardwareAcceleration,
-    perfPriority, setPerfPriority, perfPowerThrottle, setPerfPowerThrottle,
-    perfIdleReduce, setPerfIdleReduce,
+    perfPriority, setPerfPriority, perfIdleReduce, setPerfIdleReduce,
+    perfReduceAnimations, setPerfReduceAnimations, cacheCleanupDays, setCacheCleanupDays,
     applyPerfSettings} = useSettingsStore();
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages, setEnabled, setPosition, setMyComputerMode, setGlobalWidgets, setPageWidget, setCountdown } = useWidgetStore();
   const [autoLoading, setAutoLoading] = useState(false);
@@ -185,9 +186,9 @@ export default function SettingsDialog({ open, onClose }: Props) {
       case "performance": {
         const d = DEFAULTS.performance;
         setPerfPriority(d.perfPriority);
-        setPerfPowerThrottle(d.perfPowerThrottle);
         setPerfIdleReduce(d.perfIdleReduce);
-        
+        setPerfReduceAnimations(d.perfReduceAnimations);
+        setCacheCleanupDays(d.cacheCleanupDays);
         applyPerfSettings();
         break;
       }
@@ -198,7 +199,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
       setPaletteAccent, setPaletteSaturation, setPaletteContrast,
       setPreviewOffset, setLyricFontSize, setLyricUseCustomColor, setLyricCurrentColor, setLyricOtherColor, setLyricFillColor, setImageWheelMode,
       setGlobalWidgets, setPageWidget, setEnabled, setPosition, setMyComputerMode, setCountdown,
-      setPerfPriority, setPerfPowerThrottle, setPerfIdleReduce, applyPerfSettings]);
+      setPerfPriority, setPerfIdleReduce, setPerfReduceAnimations, setCacheCleanupDays, applyPerfSettings]);
 
   const doResetAll = useCallback(() => {
     for (const tab of tabs) doResetTab(tab.id);
@@ -355,6 +356,14 @@ export default function SettingsDialog({ open, onClose }: Props) {
                 {/* ── Theme Packs ── */}
                 <ThemeManager />
 
+                {/* ── Theme Dev Tools ── */}
+                <div className="flex gap-2 flex-wrap pt-2">
+                  {import.meta.env?.VITE_LICENSE_TIER && (
+                    <NavigationStudioBtn t={t} />
+                  )}
+                  <BgTunerBtn />
+                </div>
+
                 <ResetButton tab="appearance" t={t} onReset={() => setConfirmReset("appearance")} />
               </>
             )}
@@ -398,7 +407,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
 
             {/* ═══ Performance Tab ═══ */}
             {activeTab === "performance" && (
-              <PerformanceSection {...{ t, perfPriority, setPerfPriority, perfPowerThrottle, setPerfPowerThrottle, perfIdleReduce, setPerfIdleReduce, hardwareAcceleration, setHardwareAcceleration, applyPerfSettings }}>
+              <PerformanceSection {...{ t, perfPriority, setPerfPriority, perfIdleReduce, setPerfIdleReduce, perfReduceAnimations, setPerfReduceAnimations, cacheCleanupDays, setCacheCleanupDays, hardwareAcceleration, setHardwareAcceleration, applyPerfSettings }}>
                 <ResetButton tab="performance" t={t} onReset={() => setConfirmReset("performance")} />
               </PerformanceSection>
             )}
@@ -479,13 +488,6 @@ function LicenseSection({ t }: { t: any }) {
     return tier;
   };
 
-  const pricingLabel = () => {
-    if (license.duration === "monthly") return t("license.member_price_monthly");
-    if (license.duration === "yearly") return t("license.member_price_yearly");
-    if (license.duration === "permanent") return t("license.member_price_permanent");
-    return "";
-  };
-
   // ── 剩余天数 / 已过期 ──
   const expiryInfo = (): { text: string; expired: boolean } => {
     if (license.duration === "permanent") return { text: t("license.permanent"), expired: false };
@@ -525,72 +527,53 @@ function LicenseSection({ t }: { t: any }) {
       </h4>
       <div className="p-4 rounded-xl border border-white/5"
         style={{ background: "color-mix(in srgb, var(--color-primary) 4%, transparent)" }}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {tier === "free" ? (
-              <Key className="h-5 w-5 text-gray-500" />
-            ) : (
-              <Crown className="h-5 w-5 text-primary-light" />
-            )}
-            <div>
-              <p className="text-sm font-medium text-white">
-                {tierLabel(tier)}
-                {tier !== "free" && (
-                  <span className="ml-1.5 text-[11px] text-gray-400 font-normal">
-                    {pricingLabel()}
-                  </span>
-                )}
-              </p>
-              {tier !== "free" && (
-                <p className={cn("text-[11px] mt-0.5 font-mono", exp.expired ? "text-red-400" : "text-gray-500")}>
-                  {exp.text}
-                </p>
-              )}
-            </div>
-          </div>
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Icon */}
           {tier === "free" ? (
-            <button
-              onClick={openActivation}
-              className="px-3 py-1.5 rounded-lg border border-primary/40 text-primary-light text-xs font-medium hover:bg-primary/10 transition-colors"
-            >
-              {t("license.enter_code")}
-            </button>
+            <Key className="h-5 w-5 text-gray-500 shrink-0" />
           ) : (
-            <button
-              onClick={() => setUnbindOpen(true)}
-              className="px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-xs font-medium hover:bg-white/5 transition-colors"
-            >
-              {t("license.unbind")}
-            </button>
+            <Crown className="h-5 w-5 text-primary-light shrink-0" />
           )}
-        </div>
-        {/* ── 激活日期 ── */}
-        {tier !== "free" && activatedDate && (
-          <p className="text-[10px] text-gray-500 mt-2">
-            {t("license.activated_at")}：{activatedDate}
-          </p>
-        )}
-        {/* ── 授权码 ── */}
-        {tier !== "free" && license.code && (
-          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5">
-            <span className="text-[10px] text-gray-500 shrink-0">{t("license.code")}：</span>
-            <code className="text-[11px] text-gray-300 font-mono tracking-wider select-all">
-              {showCode ? license.code : "····-····-····-····"}
-            </code>
-            <button
-              onClick={() => setShowCode(!showCode)}
-              className="p-1 rounded hover:bg-white/10 transition-colors shrink-0"
-              title={showCode ? t("license.hide_code") : t("license.show_code")}
-            >
-              {showCode ? (
-                <Eye className="h-3.5 w-3.5 text-gray-500" />
-              ) : (
-                <EyeOff className="h-3.5 w-3.5 text-gray-500" />
-              )}
-            </button>
-            {showCode && (
+          {/* Tier + expiry */}
+          <div className="shrink-0">
+            <p className="text-sm font-medium text-white leading-tight">{tierLabel(tier)}</p>
+            {tier !== "free" && (
+              <p className={cn("text-[10px] font-mono leading-tight", exp.expired ? "text-red-400" : "text-gray-500")}>
+                {exp.text}
+              </p>
+            )}
+          </div>
+          {/* Divider */}
+          {tier !== "free" && <div className="w-px h-6 bg-white/10 shrink-0" />}
+          {/* Activated date */}
+          {tier !== "free" && activatedDate && (
+            <span className="text-[10px] text-gray-500 shrink-0">{t("license.activated_at")}：{activatedDate}</span>
+          )}
+          {/* Divider */}
+          {tier !== "free" && license.code && <div className="w-px h-6 bg-white/10 shrink-0" />}
+          {/* License code + controls */}
+          {tier !== "free" && license.code && (
+            <>
+              <span className="text-[10px] text-gray-500 shrink-0">{t("license.code")}：</span>
+              <code className="text-[11px] text-gray-300 font-mono tracking-wider select-all truncate">
+                {showCode
+                  ? license.code
+                  : `${license.code!.slice(0, 4)}····-····-····-${license.code!.slice(-4)}`}
+              </code>
               <button
-                onClick={async () => {
+                onClick={() => setShowCode(!showCode)}
+                className="p-1 rounded hover:bg-white/10 transition-colors shrink-0"
+                title={showCode ? t("license.hide_code") : t("license.show_code")}
+              >
+                {showCode ? (
+                  <Eye className="h-3.5 w-3.5 text-gray-500" />
+                ) : (
+                  <EyeOff className="h-3.5 w-3.5 text-gray-500" />
+                )}
+              </button>
+              {showCode && (
+                <button
+                  onClick={async () => {
                   try {
                     await navigator.clipboard.writeText(license.code!);
                     setCodeCopied(true);
@@ -617,8 +600,26 @@ function LicenseSection({ t }: { t: any }) {
                 )}
               </button>
             )}
-          </div>
-        )}
+          </>
+          )}
+          {/* Action button — pinned to right */}
+          <div className="flex-1" />
+          {tier === "free" ? (
+            <button
+              onClick={openActivation}
+              className="px-3 py-1.5 rounded-lg border border-primary/40 text-primary-light text-xs font-medium hover:bg-primary/10 transition-colors shrink-0"
+            >
+              {t("license.enter_code")}
+            </button>
+          ) : (
+            <button
+              onClick={() => setUnbindOpen(true)}
+              className="px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-xs font-medium hover:bg-white/5 transition-colors shrink-0"
+            >
+              {t("license.unbind")}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── 解绑确认弹窗 ── */}
@@ -665,7 +666,7 @@ function FeedbackSection({ t }: { t: any }) {
     // Open default browser with a pre-filled GitHub issue
     const title = encodeURIComponent("[Feedback] " + message.slice(0, 80));
     const body = encodeURIComponent(message);
-    const url = `https://github.com/your-org/your-repo/issues/new?title=${title}&body=${body}`;
+    const url = `https://github.com/cyber2079/nova-media-manager/issues/new?title=${title}&body=${body}`;
     try {
       const { open } = await import("@tauri-apps/plugin-shell");
       await open(url);
@@ -718,7 +719,30 @@ function HardwareAccelSection({ t, hardwareAcceleration, setHardwareAcceleration
   );
 }
 
-function PerformanceSection({ t, perfPriority, setPerfPriority, perfPowerThrottle, setPerfPowerThrottle, perfIdleReduce, setPerfIdleReduce, hardwareAcceleration, setHardwareAcceleration, applyPerfSettings, children }: any) {
+function PerformanceSection({ t, perfPriority, setPerfPriority, perfIdleReduce, setPerfIdleReduce, perfReduceAnimations, setPerfReduceAnimations, cacheCleanupDays, setCacheCleanupDays, hardwareAcceleration, setHardwareAcceleration, applyPerfSettings, children }: any) {
+  // 缓存清理按钮状态
+  const [cleanState, setCleanState] = useState<"" | "running" | "done">("");
+  const [cleanResult, setCleanResult] = useState("");
+
+  const handleCleanup = async () => {
+    setCleanState("running");
+    setCleanResult("");
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const r = await invoke<{ deleted: number; freedBytes: number }>("cleanup_invalid_covers");
+      if (r.deleted === 0) {
+        setCleanResult(t("settings.perf_cleanup_none"));
+      } else {
+        const mb = (r.freedBytes / (1024 * 1024)).toFixed(1);
+        setCleanResult(t("settings.perf_cleanup_done", { n: r.deleted, size: mb }));
+      }
+    } catch (e) {
+      setCleanResult(`${t("settings.perf_cleanup_fail")}: ${e}`);
+    }
+    setCleanState("done");
+    setTimeout(() => { setCleanState(""); setCleanResult(""); }, 5000);
+  };
+
   return (
     <div className="space-y-7">
       {/* ── GPU 硬件加速 ── */}
@@ -739,18 +763,18 @@ function PerformanceSection({ t, perfPriority, setPerfPriority, perfPowerThrottl
         <p className="text-[10px] text-gray-500 mt-2">{t("settings.perf_priority_hint")}</p>
       </section>
 
-      {/* ── 电源节流 ── */}
+      {/* ── 减弱动效 ── */}
       <section>
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
-            checked={perfPowerThrottle}
-            onChange={(e) => { setPerfPowerThrottle(e.target.checked); setTimeout(() => applyPerfSettings(), 0); }}
+            checked={perfReduceAnimations}
+            onChange={(e) => setPerfReduceAnimations(e.target.checked)}
             className="h-4 w-4 rounded accent-[var(--color-primary)]"
           />
-          <span className="text-sm text-gray-300">{t("settings.perf_power_throttle")}</span>
+          <span className="text-sm text-gray-300">{t("settings.perf_reduce_animations")}</span>
         </label>
-        <p className="text-[10px] text-gray-500 mt-1.5 ml-6">{t("settings.perf_power_throttle_hint")}</p>
+        <p className="text-[10px] text-gray-500 mt-1.5 ml-6">{t("settings.perf_reduce_animations_hint")}</p>
       </section>
 
       {/* ── 空闲降载 ── */}
@@ -765,6 +789,40 @@ function PerformanceSection({ t, perfPriority, setPerfPriority, perfPowerThrottl
           <span className="text-sm text-gray-300">{t("settings.perf_idle_reduce")}</span>
         </label>
         <p className="text-[10px] text-gray-500 mt-1.5 ml-6">{t("settings.perf_idle_reduce_hint")}</p>
+      </section>
+
+      {/* ── 缓存清理 ── */}
+      <section>
+        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.perf_cache_cleanup")}</h4>
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400">{t("settings.perf_cache_cleanup_interval")}</span>
+            <select
+              value={cacheCleanupDays}
+              onChange={(e) => setCacheCleanupDays(Number(e.target.value))}
+              className="h-8 rounded-lg border border-white/10 bg-surface-dark px-2 text-xs text-gray-200"
+            >
+              <option value={7}>7{t("settings.perf_cache_cleanup_days")}</option>
+              <option value={15}>15{t("settings.perf_cache_cleanup_days")}</option>
+              <option value={30}>30{t("settings.perf_cache_cleanup_days")}</option>
+              <option value={60}>60{t("settings.perf_cache_cleanup_days")}</option>
+              <option value={0}>{t("settings.perf_cache_cleanup_never")}</option>
+            </select>
+          </div>
+          <button
+            onClick={handleCleanup}
+            disabled={cleanState === "running"}
+            className="px-3 py-1.5 rounded-lg border border-white/10 text-xs text-gray-400 hover:bg-white/5 transition-colors disabled:opacity-50"
+          >
+            {cleanState === "running" ? "..." : t("settings.perf_cleanup_now")}
+          </button>
+        </div>
+        {cleanResult && (
+          <p className={cn("text-[10px] mt-2", cleanResult.includes("fail") ? "text-red-400" : "text-green-400")}>
+            {cleanResult}
+          </p>
+        )}
+        <p className="text-[10px] text-gray-500 mt-1.5">{t("settings.perf_cache_cleanup_hint")}</p>
       </section>
 
       {children}
@@ -1355,6 +1413,31 @@ function FontFamilySection({ t, fontFamily, setFontFamily }: any) {
         })}
       </div>
     </section>
+  );
+}
+
+// ── Theme dev tools buttons ──
+
+function NavigationStudioBtn({ t }: { t: any }) {
+  return (
+    <a href="/studio"
+      className="px-3 py-2 rounded-lg border border-primary/30 text-xs text-primary-light hover:bg-primary/10 transition-colors flex items-center gap-1.5">
+      <Sparkles className="h-3.5 w-3.5" />{t("settings.theme_studio")}
+    </a>
+  );
+}
+
+function BgTunerBtn() {
+  const { t } = useTranslation();
+  const [show, setShow] = useState(false);
+  return (
+    <>
+      <button onClick={() => setShow(true)}
+        className="px-3 py-2 rounded-lg border border-primary/30 text-xs text-gray-300 hover:bg-primary/10 transition-colors flex items-center gap-1.5">
+        <SlidersHorizontal className="h-3.5 w-3.5" />{t("settings.bg_tuner")}
+      </button>
+      {show && <BgVideoTuner visible={show} onToggle={() => setShow(false)} />}
+    </>
   );
 }
 

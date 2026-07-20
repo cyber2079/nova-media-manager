@@ -6,7 +6,25 @@ mod theme;
 
 
 use db::Database;
+use db::APP_ID;
 use tauri::Manager;
+
+/// Release-only: show a user-visible error dialog before exiting.
+/// Avoids silent crashes that look like app bugs on integrity/anti-debug failure.
+#[cfg(all(target_os = "windows", not(debug_assertions)))]
+fn fatal_error_msg(title: &str, body: &str) {
+    use std::ffi::OsStr;
+    use std::os::windows::ffi::OsStrExt;
+    let wide_title: Vec<u16> = OsStr::new(title).encode_wide().chain(std::iter::once(0)).collect();
+    let wide_body: Vec<u16> = OsStr::new(body).encode_wide().chain(std::iter::once(0)).collect();
+    unsafe {
+        extern "system" { fn MessageBoxW(h: isize, t: *const u16, c: *const u16, u: u32) -> i32; }
+        MessageBoxW(0, wide_body.as_ptr(), wide_title.as_ptr(), 0x10); // MB_ICONERROR
+    }
+}
+#[cfg(not(all(target_os = "windows", not(debug_assertions))))]
+#[allow(dead_code)]
+fn fatal_error_msg(_title: &str, _body: &str) { eprintln!("FATAL: {} — {}", _title, _body); }
 
 /// Release-only: detect debugger attached → exit immediately
 #[cfg(all(target_os = "windows", not(debug_assertions)))]
@@ -19,6 +37,7 @@ fn anti_debug_check() {
 
         // 1. IsDebuggerPresent — catches basic user-mode debuggers
         if IsDebuggerPresent() != 0 {
+            fatal_error_msg("Nova Media Manager", "检测到调试器，应用无法在此环境下运行。\n\nDebugger detected — application cannot run in this environment.");
             std::process::exit(1);
         }
 
@@ -27,6 +46,7 @@ fn anti_debug_check() {
         let mut debugger_present: i32 = 0;
         CheckRemoteDebuggerPresent(-1, &mut debugger_present); // -1 = GetCurrentProcess()
         if debugger_present != 0 {
+            fatal_error_msg("Nova Media Manager", "检测到远程调试器，应用无法在此环境下运行。\n\nRemote debugger detected — application cannot run in this environment.");
             std::process::exit(1);
         }
 
@@ -57,6 +77,7 @@ unsafe fn detect_hw_breakpoints() {
         options(nomem, nostack, preserves_flags),
     );
     if dr0 != 0 || dr1 != 0 || dr2 != 0 || dr3 != 0 {
+        fatal_error_msg("Nova Media Manager", "检测到硬件断点，应用无法在此环境下运行。\n\nHardware breakpoint detected — application cannot run in this environment.");
         std::process::exit(1);
     }
 }
@@ -83,6 +104,8 @@ fn verify_frontend_integrity() {
             let actual = hex::encode(Sha256::digest(&data));
             if actual != expected {
                 eprintln!("[integrity] tampered: {}", name);
+                fatal_error_msg("Nova Media Manager — 完整性校验失败",
+                    &format!("文件 {} 已被篡改，应用无法安全启动。\n\nFile {} has been tampered with.", name, name));
                 std::process::exit(1);
             }
         }
@@ -273,7 +296,8 @@ pub fn run() {
             commands::user_data::import_data,
             commands::performance::get_performance_info,
             commands::performance::set_process_priority,
-            commands::performance::set_power_throttling,
+            commands::performance::cleanup_invalid_covers,
+            commands::hevc::install_hevc_if_needed,
             license::get_license,
             license::activate_license,
             license::check_license,
@@ -301,13 +325,15 @@ pub fn run() {
 fn read_hw_accel_setting() -> Option<bool> {
     use rusqlite::Connection;
     use std::path::PathBuf;
-    // Same path logic as db.rs::Database::new — app_data_dir + "data/media_library.db"
+    // Use shared APP_ID constant (same as db.rs::Database::new) to prevent drift.
     let app_data = std::env::var("APPDATA").ok().map(PathBuf::from)
         .unwrap_or_else(|| dirs::data_dir().unwrap_or_default())
-        .join("com.media-manager.app");
+        .join(APP_ID);
     let db_path = app_data.join("data").join("media_library.db");
-    if !db_path.exists() { return None; }
+    if !db_path.exists() { return Some(true); } // DB not yet created → default enabled
     let conn = Connection::open(db_path).ok()?;
+    // Enable WAL mode so concurrent access with main Database connection is safe.
+    conn.execute_batch("PRAGMA journal_mode=WAL;").ok()?;
     let json: String = conn
         .query_row("SELECT value FROM kv_store WHERE key='app-settings'", [], |r| r.get(0))
         .ok()?;

@@ -5,6 +5,7 @@ import { invoke } from "@/lib/tauriInvoke";
 interface MusicState {
   music: Music[];
   isLoading: boolean;
+  isImporting: boolean;
   activeTags: string[];
   searchQuery: string;
   sortConfig: string;
@@ -22,6 +23,7 @@ interface MusicState {
 export const useMusicStore = create<MusicState>((set, get) => ({
   music: [],
   isLoading: false,
+  isImporting: false,
   activeTags: [],
   searchQuery: "",
   sortConfig: "default",
@@ -38,9 +40,16 @@ export const useMusicStore = create<MusicState>((set, get) => ({
   },
 
   addMusic: async (paths: string[]) => {
-    const data = await invoke("add_music", { filePaths: paths });
-    if (data) {
-      set({ music: [...get().music, ...(data as Music[])] });
+    set({ isImporting: true });
+    try {
+      const data = await invoke("add_music", { filePaths: paths });
+      if (data) {
+        set({ music: [...get().music, ...(data as Music[])], isImporting: false });
+      } else {
+        set({ isImporting: false });
+      }
+    } catch {
+      set({ isImporting: false });
     }
   },
 

@@ -1,14 +1,24 @@
 // ── 性能调优命令 ──
-// Windows 进程优先级 + 电源节流控制
-// 使用 Win32 FFI，无需额外 crate
+// Windows 进程优先级 + 缓存清理
 
 use serde::{Deserialize, Serialize};
 use tauri::command;
+use tauri::State;
+use std::collections::HashSet;
+
+use crate::Database;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct PerformanceInfo {
     pub priority_level: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct CleanupResult {
+    pub deleted: u32,
+    pub freed_bytes: u64,
 }
 
 /// 获取当前性能信息
@@ -26,17 +36,125 @@ pub fn set_process_priority(level: String) -> Result<(), String> {
     set_priority(&level)
 }
 
-/// 设置电源节流 — disable = true 禁止降频
+/// 清理 covers 目录中的无效文件（DB 中已不存在对应 media 记录的封面/缩略图）
 #[command]
-pub fn set_power_throttling(disable: bool) -> Result<(), String> {
-    set_throttling(disable)
+pub fn cleanup_invalid_covers(db: State<Database>) -> Result<CleanupResult, String> {
+    let conn = db.conn();
+    let covers_dir = db.data_dir().join("covers");
+
+    if !covers_dir.exists() {
+        return Ok(CleanupResult { deleted: 0, freed_bytes: 0 });
+    }
+
+    // ── 收集所有有效 ID ──
+    let mut valid_ids: HashSet<String> = HashSet::new();
+
+    let mut collect = |query: &str| -> Result<(), String> {
+        let mut stmt = conn.prepare(query).map_err(|e| e.to_string())?;
+        let rows = stmt.query_map([], |row| row.get::<_, String>(0))
+            .map_err(|e| e.to_string())?;
+        for r in rows {
+            if let Ok(id) = r {
+                valid_ids.insert(id);
+            }
+        }
+        Ok(())
+    };
+
+    // 有 cover_path 的表：movies, images, music
+    // Track success count — if all fail, abort to avoid wiping all covers.
+    let mut collect_ok = 0u8;
+    if collect("SELECT id FROM movies").is_ok() { collect_ok += 1; }
+    if collect("SELECT id FROM images").is_ok() { collect_ok += 1; }
+    if collect("SELECT id FROM music").is_ok() { collect_ok += 1; }
+    if collect_ok == 0 {
+        return Err("Failed to query any cover tables — aborting cleanup to avoid data loss".into());
+    }
+
+    // ── 遍历 covers 目录，按前缀匹配删除孤儿文件 ──
+    // 文件名规则:
+    //   movie:  {uuid}_{timestamp}.jpg
+    //   image:  img_{uuid}.jpg / img_{uuid}.webp
+    //   music:  music_cover_{uuid}.jpg / music_cover_{uuid}_thumb.webp
+    //
+    // UUID 格式: 8-4-4-4-12 hex digits，如 "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+
+    let mut deleted = 0u32;
+    let mut freed_bytes = 0u64;
+
+    if let Ok(entries) = std::fs::read_dir(&covers_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
+            // Skip non-cover files
+            let is_movie = name.ends_with(".jpg") && !name.starts_with("img_") && !name.starts_with("music_cover_");
+            let is_image = name.starts_with("img_");
+            let is_music = name.starts_with("music_cover_");
+            if !is_movie && !is_image && !is_music {
+                continue;
+            }
+
+            // Extract UUID from filename
+            let id = extract_uuid_from_filename(name);
+            if id.is_empty() || valid_ids.contains(&id) {
+                continue;
+            }
+
+            // Invalid — safe to delete
+            if let Ok(meta) = std::fs::metadata(&path) {
+                freed_bytes += meta.len();
+            }
+            if std::fs::remove_file(&path).is_ok() {
+                deleted += 1;
+            }
+        }
+    }
+
+    Ok(CleanupResult { deleted, freed_bytes })
 }
 
 // ═══════════════ Windows 实现 ═══════════════
 
+/// Extract a UUID v4 string from a filename, e.g. "img_a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg"
+fn extract_uuid_from_filename(name: &str) -> String {
+    let n = name.len();
+    if n < 36 { return String::new(); }
+    // Slide a 36-char window over the filename bytes (no heap alloc needed)
+    let bytes = name.as_bytes();
+    for i in 0..=n - 36 {
+        if likely_uuid_36(&bytes[i..]) {
+            return name[i..i + 36].to_string();
+        }
+    }
+    String::new()
+}
+
+fn likely_uuid_36(s: &[u8]) -> bool {
+    // positions: 8 hex, '-', 4 hex, '-', 4 hex, '-', 4 hex, '-', 12 hex
+    const DASH: bool = false;
+    const HEX: bool = true;
+    const PAT: [bool; 36] = [
+        HEX,HEX,HEX,HEX,HEX,HEX,HEX,HEX, DASH,
+        HEX,HEX,HEX,HEX, DASH,
+        HEX,HEX,HEX,HEX, DASH,
+        HEX,HEX,HEX,HEX, DASH,
+        HEX,HEX,HEX,HEX,HEX,HEX,HEX,HEX,HEX,HEX,HEX,HEX,
+    ];
+    for i in 0..36 {
+        let expect_hex = PAT[i];
+        let c = s[i];
+        match (expect_hex, c) {
+            (DASH, b'-') => continue,
+            (HEX, c) if c.is_ascii_hexdigit() => continue,
+            _ => return false,
+        }
+    }
+    true
+}
+
 #[cfg(target_os = "windows")]
 fn get_current_priority() -> String {
-    // Use PowerShell to read current priority class
     match std::process::Command::new("powershell")
         .args(["-NoProfile", "-Command",
             "(Get-Process -Id $pid).PriorityClass"
@@ -58,15 +176,16 @@ fn get_current_priority() -> String { "normal".into() }
 
 #[cfg(target_os = "windows")]
 fn set_priority(level: &str) -> Result<(), String> {
-    // PowerShell 设置当前进程优先级
+    // Strict whitelist — reject anything not explicitly allowed (prevents command injection)
     let class = match level {
+        "normal" => "Normal",
         "above_normal" => "AboveNormal",
         "high" => "High",
-        _ => "Normal",
+        other => return Err(format!("Invalid priority level: {}", other)),
     };
-    let cmd = format!("(Get-Process -Id $pid).PriorityClass = '{}'", class);
+    let script = format!("(Get-Process -Id $pid).PriorityClass = '{}'", class);
     let output = std::process::Command::new("powershell")
-        .args(["-NoProfile", "-Command", &cmd])
+        .args(["-NoProfile", "-NonInteractive", "-Command", &script])
         .output()
         .map_err(|e| format!("Failed to set priority: {}", e))?;
     if !output.status.success() {
@@ -78,44 +197,3 @@ fn set_priority(level: &str) -> Result<(), String> {
 
 #[cfg(not(target_os = "windows"))]
 fn set_priority(_level: &str) -> Result<(), String> { Ok(()) }
-
-#[cfg(target_os = "windows")]
-fn set_throttling(disable: bool) -> Result<(), String> {
-    // PowerCfg 设置电源方案 — 禁止或恢复 CPU 降频节流
-    // 使用 GUID 直接设置 ProcessPowerThrottling 不可靠（需要管理员权限），
-    // 这里改为设置当前电源方案为"高性能"来替代。
-    if disable {
-        // 切换到高性能方案
-        let output = std::process::Command::new("powercfg")
-            .args(["/setactive", "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"])
-            .output()
-            .map_err(|e| format!("Failed to set power scheme: {}", e))?;
-        if !output.status.success() {
-            // GUID may not exist on this system — try alternative approach
-            // Just use /list to find the High Performance GUID
-            let list = std::process::Command::new("powercfg")
-                .args(["/list"])
-                .output()
-                .map_err(|e| format!("Failed to list power schemes: {}", e))?;
-            let text = String::from_utf8_lossy(&list.stdout).to_string();
-            // Find "高性能" scheme
-            if let Some(line) = text.lines().find(|l| l.contains("高性能") || l.contains("High performance")) {
-                if let Some(guid_start) = line.find('{') {
-                    let guid = &line[guid_start..];
-                    if let Some(guid_end) = guid.find('}') {
-                        let guid = &guid[..=guid_end];
-                        std::process::Command::new("powercfg")
-                            .args(["/setactive", guid])
-                            .output()
-                            .map_err(|e| format!("Failed to set power scheme: {}", e))?;
-                    }
-                }
-            }
-        }
-    }
-    // Restore balanced: we don't auto-restore — user toggles this in settings
-    Ok(())
-}
-
-#[cfg(not(target_os = "windows"))]
-fn set_throttling(_disable: bool) -> Result<(), String> { Ok(()) }

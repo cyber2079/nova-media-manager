@@ -2,6 +2,9 @@ use rusqlite::{Connection, Result as SqlResult};
 use std::path::PathBuf;
 use std::sync::Mutex;
 
+/// App identifier — shared with lib.rs for path construction before Tauri setup runs.
+pub const APP_ID: &str = "com.media-manager.app";
+
 pub struct Database { pub conn: Mutex<Connection>, data_dir: PathBuf, #[allow(dead_code)] app_data_dir: PathBuf }
 
 impl Database {

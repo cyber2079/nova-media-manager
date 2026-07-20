@@ -6,10 +6,12 @@ import { isPaid, useLicenseStore } from "@/stores/licenseStore";
 interface MovieState {
   movies: Movie[];
   isLoading: boolean;
+  isImporting: boolean;
   searchQuery: string;
   activeTags: string[];
   sortConfig: string;
   isGridLayout: boolean;
+  _watchSeq: number; // internal — discards stale concurrent watch-progress writes
 
   loadMovies: () => Promise<void>;
   addMovies: (paths: string[]) => Promise<void>;
@@ -27,10 +29,12 @@ interface MovieState {
 export const useMovieStore = create<MovieState>((set, get) => ({
   movies: [],
   isLoading: false,
+  isImporting: false,
   searchQuery: "",
   activeTags: [],
   sortConfig: "default",
   isGridLayout: true,
+  _watchSeq: 0,
 
   loadMovies: async () => {
     set({ isLoading: true });
@@ -42,11 +46,17 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   },
 
   addMovies: async (paths: string[]) => {
-    set({ isLoading: true });
-    const result = await invoke("add_movies", { paths });
-    if (result) {
-      const newMovies = result as Movie[];
-      set({ movies: [...newMovies, ...get().movies], isLoading: false });
+    set({ isImporting: true });
+    try {
+      const result = await invoke("add_movies", { paths });
+      if (result) {
+        const newMovies = result as Movie[];
+        set({ movies: [...newMovies, ...get().movies], isImporting: false });
+      } else {
+        set({ isImporting: false });
+      }
+    } catch {
+      set({ isImporting: false });
     }
   },
 
@@ -67,8 +77,13 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   },
 
   // 观看进度写库 + 本地同步（Rust 侧 ≥95% 返回 watched=true）
+  // Uses _watchSeq to discard stale concurrent writes (e.g. rapid onTimeUpdate + force save on close)
   updateWatchProgress: async (id: string, position: number) => {
-    const watched = (await invoke("update_watch_progress", { id, position: Math.floor(position) })) as boolean;
+    const seq = ++get()._watchSeq;
+    const raw = await invoke("update_watch_progress", { id, position: Math.floor(position) });
+    const watched = raw === true; // cast safely — null/undefined → false, true → true
+    // Discard if a newer write has already been issued
+    if (seq !== get()._watchSeq) return;
     set({
       movies: get().movies.map((m) => (m.id === id
         ? { ...m, watchPosition: Math.floor(position), watchUpdatedAt: new Date().toISOString(), watched }
