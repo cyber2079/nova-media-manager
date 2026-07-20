@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useQuickLaunchStore, type QuickLaunchItem } from "@/stores/quickLaunchStore";
 import { Play, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -185,7 +186,7 @@ export default function QuickLaunchBar() {
       </button>
 
       {/* Args input overlay when adding a program */}
-      {adding && (
+      {adding && createPortal(
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60" onClick={() => setAdding(false)}>
           <div className="rounded-2xl border border-primary/30 p-5 max-w-md w-full mx-4 shadow-2xl bg-surface-light"
             onClick={(e) => e.stopPropagation()}>
@@ -205,7 +206,8 @@ export default function QuickLaunchBar() {
               <button onClick={confirmAdd} className="px-4 py-1.5 rounded-lg text-xs bg-primary/20 text-primary-light hover:bg-primary/30 transition-colors font-medium">{t("quicklaunch.confirm_add")}</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {tooltip && (
