@@ -23,8 +23,6 @@ export default function QuickLaunchBar() {
   const { t } = useTranslation();
   const { items, load, add, remove, launch } = useQuickLaunchStore();
   const { theme } = useThemeStore();
-  const [tooltip, setTooltip] = useState<string | null>(null);
-  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [icons, setIcons] = useState<Record<string, string>>({});
   const [runningIds, setRunningIds] = useState<Set<string>>(new Set());
   const checkTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
@@ -167,12 +165,6 @@ export default function QuickLaunchBar() {
             <button
               onClick={(e) => handleLaunch(e, item)}
               onContextMenu={(e) => handleRightClick(e, item)}
-              onMouseEnter={(e) => {
-                const rect = (e.target as HTMLElement).getBoundingClientRect();
-                setTooltipPos({ x: rect.left + rect.width / 2, y: rect.top - 8 });
-                setTooltip(item.name);
-              }}
-              onMouseLeave={() => setTooltip(null)}
               className="flex items-center justify-center rounded-md w-9 h-9
                 text-gray-400 hover:bg-surface-lighter hover:text-white hover:scale-110 hover:shadow-md transition-all duration-200 active:scale-90
                 border border-transparent hover:border-primary/30 overflow-hidden"
@@ -241,15 +233,6 @@ export default function QuickLaunchBar() {
         document.body,
       )}
 
-      {tooltip && (
-        <div
-          className="fixed z-[100] pointer-events-none px-2 py-1 rounded text-[11px]
-            bg-surface-lighter border border-primary text-white shadow-lg"
-          style={{ left: tooltipPos.x, top: tooltipPos.y, transform: "translate(-50%, -100%)" }}
-        >
-          {tooltip}
-        </div>
-      )}
 
       {/* Right-click context menu — edit args or remove */}
       {contextMenu && createPortal(
