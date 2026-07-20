@@ -9,7 +9,7 @@ import { languages } from "@/i18n";
 import { cn } from "@/lib/utils";
 import ScrollFade from "@/components/ScrollFade";
 import ThemeManager from "@/components/ThemeManager";
-import { Palette, EyeOff, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown, FolderOpen, ImageIcon, Shuffle, Home } from "lucide-react";
+import { Palette, EyeOff, Eye, Copy, Monitor, Cpu, Clock, Calendar, Settings, SlidersHorizontal, Music, Image, Film, Gamepad2, RotateCcw, Timer, Sun, Moon, Key, Crown, FolderOpen, ImageIcon, Shuffle, Home, Check, Gauge } from "lucide-react";
 import { ThemeAssets } from "@/lib/themeBase";
 import { useLicenseStore } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS, type WallpaperFit } from "@/stores/settingsStore";
@@ -27,7 +27,7 @@ const themeList: { key: ThemeName; labelKey: string; emoji: string; image?: stri
   { key: "cyber-girl", labelKey: "settings.theme_cg", emoji: "💜", image: ThemeAssets.cg.bg },
 ];
 
-type TabId = "general" | "appearance" | "music" | "images" | "movies" | "games" | "widgets" | "themes";
+type TabId = "general" | "appearance" | "music" | "images" | "movies" | "games" | "widgets" | "performance" | "themes";
 
 const tabs: { id: TabId; icon: typeof Settings; labelKey: string }[] = [
   { id: "general", icon: SlidersHorizontal, labelKey: "settings.tab_general" },
@@ -37,6 +37,7 @@ const tabs: { id: TabId; icon: typeof Settings; labelKey: string }[] = [
   { id: "movies", icon: Film, labelKey: "settings.tab_movies" },
   { id: "games", icon: Gamepad2, labelKey: "settings.tab_games" },
   { id: "widgets", icon: Monitor, labelKey: "settings.tab_widgets" },
+  { id: "performance", icon: Gauge, labelKey: "settings.tab_performance" },
 ];
 
 // ── Default values (used by reset) ──
@@ -52,9 +53,8 @@ const DEFAULTS = {
     systemMonitor: { enabled: true, position: "bottom-right" as const },
     clock: { enabled: true, position: "top-right" as const },
     calendar: { enabled: true, position: "top-left" as const },
-    countdown: { enabled: false, position: "center-right" as const, displayMode: "full" as const, hours: 0, minutes: 5, seconds: 0, loopCount: 1, alertGlow: false, alertVoice: true, voiceInterval: 30 },
-  },
-};
+    countdown: { enabled: false, position: "center-right" as const, displayMode: "full" as const, hours: 0, minutes: 5, seconds: 0, loopCount: 1, alertGlow: false, alertVoice: true, voiceInterval: 30 }},
+  performance: { perfPriority: "normal" as const, perfPowerThrottle: false, perfIdleReduce: true}};
 
 
 export default function SettingsDialog({ open, onClose }: Props) {
@@ -82,7 +82,9 @@ export default function SettingsDialog({ open, onClose }: Props) {
     cgTextSize, cgTextColor, setCgTextSize, setCgTextColor,
     paletteAccent, paletteSaturation, paletteContrast, paletteCustomized, setPaletteAccent, setPaletteSaturation, setPaletteContrast, resetPaletteToTheme,
     dashboardMode, setDashboardMode, hardwareAcceleration, setHardwareAcceleration,
-  } = useSettingsStore();
+    perfPriority, setPerfPriority, perfPowerThrottle, setPerfPowerThrottle,
+    perfIdleReduce, setPerfIdleReduce,
+    applyPerfSettings} = useSettingsStore();
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages, setEnabled, setPosition, setMyComputerMode, setGlobalWidgets, setPageWidget, setCountdown } = useWidgetStore();
   const [autoLoading, setAutoLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("general");
@@ -180,13 +182,23 @@ export default function SettingsDialog({ open, onClose }: Props) {
         setCountdown(d.countdown);
         break;
       }
+      case "performance": {
+        const d = DEFAULTS.performance;
+        setPerfPriority(d.perfPriority);
+        setPerfPowerThrottle(d.perfPowerThrottle);
+        setPerfIdleReduce(d.perfIdleReduce);
+        
+        applyPerfSettings();
+        break;
+      }
     }
     setConfirmReset(null);
   }, [setLanguage, i18n, setAutoStart, setStartFullscreen, setAutoHideHeader, setAutoHideFooter,
       setTheme, setBgVideoMode, setFontSize, setFontFamily, setHideTitleBar,
       setPaletteAccent, setPaletteSaturation, setPaletteContrast,
       setPreviewOffset, setLyricFontSize, setLyricUseCustomColor, setLyricCurrentColor, setLyricOtherColor, setLyricFillColor, setImageWheelMode,
-      setGlobalWidgets, setPageWidget, setEnabled, setPosition, setMyComputerMode, setCountdown]);
+      setGlobalWidgets, setPageWidget, setEnabled, setPosition, setMyComputerMode, setCountdown,
+      setPerfPriority, setPerfPowerThrottle, setPerfIdleReduce, applyPerfSettings]);
 
   const doResetAll = useCallback(() => {
     for (const tab of tabs) doResetTab(tab.id);
@@ -201,8 +213,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
         height: "65vh", maxHeight: "85vh",
         background: isCG ? "color-mix(in srgb, var(--color-primary) 6%, rgba(8,2,20,0.94))" : "color-mix(in srgb, var(--color-primary) 6%, rgba(8,12,20,0.94))",
         border: isCG ? "1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)" : undefined,
-        boxShadow: isCG ? "0 0 40px color-mix(in srgb, var(--color-primary) 12%, transparent), 0 0 80px color-mix(in srgb, var(--color-accent) 6%, transparent)" : undefined,
-      }}>
+        boxShadow: isCG ? "0 0 40px color-mix(in srgb, var(--color-primary) 12%, transparent), 0 0 80px color-mix(in srgb, var(--color-accent) 6%, transparent)" : undefined}}>
         {/* Header */}
         <div className={cn("relative flex items-center justify-between px-6 pt-5 pb-3 border-b",
           isCG ? "border-[var(--color-primary)]/15" : "border-white/5")}>
@@ -248,7 +259,6 @@ export default function SettingsDialog({ open, onClose }: Props) {
                 <LicenseSection t={t} />
                 <LanguageSection {...{ t, language, handleLanguage, languages }} />
                 <StartupSection {...{ t, autoStart, autoLoading, handleAutoStart, startFullscreen, setStartFullscreen }} />
-                <HardwareAccelSection {...{ t, hardwareAcceleration, setHardwareAcceleration }} />
                 <DataSection t={t} />
                 <FeedbackSection t={t} />
                 <ResetButton tab="general" t={t} onReset={() => setConfirmReset("general")} />
@@ -386,6 +396,13 @@ export default function SettingsDialog({ open, onClose }: Props) {
               <section><p className="text-sm text-gray-500">{t("settings.placeholder_games")}</p></section>
             )}
 
+            {/* ═══ Performance Tab ═══ */}
+            {activeTab === "performance" && (
+              <PerformanceSection {...{ t, perfPriority, setPerfPriority, perfPowerThrottle, setPerfPowerThrottle, perfIdleReduce, setPerfIdleReduce, hardwareAcceleration, setHardwareAcceleration, applyPerfSettings }}>
+                <ResetButton tab="performance" t={t} onReset={() => setConfirmReset("performance")} />
+              </PerformanceSection>
+            )}
+
             {/* ═══ Widgets Tab ═══ */}
             {activeTab === "widgets" && (
               <WidgetsSection {...{ t, globalWidgets, setGlobalWidgets, widgetPages, setPageWidget, myComputer, systemMonitor, clock, calendar, countdown, setEnabled, setPosition, setMyComputerMode, setCountdown, widgetTextColor, setWidgetTextColor }}>
@@ -450,37 +467,55 @@ function ResetButton({ tab, t, onReset }: { tab: string; t: (k: string, options?
 
 function LicenseSection({ t }: { t: any }) {
   const { license, openActivation, unbind } = useLicenseStore();
+  const [unbindOpen, setUnbindOpen] = useState(false);
+  const [unbinding, setUnbinding] = useState(false);
+  const [showCode, setShowCode] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
   const tier = license.tier;
 
   const tierLabel = (tier: string) => {
     if (tier === "free") return t("license.free");
     if (tier === "member") return t("license.member");
-    if (tier === "pro") return t("license.pro");
     return tier;
   };
 
-  const tierPricing = (tier: string) => {
-    if (tier === "member") return t("license.member_price");
-    if (tier === "pro") return t("license.pro_price");
+  const pricingLabel = () => {
+    if (license.duration === "monthly") return t("license.member_price_monthly");
+    if (license.duration === "yearly") return t("license.member_price_yearly");
+    if (license.duration === "permanent") return t("license.member_price_permanent");
     return "";
   };
 
-  const durLabel = (d: string) => {
-    if (d === "permanent") return t("license.permanent");
-    if (d === "monthly") return t("license.monthly");
-    if (d === "yearly") return t("license.yearly");
-    return d;
-  };
-
-  const expiryDisplay = (exp: string): string => {
-    const diff = new Date(exp).getTime() - Date.now();
-    if (diff <= 0) return t("license.expired");
+  // ── 剩余天数 / 已过期 ──
+  const expiryInfo = (): { text: string; expired: boolean } => {
+    if (license.duration === "permanent") return { text: t("license.permanent"), expired: false };
+    if (!license.expiresAt) return { text: "", expired: false };
+    const diff = new Date(license.expiresAt).getTime() - Date.now();
+    if (diff <= 0) return { text: t("license.expired"), expired: true };
     const days = Math.floor(diff / (24 * 60 * 60 * 1000));
-    if (days > 1) return t("license.remaining_days", { n: days });
+    if (days > 1) return { text: t("license.remaining_days", { n: days }), expired: false };
     const h = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
     const m = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
     const s = Math.floor((diff % (60 * 1000)) / 1000);
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    return { text: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`, expired: false };
+  };
+
+  const exp = expiryInfo();
+
+  // ── 激活日期 ──
+  const activatedDate = license.activatedAt
+    ? new Date(license.activatedAt).toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" })
+    : null;
+
+  const handleUnbind = async () => {
+    setUnbinding(true);
+    try {
+      await unbind();
+      setUnbindOpen(false);
+    } catch (e) {
+      alert(t("license.unbind_failed", { error: String(e) }));
+    }
+    setUnbinding(false);
   };
 
   return (
@@ -488,53 +523,135 @@ function LicenseSection({ t }: { t: any }) {
       <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
         {t("license.title")}
       </h4>
-      <div className="flex items-center justify-between p-4 rounded-xl border border-white/5"
+      <div className="p-4 rounded-xl border border-white/5"
         style={{ background: "color-mix(in srgb, var(--color-primary) 4%, transparent)" }}>
-        <div className="flex items-center gap-3">
-          {tier === "free" ? (
-            <Key className="h-5 w-5 text-gray-500" />
-          ) : (
-            <Crown className="h-5 w-5 text-primary-light" />
-          )}
-          <div>
-            <p className="text-sm font-medium text-white">
-              {tierLabel(tier)}
-              {tier !== "free" && (
-                <span className="ml-1.5 text-[11px] text-gray-400 font-normal">
-                  {tierPricing(tier)}
-                </span>
-              )}
-            </p>
-            {tier !== "free" && license.expiresAt && (
-              <p className="text-[11px] text-gray-500 mt-0.5 font-mono">
-                {expiryDisplay(license.expiresAt)}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {tier === "free" ? (
+              <Key className="h-5 w-5 text-gray-500" />
+            ) : (
+              <Crown className="h-5 w-5 text-primary-light" />
+            )}
+            <div>
+              <p className="text-sm font-medium text-white">
+                {tierLabel(tier)}
+                {tier !== "free" && (
+                  <span className="ml-1.5 text-[11px] text-gray-400 font-normal">
+                    {pricingLabel()}
+                  </span>
+                )}
               </p>
+              {tier !== "free" && (
+                <p className={cn("text-[11px] mt-0.5 font-mono", exp.expired ? "text-red-400" : "text-gray-500")}>
+                  {exp.text}
+                </p>
+              )}
+            </div>
+          </div>
+          {tier === "free" ? (
+            <button
+              onClick={openActivation}
+              className="px-3 py-1.5 rounded-lg border border-primary/40 text-primary-light text-xs font-medium hover:bg-primary/10 transition-colors"
+            >
+              {t("license.enter_code")}
+            </button>
+          ) : (
+            <button
+              onClick={() => setUnbindOpen(true)}
+              className="px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-xs font-medium hover:bg-white/5 transition-colors"
+            >
+              {t("license.unbind")}
+            </button>
+          )}
+        </div>
+        {/* ── 激活日期 ── */}
+        {tier !== "free" && activatedDate && (
+          <p className="text-[10px] text-gray-500 mt-2">
+            {t("license.activated_at")}：{activatedDate}
+          </p>
+        )}
+        {/* ── 授权码 ── */}
+        {tier !== "free" && license.code && (
+          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5">
+            <span className="text-[10px] text-gray-500 shrink-0">{t("license.code")}：</span>
+            <code className="text-[11px] text-gray-300 font-mono tracking-wider select-all">
+              {showCode ? license.code : "····-····-····-····"}
+            </code>
+            <button
+              onClick={() => setShowCode(!showCode)}
+              className="p-1 rounded hover:bg-white/10 transition-colors shrink-0"
+              title={showCode ? t("license.hide_code") : t("license.show_code")}
+            >
+              {showCode ? (
+                <Eye className="h-3.5 w-3.5 text-gray-500" />
+              ) : (
+                <EyeOff className="h-3.5 w-3.5 text-gray-500" />
+              )}
+            </button>
+            {showCode && (
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(license.code!);
+                    setCodeCopied(true);
+                    setTimeout(() => setCodeCopied(false), 2000);
+                  } catch {
+                    // fallback
+                    const ta = document.createElement("textarea");
+                    ta.value = license.code!;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(ta);
+                    setCodeCopied(true);
+                    setTimeout(() => setCodeCopied(false), 2000);
+                  }
+                }}
+                className="p-1 rounded hover:bg-white/10 transition-colors shrink-0"
+                title={t("license.copy_code")}
+              >
+                {codeCopied ? (
+                  <Check className="h-3.5 w-3.5 text-green-400" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5 text-gray-500" />
+                )}
+              </button>
             )}
           </div>
-        </div>
-        {tier === "free" ? (
-          <button
-            onClick={openActivation}
-            className="px-3 py-1.5 rounded-lg border border-primary/40 text-primary-light text-xs font-medium hover:bg-primary/10 transition-colors"
-          >
-            {t("license.enter_code")}
-          </button>
-        ) : (
-          <button
-            onClick={async () => {
-              if (!confirm(t("license.unbind_confirm"))) return;
-              try {
-                await unbind();
-              } catch (e) {
-                alert(t("license.unbind_failed", { error: String(e) }));
-              }
-            }}
-            className="px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-xs font-medium hover:bg-white/5 transition-colors"
-          >
-            {t("license.unbind")}
-          </button>
         )}
       </div>
+
+      {/* ── 解绑确认弹窗 ── */}
+      {unbindOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60" onClick={() => setUnbindOpen(false)}>
+          <div className="rounded-2xl border border-white/10 p-6 max-w-sm mx-4 shadow-2xl"
+            style={{ background: "color-mix(in srgb, var(--color-primary) 8%, #0c1420)" }}
+            onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-bold text-white mb-3">{t("license.unbind_title")}</h3>
+            <p className="text-xs text-gray-300 mb-3">{t("license.unbind_warning")}</p>
+            <div className="text-[11px] text-gray-400 space-y-1 mb-5 leading-relaxed">
+              <p>{t("license.unbind_note_countdown")}</p>
+              <p>{t("license.unbind_note_cooldown")}</p>
+              <p>{t("license.unbind_note_cap")}</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setUnbindOpen(false)}
+                className="flex-1 py-2 rounded-lg border border-white/10 text-gray-400 text-xs hover:text-white transition-colors"
+              >
+                {t("license.unbind_cancel")}
+              </button>
+              <button
+                onClick={handleUnbind}
+                disabled={unbinding}
+                className="flex-1 py-2 rounded-lg bg-red-500/20 border border-red-400/30 text-red-300 text-xs font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50"
+              >
+                {unbinding ? "..." : t("license.unbind_confirm_btn")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -601,6 +718,60 @@ function HardwareAccelSection({ t, hardwareAcceleration, setHardwareAcceleration
   );
 }
 
+function PerformanceSection({ t, perfPriority, setPerfPriority, perfPowerThrottle, setPerfPowerThrottle, perfIdleReduce, setPerfIdleReduce, hardwareAcceleration, setHardwareAcceleration, applyPerfSettings, children }: any) {
+  return (
+    <div className="space-y-7">
+      {/* ── GPU 硬件加速 ── */}
+      <HardwareAccelSection {...{ t, hardwareAcceleration, setHardwareAcceleration }} />
+
+      {/* ── 进程优先级 ── */}
+      <section>
+        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t("settings.perf_priority")}</h4>
+        <div className="grid grid-cols-3 gap-3">
+          {(["normal", "above_normal", "high"] as const).map((v) => (
+            <button key={v} onClick={() => { setPerfPriority(v); setTimeout(() => applyPerfSettings(), 0); }}
+              className={cn("px-3 py-3 rounded-lg text-xs border transition-all duration-200",
+                perfPriority === v ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
+              {t(`settings.perf_priority_${v}`)}
+            </button>
+          ))}
+        </div>
+        <p className="text-[10px] text-gray-500 mt-2">{t("settings.perf_priority_hint")}</p>
+      </section>
+
+      {/* ── 电源节流 ── */}
+      <section>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={perfPowerThrottle}
+            onChange={(e) => { setPerfPowerThrottle(e.target.checked); setTimeout(() => applyPerfSettings(), 0); }}
+            className="h-4 w-4 rounded accent-[var(--color-primary)]"
+          />
+          <span className="text-sm text-gray-300">{t("settings.perf_power_throttle")}</span>
+        </label>
+        <p className="text-[10px] text-gray-500 mt-1.5 ml-6">{t("settings.perf_power_throttle_hint")}</p>
+      </section>
+
+      {/* ── 空闲降载 ── */}
+      <section>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={perfIdleReduce}
+            onChange={(e) => setPerfIdleReduce(e.target.checked)}
+            className="h-4 w-4 rounded accent-[var(--color-primary)]"
+          />
+          <span className="text-sm text-gray-300">{t("settings.perf_idle_reduce")}</span>
+        </label>
+        <p className="text-[10px] text-gray-500 mt-1.5 ml-6">{t("settings.perf_idle_reduce_hint")}</p>
+      </section>
+
+      {children}
+    </div>
+  );
+}
+
 function DataSection({ t }: { t: any }) {
   const [expBusy, setExpBusy] = useState(false);
   const [impBusy, setImpBusy] = useState(false);
@@ -612,8 +783,7 @@ function DataSection({ t }: { t: any }) {
       const { save } = await import("@tauri-apps/plugin-dialog");
       const dest = await save({
         defaultPath: "media-library-backup.zip",
-        filters: [{ name: "ZIP", extensions: ["zip"] }],
-      });
+        filters: [{ name: "ZIP", extensions: ["zip"] }]});
       if (!dest) { setExpBusy(false); return; }
       try {
         const { invoke } = await import("@tauri-apps/api/core");
@@ -631,8 +801,7 @@ function DataSection({ t }: { t: any }) {
       const { open } = await import("@tauri-apps/plugin-dialog");
       const src = await open({
         multiple: false,
-        filters: [{ name: "ZIP", extensions: ["zip"] }],
-      });
+        filters: [{ name: "ZIP", extensions: ["zip"] }]});
       if (!src) { setImpBusy(false); return; }
       try {
         const { invoke } = await import("@tauri-apps/api/core");
@@ -1198,8 +1367,7 @@ function WallpaperSection({ t }: { t: any }) {
       const { open } = await import("@tauri-apps/plugin-dialog");
       const selected = await open({
         multiple: false,
-        filters: [{ name: "Images", extensions: ["webp","jpg","jpeg","png","bmp","gif"] }],
-      });
+        filters: [{ name: "Images", extensions: ["webp","jpg","jpeg","png","bmp","gif"] }]});
       if (selected) { setWallpaperConfig({ mode: "single", path: selected as string }); }
     } catch (e) { console.error("[wallpaper]", e); }
   };

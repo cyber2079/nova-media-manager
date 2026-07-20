@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import EmptyState from "@/components/EmptyState";
 import Lyrics from "@/components/Lyrics";
 import LayoutSwitch, { type LayoutMode } from "@/components/LayoutSwitch";
+import SortBar, { useNameSortOptions, useSortAnim } from "@/components/SortBar";
 import { useLayoutMode } from "@/lib/useLayoutMode";
 import PaginationBar from "@/components/PaginationBar";
 import { usePagination } from "@/lib/usePagination";
@@ -42,7 +43,10 @@ let _motionInited = false;
 export default function MusicLibrary() {
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { music, isLoading, searchQuery, activeTags, loadMusic, addMusic, deleteMusic, setSearchQuery, toggleTag, setActiveTags, updateTags } = useMusicStore();
+  const { music, isLoading, searchQuery, activeTags, sortConfig, loadMusic, addMusic, deleteMusic, setSearchQuery, toggleTag, setActiveTags, updateTags, setSortConfig } = useMusicStore();
+  const sortOptions = useNameSortOptions();
+  const { animating, triggerSort } = useSortAnim();
+  const handleSort = useCallback((key: string) => triggerSort(() => setSortConfig(key)), [triggerSort, setSortConfig]);
   const { getByType, toggleFavorite, isFavorite } = useFavoritesStore();
   const { playlists, create, remove, addSong, addSongs, removeSong, removeSongs } = usePlaylistStore();
   // Granular selectors — avoid 60fps visualizerBars re-rendering entire page
@@ -151,8 +155,12 @@ export default function MusicLibrary() {
     if (searchQuery) { const q = searchQuery.toLowerCase(); result = result.filter((m) => m.name.toLowerCase().includes(q) || m.artist.toLowerCase().includes(q) || m.album.toLowerCase().includes(q)); }
     if (favOnly) { const ids = new Set(getByType("music")); result = result.filter((m) => ids.has(m.id)); }
     if (activeTags.length > 0) { result = result.filter((m) => activeTags.some((t) => m.tags.includes(t))); }
+    if (sortConfig === "nameAsc") result.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortConfig === "nameDesc") result.sort((a, b) => b.name.localeCompare(a.name));
+    else if (sortConfig === "dateAsc") result.sort((a, b) => new Date(a.addTime).getTime() - new Date(b.addTime).getTime());
+    else if (sortConfig === "dateDesc") result.sort((a, b) => new Date(b.addTime).getTime() - new Date(a.addTime).getTime());
     return result;
-  }, [music, searchQuery, activeTags, favOnly, getByType]);
+  }, [music, searchQuery, activeTags, favOnly, getByType, sortConfig]);
 
   const pageSize = layoutMode === "small" ? 30 : 20;
   const { page, setPage, totalPages, paginated } = usePagination(filtered, pageSize);
@@ -369,7 +377,10 @@ export default function MusicLibrary() {
       </div>
 
       {!showPlaylists && (
-        <TagFilterBar tags={allTags} activeTags={activeTags} onToggle={toggleTag} onClear={() => setActiveTags([])} t={t} />
+        <>
+          <TagFilterBar tags={allTags} activeTags={activeTags} onToggle={toggleTag} onClear={() => setActiveTags([])} t={t} />
+          <SortBar options={sortOptions} active={sortConfig} onChange={handleSort} className="mb-2" />
+        </>
       )}
 
       {/* ── Playlist view ── */}
@@ -629,7 +640,7 @@ export default function MusicLibrary() {
           {filtered.length > 0 ? (
             <>
               {layoutMode === "list" ? (
-                <div className="flex flex-col gap-1">
+                <div className={cn("flex flex-col gap-1", animating && "sort-shatter")}>
                   {paginated.map((m, idx) => (
                     <div key={m.id} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group border relative",
                       playing?.id === m.id ? "bg-primary/10 border-primary/20" : "border-transparent")}
@@ -683,9 +694,10 @@ export default function MusicLibrary() {
                   ))}
                 </div>
               ) : (
-                <div className={layoutMode === "card"
+                <div className={cn(layoutMode === "card"
                   ? "grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-                  : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10"}>
+                  : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10",
+                  animating && "sort-shatter")}>
                   {paginated.map((m) => (
                     <div key={m.id} className="relative group"
                       onClick={() => { if (batch.showCheckboxes) batch.toggle(m.id); }}>

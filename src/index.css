@@ -322,6 +322,36 @@ main[data-route="home"] {
   to   { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+
+/* ═══ Sort shatter animation ═══ */
+@keyframes sort-shatter {
+  0%   { transform: scale(1); filter: blur(0); opacity: 1; }
+  10%  { transform: scale(0.96) translateX(-1px); filter: blur(0.5px); opacity: 0.85; }
+  20%  { transform: scale(0.97) translateX(1px); filter: blur(1px); opacity: 0.5; }
+  40%  { opacity: 0.3; }
+  60%  { opacity: 0.3; }
+  80%  { transform: scale(0.98); filter: blur(0px); opacity: 0.8; }
+  100% { transform: scale(1); filter: blur(0); opacity: 1; }
+}
+.sort-shatter { animation: sort-shatter 420ms cubic-bezier(.36,.07,.19,.97) both; }
+
+/* Staggered card reveal: each card flies in with delay */
+.sort-shatter > * {
+  animation: fadeInUp 0.35s ease-out both;
+}
+.sort-shatter > *:nth-child(1)  { animation-delay: 0.00s; }
+.sort-shatter > *:nth-child(2)  { animation-delay: 0.03s; }
+.sort-shatter > *:nth-child(3)  { animation-delay: 0.06s; }
+.sort-shatter > *:nth-child(4)  { animation-delay: 0.09s; }
+.sort-shatter > *:nth-child(5)  { animation-delay: 0.12s; }
+.sort-shatter > *:nth-child(6)  { animation-delay: 0.15s; }
+.sort-shatter > *:nth-child(7)  { animation-delay: 0.18s; }
+.sort-shatter > *:nth-child(8)  { animation-delay: 0.21s; }
+.sort-shatter > *:nth-child(9)  { animation-delay: 0.24s; }
+.sort-shatter > *:nth-child(10) { animation-delay: 0.27s; }
+.sort-shatter > *:nth-child(11) { animation-delay: 0.30s; }
+.sort-shatter > *:nth-child(12) { animation-delay: 0.33s; }
+
 @keyframes fadeOutDown {
   from { opacity: 1; transform: translateY(0); }
   to   { opacity: 0; transform: translateY(12px); }

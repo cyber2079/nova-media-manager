@@ -1,9 +1,6 @@
 import { useLicenseStore } from "@/stores/licenseStore";
 
-export type FeatureFlag =
-  | "premium-theme"
-  | "auto-update"
-  | "cloud-sync";
+export type FeatureFlag = "premium-theme" | "auto-update";
 
 /** 本地即时过期校验（不依赖服务端轮询） */
 function isExpiredLocally(expiresAt: string | null): boolean {
@@ -19,15 +16,6 @@ export function useGate(feature: FeatureFlag): boolean {
     return false;
   }
 
-  switch (feature) {
-    case "premium-theme":
-    case "auto-update":
-      return license.tier !== "free";
-
-    case "cloud-sync":
-      return license.tier === "pro";
-
-    default:
-      return false;
-  }
+  // Member 解锁所有付费功能
+  return license.tier !== "free";
 }

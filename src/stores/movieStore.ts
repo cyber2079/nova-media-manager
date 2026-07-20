@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Movie } from "@/types/movie";
 import { invoke } from "@/lib/tauriInvoke";
+import { isPaid, useLicenseStore } from "@/stores/licenseStore";
 
 interface MovieState {
   movies: Movie[];
@@ -60,6 +61,8 @@ export const useMovieStore = create<MovieState>((set, get) => ({
 
   // 状态推进（processing → ready）经 movie-updated 事件回流，不在此更新
   regenerateCover: async (id: string) => {
+    // 会员专享：自动截取视频帧生成封面
+    if (!isPaid(useLicenseStore.getState().license.tier)) return;
     await invoke("regenerate_movie_cover", { id });
   },
 

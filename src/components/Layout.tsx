@@ -115,6 +115,14 @@ export default function Layout() {
   useEffect(() => { useLicenseStore.getState().init(); }, []);
   useSecurity();
 
+  // ── 性能调优：启动时应用优先级设置 ──
+  useEffect(() => {
+    import("@/lib/usePerformance").then((m) => {
+      m.initPerformance();
+      m.usePerformanceMonitor();
+    });
+  }, []);
+
   // ── Periodic license check (every 7 days; 30-day grace for offline) ──
   // Uses Rust kv_store timestamps (server + local) to prevent clock manipulation
   // SKIP in dev mode — localhost has no server to check against

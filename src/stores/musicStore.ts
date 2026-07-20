@@ -7,6 +7,7 @@ interface MusicState {
   isLoading: boolean;
   activeTags: string[];
   searchQuery: string;
+  sortConfig: string;
 
   loadMusic: () => Promise<void>;
   addMusic: (paths: string[]) => Promise<void>;
@@ -15,6 +16,7 @@ interface MusicState {
   setSearchQuery: (q: string) => void;
   toggleTag: (tag: string) => void;
   setActiveTags: (tags: string[]) => void;
+  setSortConfig: (config: string) => void;
 }
 
 export const useMusicStore = create<MusicState>((set, get) => ({
@@ -22,6 +24,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
   isLoading: false,
   activeTags: [],
   searchQuery: "",
+  sortConfig: "default",
 
   loadMusic: async () => {
     set({ isLoading: true });
@@ -57,4 +60,5 @@ export const useMusicStore = create<MusicState>((set, get) => ({
     set({ activeTags: activeTags.includes(tag) ? activeTags.filter((t) => t !== tag) : [...activeTags, tag] });
   },
   setActiveTags: (tags: string[]) => set({ activeTags: tags }),
+  setSortConfig: (config: string) => set({ sortConfig: config }),
 }));

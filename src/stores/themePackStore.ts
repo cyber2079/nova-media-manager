@@ -17,7 +17,7 @@ export interface InstalledTheme {
   name: string;
   author: string;
   version: string;
-  requiresLicense: string; // "free" | "pro" | "ultra"
+  requiresLicense: string; // "free" | "member" | "pro"
   preview: string;
   cssFile: string;
   installedAt: string;

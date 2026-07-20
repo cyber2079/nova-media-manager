@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Upload, Loader2, Video, Tag, Play, Pause, Clock, Maximize, Trash2, X, Star, CheckSquare, Monitor } from "lucide-react";
 import TagFilterBar from "@/components/TagFilterBar";
 import TagEditDialog from "@/components/TagEditDialog";
+import SortBar, { useMovieSortOptions, useSortAnim } from "@/components/SortBar";
 import LayoutSwitch, { type LayoutMode } from "@/components/LayoutSwitch";
 import { useLayoutMode } from "@/lib/useLayoutMode";
 import PaginationBar from "@/components/PaginationBar";
@@ -41,6 +42,10 @@ export default function MovieLibrary() {
     movies, isLoading, searchQuery, activeTags, sortConfig,
     loadMovies, addMovies, deleteMovie, setSearchQuery, toggleTag, setSortConfig, updateMovie, updateMovieTags,
   } = useMovieStore();
+
+  const sortOptions = useMovieSortOptions();
+  const { animating, triggerSort } = useSortAnim();
+  const handleSort = useCallback((key: string) => triggerSort(() => setSortConfig(key)), [triggerSort, setSortConfig]);
 
   const [layoutMode, setLayoutMode] = useLayoutMode("layout-movies", "card");
   const [playingMovie, setPlayingMovie] = useState<Movie | null>(null);
@@ -82,6 +87,8 @@ export default function MovieLibrary() {
     switch (sortConfig) {
       case "nameAsc": result.sort((a, b) => a.name.localeCompare(b.name)); break;
       case "nameDesc": result.sort((a, b) => b.name.localeCompare(a.name)); break;
+      case "dateAsc": result.sort((a, b) => new Date(a.addTime).getTime() - new Date(b.addTime).getTime()); break;
+      case "dateDesc": result.sort((a, b) => new Date(b.addTime).getTime() - new Date(a.addTime).getTime()); break;
       case "durationAsc": result.sort((a, b) => a.durationSeconds - b.durationSeconds); break;
       case "durationDesc": result.sort((a, b) => b.durationSeconds - a.durationSeconds); break;
     }
@@ -250,18 +257,7 @@ export default function MovieLibrary() {
       <TagFilterBar tags={allTags} activeTags={activeTags} onToggle={toggleTag}
         onClear={() => useMovieStore.setState({ activeTags: [] })} t={t} />
 
-      <div className="flex items-center gap-2 text-sm text-gray-400">
-        <span>{t("movie.sort_label")}</span>
-        {[t("movie.sort_default"), t("movie.sort_name_asc"), t("movie.sort_name_desc"), t("movie.sort_duration_asc"), t("movie.sort_duration_desc")].map((label, i) => {
-          const values = ["default", "nameAsc", "nameDesc", "durationAsc", "durationDesc"];
-          return (
-            <button key={i} onClick={() => setSortConfig(values[i])}
-              className={"rounded px-2 py-1 transition-colors hover:text-white " + (sortConfig === values[i] ? "bg-surface-lighter text-white" : "")}>
-              {label}
-            </button>
-          );
-        })}
-      </div>
+      <SortBar options={sortOptions} active={sortConfig} onChange={handleSort} />
 
       {isLoading && movies.length === 0 && (
         <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary-light" /></div>
@@ -270,7 +266,7 @@ export default function MovieLibrary() {
       {filteredMovies.length > 0 ? (
         <>
           {layoutMode === "list" ? (
-            <div className="flex flex-col gap-1">
+            <div className={cn("flex flex-col gap-1", animating && "sort-shatter")}>
               {paginated.map((movie) => (
                 <div key={movie.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group"
                   onClick={() => { if (batch.showCheckboxes) { batch.toggle(movie.id); return; } handlePlayMovie(movie); }}>
@@ -322,9 +318,10 @@ export default function MovieLibrary() {
               ))}
             </div>
           ) : (
-            <div className={layoutMode === "card"
+            <div className={cn(layoutMode === "card"
               ? "grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-              : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10"}>
+              : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10",
+              animating && "sort-shatter")}>
               {paginated.map((movie) => (
                 <div key={movie.id} className="relative group"
                   onClick={() => { if (batch.showCheckboxes) batch.toggle(movie.id); }}>

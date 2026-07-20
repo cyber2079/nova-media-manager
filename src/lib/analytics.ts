@@ -5,7 +5,7 @@
  * - No filenames, paths, media content, or user identifiers.
  * - Events are buffered locally and batched every 5 minutes or 50 events.
  * - Community edition users' data is still collected to improve the product.
- * - Pro/Ultra users can view their own analytics dashboard.
+ * - Member/Pro users can view their own analytics dashboard.
  */
 
 // ═══════════════════ TYPES ═══════════════════

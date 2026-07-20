@@ -7,13 +7,15 @@ interface GameState {
   isLoading: boolean;
   isScanning: boolean;
   scanResult: string | null;
-  scanDiagnostic: string[];  // step-by-step scan log (shown in UI)
+  scanDiagnostic: string[];
+  sortConfig: string;
   loadGames: () => Promise<void>;
   addGame: (path: string) => Promise<void>;
   deleteGame: (id: string) => Promise<void>;
   launchGame: (id: string) => Promise<void>;
   updateTags: (id: string, tags: string[]) => void;
   scanSteam: () => Promise<void>;
+  setSortConfig: (config: string) => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -22,6 +24,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   isScanning: false,
   scanResult: null,
   scanDiagnostic: [],
+  sortConfig: "default",
 
   loadGames: async () => {
     set({ isLoading: true });
@@ -103,4 +106,5 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({ isScanning: false, scanResult: `扫描失败: ${e}`, scanDiagnostic: [] });
     }
   },
+  setSortConfig: (config: string) => set({ sortConfig: config }),
 }));

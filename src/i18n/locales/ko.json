@@ -692,16 +692,19 @@
     "loop_count_hint": "0=무한",
     "loop_count_unit": "회"
   },
-  "privacy": {
-    "title": "제품 개선에 도움 주세요",
-    "description": "앱 개선을 위해 익명의 사용 데이터를 수집하고자 합니다. 수집되는 데이터:",
-    "item_themes": "사용 중인 테마 및 전환 빈도",
-    "item_usage": "기능별 사용 통계",
-    "item_crash": "앱 충돌 및 오류 보고",
-    "disclaimer": "개인 정보, 파일 내용, 재생 기록은 수집하지 않습니다. 모든 데이터는 완전히 익명화되며 제품 개선에만 사용됩니다. 설정에서 언제든지 변경할 수 있습니다.",
-    "agree": "동의",
-    "decline": "거부"
-  },
+  
+	"privacy": {
+		"title": "Privacy & Terms",
+		"legal_summary": "",
+		"view_policy": "",
+		"view_terms": "",
+		"point_data": "",
+		"point_device": "",
+		"point_refund": "",
+		"agree": "",
+		"agree_hint": ""
+	}
+,
   "updateChecker": {
     "new_version": "업데이트 가능",
     "update_now": "지금 업데이트",

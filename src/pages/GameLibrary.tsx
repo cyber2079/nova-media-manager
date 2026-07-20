@@ -20,6 +20,7 @@ import { Upload, Gamepad2, Loader2, Star, Play, Monitor, Trash2, Tag, Search, X,
 import CountBadge from "@/components/CountBadge";
 import EmptyState from "@/components/EmptyState";
 import LayoutSwitch, { type LayoutMode } from "@/components/LayoutSwitch";
+import SortBar, { useNameSortOptions, useSortAnim } from "@/components/SortBar";
 import { useLayoutMode } from "@/lib/useLayoutMode";
 import PaginationBar from "@/components/PaginationBar";
 import { usePagination } from "@/lib/usePagination";
@@ -29,7 +30,10 @@ import type { Game } from "@/types/game";
 export default function GameLibrary() {
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { games, isLoading, loadGames, addGame, deleteGame, launchGame, updateTags, scanSteam, isScanning, scanResult, scanDiagnostic } = useGameStore();
+  const { games, isLoading, sortConfig, loadGames, addGame, deleteGame, launchGame, updateTags, scanSteam, isScanning, scanResult, scanDiagnostic, setSortConfig } = useGameStore();
+  const sortOptions = useNameSortOptions();
+  const { animating, triggerSort } = useSortAnim();
+  const handleSort = useCallback((key: string) => triggerSort(() => setSortConfig(key)), [triggerSort, setSortConfig]);
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const { getByType, toggleFavorite, isFavorite } = useFavoritesStore();
   const [favOnly, setFavOnly] = useState(false);
@@ -76,8 +80,12 @@ export default function GameLibrary() {
     let r = activeTags.length ? games.filter((g) => activeTags.some((t) => g.tags?.includes(t))) : games;
     if (favOnly) { const ids = new Set(getByType("game")); r = r.filter((g) => ids.has(g.id)); }
     if (searchQuery) { const q = searchQuery.toLowerCase(); r = r.filter((g) => g.name.toLowerCase().includes(q)); }
+    if (sortConfig === "nameAsc") r.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortConfig === "nameDesc") r.sort((a, b) => b.name.localeCompare(a.name));
+    else if (sortConfig === "dateAsc") r.sort((a, b) => new Date(a.addTime).getTime() - new Date(b.addTime).getTime());
+    else if (sortConfig === "dateDesc") r.sort((a, b) => new Date(b.addTime).getTime() - new Date(a.addTime).getTime());
     return r;
-  }, [games, activeTags, favOnly, getByType, searchQuery]);
+  }, [games, activeTags, favOnly, getByType, searchQuery, sortConfig]);
 
   const pageSize = layoutMode === "small" ? 30 : 20;
   const { page, setPage, totalPages, paginated } = usePagination(filtered, pageSize);
@@ -146,6 +154,7 @@ export default function GameLibrary() {
         <LayoutSwitch mode={layoutMode} onChange={setLayoutMode} />
       </div>
       <TagFilterBar tags={allTags} activeTags={activeTags} onToggle={(tag) => setActiveTags((p) => p.includes(tag) ? p.filter((t) => t !== tag) : [...p, tag])} onClear={() => setActiveTags([])} t={t} />
+      <SortBar options={sortOptions} active={sortConfig} onChange={handleSort} className="mb-2" />
 
       {/* Scan diagnostic log */}
       {scanDiagnostic.length > 0 && (
@@ -172,7 +181,7 @@ export default function GameLibrary() {
       {filtered.length > 0 ? (
         <>
           {layoutMode === "list" ? (
-            <div className="flex flex-col gap-1">
+            <div className={cn("flex flex-col gap-1", animating && "sort-shatter")}>
               {paginated.map((game) => (
                 <div key={game.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group"
                   onClick={() => { if (batch.showCheckboxes) { batch.toggle(game.id); return; } launchGame(game.id); }}
@@ -215,9 +224,10 @@ export default function GameLibrary() {
               ))}
             </div>
           ) : (
-            <div className={layoutMode === "card"
+            <div className={cn(layoutMode === "card"
               ? "grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-              : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10"}>
+              : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10",
+              animating && "sort-shatter")}>
               {paginated.map((game) => (
                 <div key={game.id} className="relative group" onContextMenu={(e: React.MouseEvent) => onContext(e, game.executablePath)}
                   onClick={() => { if (batch.showCheckboxes) batch.toggle(game.id); }}>

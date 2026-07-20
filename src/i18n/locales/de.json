@@ -692,16 +692,19 @@
     "loop_count_hint": "0=unendlich",
     "loop_count_unit": "×"
   },
-  "privacy": {
-    "title": "Helfen Sie uns, besser zu werden",
-    "description": "Wir möchten anonyme Nutzungsdaten sammeln, um die App zu verbessern. Diese Daten umfassen nur:",
-    "item_themes": "Verwendete Themen und Wechselhäufigkeit",
-    "item_usage": "Nutzungsstatistiken der Funktionen",
-    "item_crash": "App-Abstürze und Fehlerberichte",
-    "disclaimer": "Wir sammeln keine persönlichen Daten, Dateiinhalte oder Wiedergabeverläufe. Alle Daten sind vollständig anonymisiert und dienen nur der Produktverbesserung. Sie können dies jederzeit in den Einstellungen ändern.",
-    "agree": "Zustimmen",
-    "decline": "Ablehnen"
-  },
+  
+	"privacy": {
+		"title": "Privacy & Terms",
+		"legal_summary": "",
+		"view_policy": "",
+		"view_terms": "",
+		"point_data": "",
+		"point_device": "",
+		"point_refund": "",
+		"agree": "",
+		"agree_hint": ""
+	}
+,
   "updateChecker": {
     "new_version": "Update verfügbar",
     "update_now": "Jetzt aktualisieren",

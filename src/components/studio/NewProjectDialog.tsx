@@ -48,8 +48,8 @@ export default function NewProjectDialog({ open, onClose, onCreated }: Props) {
               </select></div>
             <div><label className="block text-xs text-gray-400 mb-1">许可证</label>
               <select value={license} onChange={e => setLicense(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none">
+                <option value="member">Member</option>
                 <option value="pro">Pro</option>
-                <option value="ultra">Ultra</option>
               </select></div>
           </div>
           {error && <p className="text-red-400 text-xs">{error}</p>}

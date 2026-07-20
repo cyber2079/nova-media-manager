@@ -8,6 +8,7 @@ import { tagColor } from "@/lib/tagColor";
 import { useTranslation } from "react-i18next";
 import FavoriteStar from "@/components/FavoriteStar";
 import { useSettingsStore, EXTERNAL_PLAYER_EXTS } from "@/stores/settingsStore";
+import { isPaid, useLicenseStore } from "@/stores/licenseStore";
 
 interface MovieCardProps {
   movie: Movie;
@@ -158,7 +159,7 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
               <Tag className="h-3.5 w-3.5" />
             </button>
           )}
-          {onRegenCover && !isProcessing && (
+          {onRegenCover && !isProcessing && isPaid(useLicenseStore.getState().license.tier) && (
             <button className="h-8 w-8 flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors"
               onClick={(e) => { e.stopPropagation(); onRegenCover(); }} title={t("movie.regen_cover")}>
               <RefreshCw className="h-3.5 w-3.5" />

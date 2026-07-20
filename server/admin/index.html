@@ -84,7 +84,7 @@ input{width:100%}
     <h2>批量生成激活码</h2>
     <div class="panel">
       <div class="flex-row" style="margin-bottom:1rem;flex-wrap:wrap">
-        <select id="gen-tier"><option value="pro">Pro</option><option value="ultra">Ultra</option></select>
+        <select id="gen-tier"><option value="member">Member</option></select>
         <select id="gen-dur"><option value="monthly">月付</option><option value="yearly">年付</option><option value="permanent">永久</option></select>
         <input type="number" id="gen-count" value="10" min="1" max="100" style="max-width:80px;text-align:center" placeholder="数量">
         <button class="btn btn-primary" onclick="generateCodes()">🎫 生成</button>
@@ -94,7 +94,7 @@ input{width:100%}
       <button class="btn btn-ghost" id="gen-copy-btn" style="display:none;margin-top:.5rem" onclick="copyGeneratedCodes()">📋 复制全部</button>
     </div>
     <p style="font-size:.7rem;color:#96adc8;margin-top:.75rem">
-      生成后导出为 CSV，按 Pro/Ultra + 月/年/永久 分档上传爱发电卡密库。<br>
+      生成后导出为 CSV，按 Member + 月/年/永久 分档上传爱发电卡密库。<br>
       爱发电每档方案独立库，需分别上传。
     </p>
   </section>

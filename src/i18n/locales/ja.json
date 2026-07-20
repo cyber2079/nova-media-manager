@@ -692,16 +692,19 @@
     "loop_count_hint": "0=無限",
     "loop_count_unit": "回"
   },
-  "privacy": {
-    "title": "製品改善にご協力ください",
-    "description": "アプリ改善のため匿名の使用データを収集したいと考えています。以下のデータのみが含まれます：",
-    "item_themes": "使用テーマと切替頻度",
-    "item_usage": "各機能の使用状況",
-    "item_crash": "アプリのクラッシュとエラーレポート",
-    "disclaimer": "個人情報、ファイル内容、再生履歴は一切収集しません。すべてのデータは完全に匿名化され、製品改善のみに使用されます。この設定はいつでも変更できます。",
-    "agree": "同意する",
-    "decline": "拒否する"
-  },
+  
+	"privacy": {
+		"title": "Privacy & Terms",
+		"legal_summary": "",
+		"view_policy": "",
+		"view_terms": "",
+		"point_data": "",
+		"point_device": "",
+		"point_refund": "",
+		"agree": "",
+		"agree_hint": ""
+	}
+,
   "updateChecker": {
     "new_version": "新しいバージョンがあります",
     "update_now": "今すぐ更新",

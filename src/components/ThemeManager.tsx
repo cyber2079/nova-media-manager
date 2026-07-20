@@ -1,12 +1,12 @@
 /**
  * Theme Manager — install, browse, and manage .nvtp theme packs.
  *
- * Ultra/Premium feature: free tier users see a limited view.
+ * Premium feature: free tier users see a limited view.
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemePackStore, type InstalledTheme, type ThemePackInfo } from "@/stores/themePackStore";
-import { useLicenseStore, isPaid, isProTier } from "@/stores/licenseStore";
+import { useLicenseStore, isPaid } from "@/stores/licenseStore";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Package, Download, Trash2, Loader2, FolderOpen } from "lucide-react";
 
@@ -27,8 +27,7 @@ export default function ThemeManager() {
   }, [open]);
 
   const handleInstallFromServer = async (info: ThemePackInfo) => {
-    const ok = isPaid(license.tier) && info.requires_license !== "pro"
-      || isProTier(license.tier);
+    const ok = isPaid(license.tier);
     if (!ok) {
       setStatus("error");
       setStatusMsg(t("themeManager.license_denied"));

@@ -4,12 +4,15 @@ import { invoke } from "@tauri-apps/api/core";
 const SERVER_URL = "https://scm-think.cn";
 
 export interface LicenseInfo {
-  tier: "free" | "member" | "pro";
+  tier: "free" | "member";
   duration: "monthly" | "yearly" | "permanent";
   expiresAt: string | null;
+  /** ISO timestamp of when the license was first activated on this device */
   activatedAt?: string;
   maxDevices: number;
   deviceName?: string;
+  /** Activation code (masked by default in settings) */
+  code?: string;
 }
 
 interface LicenseState {
@@ -36,16 +39,17 @@ const FREE_LICENSE: LicenseInfo = {
   maxDevices: 1,
 };
 
-/** Dev mode override — set VITE_LICENSE_TIER in .env to bypass activation */
+/** Dev mode override — set VITE_LICENSE_TIER=member in .env to bypass activation */
 function devLicense(): LicenseInfo | null {
   const tier = import.meta.env?.VITE_LICENSE_TIER as string | undefined;
   if (!tier || tier === "free") return null;
   return {
-    tier: tier as "member" | "pro",
-    duration: "permanent",
-    expiresAt: null,
-    maxDevices: 99,
+    tier: "member",
+    duration: "yearly",
+    expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    maxDevices: 1,
     deviceName: "dev-machine",
+    activatedAt: new Date().toISOString(),
   };
 }
 
@@ -95,17 +99,7 @@ export const useLicenseStore = create<LicenseState>((set, get) => ({
   closeActivation: () => set({ activationOpen: false }),
 }));
 
-/** Helper: is any paid tier? (member or pro) */
+/** Helper: is paid member? */
 export function isPaid(tier: string): boolean {
-  return tier === "member" || tier === "pro";
-}
-
-/** @deprecated use isPaid */
-export function isPro(tier: string): boolean {
-  return tier === "member" || tier === "pro";
-}
-
-/** Helper: is Pro tier? */
-export function isProTier(tier: string): boolean {
-  return tier === "pro";
+  return tier === "member";
 }

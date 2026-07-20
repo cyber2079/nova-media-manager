@@ -5,15 +5,18 @@ import { invoke } from "@/lib/tauriInvoke";
 interface ImageState {
   images: ImageItem[];
   isLoading: boolean;
+  sortConfig: string;
   loadImages: () => Promise<void>;
   addImages: (paths: string[]) => Promise<void>;
   deleteImage: (id: string) => Promise<void>;
   updateTags: (id: string, tags: string[]) => void;
+  setSortConfig: (config: string) => void;
 }
 
 export const useImageStore = create<ImageState>((set, get) => ({
   images: [],
   isLoading: false,
+  sortConfig: "default",
 
   loadImages: async () => {
     set({ isLoading: true });
@@ -39,4 +42,5 @@ export const useImageStore = create<ImageState>((set, get) => ({
     invoke("update_image_tags", { id, tags });
     set({ images: get().images.map((i) => (i.id === id ? { ...i, tags } : i)) });
   },
+  setSortConfig: (config: string) => set({ sortConfig: config }),
 }));

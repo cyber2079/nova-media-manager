@@ -92,8 +92,7 @@ export const ACCENT_OPTIONS = [
 export const THEME_PALETTE_DEFAULTS: Record<ThemeName, PaletteConfig> = {
   default:     { accent: "#4788f0", saturation: 50, contrast: "dark" },
   "ice-girl":   { accent: "#87ceeb", saturation: 40, contrast: "dark" },
-  "cyber-girl": { accent: "#8b5cf6", saturation: 80, contrast: "dark" },
-};
+  "cyber-girl": { accent: "#8b5cf6", saturation: 80, contrast: "dark" }};
 
 export type SettingsState = {
   language: string;
@@ -201,6 +200,16 @@ export type SettingsState = {
   resetPaletteToTheme: (theme: ThemeName) => void;
   hardwareAcceleration: boolean;
   setHardwareAcceleration: (v: boolean) => void;
+
+  // ── 性能调优 ──
+  perfPriority: "normal" | "above_normal" | "high";
+  perfPowerThrottle: boolean; // true = 禁止降频
+  perfIdleReduce: boolean;    // 空闲时降载
+  
+  setPerfPriority: (v: "normal" | "above_normal" | "high") => void;
+  setPerfPowerThrottle: (v: boolean) => void;
+  setPerfIdleReduce: (v: boolean) => void;
+  applyPerfSettings: () => Promise<void>;
 };
 
 const STORAGE_KEY = "app-settings";
@@ -208,8 +217,7 @@ const STORAGE_KEY = "app-settings";
 function getDefaultLoop(): BgVideoLoopConfig {
   return {
     enabled: true, loopCount: 0, firstPlayStart: 0, firstPlayEnd: 0,
-    loopStart: 0, loopDuration: 3, transitionMs: 450, playbackRate: 0.7,
-  };
+    loopStart: 0, loopDuration: 3, transitionMs: 450, playbackRate: 0.7};
 }
 
 function getDefaultWallpaper(): WallpaperConfig {
@@ -379,8 +387,7 @@ async function persist(s: SettingsState) {
     visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
     headerOpacity: s.headerOpacity, footerOpacity: s.footerOpacity,
     surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
-    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
-  });
+    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer});
   // Write to both: SQLite (primary) + localStorage (fast sync fallback)
   localStorage.setItem(STORAGE_KEY, payload);
   await kv.set(STORAGE_KEY, payload).catch(() => {});
@@ -423,8 +430,7 @@ export function computeThemeColors(base: string) {
     surfaceLight: hslToHex(h, Math.max(5, s/4), Math.max(10, Math.min(15, l/2.5))),
     surfaceLighter: hslToHex(h, Math.max(6, s/3), Math.max(14, Math.min(22, l/2))),
     border: hslToHex(h, Math.max(15, s/3), Math.min(55, l + 8)),
-    accent: hslToHex(h, Math.min(75, s + 5), Math.min(60, l + 5)),
-  };
+    accent: hslToHex(h, Math.min(75, s + 5), Math.min(60, l + 5))};
 }
 
 export const COLOR_PRESETS = [
@@ -481,6 +487,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     paletteContrast: (saved as any).paletteContrast || "dark",
     paletteCustomized: (saved as any).paletteCustomized || false,
     hardwareAcceleration: (saved as any).hardwareAcceleration ?? true,
+    perfPriority: (saved as any).perfPriority || "normal",
+    perfPowerThrottle: (saved as any).perfPowerThrottle || false,
+    perfIdleReduce: (saved as any).perfIdleReduce ?? true,
     dashboardMode: (saved as any).dashboardMode || "full",
     contentMinimized: (saved as any).contentMinimized || {},
 
@@ -533,8 +542,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized, hardwareAcceleration: (s.hardwareAcceleration as boolean) ?? get().hardwareAcceleration, wallpaper: s.wallpaper ?? get().wallpaper,
             externalPlayer: s.externalPlayer ?? get().externalPlayer,
             dashboardMode: (s.dashboardMode as any) ?? get().dashboardMode,
-            contentMinimized: (s.contentMinimized as any) ?? get().contentMinimized,
-          });
+            contentMinimized: (s.contentMinimized as any) ?? get().contentMinimized});
           applyPalette(); applySurface();
           applyFontColors();
           applyLyricColors();
@@ -551,6 +559,17 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setStartFullscreen(on) { set({ startFullscreen: on }); outdate(); persist(get()); },
     setDashboardMode(m) { set({ dashboardMode: m }); outdate(); persist(get()); },
     setHardwareAcceleration(v) { set({ hardwareAcceleration: v }); outdate(); persist(get()); },
+    setPerfPriority(v) { set({ perfPriority: v }); outdate(); persist(get()); },
+    setPerfPowerThrottle(v) { set({ perfPowerThrottle: v }); outdate(); persist(get()); },
+    setPerfIdleReduce(v) { set({ perfIdleReduce: v }); outdate(); persist(get()); },
+    async applyPerfSettings() {
+      const { perfPriority, perfPowerThrottle } = get();
+      try {
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("set_process_priority", { level: perfPriority });
+        await invoke("set_power_throttling", { disable: perfPowerThrottle });
+      } catch {}
+    },
     toggleContentMinimized(page) { set((s) => ({ contentMinimized: { ...s.contentMinimized, [page]: !s.contentMinimized[page] } })); outdate(); persist(get()); },
     setAutoHideHeader(on) { set({ autoHideHeader: on }); outdate(); persist(get()); },
     setAutoHideFooter(on) { set({ autoHideFooter: on }); outdate(); persist(get()); },
@@ -596,6 +615,5 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       const def = THEME_PALETTE_DEFAULTS[theme] ?? THEME_PALETTE_DEFAULTS.default;
       set({ paletteAccent: def.accent, paletteSaturation: def.saturation, paletteContrast: def.contrast, paletteCustomized: false });
       outdate(); persist(get()); applyPalette();
-    },
-  };
+    }};
 });
