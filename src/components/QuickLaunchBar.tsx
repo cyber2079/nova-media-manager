@@ -255,7 +255,7 @@ export default function QuickLaunchBar() {
       {contextMenu && createPortal(
         <div ref={contextRef}
           className="fixed z-[130] min-w-[120px] rounded-lg border border-white/10 bg-surface-light/98 backdrop-blur-md shadow-2xl py-1"
-          style={{ left: contextMenu.x, top: contextMenu.y }}>
+          style={{ left: contextMenu.x, bottom: `calc(100vh - ${contextMenu.y}px)` }}>
           <button
             onClick={handleEditArgs}
             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-white/5 transition-colors">
