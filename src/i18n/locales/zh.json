@@ -230,6 +230,7 @@
   },
   "quicklaunch": {
     "add": "添加程序",
+    "remove": "移除",
     "right_click_delete": "右键删除",
     "filter_executable": "可执行文件",
     "add_title": "添加启动参数（可选）",

@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useQuickLaunchStore, type QuickLaunchItem } from "@/stores/quickLaunchStore";
-import { Play, Plus } from "lucide-react";
+import { Play, Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useThemeStore } from "@/stores/themeStore";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ export default function QuickLaunchBar() {
   const [icons, setIcons] = useState<Record<string, string>>({});
   const [runningIds, setRunningIds] = useState<Set<string>>(new Set());
   const checkTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const [contextMenu, setContextMenu] = useState<{ id: string; x: number; y: number } | null>(null);
 
   useEffect(() => { load(); }, []);
 
@@ -82,10 +83,24 @@ export default function QuickLaunchBar() {
     } catch {}
   }, [items]);
 
-  const handleRightClick = useCallback(async (e: React.MouseEvent, id: string) => {
+  const handleRightClick = useCallback((e: React.MouseEvent, id: string) => {
     e.preventDefault();
-    await remove(id);
-  }, [remove]);
+    setContextMenu({ id, x: e.clientX, y: e.clientY });
+  }, []);
+
+  const contextRef = useRef<HTMLDivElement>(null);
+
+  // Close context menu on outside click
+  useEffect(() => {
+    if (!contextMenu) return;
+    const onDown = (e: MouseEvent) => {
+      if (contextRef.current && !contextRef.current.contains(e.target as Node)) {
+        setContextMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [contextMenu]);
 
   const handleLaunch = useCallback(async (e: React.MouseEvent, item: QuickLaunchItem) => {
     e.stopPropagation();
@@ -218,6 +233,20 @@ export default function QuickLaunchBar() {
         >
           {tooltip}
         </div>
+      )}
+
+      {/* Right-click context menu — confirm before removing */}
+      {contextMenu && createPortal(
+        <div ref={contextRef}
+          className="fixed z-[130] min-w-[120px] rounded-lg border border-white/10 bg-surface-light/98 backdrop-blur-md shadow-2xl py-1"
+          style={{ left: contextMenu.x, top: contextMenu.y }}>
+          <button
+            onClick={() => { remove(contextMenu.id); setContextMenu(null); }}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-400/10 transition-colors">
+            <Trash2 className="h-3 w-3" />{t("quicklaunch.remove")}
+          </button>
+        </div>,
+        document.body,
       )}
     </div>
   );
