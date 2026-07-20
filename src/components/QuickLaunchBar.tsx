@@ -176,7 +176,7 @@ export default function QuickLaunchBar() {
               className="flex items-center justify-center rounded-md w-9 h-9
                 text-gray-400 hover:bg-surface-lighter hover:text-white hover:scale-110 hover:shadow-md transition-all duration-200 active:scale-90
                 border border-transparent hover:border-primary/30 overflow-hidden"
-              title={`${item.name} — ${t("quicklaunch.right_click_delete")}`}
+              title={item.name}
             >
               {icons[item.id] ? (
                 <img src={icons[item.id]} alt={item.name} className="w-6 h-6 object-contain" style={{ imageRendering: "auto" }} />
