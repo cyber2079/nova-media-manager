@@ -231,7 +231,10 @@
   "quicklaunch": {
     "add": "添加程序",
     "right_click_delete": "右键删除",
-    "filter_executable": "可执行文件"
+    "filter_executable": "可执行文件",
+    "add_title": "添加启动参数（可选）",
+    "args_placeholder": "如 --src3 --flag，无则留空",
+    "confirm_add": "确认添加"
   },
   "music": {
     "confirm_delete": "确定要删除这首歌曲吗？此操作不可撤销。",

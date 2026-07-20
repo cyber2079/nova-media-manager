@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState, useRef } from "react";
-import { useQuickLaunchStore } from "@/stores/quickLaunchStore";
+import { useQuickLaunchStore, type QuickLaunchItem } from "@/stores/quickLaunchStore";
 import { Play, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useThemeStore } from "@/stores/themeStore";
@@ -86,23 +86,39 @@ export default function QuickLaunchBar() {
     await remove(id);
   }, [remove]);
 
-  const handleLaunch = useCallback(async (e: React.MouseEvent, path: string) => {
+  const handleLaunch = useCallback(async (e: React.MouseEvent, item: QuickLaunchItem) => {
     e.stopPropagation();
-    await launch(path);
+    await launch(item.programPath, item.args || "");
     // Re-check after a short delay to let the process start
     setTimeout(doCheck, 1500);
   }, [launch, doCheck]);
 
-  const handleAdd = useCallback(async () => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [adding, setAdding] = useState(false);
+  const [addPath, setAddPath] = useState("");
+  const [addArgs, setAddArgs] = useState("");
+
+  const triggerAdd = useCallback(async () => {
     try {
       const { open } = await import("@tauri-apps/plugin-dialog");
       const selected = await open({
         multiple: false,
         filters: [{ name: "可执行文件", extensions: ["exe", "lnk", "bat", "cmd", "com"] }],
       });
-      if (selected) await add(selected as string);
+      if (selected) {
+        setAddPath(selected as string);
+        setAddArgs("");
+        setAdding(true);
+        setTimeout(() => inputRef.current?.focus(), 50);
+      }
     } catch {}
-  }, [add]);
+  }, []);
+
+  const confirmAdd = useCallback(async () => {
+    if (!addPath) { setAdding(false); return; }
+    await add(addPath, addArgs);
+    setAdding(false); setAddPath(""); setAddArgs("");
+  }, [addPath, addArgs, add]);
 
   // Theme-aware running underline color
   const runningDotColor = (() => {
@@ -117,7 +133,7 @@ export default function QuickLaunchBar() {
         return (
           <div key={item.id} className="relative">
             <button
-              onClick={(e) => handleLaunch(e, item.programPath)}
+              onClick={(e) => handleLaunch(e, item)}
               onContextMenu={(e) => handleRightClick(e, item.id)}
               onMouseEnter={(e) => {
                 const rect = (e.target as HTMLElement).getBoundingClientRect();
@@ -155,7 +171,7 @@ export default function QuickLaunchBar() {
 
       {/* Add button — pulse ring */}
       <button
-        onClick={handleAdd}
+        onClick={triggerAdd}
         className="ql-add-btn flex items-center justify-center h-8 w-8 rounded-full
           text-gray-600 hover:text-primary-light
           transition-all duration-300 active:scale-90"
@@ -167,6 +183,30 @@ export default function QuickLaunchBar() {
       >
         <Plus className="h-4 w-4" strokeWidth={1.5} />
       </button>
+
+      {/* Args input overlay when adding a program */}
+      {adding && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60" onClick={() => setAdding(false)}>
+          <div className="rounded-2xl border border-primary/30 p-5 max-w-md w-full mx-4 shadow-2xl bg-surface-light"
+            onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm font-semibold text-white mb-1">{t("quicklaunch.add_title")}</p>
+            <p className="text-[10px] text-gray-500 break-all mb-4">{addPath}</p>
+            <input
+              ref={inputRef}
+              type="text"
+              value={addArgs}
+              onChange={(e) => setAddArgs(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") confirmAdd(); if (e.key === "Escape") setAdding(false); }}
+              placeholder={t("quicklaunch.args_placeholder")}
+              className="w-full px-3 py-2 rounded-lg border border-white/10 bg-surface-dark text-sm text-white placeholder-gray-500 outline-none focus:border-primary-light mb-4"
+            />
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setAdding(false)} className="px-4 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-surface-lighter transition-colors">{t("settings.cancel")}</button>
+              <button onClick={confirmAdd} className="px-4 py-1.5 rounded-lg text-xs bg-primary/20 text-primary-light hover:bg-primary/30 transition-colors font-medium">{t("quicklaunch.confirm_add")}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {tooltip && (
         <div

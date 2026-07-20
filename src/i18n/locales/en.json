@@ -217,7 +217,10 @@
   "quicklaunch": {
     "add": "Add Program",
     "right_click_delete": "Right-click to remove",
-    "filter_executable": "Executable Files"
+    "filter_executable": "Executable Files",
+    "add_title": "Add launch arguments (optional)",
+    "args_placeholder": "e.g. --src3 --flag, leave empty if none",
+    "confirm_add": "Add"
   },
   "music": {
     "confirm_delete": "Delete this song? This cannot be undone.",
