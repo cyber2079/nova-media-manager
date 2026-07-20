@@ -50,10 +50,130 @@ pub fn launch_quick_item(program_path: String) -> Result<bool, String> {
     // Strip Zone.Identifier ADS (Mark of the Web) to prevent SmartScreen prompt
     let _ = std::fs::remove_file(format!("{}:Zone.Identifier", &program_path));
 
+    // If the program is already running, bring its window to foreground instead of launching again
+    if try_bring_running_to_foreground(&program_path) {
+        return Ok(true);
+    }
+
     // open crate uses ShellExecuteW on Windows, xdg-open/macOS open elsewhere
     open::that(&program_path).map_err(|e| e.to_string())?;
     Ok(true)
 }
+
+/// Find the main window of a process matching `exe_path` and bring it to the foreground.
+/// Returns true if the window was found and activated.
+#[cfg(target_os = "windows")]
+fn try_bring_running_to_foreground(exe_path: &str) -> bool {
+    let exe_name = std::path::Path::new(exe_path)
+        .file_name()
+        .map(|n| n.to_string_lossy().to_lowercase())
+        .unwrap_or_default();
+    if exe_name.is_empty() { return false; }
+
+    unsafe {
+        extern "system" {
+            fn EnumWindows(callback: extern "system" fn(hwnd: isize, lparam: isize) -> i32, lparam: isize) -> i32;
+            fn IsWindowVisible(hwnd: isize) -> i32;
+            fn GetWindowThreadProcessId(hwnd: isize, pid: *mut u32) -> u32;
+            fn SetForegroundWindow(hwnd: isize) -> i32;
+            fn ShowWindow(hwnd: isize, nCmdShow: i32) -> i32;
+            fn IsIconic(hwnd: isize) -> i32;
+            fn BringWindowToTop(hwnd: isize) -> i32;
+            fn AttachThreadInput(idAttach: u32, idAttachTo: u32, fAttach: i32) -> i32;
+            fn GetForegroundWindow() -> isize;
+        }
+
+        struct SearchCtx {
+            target_name: String,
+            found_hwnd: isize,
+        }
+
+        extern "system" fn enum_proc(hwnd: isize, lparam: isize) -> i32 {
+            let ctx = unsafe { &mut *(lparam as *mut SearchCtx) };
+            if unsafe { IsWindowVisible(hwnd) } == 0 { return 1; }
+
+            let mut pid: u32 = 0;
+            unsafe { GetWindowThreadProcessId(hwnd, &mut pid) };
+            if pid == 0 { return 1; }
+
+            let proc_name = get_process_name_for_window(pid);
+            if proc_name == ctx.target_name {
+                ctx.found_hwnd = hwnd;
+                return 0; // stop enumeration
+            }
+            1 // continue
+        }
+
+        let mut ctx = SearchCtx { target_name: exe_name, found_hwnd: 0 };
+        EnumWindows(enum_proc, &mut ctx as *mut _ as isize);
+
+        if ctx.found_hwnd != 0 {
+            let target_hwnd = ctx.found_hwnd;
+
+            // If minimized, restore first
+            if IsIconic(target_hwnd) != 0 {
+                ShowWindow(target_hwnd, 9); // SW_RESTORE
+            }
+
+            // Windows blocks background processes from calling SetForegroundWindow.
+            // Workaround: temporarily attach our input queue to the foreground thread.
+            let fg_hwnd = GetForegroundWindow();
+            if fg_hwnd != 0 {
+                let fg_thread_id = GetWindowThreadProcessId(fg_hwnd, std::ptr::null_mut());
+                let target_thread_id = GetWindowThreadProcessId(target_hwnd, std::ptr::null_mut());
+                if fg_thread_id != target_thread_id {
+                    AttachThreadInput(target_thread_id, fg_thread_id, 1);
+                    BringWindowToTop(target_hwnd);
+                    SetForegroundWindow(target_hwnd);
+                    AttachThreadInput(target_thread_id, fg_thread_id, 0);
+                } else {
+                    SetForegroundWindow(target_hwnd);
+                }
+            } else {
+                // No foreground window (unlikely) — try direct
+                BringWindowToTop(target_hwnd);
+                SetForegroundWindow(target_hwnd);
+            }
+            return true;
+        }
+    }
+    false
+}
+
+#[cfg(target_os = "windows")]
+fn get_process_name_for_window(pid: u32) -> String {
+    use std::ffi::OsString;
+    use std::os::windows::ffi::OsStringExt;
+
+    unsafe {
+        extern "system" {
+            fn OpenProcess(desired_access: u32, inherit_handle: i32, pid: u32) -> isize;
+            fn CloseHandle(handle: isize) -> i32;
+            fn QueryFullProcessImageNameW(handle: isize, flags: u32, buffer: *mut u16, size: *mut u32) -> i32;
+        }
+
+        const PROCESS_QUERY_LIMITED_INFORMATION: u32 = 0x1000;
+        let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid);
+        if handle == 0 || handle == -1 { return String::new(); }
+
+        let mut buf = vec![0u16; 260];
+        let mut size: u32 = 260;
+        let result = QueryFullProcessImageNameW(handle, 0, buf.as_mut_ptr(), &mut size);
+        CloseHandle(handle);
+
+        if result != 0 {
+            let path = OsString::from_wide(&buf[..size as usize]);
+            let path_str = path.to_string_lossy();
+            if let Some(name) = std::path::Path::new(path_str.as_ref()).file_name() {
+                return name.to_string_lossy().to_lowercase();
+            }
+        }
+        String::new()
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn try_bring_running_to_foreground(_exe_path: &str) -> bool { false }
 
 /// Batch check: given a list of program paths, return which ones are currently running.
 /// Uses a single sysinfo enumeration — no per-item overhead.
