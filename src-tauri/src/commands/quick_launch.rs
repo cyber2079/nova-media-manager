@@ -93,18 +93,12 @@ pub fn launch_quick_item(program_path: String, args: Option<String>) -> Result<b
     // Strip Zone.Identifier ADS (Mark of the Web) to prevent SmartScreen prompt
     let _ = std::fs::remove_file(format!("{}:Zone.Identifier", &program_path));
 
-    let has_args = args.as_ref().map_or(false, |a| !a.is_empty());
-    let _exe_name = Path::new(&program_path)
-        .file_name()
-        .map(|n| n.to_string_lossy().to_lowercase())
-        .unwrap_or_default();
-
-    // If no args, try foregrounding the existing window first
-    if !has_args {
-        if try_bring_running_to_foreground(&program_path) {
-            return Ok(true);
-        }
+    // Always try foregrounding first — args don't affect exe-name matching
+    if try_bring_running_to_foreground(&program_path) {
+        return Ok(true);
     }
+
+    let has_args = args.as_ref().map_or(false, |a| !a.is_empty());
 
     if has_args {
         // Use Command for argument-aware launch
@@ -251,6 +245,40 @@ fn get_process_name_for_window(pid: u32) -> String {
 #[cfg(not(target_os = "windows"))]
 fn try_bring_running_to_foreground(_exe_path: &str) -> bool { false }
 
+/// Lightweight EnumWindows scan: returns true if any visible window belongs to exe `name`.
+#[cfg(target_os = "windows")]
+fn has_visible_window_for_exe(exe_name: &str) -> bool {
+    unsafe {
+        extern "system" {
+            fn EnumWindows(callback: extern "system" fn(hwnd: isize, lparam: isize) -> i32, lparam: isize) -> i32;
+            fn IsWindowVisible(hwnd: isize) -> i32;
+            fn GetWindowThreadProcessId(hwnd: isize, pid: *mut u32) -> u32;
+        }
+
+        struct CheckCtx { target: String, found: bool }
+
+        extern "system" fn check_window(hwnd: isize, lparam: isize) -> i32 {
+            unsafe {
+                let ctx = &mut *(lparam as *mut CheckCtx);
+                if ctx.found { return 0; }
+                if IsWindowVisible(hwnd) == 0 { return 1; }
+                let mut pid: u32 = 0;
+                GetWindowThreadProcessId(hwnd, &mut pid);
+                if pid == 0 { return 1; }
+                if get_process_name_for_window(pid) == ctx.target {
+                    ctx.found = true;
+                    return 0;
+                }
+            }
+            1
+        }
+
+        let mut ctx = CheckCtx { target: exe_name.to_string(), found: false };
+        EnumWindows(check_window, &mut ctx as *mut _ as isize);
+        ctx.found
+    }
+}
+
 /// Batch check: given a list of program paths, return which ones are currently running.
 #[tauri::command]
 pub fn check_programs_running(program_paths: Vec<String>) -> Result<Vec<bool>, String> {
@@ -279,6 +307,9 @@ pub fn check_programs_running(program_paths: Vec<String>) -> Result<Vec<bool>, S
             .unwrap_or_default();
         if running_full_paths.contains(&p_lower) { return true; }
         if !p_name.is_empty() && running_exe_names.contains(&p_name) { return true; }
+        // Fallback: enumerate visible windows (catches newly spawned / child processes)
+        #[cfg(target_os = "windows")]
+        if !p_name.is_empty() && has_visible_window_for_exe(&p_name) { return true; }
         false
     }).collect();
 
