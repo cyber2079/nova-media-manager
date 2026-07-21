@@ -28,16 +28,17 @@ pub fn get_all_games(db: State<Database>) -> Result<Vec<Game>, String> {
     ).map_err(|e| e.to_string())?;
 
     let mut games: Vec<Game> = stmt.query_map([], |row| {
-        let tags_str: String = row.get(6)?;
+        let tags_str: String = row.get::<_, String>(6).unwrap_or_default();
         let exec: String = row.get(2)?;
         Ok(Game {
             id: row.get(0)?, name: row.get(1)?,
             executable_path: exec.clone(),
             installed: !exec.starts_with("steam://"),
-            cover_path: row.get(3)?, landscape_path: row.get(4)?,
-            platform: row.get(5)?,
+            cover_path: row.get::<_, String>(3).unwrap_or_default(),
+            landscape_path: row.get::<_, String>(4).unwrap_or_default(),
+            platform: row.get::<_, String>(5).unwrap_or_default(),
             tags: serde_json::from_str(&tags_str).unwrap_or_default(),
-            add_time: row.get(7)?,
+            add_time: row.get::<_, String>(7).unwrap_or_default(),
         })
     }).map_err(|e| e.to_string())?
     .filter_map(|r| r.ok())
