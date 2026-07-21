@@ -39,19 +39,19 @@ export default defineConfig({
   },
   // 抑制 Vite 7 + Tauri 2 已知降级警告（非功能缺陷）
   customLogger: {
-    info(msg) { console.info(msg); },
-    warn(msg) {
+    info(msg: string) { console.info(msg); },
+    warn(msg: string) {
       if (msg.includes("is deprecated") && msg.includes("config")) return;
       if (msg.includes("enforce: 'pre'")) return;
       console.warn(msg);
     },
-    error(msg) { console.error(msg); },
-    infoOnce(msg) { console.info(msg); },
-    warnOnce(msg) {
+    error(msg: string) { console.error(msg); },
+    infoOnce(msg: string) { console.info(msg); },
+    warnOnce(msg: string) {
       if (msg.includes("is deprecated") && msg.includes("config")) return;
       console.warn(msg);
     },
-    errorOnce(msg) { console.error(msg); },
+    errorOnce(msg: string) { console.error(msg); },
     clearScreen() {},
     hasWarned: new Set(),
   } as any,

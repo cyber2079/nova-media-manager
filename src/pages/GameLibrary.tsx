@@ -151,11 +151,8 @@ export default function GameLibrary() {
 
       {/* Scan diagnostic log */}
       {scanDiagnostic.length > 0 && (
-        <div className="rounded-lg border p-3 text-xs font-mono space-y-0.5 max-h-48 overflow-y-auto relative border-primary/20 bg-primary/5 text-primary-light/80">
-          <div className="absolute top-2 right-2 flex items-center gap-2">
-            <span className="text-xs font-bold tabular-nums text-primary-light">
-              {diagCountdown > 0 ? `${diagCountdown}s` : ""}
-            </span>
+        <div className="rounded-lg border p-3 text-xs font-mono space-y-0.5 max-h-80 overflow-y-auto relative border-primary/20 bg-primary/5 text-primary-light/80 select-text cursor-text">
+          <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
             <button
               onClick={dismissDiag}
               className="h-5 w-5 flex items-center justify-center rounded transition-colors text-primary-light/60 hover:text-primary-light hover:bg-primary-light/20"
@@ -165,7 +162,7 @@ export default function GameLibrary() {
             </button>
           </div>
           {scanDiagnostic.map((line, i) => (
-            <div key={i} className="pr-16">{line}</div>
+            <div key={i} className="pr-12">{line}</div>
           ))}
         </div>
       )}
@@ -180,7 +177,7 @@ export default function GameLibrary() {
                   onClick={() => { if (batch.showCheckboxes) { batch.toggle(game.id); return; } launchGame(game.id); }}
                   onContextMenu={(e: React.MouseEvent) => onContext(e, game.executablePath)}>
                   {batch.showCheckboxes && <BatchCheckbox inline checked={batch.selected.has(game.id)} onToggle={() => batch.toggle(game.id)} />}
-                  <GameIcon path={game.executablePath} />
+                  <GameIcon path={game.executablePath} coverPath={game.coverPath} installed={game.installed} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
                       <p className="text-sm text-gray-200 truncate">{game.name}</p>
@@ -252,13 +249,21 @@ export default function GameLibrary() {
 // ── GameIcon: extracts .exe icon inline (cached) ──
 const gameIconCache = new Map<string, string>();
 
-function GameIcon({ path }: { path: string }) {
+function GameIcon({ path, coverPath, installed }: { path: string; coverPath?: string; installed?: boolean }) {
   const [src, setSrc] = useState<string | null>(null);
   const cancelledRef = useRef(false);
 
   useEffect(() => {
     cancelledRef.current = false;
-    if (!path) return;
+    // Steam uninstalled games: use CDN cover if available
+    if (installed === false && coverPath) {
+      const img = new Image();
+      img.onload = () => { if (!cancelledRef.current) setSrc(coverPath); };
+      img.src = coverPath;
+      return;
+    }
+    // Steam installed or non-Steam games: try exe icon
+    if (!path || path.startsWith("steam://")) return;
     const cached = gameIconCache.get(path);
     if (cached) { setSrc(cached); return; }
 
@@ -274,7 +279,7 @@ function GameIcon({ path }: { path: string }) {
     })();
 
     return () => { cancelledRef.current = true; };
-  }, [path]);
+  }, [path, coverPath, installed]);
 
   return (
     <div className="w-10 h-10 rounded-lg overflow-hidden bg-transparent shrink-0 flex items-center justify-center" style={{ boxShadow: "inset 0 0 0 1px var(--border)" }}>

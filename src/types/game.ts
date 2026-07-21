@@ -6,4 +6,5 @@ export interface Game {
   platform: string;
   tags: string[];
   addTime: string;
+  installed?: boolean;
 }

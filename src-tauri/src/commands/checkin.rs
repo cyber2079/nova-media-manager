@@ -1,5 +1,5 @@
 // ── 签到系统（纯统计）──
-// 每日首次活动自动签入（有 >=1 条 play_events 即算活跃）
+// 打开应用即签入，无需播放媒体
 
 use crate::db::Database;
 use crate::license::LicenseState;
@@ -25,21 +25,20 @@ pub fn auto_checkin(db: State<'_, Database>) -> Result<CheckInStats, String> {
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
     let now = chrono::Local::now().format("%Y-%m-%dT%H:%M:%S").to_string();
 
-    let today_plays: i64 = conn
+    // 打开应用即签入，每次调用递增 play_count（用于统计当天打开次数）
+    let prev: i64 = conn
         .query_row(
-            "SELECT COUNT(*) FROM play_events WHERE date(played_at, 'localtime') = ?1",
+            "SELECT play_count FROM check_in WHERE date = ?1",
             [&today],
             |row| row.get(0),
         )
         .unwrap_or(0);
 
-    if today_plays > 0 {
-        conn.execute(
-            "INSERT OR REPLACE INTO check_in (date, play_count, created_at) VALUES (?1, ?2, ?3)",
-            rusqlite::params![today, today_plays, now],
-        )
-        .map_err(|e| format!("err: {}", e))?;
-    }
+    conn.execute(
+        "INSERT OR REPLACE INTO check_in (date, play_count, created_at) VALUES (?1, ?2, ?3)",
+        rusqlite::params![today, prev + 1, now],
+    )
+    .map_err(|e| format!("err: {}", e))?;
 
     drop(conn);
     get_checkin_stats_inner(&db)

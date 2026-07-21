@@ -86,7 +86,11 @@ export default function Layout() {
   const isDefault = theme === "default";
   const isCG = theme === "cyber-girl";
   const dashboardMode = useSettingsStore((s) => s.dashboardMode);
-  const isImportingAny = useGameStore(s => s.isImporting || s.isScanning) || useImageStore(s => s.isImporting) || useMovieStore(s => s.isImporting) || useMusicStore(s => s.isImporting);
+  const gameIsImporting = useGameStore(s => s.isImporting || s.isScanning);
+  const imageIsImporting = useImageStore(s => s.isImporting);
+  const movieIsImporting = useMovieStore(s => s.isImporting);
+  const musicIsImporting = useMusicStore(s => s.isImporting);
+  const isImportingAny = gameIsImporting || imageIsImporting || movieIsImporting || musicIsImporting;
   const perfReduceAnimations = useSettingsStore((s) => s.perfReduceAnimations);
   const cacheCleanupDays = useSettingsStore((s) => s.cacheCleanupDays);
   const cacheCleanupLastRun = useSettingsStore((s) => s.cacheCleanupLastRun);
@@ -94,8 +98,7 @@ export default function Layout() {
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();
   const bgVideoMode = useSettingsStore((s) => s.bgVideoMode);
   const bgOverlayOpacity = useSettingsStore((s) => s.bgOverlayOpacity);
-  const headerOpacity = useSettingsStore((s) => s.headerOpacity);
-  const footerOpacity = useSettingsStore((s) => s.footerOpacity);
+  const barOpacity = useSettingsStore((s) => s.barOpacity);
   const isHome = location.pathname === "/";
   const showQuickHub = true;
   const isHomeStrip = isHome && isDefault && dashboardMode === "strip";
@@ -482,7 +485,7 @@ export default function Layout() {
   };
 
   const headerClass = "fixed top-0 left-0 right-0 z-50";
-  const headerOpacityStyle = { backgroundColor: `color-mix(in srgb, var(--color-surface) ${headerOpacity}%, transparent)` };
+  const barBgStyle = { background: `color-mix(in srgb, var(--color-surface) ${barOpacity}%, transparent)`, backdropFilter: "blur(16px) saturate(140%)", WebkitBackdropFilter: "blur(16px) saturate(140%)" };
 
   return (
     <div className={cn("min-h-screen", isDefault && !isHomeStrip && "bg-surface")} id="app" ref={appRef}>
@@ -502,7 +505,7 @@ export default function Layout() {
       </>}
 
       {/* ── Header ── */}
-      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden")} style={headerOpacityStyle}>
+      <header ref={headerRef} className={cn(headerClass, !headerVisible && "hidden")} style={barBgStyle}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
             {isIce ? (
@@ -584,13 +587,8 @@ export default function Layout() {
 
       {/* ── Footer: glass bar, centered layout ── */}
       <footer
-        className={cn("fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 h-12", !footerVisible && "opacity-0 translate-y-full pointer-events-none")}
-        style={{
-          background: "rgba(8,12,20,0.78)",
-          backdropFilter: "blur(16px) saturate(140%)",
-          WebkitBackdropFilter: "blur(16px) saturate(140%)",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-        }}
+        className={cn("fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 h-12 border-t border-white/5", !footerVisible && "opacity-0 translate-y-full pointer-events-none")}
+        style={barBgStyle}
       >
         <div className="flex items-center justify-center gap-2.5 h-full px-4">
           {/* QuickHub trigger button (all pages) */}

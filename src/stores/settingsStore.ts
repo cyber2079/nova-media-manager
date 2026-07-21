@@ -65,7 +65,6 @@ export const FONT_LIST: { value: string; label: string; i18nKey: string; css: st
 export interface PaletteConfig {
   accent: string;     // hex color
   saturation: number; // 0-100
-  contrast: "dark" | "light";
 }
 
 export const ACCENT_OPTIONS = [
@@ -90,9 +89,9 @@ export const ACCENT_OPTIONS = [
 ];
 
 export const THEME_PALETTE_DEFAULTS: Record<ThemeName, PaletteConfig> = {
-  default:     { accent: "#4788f0", saturation: 50, contrast: "dark" },
-  "ice-girl":   { accent: "#87ceeb", saturation: 40, contrast: "dark" },
-  "cyber-girl": { accent: "#8b5cf6", saturation: 80, contrast: "dark" }};
+  default:     { accent: "#4788f0", saturation: 50 },
+  "ice-girl":   { accent: "#87ceeb", saturation: 40 },
+  "cyber-girl": { accent: "#8b5cf6", saturation: 80 }};
 
 export type SettingsState = {
   language: string;
@@ -116,8 +115,7 @@ export type SettingsState = {
   fontFamily: string;
   visualizerMode: VisualizerMode;
   imageWheelMode: ImageWheelMode;
-  headerOpacity: number;
-  footerOpacity: number;
+  barOpacity: number;
   surfaceSaturation: number;
   surfaceOpacity: number;
   bgOverlayOpacity: number;
@@ -143,7 +141,6 @@ export type SettingsState = {
   // ── New palette system (replaces 13 individual controls) ──
   paletteAccent: string;
   paletteSaturation: number;  // 0-100
-  paletteContrast: "dark" | "light";
   /** Whether user has manually adjusted palette from theme default */
   paletteCustomized: boolean;
 
@@ -174,8 +171,7 @@ export type SettingsState = {
   setIconSize: (v: IconSize) => void;
   setVisualizerMode: (v: VisualizerMode) => void;
   setImageWheelMode: (v: ImageWheelMode) => void;
-  setHeaderOpacity: (v: number) => void;
-  setFooterOpacity: (v: number) => void;
+  setBarOpacity: (v: number) => void;
   setSurfaceSaturation: (v: number) => void;
   setSurfaceOpacity: (v: number) => void;
   setBgOverlayOpacity: (v: number) => void;
@@ -194,7 +190,6 @@ export type SettingsState = {
   setFontFamily: (v: string) => void;
   setPaletteAccent: (v: string) => void;
   setPaletteSaturation: (v: number) => void;
-  setPaletteContrast: (v: "dark" | "light") => void;
   setWallpaperConfig: (cfg: Partial<WallpaperConfig>) => void;
   setExternalPlayer: (cfg: Partial<ExternalPlayerConfig>) => void;
   resetPaletteToTheme: (theme: ThemeName) => void;
@@ -250,9 +245,9 @@ function schedulePersist() {
     lyricCurrentColor: s.lyricCurrentColor, lyricOtherColor: s.lyricOtherColor, lyricFillColor: s.lyricFillColor,
     fontSize: s.fontSize, iconSize: s.iconSize, fontFamily: s.fontFamily,
     visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
-    headerOpacity: s.headerOpacity, footerOpacity: s.footerOpacity,
+    barOpacity: s.barOpacity,
     surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
-    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteContrast: s.paletteContrast, paletteCustomized: s.paletteCustomized, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
+    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteCustomized: s.paletteCustomized, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
     perfPriority: s.perfPriority, perfIdleReduce: s.perfIdleReduce, perfReduceAnimations: s.perfReduceAnimations, cacheCleanupDays: s.cacheCleanupDays, cacheCleanupLastRun: s.cacheCleanupLastRun,
     dashboardMode: s.dashboardMode, contentMinimized: s.contentMinimized,
   });
@@ -279,11 +274,10 @@ function persist() { schedulePersist(); }
 export function applyPalette() {
   const s = useSettingsStore.getState();
   const v = s.paletteSaturation; // 0-100
-  const contrast = s.paletteContrast;
   const accent = s.paletteAccent;
   const root = document.documentElement;
 
-  const isDark = contrast !== "light";
+  const isDark = true;
   const text = isDark ? "#edeff4" : "#1c1c1e";
   const muted = isDark ? "#8a99b8" : "#5c5b66";
 
@@ -314,15 +308,10 @@ export function applyPalette() {
   root.style.setProperty("--cg-text-color", primary);
   root.style.setProperty("--cg-text-bg", primary);
 
-  // ── Light palette contrast ──
-  if (contrast === "light") {
-    root.setAttribute("data-palette", "light");
-  } else {
-    root.removeAttribute("data-palette");
-  }
+  root.removeAttribute("data-palette");
 }
 
-/** Re-apply the palette (called by legacy setters like headerOpacity).
+/** Re-apply the palette (called by legacy setters like setBarOpacity).
  *  Surface colours are now entirely CSS-driven via var(--color-primary). */
 export function applySurface() {
   applyPalette();
@@ -430,8 +419,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     fontFamily: (saved as any).fontFamily || "inter",
     visualizerMode: (saved as any).visualizerMode || "bars",
     imageWheelMode: (saved as any).imageWheelMode || "prevNext",
-    headerOpacity: (saved as any).headerOpacity ?? 30,
-    footerOpacity: (saved as any).footerOpacity ?? 30,
+    barOpacity: (saved as any).barOpacity ?? (saved as any).footerOpacity ?? 78,
     surfaceSaturation: (saved as any).surfaceSaturation ?? 4,
     surfaceOpacity: (saved as any).surfaceOpacity ?? 92,
     bgOverlayOpacity: (saved as any).bgOverlayOpacity ?? 70,
@@ -451,7 +439,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     externalPlayer: (saved as any).externalPlayer || defaultExternalPlayer(),
     paletteAccent: (saved as any).paletteAccent || "#4788f0",
     paletteSaturation: (saved as any).paletteSaturation ?? ((saved as any).paletteVibrancy != null ? (saved as any).paletteVibrancy * 10 : 50),
-    paletteContrast: (saved as any).paletteContrast || "dark",
     paletteCustomized: (saved as any).paletteCustomized || false,
     hardwareAcceleration: (saved as any).hardwareAcceleration ?? true,
     perfPriority: (saved as any).perfPriority || "normal",
@@ -489,8 +476,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             fontFamily: (s.fontFamily as string) ?? get().fontFamily,
             visualizerMode: (s.visualizerMode as any) ?? get().visualizerMode,
             imageWheelMode: (s.imageWheelMode as any) ?? get().imageWheelMode,
-            headerOpacity: (s.headerOpacity as number) ?? get().headerOpacity,
-            footerOpacity: (s.footerOpacity as number) ?? get().footerOpacity,
+            barOpacity: (s.barOpacity as number) ?? (s as any).footerOpacity ?? get().barOpacity,
             surfaceSaturation: (s.surfaceSaturation as number) ?? get().surfaceSaturation,
             surfaceOpacity: (s.surfaceOpacity as number) ?? get().surfaceOpacity,
             hideTitleBar: (s.hideTitleBar as boolean) ?? get().hideTitleBar,
@@ -507,7 +493,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             cgTextBgOpacity: (s.cgTextBgOpacity as number) ?? get().cgTextBgOpacity,
             paletteAccent: (s.paletteAccent as string) ?? get().paletteAccent,
             paletteSaturation: (s.paletteSaturation as number) ?? ((s as any).paletteVibrancy != null ? (s as any).paletteVibrancy * 10 : get().paletteSaturation),
-            paletteContrast: (s.paletteContrast as any) ?? get().paletteContrast,
             paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized, hardwareAcceleration: (s.hardwareAcceleration as boolean) ?? get().hardwareAcceleration, wallpaper: s.wallpaper ?? get().wallpaper,
             externalPlayer: s.externalPlayer ?? get().externalPlayer,
             dashboardMode: (s.dashboardMode as any) ?? get().dashboardMode,
@@ -558,8 +543,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setIconSize(v) { set({ iconSize: v }); persist(); },
     setVisualizerMode(v) { set({ visualizerMode: v }); persist(); },
     setImageWheelMode(v) { set({ imageWheelMode: v }); persist(); },
-    setHeaderOpacity(v) { set({ headerOpacity: v }); persist(); applySurface(); },
-    setFooterOpacity(v) { set({ footerOpacity: v }); persist(); },
+    setBarOpacity(v) { set({ barOpacity: v }); persist(); },
     setSurfaceSaturation(v) { set({ surfaceSaturation: v }); persist(); applySurface(); },
     setSurfaceOpacity(v) { set({ surfaceOpacity: v }); persist(); applySurface(); },
     setBgOverlayOpacity(v) { set({ bgOverlayOpacity: v }); persist(); },
@@ -578,12 +562,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setFontFamily(v) { set({ fontFamily: v }); persist(); applyFontFamily(v); },
     setPaletteAccent(v) { set({ paletteAccent: v, paletteCustomized: true }); persist(); applyPalette(); },
     setPaletteSaturation(v) { set({ paletteSaturation: v, paletteCustomized: true }); persist(); applyPalette(); },
-    setPaletteContrast(v) { set({ paletteContrast: v, paletteCustomized: true }); persist(); applyPalette(); },
     setWallpaperConfig(cfg) { set((s) => ({ wallpaper: { ...s.wallpaper, ...cfg } })); persist(); },
     setExternalPlayer(cfg) { set((s) => ({ externalPlayer: { ...s.externalPlayer, ...cfg } })); persist(); },
     resetPaletteToTheme(theme) {
       const def = THEME_PALETTE_DEFAULTS[theme] ?? THEME_PALETTE_DEFAULTS.default;
-      set({ paletteAccent: def.accent, paletteSaturation: def.saturation, paletteContrast: def.contrast, paletteCustomized: false });
+      set({ paletteAccent: def.accent, paletteSaturation: def.saturation, paletteCustomized: false });
       persist(); applyPalette();
     }};
 });

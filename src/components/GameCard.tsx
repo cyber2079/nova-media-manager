@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Game } from "@/types/game";
-import { Play, Trash2, Monitor, Tag } from "lucide-react";
+import { Play, Trash2, Monitor, Tag, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { tagColor } from "@/lib/tagColor";
 import FavoriteStar from "@/components/FavoriteStar";
@@ -11,6 +11,7 @@ import FavoriteStar from "@/components/FavoriteStar";
 const iconCache = new Map<string, string>();
 
 async function getExeIcon(path: string): Promise<string | null> {
+  if (!path || path.startsWith("steam://")) return null;
   if (iconCache.has(path)) return iconCache.get(path)!;
   try {
     const { invoke } = await import("@tauri-apps/api/core");
@@ -33,20 +34,30 @@ interface GameCardProps {
 
 export default memo(function GameCard({ game, onDelete, onLaunch, onEditTags, compact, favorited, onToggleFav }: GameCardProps) {
   const [coverSrc, setCoverSrc] = useState<string>("");
+  const uninstalled = game.installed === false;
 
-  // Load exe icon as cover when no custom cover path exists
+  // Load exe icon or Steam CDN cover
   useEffect(() => {
+    if (uninstalled) {
+      if (game.coverPath) {
+        // Preload cover from URL; if it loads use it, otherwise try exe icon
+        const img = new Image();
+        img.onload = () => setCoverSrc(game.coverPath);
+        img.src = game.coverPath;
+      }
+      return;
+    }
     if (!game.executablePath) return;
     let cancelled = false;
     getExeIcon(game.executablePath).then((url) => {
       if (!cancelled && url) setCoverSrc(url);
     });
     return () => { cancelled = true; };
-  }, [game.executablePath]);
+  }, [game.executablePath, game.coverPath, uninstalled]);
 
   return (
     <Card
-      className="group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] theme-enter-card hover:shadow-xl hover:shadow-primary/10 cursor-pointer"
+      className={cn("group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] theme-enter-card cursor-pointer")}
       onClick={() => onLaunch(game)}
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-surface-lighter">
@@ -59,10 +70,17 @@ export default memo(function GameCard({ game, onDelete, onLaunch, onEditTags, co
           )}
         </div>
 
+        {/* Uninstalled badge */}
+        {uninstalled && (
+          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 border border-white/10 text-[10px] text-gray-400">
+            未安装
+          </div>
+        )}
+
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/40">
           <Button size="icon" className="h-12 w-12 rounded-full opacity-0 transition-all group-hover:opacity-100"
-            onClick={() => onLaunch(game)}>
-            <Play className="h-5 w-5 fill-white" />
+            onClick={(e) => { e.stopPropagation(); onLaunch(game); }}>
+            {uninstalled ? <Download className="h-5 w-5" /> : <Play className="h-5 w-5 fill-white" />}
           </Button>
         </div>
 
@@ -83,13 +101,10 @@ export default memo(function GameCard({ game, onDelete, onLaunch, onEditTags, co
           </div>
         )}
 
-        {/* 名称 — 单独一行 */}
         <h3 className={cn("truncate font-medium mb-1.5", compact ? "text-xs" : "text-sm")}>{game.name}</h3>
 
-        {/* 信息行 */}
-        {!compact && <p className="text-xs text-gray-500 mb-2">{game.platform}</p>}
+        {!compact && <p className="text-xs text-gray-500 mb-2">{uninstalled ? "Steam · 未安装" : game.platform}</p>}
 
-        {/* 操作按钮行 */}
         <div className="flex items-center gap-1">
           {onEditTags && (
             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light"
@@ -99,7 +114,7 @@ export default memo(function GameCard({ game, onDelete, onLaunch, onEditTags, co
           )}
           <div className="flex-1" />
           <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-red-400"
-            onClick={() => onDelete(game.id)}>
+            onClick={(e) => { e.stopPropagation(); onDelete(game.id); }}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>

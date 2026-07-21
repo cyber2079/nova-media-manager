@@ -1,0 +1,2 @@
+# This directory contains native plugins (e.g. HEVC codec) synced via Syncthing.
+# It is gitignored — this file exists only so the Tauri build glob doesn't fail.

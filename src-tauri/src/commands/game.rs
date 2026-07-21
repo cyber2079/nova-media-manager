@@ -13,7 +13,11 @@ pub struct Game {
     pub platform: String,
     pub tags: Vec<String>,
     pub add_time: String,
+    #[serde(default = "default_installed")]
+    pub installed: bool,
 }
+
+fn default_installed() -> bool { true }
 
 #[tauri::command]
 pub fn get_all_games(db: State<Database>) -> Result<Vec<Game>, String> {
@@ -24,8 +28,11 @@ pub fn get_all_games(db: State<Database>) -> Result<Vec<Game>, String> {
 
     let games = stmt.query_map([], |row| {
         let tags_str: String = row.get(5)?;
+        let exec: String = row.get(2)?;
         Ok(Game {
-            id: row.get(0)?, name: row.get(1)?, executable_path: row.get(2)?,
+            id: row.get(0)?, name: row.get(1)?,
+            executable_path: exec.clone(),
+            installed: !exec.starts_with("steam://"),
             cover_path: row.get(3)?, platform: row.get(4)?,
             tags: serde_json::from_str(&tags_str).unwrap_or_default(),
             add_time: row.get(6)?,
@@ -53,7 +60,7 @@ pub fn add_game(db: State<Database>, executable_path: String) -> Result<Vec<Game
     let game = Game {
         id: id.clone(), name, executable_path: executable_path.clone(),
         cover_path: String::new(), platform: platform.to_string(),
-        tags: vec![], add_time: add_time.clone(),
+        tags: vec![], add_time: add_time.clone(), installed: true,
     };
 
     let conn = db.conn();
