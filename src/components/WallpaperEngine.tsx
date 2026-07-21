@@ -51,6 +51,7 @@ function useFolderImages(path: string, shuffle: boolean, intervalSec: number): s
 
 export default function WallpaperEngine() {
   const wp = useSettingsStore((s) => s.wallpaper);
+  const bgMode = useSettingsStore((s) => s.bgVideoMode);
   const [singleSrc, setSingleSrc] = useState<string | null>(null);
   const [videoFailed, setVideoFailed] = useState(false);
   const folderSrc = useFolderImages(
@@ -81,13 +82,13 @@ export default function WallpaperEngine() {
   };
 
   const fitStyle: React.CSSProperties = (() => {
-    if (wp.fit === "none") {
+    if (bgMode === "none") {
       return {
         width: "auto", height: "auto", maxWidth: "100vw", maxHeight: "100vh",
         position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)",
       } as React.CSSProperties;
     }
-    return { width: "100%", height: "100%", objectFit: wp.fit === "contain" ? "contain" : wp.fit === "fill" ? "fill" : "cover" } as React.CSSProperties;
+    return { width: "100%", height: "100%", objectFit: bgMode === "contain" ? "contain" : bgMode === "fill" ? "fill" : "cover" } as React.CSSProperties;
   })();
 
   // 视频加载失败（如 HEVC 编码无解码器）→ 隐藏，让默认背景色透出

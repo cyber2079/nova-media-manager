@@ -198,7 +198,13 @@
     "add_failed": "添加游戏失败",
     "scan_steam": "扫描 Steam 游戏",
     "close": "关闭",
-    "edit_tags": "编辑标签"
+    "edit_tags": "编辑标签",
+    "layout_banner": "横幅",
+    "uninstalled": "未安装",
+    "steam_uninstalled": "Steam · 未安装",
+    "scan_found": "发现 {{count}} 个新游戏",
+    "scan_none": "未发现新游戏",
+    "scan_failed": "扫描失败: {{error}}"
   },
   "theme": {
     "switch_hint": "当前: {{theme}} | 点击切换"
@@ -442,13 +448,15 @@
     "lyric_fill_color": "染色",
     "scroll_fade": "滚动蒙版浓度",
     "bg_video": "屏幕背景",
-    "bg_normal": "正常",
-    "bg_fill": "填充",
-    "bg_stretch": "拉伸",
+    "bg_contain": "完整",
+    "bg_cover": "填充",
+    "bg_fill": "拉伸",
+    "bg_none": "原样",
     "image_wheel": "图片滚轮",
     "image_wheel_prevNext": "上一张/下一张",
     "image_wheel_zoom": "放大/缩小",
     "bar_opacity": "顶栏/底栏透明度",
+    "bar_blur": "顶栏/底栏模糊度",
     "palette_title": "调色板",
     "palette_accent": "强调色",
     "palette_saturation": "饱和度",

@@ -2,12 +2,14 @@ import { create } from "zustand";
 import type { Game } from "@/types/game";
 import { invoke } from "@/lib/tauriInvoke";
 
+export type ScanResultMsg = { type: "found"; count: number } | { type: "none" } | { type: "failed"; error: string };
+
 interface GameState {
   games: Game[];
   isLoading: boolean;
   isImporting: boolean;
   isScanning: boolean;
-  scanResult: string | null;
+  scanResult: ScanResultMsg | null;
   scanDiagnostic: string[];
   sortConfig: string;
   loadGames: () => Promise<void>;
@@ -99,13 +101,13 @@ export const useGameStore = create<GameState>((set, get) => ({
         set({
           games: [...result.newGames, ...get().games],
           isScanning: false,
-          scanResult: `发现 ${count} 个新游戏`,
+          scanResult: { type: "found", count },
         });
       } else {
-        set({ isScanning: false, scanResult: "未发现新游戏" });
+        set({ isScanning: false, scanResult: { type: "none" } });
       }
     } catch (e) {
-      set({ isScanning: false, scanResult: `扫描失败: ${e}`, scanDiagnostic: [] });
+      set({ isScanning: false, scanResult: { type: "failed", error: String(e) }, scanDiagnostic: [] });
     }
   },
   setSortConfig: (config: string) => set({ sortConfig: config }),

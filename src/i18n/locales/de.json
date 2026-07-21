@@ -198,7 +198,13 @@
     "add_failed": "Spiel hinzufügen fehlgeschlagen",
     "scan_steam": "Steam-Spiele scannen",
     "close": "Schließen",
-    "edit_tags": "Tags bearbeiten"
+    "edit_tags": "Tags bearbeiten",
+    "layout_banner": "Banner",
+    "uninstalled": "Nicht installiert",
+    "steam_uninstalled": "Steam · Nicht installiert",
+    "scan_found": "{{count}} neue Spiele gefunden",
+    "scan_none": "Keine neuen Spiele gefunden",
+    "scan_failed": "Scan fehlgeschlagen: {{error}}"
   },
   "theme": {
     "switch_hint": "Aktuell: {{theme}}"
@@ -258,9 +264,10 @@
     "theme_plugins": "Theme-Markt",
     "tab_widgets": "Widgets",
     "bg_video": "Hintergrund",
-    "bg_normal": "Normal",
-    "bg_fill": "Füllen",
-    "bg_stretch": "Strecken",
+    "bg_contain": "Einpassen",
+    "bg_cover": "Füllen",
+    "bg_fill": "Strecken",
+    "bg_none": "Original",
     "theme_default": "Standard",
     "theme_poe": "Eira Frost",
     "theme_pg": "Sternentraum",
@@ -293,6 +300,7 @@
     "image_wheel_prevNext": "Zurück/Weiter",
     "image_wheel_zoom": "Zoomen",
     "bar_opacity": "Leisten-Transparenz",
+    "bar_blur": "Header/Footer Weichzeichner",
     "palette_title": "Palette",
     "palette_accent": "Akzent",
     "palette_saturation": "Sättigung",
@@ -670,6 +678,7 @@
     "items_suffix": " Elemente"
   },
   "mediaScan": {
+    "importing": "Steam-Bibliothek wird gescannt...",
     "no_new_media": "Keine neuen Medien gefunden (Bereits importierte übersprungen)",
     "imported_n": "{{n}} {{unit}} importiert",
     "truncated": " (2000-Limit erreicht; erneut importieren für mehr)"

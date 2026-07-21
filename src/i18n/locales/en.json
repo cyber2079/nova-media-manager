@@ -184,7 +184,13 @@
     "add_failed": "Failed to add game",
     "scan_steam": "Scan Steam Games",
     "close": "Close",
-    "edit_tags": "Edit Tags"
+    "edit_tags": "Edit Tags",
+    "layout_banner": "Banner",
+    "uninstalled": "Not installed",
+    "steam_uninstalled": "Steam · Not installed",
+    "scan_found": "Found {{count}} new games",
+    "scan_none": "No new games found",
+    "scan_failed": "Scan failed: {{error}}"
   },
   "theme": {
     "switch_hint": "Current: {{theme}} | Click to switch"
@@ -427,13 +433,15 @@
     "lyric_fill_color": "Fill (Karaoke)",
     "scroll_fade": "Scroll Fade Opacity",
     "bg_video": "Background",
-    "bg_normal": "Normal",
-    "bg_fill": "Fill",
-    "bg_stretch": "Stretch",
+    "bg_contain": "Fit",
+    "bg_cover": "Fill",
+    "bg_fill": "Stretch",
+    "bg_none": "Original",
     "image_wheel": "Image Scroll",
     "image_wheel_prevNext": "Prev/Next",
     "image_wheel_zoom": "Zoom",
     "bar_opacity": "Bar Opacity",
+    "bar_blur": "Header/Footer Blur",
     "palette_title": "Palette",
     "palette_accent": "Accent",
     "palette_saturation": "Saturation",
@@ -682,6 +690,7 @@
     "month_start": "1st"
   },
   "mediaScan": {
+    "importing": "Scanning Steam library...",
     "no_new_media": "No new media found (already in library skipped)",
     "imported_n": "Imported {{n}} {{unit}}",
     "truncated": " (2000 limit reached; import again for more)"

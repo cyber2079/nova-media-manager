@@ -99,13 +99,13 @@ export function useIceBackgroundVideo(isActive: boolean) {
     const draw = () => {
       if (!ctx || !canvas) return;
       const w = canvas.width, h = canvas.height;
-      const mode = useSettingsStore.getState().bgVideoMode || "fill";
+      const mode = useSettingsStore.getState().bgVideoMode || "cover";
       const isPortrait = h > w;
       const hasVideoDims = active.videoWidth > 0 && active.videoHeight > 0;
       let dx = 0, dy = 0, dw = w, dh = h;
       let needsBg = false;
-      if (mode === "stretch") { dx = 0; dy = 0; dw = w; dh = h; }
-      else if (mode === "fill") {
+      if (mode === "fill") { dx = 0; dy = 0; dw = w; dh = h; }
+      else if (mode === "cover") {
         if (hasVideoDims) {
           const vw = active.videoWidth, vh = active.videoHeight;
           const scale = Math.max(w / vw, h / vh);

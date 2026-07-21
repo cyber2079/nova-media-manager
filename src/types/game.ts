@@ -3,6 +3,7 @@ export interface Game {
   name: string;
   executablePath: string;
   coverPath: string;
+  landscapePath: string;
   platform: string;
   tags: string[];
   addTime: string;

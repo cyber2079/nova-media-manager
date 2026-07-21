@@ -198,7 +198,13 @@
     "add_failed": "ゲームの追加に失敗",
     "scan_steam": "Steamゲームをスキャン",
     "close": "閉じる",
-    "edit_tags": "タグ編集"
+    "edit_tags": "タグ編集",
+    "layout_banner": "バナー",
+    "uninstalled": "未インストール",
+    "steam_uninstalled": "Steam · 未インストール",
+    "scan_found": "{{count}}件の新しいゲームを発見",
+    "scan_none": "新しいゲームは見つかりませんでした",
+    "scan_failed": "スキャン失敗: {{error}}"
   },
   "theme": {
     "switch_hint": "現在: {{theme}} | クリック切替"
@@ -258,9 +264,10 @@
     "theme_plugins": "テーマ市場",
     "tab_widgets": "ウィジェット",
     "bg_video": "画面背景",
-    "bg_normal": "通常",
-    "bg_fill": "填充",
-    "bg_stretch": "ストレッチ",
+    "bg_contain": "フィット",
+    "bg_cover": "塗りつぶし",
+    "bg_fill": "引き伸ばし",
+    "bg_none": "オリジナル",
     "theme_default": "デフォルト",
     "theme_poe": "蘇雪凝",
     "theme_pg": "星夢琉璃",
@@ -293,6 +300,7 @@
     "image_wheel_prevNext": "前へ/次へ",
     "image_wheel_zoom": "ズーム",
     "bar_opacity": "バー透明度",
+    "bar_blur": "ヘッダー/フッターぼかし",
     "palette_title": "パレット",
     "palette_accent": "アクセント",
     "palette_saturation": "彩度",
@@ -670,6 +678,7 @@
     "items_suffix": " 項目"
   },
   "mediaScan": {
+    "importing": "Steamライブラリをスキャン中...",
     "no_new_media": "新しいメディアは見つかりませんでした（既存分はスキップ）",
     "imported_n": "{{n}}{{unit}}をインポートしました",
     "truncated": "（2000件の上限に達しました。もう一度インポートしてください）"

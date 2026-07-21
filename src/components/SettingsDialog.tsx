@@ -11,9 +11,8 @@ import ScrollFade from "@/components/ScrollFade";
 import ThemeManager from "@/components/ThemeManager";
 import BgVideoTuner from "@/components/BgVideoTuner";
 import { Palette, Monitor, SlidersHorizontal, Music, RotateCcw, Gauge, Sparkles, EyeOff, Eye, Copy, Check, Key, Crown, Cpu, Clock, Calendar, Timer, FolderOpen, ImageIcon, Shuffle, Home } from "lucide-react";
-import { ThemeAssets } from "@/lib/themeBase";
 import { useLicenseStore } from "@/stores/licenseStore";
-import { ACCENT_OPTIONS, THEME_PALETTE_DEFAULTS, type WallpaperFit } from "@/stores/settingsStore";
+import { ACCENT_OPTIONS } from "@/stores/settingsStore";
 import { useWidgetStore, pageKeys } from "@/stores/widgetStore";
 import type { PageKey } from "@/stores/widgetStore";
 
@@ -21,8 +20,6 @@ interface Props { open: boolean; onClose: () => void; }
 
 const themeList: { key: ThemeName; labelKey: string; emoji: string; image?: string }[] = [
   { key: "default", labelKey: "settings.theme_default", emoji: "🏠" },
-  { key: "ice-girl", labelKey: "settings.theme_ice", emoji: "❄️", image: ThemeAssets.ice.head },
-  { key: "cyber-girl", labelKey: "settings.theme_cg", emoji: "💜", image: ThemeAssets.cg.bg },
 ];
 
 // ═══════════════ TABS ═══════════════
@@ -38,18 +35,19 @@ const tabs: { id: TabId; icon: typeof SlidersHorizontal; labelKey: string }[] = 
 
 // ═══════════════ DEFAULTS ═══════════════
 const DEFAULTS = {
-  general: { language: "zh", autoStart: true, startFullscreen: true, autoHideHeader: false, autoHideFooter: false, hideTitleBar: true },
-  appearance: { theme: "path-of-exile" as ThemeName, bgVideoMode: "fill" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "inter", paletteAccent: "#4788f0", paletteSaturation: 50, paletteCustomized: false, barOpacity: 78 },
-  media: { previewOffset: 0.5, lyricFontSize: "normal" as const, lyricUseCustomColor: false, lyricCurrentColor: "#ffffff", lyricOtherColor: "#8899aa", lyricFillColor: "#ffb6c1", playerBgMode: "follow" as const, playerBgColor: "", cyberBgmEnabled: true, imageWheelMode: "prevNext" as ImageWheelMode },
+  general: { language: "zh", autoStart: true, startFullscreen: true },
+  appearance: { theme: "default" as ThemeName, bgVideoMode: "cover" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "inter", paletteAccent: "#4788f0", paletteSaturation: 50, paletteCustomized: false, barOpacity: 78, barBlur: 16, autoHideHeader: false, autoHideFooter: false, hideTitleBar: true, wallpaper: { mode: "none" as const, path: "", shuffle: "sequential" as const, interval: 30, fit: "none" as const } },
+  media: { previewOffset: 0.5, lyricFontSize: "normal" as const, lyricUseCustomColor: false, lyricCurrentColor: "#ffffff", lyricOtherColor: "#8899aa", lyricFillColor: "#ffb6c1", playerBgMode: "follow" as const, playerBgColor: "", cyberBgmEnabled: true, imageWheelMode: "prevNext" as ImageWheelMode, externalPlayer: { mode: "auto" as const, kind: "", path: "" } },
   widgets: {
     globalWidgets: true,
+    widgetTextColor: "#e8f4ff",
     widgetPages: {} as Record<string, boolean>,
-    myComputer: { enabled: true, position: "bottom-left" as const, myComputerMode: "custom" as const },
-    systemMonitor: { enabled: true, position: "bottom-right" as const },
-    clock: { enabled: true, position: "top-right" as const },
-    calendar: { enabled: true, position: "top-left" as const },
+    myComputer: { enabled: false, position: "bottom-left" as const, myComputerMode: "default" as const },
+    systemMonitor: { enabled: false, position: "bottom-right" as const },
+    clock: { enabled: false, position: "top-right" as const },
+    calendar: { enabled: false, position: "top-left" as const },
     countdown: { enabled: false, position: "center-right" as const, displayMode: "full" as const, hours: 0, minutes: 5, seconds: 0, loopCount: 1, alertGlow: false, alertVoice: true, voiceInterval: 30 }},
-  performance: { perfPriority: "normal" as const, perfIdleReduce: true, perfReduceAnimations: false, cacheCleanupDays: 30 },
+  performance: { perfPriority: "normal" as const, perfIdleReduce: true, perfReduceAnimations: false, cacheCleanupDays: 30, hardwareAcceleration: true },
 };
 
 // ═══════════════ MAIN COMPONENT ═══════════════
@@ -67,7 +65,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
     lyricOtherColor, setLyricOtherColor, lyricFillColor, setLyricFillColor,
     fontSize, iconSize, setFontSize, setIconSize, fontFamily, setFontFamily,
     imageWheelMode, setImageWheelMode,
-    barOpacity, setBarOpacity, bgOverlayOpacity, setBgOverlayOpacity,
+    barOpacity, setBarOpacity, barBlur, setBarBlur, bgOverlayOpacity, setBgOverlayOpacity,
     hideTitleBar, setHideTitleBar,
     fontPrimaryColor, fontSecondaryColor, widgetTextColor, setFontPrimaryColor, setFontSecondaryColor, setWidgetTextColor,
     scrollFadeOpacity, setScrollFadeOpacity,
@@ -76,6 +74,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
     cgTextSize, cgTextColor, setCgTextSize, setCgTextColor,
     paletteAccent, paletteSaturation, setPaletteAccent, setPaletteSaturation, resetPaletteToTheme,
     dashboardMode, setDashboardMode, hardwareAcceleration, setHardwareAcceleration,
+    setWallpaperConfig, setExternalPlayer,
     perfPriority, setPerfPriority, perfIdleReduce, setPerfIdleReduce,
     perfReduceAnimations, setPerfReduceAnimations, cacheCleanupDays, setCacheCleanupDays,
     applyPerfSettings,
@@ -115,8 +114,6 @@ export default function SettingsDialog({ open, onClose }: Props) {
         setLanguage(d.language); i18n.changeLanguage(d.language);
         localStorage.setItem("app-lang", d.language); kv.set("app-lang", d.language).catch(() => {});
         setAutoStart(d.autoStart); setStartFullscreen(d.startFullscreen);
-        setAutoHideHeader(d.autoHideHeader); setAutoHideFooter(d.autoHideFooter);
-        setHideTitleBar(d.hideTitleBar);
         break;
       }
       case "appearance": {
@@ -124,7 +121,10 @@ export default function SettingsDialog({ open, onClose }: Props) {
         setTheme(d.theme); setBgVideoMode(d.bgVideoMode);
         setFontSize(d.fontSize); setFontFamily(d.fontFamily);
         setPaletteAccent(d.paletteAccent); setPaletteSaturation(d.paletteSaturation);
-        setBarOpacity(d.barOpacity);
+        setBarOpacity(d.barOpacity); setBarBlur(d.barBlur);
+        setAutoHideHeader(d.autoHideHeader); setAutoHideFooter(d.autoHideFooter);
+        setHideTitleBar(d.hideTitleBar);
+        setWallpaperConfig(d.wallpaper);
         setTimeout(() => applySurface(), 0);
         break;
       }
@@ -135,6 +135,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
         setLyricOtherColor(d.lyricOtherColor); setLyricFillColor(d.lyricFillColor);
         setPlayerBgMode(d.playerBgMode); setPlayerBgColor(d.playerBgColor);
         setCyberBgmEnabled(d.cyberBgmEnabled); setImageWheelMode(d.imageWheelMode);
+        setExternalPlayer(d.externalPlayer);
         break;
       }
       case "widgets": {
@@ -146,12 +147,14 @@ export default function SettingsDialog({ open, onClose }: Props) {
         setEnabled("clock", d.clock.enabled); setPosition("clock", d.clock.position);
         setEnabled("calendar", d.calendar.enabled); setPosition("calendar", d.calendar.position);
         setCountdown(d.countdown);
+        setWidgetTextColor(d.widgetTextColor);
         break;
       }
       case "performance": {
         const d = DEFAULTS.performance;
         setPerfPriority(d.perfPriority); setPerfIdleReduce(d.perfIdleReduce);
         setPerfReduceAnimations(d.perfReduceAnimations); setCacheCleanupDays(d.cacheCleanupDays);
+        setHardwareAcceleration(d.hardwareAcceleration);
         applyPerfSettings();
         break;
       }
@@ -207,7 +210,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
           <div className="flex-1 overflow-y-auto px-6 py-5 relative">
             {activeTab === "general" && <GeneralTab t={t} language={language} handleLanguage={handleLanguage} languages={languages} autoStart={autoStart} autoLoading={autoLoading} handleAutoStart={handleAutoStart} startFullscreen={startFullscreen} setStartFullscreen={setStartFullscreen} resetTab={() => setConfirmReset("general")} />}
 
-            {activeTab === "appearance" && <AppearanceTab t={t} theme={theme} filteredThemeList={filteredThemeList} handleTheme={handleTheme} paletteAccent={paletteAccent} paletteSaturation={paletteSaturation} setPaletteAccent={setPaletteAccent} setPaletteSaturation={setPaletteSaturation} resetPaletteToTheme={resetPaletteToTheme} bgVideoMode={bgVideoMode} setBgVideoMode={setBgVideoMode} hideTitleBar={hideTitleBar} setHideTitleBar={setHideTitleBar} autoHideHeader={autoHideHeader} setAutoHideHeader={setAutoHideHeader} autoHideFooter={autoHideFooter} setAutoHideFooter={setAutoHideFooter} barOpacity={barOpacity} setBarOpacity={setBarOpacity} dashboardMode={dashboardMode} setDashboardMode={setDashboardMode} fontSize={fontSize} setFontSize={setFontSize} iconSize={iconSize} setIconSize={setIconSize} fontFamily={fontFamily} setFontFamily={setFontFamily} resetTab={() => setConfirmReset("appearance")} />}
+            {activeTab === "appearance" && <AppearanceTab t={t} theme={theme} filteredThemeList={filteredThemeList} handleTheme={handleTheme} paletteAccent={paletteAccent} paletteSaturation={paletteSaturation} setPaletteAccent={setPaletteAccent} setPaletteSaturation={setPaletteSaturation} resetPaletteToTheme={resetPaletteToTheme} bgVideoMode={bgVideoMode} setBgVideoMode={setBgVideoMode} hideTitleBar={hideTitleBar} setHideTitleBar={setHideTitleBar} autoHideHeader={autoHideHeader} setAutoHideHeader={setAutoHideHeader} autoHideFooter={autoHideFooter} setAutoHideFooter={setAutoHideFooter} barOpacity={barOpacity} setBarOpacity={setBarOpacity} barBlur={barBlur} setBarBlur={setBarBlur} dashboardMode={dashboardMode} setDashboardMode={setDashboardMode} fontSize={fontSize} setFontSize={setFontSize} iconSize={iconSize} setIconSize={setIconSize} fontFamily={fontFamily} setFontFamily={setFontFamily} resetTab={() => setConfirmReset("appearance")} />}
 
             {activeTab === "media" && <MediaTab t={t} previewOffset={previewOffset} setPreviewOffset={setPreviewOffset} lyricFontSize={lyricFontSize} setLyricFontSize={setLyricFontSize} lyricUseCustomColor={lyricUseCustomColor} setLyricUseCustomColor={setLyricUseCustomColor} lyricCurrentColor={lyricCurrentColor} setLyricCurrentColor={setLyricCurrentColor} lyricOtherColor={lyricOtherColor} setLyricOtherColor={setLyricOtherColor} lyricFillColor={lyricFillColor} setLyricFillColor={setLyricFillColor} playerBgMode={playerBgMode} playerBgColor={playerBgColor} setPlayerBgMode={setPlayerBgMode} setPlayerBgColor={setPlayerBgColor} cyberBgmEnabled={cyberBgmEnabled} setCyberBgmEnabled={setCyberBgmEnabled} imageWheelMode={imageWheelMode} setImageWheelMode={setImageWheelMode} resetTab={() => setConfirmReset("media")} />}
 
@@ -311,18 +314,18 @@ function GeneralTab({ t, language, handleLanguage, languages, autoStart, autoLoa
 // ═══════════════ APPEARANCE TAB ═══════════════
 
 function AppearanceTab(props: any) {
-  const { t, theme, filteredThemeList, handleTheme, paletteAccent, paletteSaturation, setPaletteAccent, setPaletteSaturation, resetPaletteToTheme, bgVideoMode, setBgVideoMode, hideTitleBar, setHideTitleBar, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, barOpacity, setBarOpacity, dashboardMode, setDashboardMode, fontSize, setFontSize, iconSize, setIconSize, fontFamily, setFontFamily, resetTab } = props;
+  const { t, theme, filteredThemeList, handleTheme, paletteAccent, paletteSaturation, setPaletteAccent, setPaletteSaturation, resetPaletteToTheme, bgVideoMode, setBgVideoMode, hideTitleBar, setHideTitleBar, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, barOpacity, setBarOpacity, barBlur, setBarBlur, dashboardMode, setDashboardMode, fontSize, setFontSize, iconSize, setIconSize, fontFamily, setFontFamily, resetTab } = props;
   return (
     <>
       {/* ═══ Theme ═══ */}
       <SectionGroup title={t("settings.theme")}>
         <SettingCard>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2">
             {filteredThemeList.map((item: any) => (
               <button key={item.key} onClick={() => handleTheme(item.key)}
-                className={cn("flex flex-col items-center gap-2 px-3 py-4 rounded-lg text-xs border transition-all duration-200",
+                className={cn("flex flex-col items-center gap-1.5 px-2 py-3 rounded-lg text-xs border transition-all duration-200",
                   theme === item.key ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
-                {item.image ? <img src={item.image} alt="" className="w-14 h-14 rounded-full object-cover" /> : item.key === "default" ? <Home className="h-7 w-7" /> : <span className="text-xl">{item.emoji}</span>}
+                {item.image ? <img src={item.image} alt="" className="w-10 h-10 rounded-full object-cover" /> : item.key === "default" ? <Home className="h-5 w-5" /> : <span className="text-base">{item.emoji}</span>}
                 <span>{t(item.labelKey)}</span>
               </button>
             ))}
@@ -335,11 +338,16 @@ function AppearanceTab(props: any) {
         <SettingCard>
           <div>
             <p className="text-xs text-gray-400 mb-2">{t("settings.palette_accent")}</p>
-            <div className="flex gap-2 flex-wrap">
+            <div className="grid grid-cols-9 gap-1.5">
               {ACCENT_OPTIONS.map((a) => (
                 <button key={a.value} onClick={() => setPaletteAccent(a.value)}
-                  className={cn("w-8 h-8 rounded-full border-2 transition-all",
-                    paletteAccent === a.value ? "border-white scale-110 shadow-lg" : "border-transparent hover:scale-105")}
+                  className={cn(
+                    "h-5 rounded transition-all duration-150",
+                    "ring-1 ring-white/10 hover:ring-white/30",
+                    paletteAccent === a.value
+                      ? "ring-2 ring-white shadow-lg scale-105"
+                      : "hover:scale-105"
+                  )}
                   style={{ background: a.value }} title={t(a.i18nKey)} />
               ))}
             </div>
@@ -356,8 +364,8 @@ function AppearanceTab(props: any) {
         <SettingCard>
           <div>
             <p className="text-xs text-gray-400 mb-2">{t("settings.bg_video")}</p>
-            <div className="grid grid-cols-3 gap-2">
-              {(["normal", "fill", "stretch"] as BgVideoMode[]).map((mode) => (
+            <div className="grid grid-cols-4 gap-2">
+              {(["contain", "cover", "fill", "none"] as BgVideoMode[]).map((mode) => (
                 <button key={mode} onClick={() => setBgVideoMode(mode)}
                   className={cn("px-3 py-2 rounded-lg text-xs border transition-all",
                     bgVideoMode === mode ? "bg-primary/15 border-primary/40 text-primary-light" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
@@ -385,6 +393,7 @@ function AppearanceTab(props: any) {
           <CardDivider />
           <SettingRow label={t("settings.auto_hide_footer")}><Toggle active={autoHideFooter} onToggle={() => setAutoHideFooter(!autoHideFooter)} /></SettingRow>
           <SliderControl title={t("settings.bar_opacity")} value={barOpacity} onChange={setBarOpacity} min={0} max={100} unit="%" />
+          <SliderControl title={t("settings.bar_blur")} value={barBlur} onChange={setBarBlur} min={0} max={40} unit="px" />
         </SettingCard>
       </SectionGroup>
 
@@ -974,18 +983,6 @@ function WallpaperSection({ t }: { t: any }) {
         <SettingRow label={t("settings.wallpaper_shuffle")}><Toggle active={wallpaper.shuffle === "random"} onToggle={() => setWallpaperConfig({ shuffle: wallpaper.shuffle === "random" ? "sequential" : "random" })} /></SettingRow>
         <SliderControl title={t("settings.wallpaper_interval")} value={wallpaper.interval} onChange={(v) => setWallpaperConfig({ interval: v })} min={5} max={300} unit="s" />
       </>)}
-      {wallpaper.mode !== "none" && (
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-400">{t("settings.wallpaper_fit")}</span>
-          <select value={wallpaper.fit} onChange={(e) => setWallpaperConfig({ fit: e.target.value as WallpaperFit })}
-            className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-white text-xs outline-none">
-            <option value="none">{t("settings.wallpaper_fit_none")}</option>
-            <option value="cover">{t("settings.wallpaper_fit_cover")}</option>
-            <option value="contain">{t("settings.wallpaper_fit_contain")}</option>
-            <option value="fill">{t("settings.wallpaper_fit_fill")}</option>
-          </select>
-        </div>
-      )}
     </SettingCard>
   );
 }

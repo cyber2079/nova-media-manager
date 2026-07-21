@@ -122,6 +122,25 @@ async fn fetch_names_from_store(appids: &[u32]) -> HashMap<u32, String> {
     map
 }
 
+/// Download a Steam cover image, trying variants in order.
+/// Returns true if any variant was successfully downloaded and saved.
+async fn download_steam_cover(app_id:u32,variants:&[&str],save_path:&std::path::Path)->bool{
+    for variant in variants{
+        let url=format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/{}",app_id,variant);
+        match reqwest::get(&url).await{
+            Ok(resp) if resp.status().is_success()=>{
+                if let Ok(bytes)=resp.bytes().await{
+                    if std::fs::write(save_path,&bytes).is_ok()
+                        &&std::fs::metadata(save_path).map(|m|m.len()>0).unwrap_or(false)
+                    {return true;}
+                }
+            }
+            _=>continue,
+        }
+    }
+    false
+}
+
 #[derive(serde::Serialize)] #[serde(rename_all="camelCase")]
 pub struct ScanResult{pub new_games:Vec<Game>,pub diagnostic:Vec<String>}
 
@@ -156,30 +175,58 @@ pub async fn scan_steam_games(db:State<'_,Database>)->Result<ScanResult,String> 
     diag.push("=== Step 3: 已安装 ===".into());
     let libs=match steamlocate::SteamDir::from_dir(&steam){Ok(sd)=>match sd.libraries(){Ok(l)=>l,Err(e)=>{diag.push(format!("✗ {e}"));return Ok(ScanResult{new_games:vec![],diagnostic:diag});}},Err(e)=>{diag.push(format!("✗ {e}"));return Ok(ScanResult{new_games:vec![],diagnostic:diag});}};
     diag.push(format!("✓ {} 个库",libs.len()));
-    let (at,conn)=(chrono::Utc::now().to_rfc3339(),db.conn());
+    let at=chrono::Utc::now().to_rfc3339();
     let (mut ng,mut installed_ids,mut updated)=(Vec::new(),HashSet::new(),0u32);
+
+    // Migration phase
+    {
+    let conn=db.conn();
+    // Migrate old header.jpg to library_600x900.jpg
+    let old_covers:i64=conn.query_row("SELECT COUNT(*) FROM games WHERE cover_path LIKE '%/header.jpg' AND platform='Steam'",[],|r|r.get(0)).unwrap_or(0);
+    if old_covers>0{conn.execute("UPDATE games SET cover_path=REPLACE(cover_path,'/header.jpg','/library_600x900.jpg') WHERE cover_path LIKE '%/header.jpg' AND platform='Steam'",[]).ok();diag.push(format!("✓ 封面迁移: {old_covers} 个 header→library_600x900"));}
 
     // Fix placeholder names
     let cnt:i64=conn.query_row("SELECT COUNT(*) FROM games WHERE name LIKE 'Steam App %' AND platform='Steam'",[],|r|r.get(0)).unwrap_or(0);
     if cnt>0{diag.push(format!("{cnt} 个占位符名称，更新中..."));let mut st=conn.prepare("SELECT id FROM games WHERE name LIKE 'Steam App %' AND platform='Steam'").map_err(|e|e.to_string())?;let tf:Vec<(String,u32)>=st.query_map([],|r|{let s:String=r.get(0)?;Ok(s)}).map_err(|e|e.to_string())?.filter_map(|r|r.ok()).filter_map(|s|s.strip_prefix("steam_").and_then(|n|n.parse::<u32>().ok()).map(|a|(s,a))).collect();for(sid,aid)in &tf{if let Some(nm)=app_name_map.get(aid){conn.execute("UPDATE games SET name=?1 WHERE id=?2",rusqlite::params![nm,sid]).ok();updated+=1;}}diag.push(format!("✓ 更新 {updated} 个"));}
+    } // end migration block
 
     for lib in libs{let lib=match lib{Ok(l)=>l,Err(e)=>{diag.push(format!("✗ {e}"));continue;}};
         for app in lib.apps(){let app=match app{Ok(a)=>a,Err(e)=>{diag.push(format!("  跳过: {e}"));continue;}};installed_ids.insert(app.app_id);
             let name=app.name.clone().or_else(||app_name_map.get(&app.app_id).cloned()).unwrap_or_else(||format!("Steam App {}",app.app_id));
             let id=format!("steam_{}",app.app_id);app_name_map.entry(app.app_id).or_insert_with(||name.clone());
-            if conn.query_row("SELECT COUNT(*)>0 FROM games WHERE id=?1",rusqlite::params![id],|r|r.get(0)).unwrap_or(false){diag.push(format!("  · {name}"));continue;}
             let ip=lib.path().join("steamapps").join("common").join(&app.install_dir);if !ip.exists(){diag.push(format!("  ✗ {}",ip.display()));continue;}
             let exe=find_game_exe(&ip).unwrap_or_default();diag.push(format!("  ✓ [{0}] {name}",app.app_id));
-            let g=Game{id:id.clone(),name,executable_path:exe,cover_path:format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg",app.app_id),platform:"Steam".into(),tags:vec![],add_time:at.clone(),installed:true};
-            conn.execute("INSERT OR IGNORE INTO games (id,name,executable_path,cover_path,platform,tags,add_time) VALUES (?1,?2,?3,?4,?5,?6,?7)",rusqlite::params![g.id,g.name,g.executable_path,g.cover_path,g.platform,serde_json::to_string(&g.tags).unwrap_or_default(),g.add_time]).map_err(|e|e.to_string())?;ng.push(g);}}
+            {let conn=db.conn();
+            if conn.query_row("SELECT COUNT(*)>0 FROM games WHERE id=?1",rusqlite::params![id],|r|r.get(0)).unwrap_or(false){diag.push(format!("  · {name}"));continue;}
+            } // conn dropped here — safe to .await below
+            // ── Download covers ──
+            let covers_dir=db.data_dir().join("covers");std::fs::create_dir_all(&covers_dir).ok();
+            let portrait_path=covers_dir.join(format!("game_steam_{}_portrait.jpg",app.app_id));
+            let landscape_path=covers_dir.join(format!("game_steam_{}_landscape.jpg",app.app_id));
+            let portrait_done=download_steam_cover(app.app_id,&["library_600x900.jpg","library_hero.jpg","capsule_616x353.jpg","header.jpg"],&portrait_path).await;
+            let landscape_done=download_steam_cover(app.app_id,&["library_hero.jpg","capsule_616x353.jpg","header.jpg"],&landscape_path).await;
+            let cover_path=if portrait_done{portrait_path.to_string_lossy().to_string()}else{format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/library_600x900.jpg",app.app_id)};
+            let landscape_path_str=if landscape_done{landscape_path.to_string_lossy().to_string()}else{String::new()};
+            let g=Game{id:id.clone(),name,executable_path:exe,cover_path,landscape_path:landscape_path_str,platform:"Steam".into(),tags:vec![],add_time:at.clone(),installed:true};
+            let conn=db.conn();
+            conn.execute("INSERT OR IGNORE INTO games (id,name,executable_path,cover_path,landscape_path,platform,tags,add_time) VALUES (?1,?2,?3,?4,?5,?6,?7,?8)",rusqlite::params![g.id,g.name,g.executable_path,g.cover_path,g.landscape_path,g.platform,serde_json::to_string(&g.tags).unwrap_or_default(),g.add_time]).map_err(|e|e.to_string())?;ng.push(g);}}
 
     diag.push("=== Step 4: 未安装 ===".into());
     if found_steamid && !owned_ids.is_empty(){
         let ui:Vec<u32>=owned_ids.iter().filter(|id|!installed_ids.contains(id)).copied().collect();diag.push(format!("{} 个未安装",ui.len()));let mut uc=0u32;
-        for aid in &ui{let id=format!("steam_{aid}");if conn.query_row("SELECT COUNT(*)>0 FROM games WHERE id=?1",rusqlite::params![id],|r|r.get(0)).unwrap_or(false){continue;}
+        for aid in &ui{let id=format!("steam_{aid}");{let conn=db.conn();if conn.query_row("SELECT COUNT(*)>0 FROM games WHERE id=?1",rusqlite::params![id],|r|r.get(0)).unwrap_or(false){continue;}}
             let name=match app_name_map.get(aid){Some(n)=>n.clone(),None=>continue}; // skip garbage IDs without a proper name
-            let g=Game{id:id.clone(),name,executable_path:format!("steam://run/{aid}"),cover_path:format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{aid}/header.jpg"),platform:"Steam".into(),tags:vec![],add_time:at.clone(),installed:false};
-            conn.execute("INSERT OR IGNORE INTO games (id,name,executable_path,cover_path,platform,tags,add_time) VALUES (?1,?2,?3,?4,?5,?6,?7)",rusqlite::params![g.id,g.name,g.executable_path,g.cover_path,g.platform,serde_json::to_string(&g.tags).unwrap_or_default(),g.add_time]).map_err(|e|e.to_string())?;ng.push(g);uc+=1;}
+            // ── Download covers ──
+            let covers_dir=db.data_dir().join("covers");std::fs::create_dir_all(&covers_dir).ok();
+            let portrait_path=covers_dir.join(format!("game_steam_{}_portrait.jpg",aid));
+            let landscape_path=covers_dir.join(format!("game_steam_{}_landscape.jpg",aid));
+            let portrait_done=download_steam_cover(*aid,&["library_600x900.jpg","library_hero.jpg","capsule_616x353.jpg","header.jpg"],&portrait_path).await;
+            let landscape_done=download_steam_cover(*aid,&["library_hero.jpg","capsule_616x353.jpg","header.jpg"],&landscape_path).await;
+            let cover_path=if portrait_done{portrait_path.to_string_lossy().to_string()}else{format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{aid}/library_600x900.jpg")};
+            let landscape_path_str=if landscape_done{landscape_path.to_string_lossy().to_string()}else{String::new()};
+            let g=Game{id:id.clone(),name,executable_path:format!("steam://run/{aid}"),cover_path,landscape_path:landscape_path_str,platform:"Steam".into(),tags:vec![],add_time:at.clone(),installed:false};
+            let conn=db.conn();
+            conn.execute("INSERT OR IGNORE INTO games (id,name,executable_path,cover_path,landscape_path,platform,tags,add_time) VALUES (?1,?2,?3,?4,?5,?6,?7,?8)",rusqlite::params![g.id,g.name,g.executable_path,g.cover_path,g.landscape_path,g.platform,serde_json::to_string(&g.tags).unwrap_or_default(),g.add_time]).map_err(|e|e.to_string())?;ng.push(g);uc+=1;}
         diag.push(format!("=== 总计: 已装 {} | 未装 {uc} | 新 {} ===",installed_ids.len(),ng.len()));
     } else { diag.push(format!("=== 总计: 已装 {} | 新 {} ===",installed_ids.len(),ng.len())); }
     Ok(ScanResult{new_games:ng,diagnostic:diag})

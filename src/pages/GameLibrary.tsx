@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState, useMemo, useRef } from "react";
-import { useGameStore } from "@/stores/gameStore";
+import { useGameStore, type ScanResultMsg } from "@/stores/gameStore";
 import { useTranslation } from "react-i18next";
 import GameCard from "@/components/GameCard";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import PaginationBar from "@/components/PaginationBar";
 import { usePagination } from "@/lib/usePagination";
 import { useToast } from "@/components/Toast";
 import { useAllTags } from "@/hooks/useAllTags";
+import { steamCdnFallbacks } from "@/lib/steamCdn";
 import type { Game } from "@/types/game";
 
 export default function GameLibrary() {
@@ -86,7 +87,7 @@ export default function GameLibrary() {
     return r;
   }, [games, activeTags, favOnly, getByType, searchQuery, sortConfig]);
 
-  const pageSize = layoutMode === "small" ? 30 : 20;
+  const pageSize = layoutMode === "banner" ? 10 : layoutMode === "small" ? 30 : 20;
   const { page, setPage, totalPages, paginated } = usePagination(filtered, pageSize);
   useSearchJump(filtered, pageSize, setPage);
 
@@ -129,7 +130,11 @@ export default function GameLibrary() {
           {searchQuery && <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-0.5"><X className="h-3.5 w-3.5" /></button>}
         </div>
         {scanResult && (
-          <span className="text-xs text-primary-light/80">{scanResult}</span>
+          <span className="text-xs text-primary-light/80">
+            {scanResult.type === "found" ? t("game.scan_found", { count: scanResult.count })
+              : scanResult.type === "none" ? t("game.scan_none")
+              : t("game.scan_failed", { error: scanResult.error })}
+          </span>
         )}
         <button onClick={scanSteam} disabled={isScanning}
           className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center",
@@ -170,7 +175,26 @@ export default function GameLibrary() {
       {isLoading && <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary-light" /></div>}
       {filtered.length > 0 ? (
         <>
-          {layoutMode === "list" ? (
+          {layoutMode === "banner" ? (
+            <div className={cn("flex flex-col gap-3", animating && "sort-shatter")}>
+              {paginated.map((game) => (
+                <div key={game.id} className="relative group"
+                  onContextMenu={(e: React.MouseEvent) => onContext(e, game.executablePath)}
+                  onClick={() => { if (batch.showCheckboxes) { batch.toggle(game.id); return; } launchGame(game.id); }}>
+                  {batch.showCheckboxes && <BatchCheckbox checked={batch.selected.has(game.id)} onToggle={() => batch.toggle(game.id)} />}
+                  <GameCard
+                    game={game}
+                    onDelete={(id) => confirm(t("game.confirm_delete"), () => deleteGame(id))}
+                    onLaunch={batch.showCheckboxes ? () => {} : (_g) => launchGame(_g.id)}
+                    onEditTags={() => setTagEditItem(game)}
+                    horizontal
+                    favorited={isFavorite(game.id)}
+                    onToggleFav={() => toggleFavorite(game.id, "game")}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : layoutMode === "list" ? (
             <div className={cn("flex flex-col gap-1", animating && "sort-shatter")}>
               {paginated.map((game) => (
                 <div key={game.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group"
@@ -255,14 +279,38 @@ function GameIcon({ path, coverPath, installed }: { path: string; coverPath?: st
 
   useEffect(() => {
     cancelledRef.current = false;
-    // Steam uninstalled games: use CDN cover if available
-    if (installed === false && coverPath) {
-      const img = new Image();
-      img.onload = () => { if (!cancelledRef.current) setSrc(coverPath); };
-      img.src = coverPath;
+    // Steam games: try CDN variants in order, then fall back to exe icon
+    if (coverPath) {
+      const urls = steamCdnFallbacks(coverPath);
+      const tryNext = (i: number) => {
+        if (cancelledRef.current) return;
+        if (i >= urls.length) {
+          // All CDN variants exhausted — try exe icon
+          if (path && !path.startsWith("steam://")) {
+            const cached = gameIconCache.get(path);
+            if (cached) { setSrc(cached); return; }
+            (async () => {
+              try {
+                const { invoke } = await import("@tauri-apps/api/core");
+                const dataUrl: string = await invoke("extract_exe_icon", { path });
+                if (!cancelledRef.current && dataUrl) {
+                  gameIconCache.set(path, dataUrl);
+                  setSrc(dataUrl);
+                }
+              } catch {}
+            })();
+          }
+          return;
+        }
+        const img = new Image();
+        img.onload = () => { if (!cancelledRef.current) setSrc(urls[i]); };
+        img.onerror = () => tryNext(i + 1);
+        img.src = urls[i];
+      };
+      tryNext(0);
       return;
     }
-    // Steam installed or non-Steam games: try exe icon
+    // Non-Steam games: try exe icon
     if (!path || path.startsWith("steam://")) return;
     const cached = gameIconCache.get(path);
     if (cached) { setSrc(cached); return; }

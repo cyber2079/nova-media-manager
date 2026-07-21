@@ -198,7 +198,13 @@
     "add_failed": "Aggiunta gioco fallita",
     "scan_steam": "Scansiona giochi Steam",
     "close": "Chiudi",
-    "edit_tags": "Modifica tag"
+    "edit_tags": "Modifica tag",
+    "layout_banner": "Banner",
+    "uninstalled": "Non installato",
+    "steam_uninstalled": "Steam · Non installato",
+    "scan_found": "{{count}} nuovi giochi trovati",
+    "scan_none": "Nessun nuovo gioco trovato",
+    "scan_failed": "Scansione fallita: {{error}}"
   },
   "theme": {
     "switch_hint": "Attuale: {{theme}}"
@@ -258,9 +264,10 @@
     "theme_plugins": "Negozio temi",
     "tab_widgets": "Widget",
     "bg_video": "Sfondo",
-    "bg_normal": "Normale",
-    "bg_fill": "Riempi",
-    "bg_stretch": "Allunga",
+    "bg_contain": "Adatta",
+    "bg_cover": "Riempi",
+    "bg_fill": "Allunga",
+    "bg_none": "Originale",
     "theme_default": "Predefinito",
     "theme_poe": "Eira Frost",
     "theme_pg": "Sogno Stellato",
@@ -293,6 +300,7 @@
     "image_wheel_prevNext": "Precedente/Successiva",
     "image_wheel_zoom": "Zoom",
     "bar_opacity": "Opacità barre",
+    "bar_blur": "Sfocatura header/footer",
     "palette_title": "Tavolozza",
     "palette_accent": "Accento",
     "palette_saturation": "Saturazione",
@@ -670,6 +678,7 @@
     "items_suffix": " elementi"
   },
   "mediaScan": {
+    "importing": "Scansione libreria Steam in corso...",
     "no_new_media": "Nessun nuovo media trovato (già importati saltati)",
     "imported_n": "Importati {{n}} {{unit}}",
     "truncated": " (Limite 2000 raggiunto; importa di nuovo per altri)"

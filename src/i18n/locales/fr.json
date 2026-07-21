@@ -198,7 +198,13 @@
     "add_failed": "Échec de l'ajout du jeu",
     "scan_steam": "Analyser les jeux Steam",
     "close": "Fermer",
-    "edit_tags": "Modifier les tags"
+    "edit_tags": "Modifier les tags",
+    "layout_banner": "Bannière",
+    "uninstalled": "Non installé",
+    "steam_uninstalled": "Steam · Non installé",
+    "scan_found": "{{count}} nouveaux jeux trouvés",
+    "scan_none": "Aucun nouveau jeu trouvé",
+    "scan_failed": "Échec du scan: {{error}}"
   },
   "theme": {
     "switch_hint": "Actuel: {{theme}}"
@@ -258,9 +264,10 @@
     "theme_plugins": "Boutique thèmes",
     "tab_widgets": "Widgets",
     "bg_video": "Arrière-plan",
-    "bg_normal": "Normal",
-    "bg_fill": "Remplir",
-    "bg_stretch": "Étirer",
+    "bg_contain": "Ajuster",
+    "bg_cover": "Remplir",
+    "bg_fill": "Étirer",
+    "bg_none": "Original",
     "theme_default": "Défaut",
     "theme_poe": "Eira Frost",
     "theme_pg": "Rêve Étoilé",
@@ -293,6 +300,7 @@
     "image_wheel_prevNext": "Précédent/Suivant",
     "image_wheel_zoom": "Zoom",
     "bar_opacity": "Opacité des barres",
+    "bar_blur": "Flou en-tête/pied",
     "palette_title": "Palette",
     "palette_accent": "Accent",
     "palette_saturation": "Saturation",
@@ -670,6 +678,7 @@
     "items_suffix": " éléments"
   },
   "mediaScan": {
+    "importing": "Analyse de la bibliothèque Steam...",
     "no_new_media": "Aucun nouveau média trouvé (déjà importés ignorés)",
     "imported_n": "{{n}} {{unit}} importés",
     "truncated": " (Limite de 2000 atteinte ; réimportez pour plus)"

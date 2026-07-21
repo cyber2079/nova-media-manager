@@ -10,7 +10,7 @@ export function useLayoutMode(key: string, fallback: LayoutMode = "card"): [Layo
   useEffect(() => {
     // On mount, load from SQLite (may override localStorage cached value)
     kv.get(key).then((raw) => {
-      if (raw === "list" || raw === "card" || raw === "small") {
+      if (raw === "list" || raw === "card" || raw === "small" || raw === "banner") {
         setMode(raw as LayoutMode);
       }
     });

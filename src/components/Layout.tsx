@@ -99,6 +99,7 @@ export default function Layout() {
   const bgVideoMode = useSettingsStore((s) => s.bgVideoMode);
   const bgOverlayOpacity = useSettingsStore((s) => s.bgOverlayOpacity);
   const barOpacity = useSettingsStore((s) => s.barOpacity);
+  const barBlur = useSettingsStore((s) => s.barBlur);
   const isHome = location.pathname === "/";
   const showQuickHub = true;
   const isHomeStrip = isHome && isDefault && dashboardMode === "strip";
@@ -485,7 +486,7 @@ export default function Layout() {
   };
 
   const headerClass = "fixed top-0 left-0 right-0 z-50";
-  const barBgStyle = { background: `color-mix(in srgb, var(--color-surface) ${barOpacity}%, transparent)`, backdropFilter: "blur(16px) saturate(140%)", WebkitBackdropFilter: "blur(16px) saturate(140%)" };
+  const barBgStyle = { background: `color-mix(in srgb, var(--color-surface) ${barOpacity}%, transparent)`, backdropFilter: `blur(${barBlur}px) saturate(140%)`, WebkitBackdropFilter: `blur(${barBlur}px) saturate(140%)` };
 
   return (
     <div className={cn("min-h-screen", isDefault && !isHomeStrip && "bg-surface")} id="app" ref={appRef}>

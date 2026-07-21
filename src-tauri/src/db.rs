@@ -98,6 +98,8 @@ impl Database {
             "ALTER TABLE movies ADD COLUMN watch_position INTEGER DEFAULT 0",
             "ALTER TABLE movies ADD COLUMN watch_updated_at TEXT DEFAULT ''",
             "ALTER TABLE movies ADD COLUMN watched INTEGER DEFAULT 0",
+            // ── Game landscape cover ──
+            "ALTER TABLE games ADD COLUMN landscape_path TEXT DEFAULT ''",
         ] {
             let _ = conn.execute(sql, []);
         }

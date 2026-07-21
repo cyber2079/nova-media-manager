@@ -87,7 +87,7 @@ export const useWidgetStore = create<WidgetState>((set, get) => {
     myComputer: def("myComputer", { enabled: saved.myComputer?.enabled || false, position: saved.myComputer?.position || "bottom-left", label: saved.myComputer?.label || "我的电脑", appPath: saved.myComputer?.appPath || "::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", iconPath: saved.myComputer?.iconPath || "", myComputerMode: saved.myComputer?.myComputerMode || "default" }),
     systemMonitor: def("systemMonitor", { enabled: saved.systemMonitor?.enabled || false, position: saved.systemMonitor?.position || "bottom-right" }),
     clock: def("clock", { enabled: saved.clock?.enabled || false, position: saved.clock?.position || "top-right", label: "" }),
-    calendar: def("calendar", { enabled: saved.calendar?.enabled || false, position: saved.calendar?.position || "top-right", label: "" }),
+    calendar: def("calendar", { enabled: saved.calendar?.enabled || false, position: saved.calendar?.position || "top-left", label: "" }),
     countdown: {
       enabled: saved.countdown?.enabled ?? false,
       position: (saved.countdown?.position as WidgetPosition) || "center-right",

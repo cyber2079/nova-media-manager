@@ -1,8 +1,8 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { LayoutGrid, LayoutList, LayoutPanelTop } from "lucide-react";
+import { LayoutGrid, LayoutList, LayoutPanelTop, LayoutTemplate } from "lucide-react";
 
-export type LayoutMode = "card" | "small" | "list";
+export type LayoutMode = "card" | "small" | "list" | "banner";
 
 interface LayoutSwitchProps {
   mode: LayoutMode;
@@ -15,6 +15,7 @@ export default memo(function LayoutSwitch({ mode, onChange }: LayoutSwitchProps)
   const modes: { key: LayoutMode; icon: typeof LayoutGrid; label: string }[] = [
     { key: "card", icon: LayoutGrid, label: t("music.layout_large") },
     { key: "small", icon: LayoutPanelTop, label: t("music.layout_small") },
+    { key: "banner", icon: LayoutTemplate, label: t("game.layout_banner") },
     { key: "list", icon: LayoutList, label: t("music.layout_list") },
   ];
 

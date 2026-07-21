@@ -61,21 +61,23 @@ pub fn cleanup_invalid_covers(db: State<Database>) -> Result<CleanupResult, Stri
         Ok(())
     };
 
-    // 有 cover_path 的表：movies, images, music
+    // 有 cover_path 的表：movies, images, music, games
     // Track success count — if all fail, abort to avoid wiping all covers.
     let mut collect_ok = 0u8;
     if collect("SELECT id FROM movies").is_ok() { collect_ok += 1; }
     if collect("SELECT id FROM images").is_ok() { collect_ok += 1; }
     if collect("SELECT id FROM music").is_ok() { collect_ok += 1; }
+    if collect("SELECT id FROM games").is_ok() { collect_ok += 1; }
     if collect_ok == 0 {
         return Err("Failed to query any cover tables — aborting cleanup to avoid data loss".into());
     }
 
     // ── 遍历 covers 目录，按前缀匹配删除孤儿文件 ──
     // 文件名规则:
-    //   movie:  {uuid}_{timestamp}.jpg
-    //   image:  img_{uuid}.jpg / img_{uuid}.webp
-    //   music:  music_cover_{uuid}.jpg / music_cover_{uuid}_thumb.webp
+    //   movie:         {uuid}_{timestamp}.jpg
+    //   image:         img_{uuid}.jpg / img_{uuid}.webp
+    //   music:         music_cover_{uuid}.jpg / music_cover_{uuid}_thumb.webp
+    //   game (Steam):  game_steam_{app_id}_portrait.jpg / game_steam_{app_id}_landscape.jpg
     //
     // UUID 格式: 8-4-4-4-12 hex digits，如 "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 
@@ -88,15 +90,21 @@ pub fn cleanup_invalid_covers(db: State<Database>) -> Result<CleanupResult, Stri
             let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
             // Skip non-cover files
-            let is_movie = name.ends_with(".jpg") && !name.starts_with("img_") && !name.starts_with("music_cover_");
+            let is_movie = name.ends_with(".jpg") && !name.starts_with("img_") && !name.starts_with("music_cover_") && !name.starts_with("game_");
             let is_image = name.starts_with("img_");
             let is_music = name.starts_with("music_cover_");
-            if !is_movie && !is_image && !is_music {
+            let is_game = name.starts_with("game_steam_") && (name.ends_with(".jpg") || name.ends_with(".webp"));
+            if !is_movie && !is_image && !is_music && !is_game {
                 continue;
             }
 
-            // Extract UUID from filename
-            let id = extract_uuid_from_filename(name);
+            // Extract ID from filename
+            let id = if is_game {
+                // game_steam_{app_id}_portrait.jpg → steam_{app_id}
+                extract_steam_app_id(name)
+            } else {
+                extract_uuid_from_filename(name)
+            };
             if id.is_empty() || valid_ids.contains(&id) {
                 continue;
             }
@@ -125,6 +133,20 @@ fn extract_uuid_from_filename(name: &str) -> String {
     for i in 0..=n - 36 {
         if likely_uuid_36(&bytes[i..]) {
             return name[i..i + 36].to_string();
+        }
+    }
+    String::new()
+}
+
+/// Extract Steam app ID from game cover filename like "game_steam_524410_portrait.jpg"
+/// Returns "steam_524410" to match the games table primary key.
+fn extract_steam_app_id(name: &str) -> String {
+    let rest = name.strip_prefix("game_steam_").unwrap_or(name);
+    // Find suffix like _portrait or _landscape
+    if let Some(suffix_pos) = rest.rfind("_portrait.").or_else(|| rest.rfind("_landscape.")) {
+        let digits = &rest[..suffix_pos];
+        if !digits.is_empty() && digits.chars().all(|c| c.is_ascii_digit()) {
+            return format!("steam_{digits}");
         }
     }
     String::new()

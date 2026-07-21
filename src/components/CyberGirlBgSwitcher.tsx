@@ -80,11 +80,12 @@ function easeOutExpo(t: number) { return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); 
 function easeInOutCubic(t: number) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
 function computeFit(iw: number, ih: number, cw: number, ch: number, mode: string) {
-  if (mode === "stretch") return { dx: 0, dy: 0, dw: cw, dh: ch };
-  if (mode === "normal") {
+  if (mode === "fill" || mode === "stretch") return { dx: 0, dy: 0, dw: cw, dh: ch };
+  if (mode === "contain" || mode === "none") {
     const scale = Math.min(cw / iw, ch / ih);
     return { dx: (cw - iw * scale) / 2, dy: (ch - ih * scale) / 2, dw: iw * scale, dh: ih * scale };
   }
+  // cover (default)
   const scale = Math.max(cw / iw, ch / ih);
   return { dx: (cw - iw * scale) / 2, dy: (ch - ih * scale) / 2, dw: iw * scale, dh: ih * scale };
 }

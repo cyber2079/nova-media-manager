@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { kv } from "@/lib/sqliteStore";
 import type { ThemeName } from "./themeStore";
 
-export type BgVideoMode = "normal" | "fill" | "stretch";
+export type BgVideoMode = "contain" | "cover" | "fill" | "none";
 export type WallpaperMode = "none" | "single" | "folder";
 export type WallpaperShuffle = "sequential" | "random";
 export type WallpaperFit = "none" | "cover" | "fill" | "contain";
@@ -116,6 +116,7 @@ export type SettingsState = {
   visualizerMode: VisualizerMode;
   imageWheelMode: ImageWheelMode;
   barOpacity: number;
+  barBlur: number;
   surfaceSaturation: number;
   surfaceOpacity: number;
   bgOverlayOpacity: number;
@@ -172,6 +173,7 @@ export type SettingsState = {
   setVisualizerMode: (v: VisualizerMode) => void;
   setImageWheelMode: (v: ImageWheelMode) => void;
   setBarOpacity: (v: number) => void;
+  setBarBlur: (v: number) => void;
   setSurfaceSaturation: (v: number) => void;
   setSurfaceOpacity: (v: number) => void;
   setBgOverlayOpacity: (v: number) => void;
@@ -246,6 +248,7 @@ function schedulePersist() {
     fontSize: s.fontSize, iconSize: s.iconSize, fontFamily: s.fontFamily,
     visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
     barOpacity: s.barOpacity,
+    barBlur: s.barBlur,
     surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
     hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteCustomized: s.paletteCustomized, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
     perfPriority: s.perfPriority, perfIdleReduce: s.perfIdleReduce, perfReduceAnimations: s.perfReduceAnimations, cacheCleanupDays: s.cacheCleanupDays, cacheCleanupLastRun: s.cacheCleanupLastRun,
@@ -399,16 +402,22 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
 
   return {
     language: saved.language || "zh",
-    autoStart: saved.autoStart || false,
+    autoStart: saved.autoStart ?? true,
     startFullscreen: saved.startFullscreen !== false,
     autoHideHeader: saved.autoHideHeader || false,
     autoHideFooter: saved.autoHideFooter || false,
     customColor: saved.customColor || "#4488ff",
     useCustomColor: saved.useCustomColor || false,
-    bgVideoMode: (saved as any).bgVideoMode || "fill",
+    bgVideoMode: (() => {
+      const raw = (saved as any).bgVideoMode;
+      if (raw === "normal") return "contain";
+      if (raw === "cover" || raw === "fill" || raw === "none") return raw;
+      if (raw === "stretch") return "fill";
+      return "cover";
+    })(),
     bgVideoLoop: (saved as any).bgVideoLoop || getDefaultLoop(),
     lastVolume: (saved as any).lastVolume ?? 0.8,
-    previewOffset: (saved as any).previewOffset ?? 0.8,
+    previewOffset: (saved as any).previewOffset ?? 0.5,
     lyricFontSize: (saved as any).lyricFontSize || "normal",
     lyricUseCustomColor: (saved as any).lyricUseCustomColor || false,
     lyricCurrentColor: (saved as any).lyricCurrentColor || "#ffffff",
@@ -420,6 +429,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     visualizerMode: (saved as any).visualizerMode || "bars",
     imageWheelMode: (saved as any).imageWheelMode || "prevNext",
     barOpacity: (saved as any).barOpacity ?? (saved as any).footerOpacity ?? 78,
+    barBlur: (saved as any).barBlur ?? 16,
     surfaceSaturation: (saved as any).surfaceSaturation ?? 4,
     surfaceOpacity: (saved as any).surfaceOpacity ?? 92,
     bgOverlayOpacity: (saved as any).bgOverlayOpacity ?? 70,
@@ -462,7 +472,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             autoHideFooter: s.autoHideFooter ?? get().autoHideFooter,
             customColor: s.customColor ?? get().customColor,
             useCustomColor: s.useCustomColor ?? get().useCustomColor,
-            bgVideoMode: s.bgVideoMode ?? get().bgVideoMode,
+            bgVideoMode: (() => {
+              const raw = s.bgVideoMode as string | undefined;
+              if (raw === "normal") return "contain" as BgVideoMode;
+              if (raw === "stretch") return "fill" as BgVideoMode;
+              return (raw as BgVideoMode | undefined) ?? get().bgVideoMode;
+            })(),
             bgVideoLoop: s.bgVideoLoop ?? get().bgVideoLoop,
             lastVolume: s.lastVolume ?? get().lastVolume,
             previewOffset: s.previewOffset ?? get().previewOffset,
@@ -477,6 +492,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             visualizerMode: (s.visualizerMode as any) ?? get().visualizerMode,
             imageWheelMode: (s.imageWheelMode as any) ?? get().imageWheelMode,
             barOpacity: (s.barOpacity as number) ?? (s as any).footerOpacity ?? get().barOpacity,
+            barBlur: (s.barBlur as number) ?? get().barBlur,
             surfaceSaturation: (s.surfaceSaturation as number) ?? get().surfaceSaturation,
             surfaceOpacity: (s.surfaceOpacity as number) ?? get().surfaceOpacity,
             hideTitleBar: (s.hideTitleBar as boolean) ?? get().hideTitleBar,
@@ -544,6 +560,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setVisualizerMode(v) { set({ visualizerMode: v }); persist(); },
     setImageWheelMode(v) { set({ imageWheelMode: v }); persist(); },
     setBarOpacity(v) { set({ barOpacity: v }); persist(); },
+    setBarBlur(v) { set({ barBlur: v }); persist(); },
     setSurfaceSaturation(v) { set({ surfaceSaturation: v }); persist(); applySurface(); },
     setSurfaceOpacity(v) { set({ surfaceOpacity: v }); persist(); applySurface(); },
     setBgOverlayOpacity(v) { set({ bgOverlayOpacity: v }); persist(); },
