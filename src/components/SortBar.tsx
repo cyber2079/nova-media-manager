@@ -1,7 +1,7 @@
 // 排序控制栏 — 纯图标，点击后触发破碎重组动画
 
 import { useMemo, useCallback, useState } from "react";
-import { ArrowDownUp, ArrowUpNarrowWide, ArrowDownWideNarrow, Clock, CalendarArrowUp, CalendarArrowDown, History } from "lucide-react";
+import { ArrowDownUp, ArrowUpNarrowWide, ArrowDownWideNarrow, Clock, CalendarArrowUp, CalendarArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type SortKey = string;
@@ -58,17 +58,6 @@ export function useMovieSortOptions(): SortOption[] {
 export function useNameSortOptions(): SortOption[] {
   return useMemo(() => [
     { key: "default",  icon: <ArrowDownUp className="h-3.5 w-3.5" />,              label: "默认" },
-    { key: "nameAsc",  icon: <ArrowUpNarrowWide className="h-3.5 w-3.5" />,        label: "名称 A→Z" },
-    { key: "nameDesc", icon: <ArrowDownWideNarrow className="h-3.5 w-3.5" />,      label: "名称 Z→A" },
-    { key: "dateAsc",  icon: <CalendarArrowUp className="h-3.5 w-3.5" />,          label: "最早添加" },
-    { key: "dateDesc", icon: <CalendarArrowDown className="h-3.5 w-3.5" />,        label: "最近添加" },
-  ], []);
-}
-
-/** 游戏排序：最近游玩 / 名称 / 日期 */
-export function useGameSortOptions(): SortOption[] {
-  return useMemo(() => [
-    { key: "recent",   icon: <History className="h-3.5 w-3.5" />,                  label: "最近游玩" },
     { key: "nameAsc",  icon: <ArrowUpNarrowWide className="h-3.5 w-3.5" />,        label: "名称 A→Z" },
     { key: "nameDesc", icon: <ArrowDownWideNarrow className="h-3.5 w-3.5" />,      label: "名称 Z→A" },
     { key: "dateAsc",  icon: <CalendarArrowUp className="h-3.5 w-3.5" />,          label: "最早添加" },
