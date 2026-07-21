@@ -428,7 +428,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     fontFamily: (saved as any).fontFamily || "inter",
     visualizerMode: (saved as any).visualizerMode || "bars",
     imageWheelMode: (saved as any).imageWheelMode || "prevNext",
-    barOpacity: (saved as any).barOpacity ?? (saved as any).footerOpacity ?? 78,
+    barOpacity: (saved as any).barOpacity ?? (saved as any).footerOpacity ?? 92,
     barBlur: (saved as any).barBlur ?? 16,
     surfaceSaturation: (saved as any).surfaceSaturation ?? 4,
     surfaceOpacity: (saved as any).surfaceOpacity ?? 92,
