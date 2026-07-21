@@ -247,7 +247,7 @@ export default function ImageLibrary() {
   }, []);
 
   const filtered = useMemo(() => {
-    let r = activeTags.length ? images.filter((i) => activeTags.some((t) => i.tags?.includes(t))) : images;
+    let r = activeTags.length ? images.filter((i) => activeTags.some((t) => i.tags?.includes(t))) : [...images];
     if (favOnly) { const ids = new Set(getByType("image")); r = r.filter((i) => ids.has(i.id)); }
     if (searchQuery) { const q = searchQuery.toLowerCase(); r = r.filter((i) => i.name.toLowerCase().includes(q)); }
     if (sortConfig === "nameAsc") r.sort((a, b) => a.name.localeCompare(b.name));
