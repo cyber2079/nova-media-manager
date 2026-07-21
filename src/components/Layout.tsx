@@ -412,6 +412,16 @@ export default function Layout() {
     return () => { clearTimeout(t); unsub(); };
   }, []);
 
+  // Sync fullscreen state with actual Tauri window state.
+  // On page refresh (Ctrl+R) the native window stays fullscreen, but React
+  // state resets to false, which defeats the drag guard and lets the user
+  // mouse-drag a fullscreen window.
+  useEffect(() => {
+    getCurrentWindow().isFullscreen().then(fs => {
+      if (fs) { setIsFS(true); wantsFS.current = true; }
+    }).catch(() => {});
+  }, []);
+
   // Start fullscreen + language
   // sessionStorage survives Ctrl+R but NOT app close → only enter fullscreen
   // on the first mount of a session, never on a page refresh.
