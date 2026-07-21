@@ -77,7 +77,7 @@ export default function GameLibrary() {
   }, []);
 
   const filtered = useMemo(() => {
-    let r = activeTags.length ? games.filter((g) => activeTags.some((t) => g.tags?.includes(t))) : games;
+    let r = activeTags.length ? games.filter((g) => activeTags.some((t) => g.tags?.includes(t))) : [...games];
     if (favOnly) { const ids = new Set(getByType("game")); r = r.filter((g) => ids.has(g.id)); }
     if (searchQuery) { const q = searchQuery.toLowerCase(); r = r.filter((g) => g.name.toLowerCase().includes(q)); }
     if (sortConfig === "nameAsc" || sortConfig === "default") r.sort((a, b) => a.name.localeCompare(b.name));

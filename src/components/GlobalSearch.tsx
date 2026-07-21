@@ -5,6 +5,7 @@ import { useMovieStore } from "@/stores/movieStore";
 import { useImageStore } from "@/stores/imageStore";
 import { useMusicStore } from "@/stores/musicStore";
 import { useGameStore } from "@/stores/gameStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 import { useNavigate } from "react-router-dom";
 import { setSearchJumpTarget } from "@/lib/searchJump";
 import { useTranslation } from "react-i18next";
@@ -16,10 +17,10 @@ interface SearchResult {
 }
 
 const typeMeta = {
-  movie: { icon: Film, color: "#e06040", label: "movie.title" as const, path: "/movies" },
-  image: { icon: Image, color: "#4488ff", label: "image.title" as const, path: "/images" },
-  music: { icon: Music, color: "#5b8c5a", label: "music.title" as const, path: "/music" },
-  game: { icon: Gamepad2, color: "#d4a84b", label: "game.title" as const, path: "/games" },
+  movie: { icon: Film, color: "#e06040", label: "movie.title" as const, path: "/movies", pageKey: "movies" },
+  image: { icon: Image, color: "#4488ff", label: "image.title" as const, path: "/images", pageKey: "images" },
+  music: { icon: Music, color: "#5b8c5a", label: "music.title" as const, path: "/music", pageKey: "music" },
+  game: { icon: Gamepad2, color: "#d4a84b", label: "game.title" as const, path: "/games", pageKey: "games" },
 };
 
 export default function GlobalSearch({ open: externalOpen, onClose }: { open?: boolean; onClose?: () => void }) {
@@ -75,6 +76,10 @@ export default function GlobalSearch({ open: externalOpen, onClose }: { open?: b
     // Pre-set store search so the library shows the item on page 1
     if (item.type === "movie") useMovieStore.getState().setSearchQuery(item.name);
     if (item.type === "music") useMusicStore.getState().setSearchQuery(item.name);
+    // Ensure target page content is visible (not minimized)
+    const pageKey = typeMeta[item.type].pageKey;
+    const s = useSettingsStore.getState();
+    if (s.contentMinimized[pageKey]) s.toggleContentMinimized(pageKey);
     navigate(typeMeta[item.type].path);
     setOpen(false);
   }, [navigate]);
