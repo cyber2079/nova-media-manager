@@ -39,17 +39,24 @@ const FREE_LICENSE: LicenseInfo = {
   maxDevices: 1,
 };
 
-/** Dev mode override — set VITE_LICENSE_TIER=member in .env to bypass activation */
+/** Dev mode override — set VITE_LICENSE_TIER=member in .env to bypass activation.
+ *  Preserves activatedAt across app restarts via localStorage so it doesn't drift. */
 function devLicense(): LicenseInfo | null {
   const tier = import.meta.env?.VITE_LICENSE_TIER as string | undefined;
   if (!tier || tier === "free") return null;
+  const STORAGE_KEY = "dev-license-activated-at";
+  let activatedAt = localStorage.getItem(STORAGE_KEY);
+  if (!activatedAt) {
+    activatedAt = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEY, activatedAt);
+  }
   return {
     tier: "member",
     duration: "yearly",
     expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
     maxDevices: 1,
     deviceName: "dev-machine",
-    activatedAt: new Date().toISOString(),
+    activatedAt,
   };
 }
 

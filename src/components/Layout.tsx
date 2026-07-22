@@ -100,6 +100,9 @@ export default function Layout() {
   const bgOverlayOpacity = useSettingsStore((s) => s.bgOverlayOpacity);
   const barOpacity = useSettingsStore((s) => s.barOpacity);
   const barBlur = useSettingsStore((s) => s.barBlur);
+  const glassMasterEnabled = useSettingsStore((s) => s.glassMasterEnabled);
+  const globalGlassOpacity = useSettingsStore((s) => s.globalGlassOpacity);
+  const globalGlassBlur = useSettingsStore((s) => s.globalGlassBlur);
   const isHome = location.pathname === "/";
   const showQuickHub = true;
   const isHomeStrip = isHome && isDefault && dashboardMode === "strip";
@@ -496,7 +499,11 @@ export default function Layout() {
   };
 
   const headerClass = "fixed top-0 left-0 right-0 z-50";
-  const barBgStyle = { background: `color-mix(in srgb, var(--color-surface) ${barOpacity}%, transparent)`, backdropFilter: `blur(${barBlur}px) saturate(140%)`, WebkitBackdropFilter: `blur(${barBlur}px) saturate(140%)` };
+  // Effective glass values: master ON → use global, master OFF → per-area
+  const effBarOpacity = glassMasterEnabled ? globalGlassOpacity : barOpacity;
+  const effBarBlur = glassMasterEnabled ? globalGlassBlur : barBlur;
+
+  const barBgStyle = { background: `color-mix(in srgb, var(--color-surface) ${effBarOpacity}%, transparent)`, backdropFilter: `blur(${effBarBlur}px) saturate(140%)`, WebkitBackdropFilter: `blur(${effBarBlur}px) saturate(140%)` };
 
   return (
     <div className={cn("min-h-screen", isDefault && !isHomeStrip && "bg-surface")} id="app" ref={appRef}>

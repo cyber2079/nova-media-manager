@@ -56,8 +56,11 @@
   // 渲染配置
   "renderConfig": { /* 见第十节 */ },
 
+  // WebGL 扩展声明
+  "requiredWebGLExtensions": [ /* 见第十一节 */ ],
+
   // 专属扩展
-  "extensions": { /* 见第十一节 */ }
+  "extensions": { /* 见第十二节 */ }
 }
 ```
 
@@ -80,6 +83,7 @@
 | `quests` | ❌ | 无任务主题可省略 |
 | `i18n` | ✅ | 至少包含 zh 和 en |
 | `renderConfig` | ✅ | 渲染管线配置 |
+| `requiredWebGLExtensions` | ❌ | 主题必需的 WebGL 扩展列表（见第十一节） |
 | `extensions` | ❌ | 主题专属扩展 |
 
 ---
@@ -491,7 +495,67 @@
 
 ---
 
-## 十一、extensions — 专属扩展
+## 十一、requiredWebGLExtensions — WebGL 扩展声明
+
+### 11.1 设计目的
+
+主题如有对特定 WebGL 扩展的硬依赖，必须在 manifest 中显式声明。客户端在**下载主题前**（或下载后、解压前）即可据此判断本机 GPU 是否支持该主题，避免用户花费带宽和时间下载一个无法运行的主题。
+
+### 11.2 字段定义
+
+```jsonc
+{
+  "requiredWebGLExtensions": [
+    "EXT_texture_filter_anisotropic",
+    "OES_texture_float",
+    "EXT_color_buffer_float"
+  ]
+}
+```
+
+- 字段为字符串数组，每项为 WebGL 扩展名（与 `gl.getExtension()` 接受的名称一致）
+- 空数组或省略 → 表示无额外扩展依赖，仅需 WebGL 2.0 基准能力
+- 客户端在初始化前逐个检查：`gl.getExtension(name)` → 任一返回 `null` → 标记主题为 `unsupported`
+
+### 11.3 常见扩展参考
+
+| 扩展名 | 用途 | 覆盖情况 |
+|--------|------|---------|
+| `EXT_texture_filter_anisotropic` | 各向异性过滤，提升斜视纹理质量 | 桌面 GPU 几乎全部支持 |
+| `OES_texture_float` | 浮点纹理，用于 HDR 渲染管线 | 多数桌面 GPU 支持 |
+| `EXT_color_buffer_float` | 浮点渲染目标 | 部分集成显卡不支持 |
+| `WEBGL_draw_buffers` | 多渲染目标（MRT），延迟渲染 | WebGL 2.0 核心已含，但部分设备受限 |
+| `EXT_shader_texture_lod` | 着色器内纹理 LOD 查询 | 桌面 GPU 广泛支持 |
+| `OES_texture_half_float` | 半精度浮点纹理（节省显存带宽） | WebGL 2.0 核心已含 |
+| `WEBGL_compressed_texture_astc` | ASTC 纹理压缩 | 移动端为主，桌面有限 |
+| `EXT_disjoint_timer_query` | GPU 时间戳查询（调试/性能分析） | 仅开发模式使用 |
+
+### 11.4 客户端检查流程
+
+```
+下载前（服务端过滤）
+    │
+    ├─ 客户端上报 GPU 支持的扩展列表（可选，隐私考量）
+    ├─ 服务端过滤不兼容主题 → API 不返回该主题
+    │
+下载后（客户端校验）
+    │
+    ├─ 解析 Manifest → 读取 requiredWebGLExtensions
+    ├─ 逐个调用 gl.getExtension(name)
+    ├─ 任一不支持 → 标记 unsupported → 提示用户"当前 GPU 不支持此主题"
+    │                 → 阻止加载，不消耗解压缓存空间
+    └─ 全部通过 → 继续加载流程
+```
+
+### 11.5 与降级策略的关系
+
+- WebGL 扩展不满足**不是降级**——降级是在 3D 可运行前提下的画质妥协
+- 扩展不满足意味着该主题在当前设备上**从根本上无法正确渲染**
+- 不应尝试"缺少扩展时用软件模拟"（如用常规纹理替代浮点纹理），因为效果差异过大且性能不可控
+
+---
+
+## 十二、extensions — 专属扩展
 
 ```jsonc
 {
@@ -549,6 +613,7 @@
 | i18n 完整性 | 至少包含 `zh` 和 `en` |
 | 文件 hash 匹配 | 每个资源文件的 SHA256 与 manifest 中的 hash 一致 |
 | 贴图分辨率 | 不超过对应 quality level 的上限 |
+| `requiredWebGLExtensions` 格式 | 每项必须是有效的 WebGL 扩展名字符串，数组中无重复项 |
 
 ### 12.2 运行时校验（加载时，告警级）
 
@@ -558,6 +623,7 @@
 | 缺失可选字段 | 使用模块默认值 |
 | 引用资源不存在 | 跳过该资源，渲染缺失占位（如粉色材质） |
 | i18n key 缺失 | fallback 到 `en`，`en` 也缺失则显示 raw key |
+| `requiredWebGLExtensions` 中某扩展不支持 | 标记主题为 `unsupported`，阻止加载，提示用户 GPU 不兼容 |
 
 ### 12.3 安全校验（加载时，阻断级）
 

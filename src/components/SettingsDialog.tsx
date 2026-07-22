@@ -36,7 +36,7 @@ const tabs: { id: TabId; icon: typeof SlidersHorizontal; labelKey: string }[] = 
 // ═══════════════ DEFAULTS ═══════════════
 const DEFAULTS = {
   general: { language: "zh", autoStart: true, startFullscreen: true },
-  appearance: { theme: "default" as ThemeName, bgVideoMode: "cover" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "inter", paletteAccent: "#4788f0", paletteSaturation: 50, paletteCustomized: false, barOpacity: 78, barBlur: 16, autoHideHeader: false, autoHideFooter: false, hideTitleBar: true, wallpaper: { mode: "none" as const, path: "", shuffle: "sequential" as const, interval: 30, fit: "none" as const } },
+  appearance: { theme: "default" as ThemeName, bgVideoMode: "cover" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "inter", paletteAccent: "#4788f0", paletteSaturation: 50, paletteCustomized: false, glassMasterEnabled: true, globalGlassOpacity: 92, globalGlassBlur: 16, barOpacity: 92, barBlur: 16, mainOpacity: 92, mainBlur: 16, dialogOpacity: 92, dialogBlur: 16, autoHideHeader: false, autoHideFooter: false, hideTitleBar: true, wallpaper: { mode: "none" as const, path: "", shuffle: "sequential" as const, interval: 30, fit: "none" as const } },
   media: { previewOffset: 0.5, lyricFontSize: "normal" as const, lyricUseCustomColor: false, lyricCurrentColor: "#ffffff", lyricOtherColor: "#8899aa", lyricFillColor: "#ffb6c1", playerBgMode: "follow" as const, playerBgColor: "", cyberBgmEnabled: true, imageWheelMode: "prevNext" as ImageWheelMode, externalPlayer: { mode: "auto" as const, kind: "", path: "" } },
   widgets: {
     globalWidgets: true,
@@ -65,7 +65,11 @@ export default function SettingsDialog({ open, onClose }: Props) {
     lyricOtherColor, setLyricOtherColor, lyricFillColor, setLyricFillColor,
     fontSize, iconSize, setFontSize, setIconSize, fontFamily, setFontFamily,
     imageWheelMode, setImageWheelMode,
-    barOpacity, setBarOpacity, barBlur, setBarBlur, bgOverlayOpacity, setBgOverlayOpacity,
+    barOpacity, setBarOpacity, barBlur, setBarBlur,
+    glassMasterEnabled, setGlassMasterEnabled, globalGlassOpacity, setGlobalGlassOpacity, globalGlassBlur, setGlobalGlassBlur,
+    mainOpacity, setMainOpacity, mainBlur, setMainBlur,
+    dialogOpacity, setDialogOpacity, dialogBlur, setDialogBlur,
+    bgOverlayOpacity, setBgOverlayOpacity,
     hideTitleBar, setHideTitleBar,
     fontPrimaryColor, fontSecondaryColor, widgetTextColor, setFontPrimaryColor, setFontSecondaryColor, setWidgetTextColor,
     scrollFadeOpacity, setScrollFadeOpacity,
@@ -122,6 +126,9 @@ export default function SettingsDialog({ open, onClose }: Props) {
         setFontSize(d.fontSize); setFontFamily(d.fontFamily);
         setPaletteAccent(d.paletteAccent); setPaletteSaturation(d.paletteSaturation);
         setBarOpacity(d.barOpacity); setBarBlur(d.barBlur);
+        setGlassMasterEnabled(d.glassMasterEnabled); setGlobalGlassOpacity(d.globalGlassOpacity); setGlobalGlassBlur(d.globalGlassBlur);
+        setMainOpacity(d.mainOpacity); setMainBlur(d.mainBlur);
+        setDialogOpacity(d.dialogOpacity); setDialogBlur(d.dialogBlur);
         setAutoHideHeader(d.autoHideHeader); setAutoHideFooter(d.autoHideFooter);
         setHideTitleBar(d.hideTitleBar);
         setWallpaperConfig(d.wallpaper);
@@ -162,7 +169,8 @@ export default function SettingsDialog({ open, onClose }: Props) {
     setConfirmReset(null);
   }, [setLanguage, i18n, setAutoStart, setStartFullscreen, setAutoHideHeader, setAutoHideFooter,
       setTheme, setBgVideoMode, setFontSize, setFontFamily, setHideTitleBar,
-      setPaletteAccent, setPaletteSaturation, setBarOpacity,
+      setPaletteAccent, setPaletteSaturation, setBarOpacity, setBarBlur,
+      setGlassMasterEnabled, setGlobalGlassOpacity, setGlobalGlassBlur, setMainOpacity, setMainBlur, setDialogOpacity, setDialogBlur,
       setPreviewOffset, setLyricFontSize, setLyricUseCustomColor, setLyricCurrentColor, setLyricOtherColor, setLyricFillColor, setImageWheelMode,
       setPlayerBgMode, setPlayerBgColor, setCyberBgmEnabled,
       setGlobalWidgets, setPageWidget, setEnabled, setPosition, setMyComputerMode, setCountdown,
@@ -172,13 +180,22 @@ export default function SettingsDialog({ open, onClose }: Props) {
 
   const isCG = theme === "cyber-girl";
 
+  // Dialog glass: unified formula, same as bar / main area
+  const effDialogOpacity = glassMasterEnabled ? globalGlassOpacity : dialogOpacity;
+  const effDialogBlur = glassMasterEnabled ? globalGlassBlur : dialogBlur;
+  const dialogGlassStyle = {
+    background: `color-mix(in srgb, var(--color-surface) ${effDialogOpacity}%, transparent)`,
+    backdropFilter: `blur(${effDialogBlur}px) saturate(140%)`,
+    WebkitBackdropFilter: `blur(${effDialogBlur}px) saturate(140%)`,
+    border: isCG ? "1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)" : "1px solid color-mix(in srgb, var(--color-primary) 6%, transparent)",
+    boxShadow: isCG ? "0 0 40px color-mix(in srgb, var(--color-primary) 12%, transparent), 0 0 80px color-mix(in srgb, var(--color-accent) 6%, transparent)" : undefined,
+  };
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-4xl overflow-hidden flex flex-col p-0 gap-0 rounded-2xl" style={{
         height: "72vh", maxHeight: "85vh",
-        background: isCG ? "color-mix(in srgb, var(--color-primary) 6%, rgba(8,2,20,0.94))" : "color-mix(in srgb, var(--color-primary) 6%, rgba(8,12,20,0.94))",
-        border: isCG ? "1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)" : undefined,
-        boxShadow: isCG ? "0 0 40px color-mix(in srgb, var(--color-primary) 12%, transparent), 0 0 80px color-mix(in srgb, var(--color-accent) 6%, transparent)" : undefined,
+        ...dialogGlassStyle,
       }}>
         {/* Title bar */}
         <div className={cn("relative flex items-center justify-between px-6 pt-5 pb-3 border-b",
@@ -210,7 +227,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
           <div className="flex-1 overflow-y-auto px-6 py-5 relative">
             {activeTab === "general" && <GeneralTab t={t} language={language} handleLanguage={handleLanguage} languages={languages} autoStart={autoStart} autoLoading={autoLoading} handleAutoStart={handleAutoStart} startFullscreen={startFullscreen} setStartFullscreen={setStartFullscreen} resetTab={() => setConfirmReset("general")} />}
 
-            {activeTab === "appearance" && <AppearanceTab t={t} theme={theme} filteredThemeList={filteredThemeList} handleTheme={handleTheme} paletteAccent={paletteAccent} paletteSaturation={paletteSaturation} setPaletteAccent={setPaletteAccent} setPaletteSaturation={setPaletteSaturation} resetPaletteToTheme={resetPaletteToTheme} bgVideoMode={bgVideoMode} setBgVideoMode={setBgVideoMode} hideTitleBar={hideTitleBar} setHideTitleBar={setHideTitleBar} autoHideHeader={autoHideHeader} setAutoHideHeader={setAutoHideHeader} autoHideFooter={autoHideFooter} setAutoHideFooter={setAutoHideFooter} barOpacity={barOpacity} setBarOpacity={setBarOpacity} barBlur={barBlur} setBarBlur={setBarBlur} dashboardMode={dashboardMode} setDashboardMode={setDashboardMode} fontSize={fontSize} setFontSize={setFontSize} iconSize={iconSize} setIconSize={setIconSize} fontFamily={fontFamily} setFontFamily={setFontFamily} resetTab={() => setConfirmReset("appearance")} />}
+            {activeTab === "appearance" && <AppearanceTab t={t} theme={theme} filteredThemeList={filteredThemeList} handleTheme={handleTheme} paletteAccent={paletteAccent} paletteSaturation={paletteSaturation} setPaletteAccent={setPaletteAccent} setPaletteSaturation={setPaletteSaturation} resetPaletteToTheme={resetPaletteToTheme} bgVideoMode={bgVideoMode} setBgVideoMode={setBgVideoMode} hideTitleBar={hideTitleBar} setHideTitleBar={setHideTitleBar} autoHideHeader={autoHideHeader} setAutoHideHeader={setAutoHideHeader} autoHideFooter={autoHideFooter} setAutoHideFooter={setAutoHideFooter} barOpacity={barOpacity} setBarOpacity={setBarOpacity} barBlur={barBlur} setBarBlur={setBarBlur} glassMasterEnabled={glassMasterEnabled} setGlassMasterEnabled={setGlassMasterEnabled} globalGlassOpacity={globalGlassOpacity} setGlobalGlassOpacity={setGlobalGlassOpacity} globalGlassBlur={globalGlassBlur} setGlobalGlassBlur={setGlobalGlassBlur} mainOpacity={mainOpacity} setMainOpacity={setMainOpacity} mainBlur={mainBlur} setMainBlur={setMainBlur} dialogOpacity={dialogOpacity} setDialogOpacity={setDialogOpacity} dialogBlur={dialogBlur} setDialogBlur={setDialogBlur} dashboardMode={dashboardMode} setDashboardMode={setDashboardMode} fontSize={fontSize} setFontSize={setFontSize} iconSize={iconSize} setIconSize={setIconSize} fontFamily={fontFamily} setFontFamily={setFontFamily} resetTab={() => setConfirmReset("appearance")} />}
 
             {activeTab === "media" && <MediaTab t={t} previewOffset={previewOffset} setPreviewOffset={setPreviewOffset} lyricFontSize={lyricFontSize} setLyricFontSize={setLyricFontSize} lyricUseCustomColor={lyricUseCustomColor} setLyricUseCustomColor={setLyricUseCustomColor} lyricCurrentColor={lyricCurrentColor} setLyricCurrentColor={setLyricCurrentColor} lyricOtherColor={lyricOtherColor} setLyricOtherColor={setLyricOtherColor} lyricFillColor={lyricFillColor} setLyricFillColor={setLyricFillColor} playerBgMode={playerBgMode} playerBgColor={playerBgColor} setPlayerBgMode={setPlayerBgMode} setPlayerBgColor={setPlayerBgColor} cyberBgmEnabled={cyberBgmEnabled} setCyberBgmEnabled={setCyberBgmEnabled} imageWheelMode={imageWheelMode} setImageWheelMode={setImageWheelMode} resetTab={() => setConfirmReset("media")} />}
 
@@ -314,7 +331,7 @@ function GeneralTab({ t, language, handleLanguage, languages, autoStart, autoLoa
 // ═══════════════ APPEARANCE TAB ═══════════════
 
 function AppearanceTab(props: any) {
-  const { t, theme, filteredThemeList, handleTheme, paletteAccent, paletteSaturation, setPaletteAccent, setPaletteSaturation, resetPaletteToTheme, bgVideoMode, setBgVideoMode, hideTitleBar, setHideTitleBar, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, barOpacity, setBarOpacity, barBlur, setBarBlur, dashboardMode, setDashboardMode, fontSize, setFontSize, iconSize, setIconSize, fontFamily, setFontFamily, resetTab } = props;
+  const { t, theme, filteredThemeList, handleTheme, paletteAccent, paletteSaturation, setPaletteAccent, setPaletteSaturation, resetPaletteToTheme, bgVideoMode, setBgVideoMode, hideTitleBar, setHideTitleBar, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, barOpacity, setBarOpacity, barBlur, setBarBlur, glassMasterEnabled, setGlassMasterEnabled, globalGlassOpacity, setGlobalGlassOpacity, globalGlassBlur, setGlobalGlassBlur, mainOpacity, setMainOpacity, mainBlur, setMainBlur, dialogOpacity, setDialogOpacity, dialogBlur, setDialogBlur, dashboardMode, setDashboardMode, fontSize, setFontSize, iconSize, setIconSize, fontFamily, setFontFamily, resetTab } = props;
   return (
     <>
       {/* ═══ Theme ═══ */}
@@ -392,8 +409,37 @@ function AppearanceTab(props: any) {
           <SettingRow label={t("settings.auto_hide_header")}><Toggle active={autoHideHeader} onToggle={() => setAutoHideHeader(!autoHideHeader)} /></SettingRow>
           <CardDivider />
           <SettingRow label={t("settings.auto_hide_footer")}><Toggle active={autoHideFooter} onToggle={() => setAutoHideFooter(!autoHideFooter)} /></SettingRow>
-          <SliderControl title={t("settings.bar_opacity")} value={barOpacity} onChange={setBarOpacity} min={0} max={100} unit="%" />
-          <SliderControl title={t("settings.bar_blur")} value={barBlur} onChange={setBarBlur} min={0} max={40} unit="px" />
+        </SettingCard>
+      </SectionGroup>
+
+      {/* ═══ Glass Effect ═══ */}
+      <SectionGroup title={t("settings.glass_title")}>
+        <SettingCard>
+          <SettingRow label={t("settings.glass_master")} hint={t("settings.glass_master_hint")}>
+            <Toggle active={glassMasterEnabled} onToggle={() => setGlassMasterEnabled(!glassMasterEnabled)} />
+          </SettingRow>
+          {glassMasterEnabled ? (
+            <>
+              <CardDivider />
+              <SliderControl title={t("settings.global_opacity")} value={globalGlassOpacity} onChange={setGlobalGlassOpacity} min={0} max={100} unit="%" />
+              <SliderControl title={t("settings.global_blur")} value={globalGlassBlur} onChange={setGlobalGlassBlur} min={0} max={40} unit="px" />
+            </>
+          ) : (
+            <>
+              <CardDivider />
+              <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">{t("settings.glass_bars")}</p>
+              <SliderControl title={t("settings.bar_opacity")} value={barOpacity} onChange={setBarOpacity} min={0} max={100} unit="%" />
+              <SliderControl title={t("settings.bar_blur")} value={barBlur} onChange={setBarBlur} min={0} max={40} unit="px" />
+              <CardDivider />
+              <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">{t("settings.glass_main")}</p>
+              <SliderControl title={t("settings.main_opacity")} value={mainOpacity} onChange={setMainOpacity} min={0} max={100} unit="%" />
+              <SliderControl title={t("settings.main_blur")} value={mainBlur} onChange={setMainBlur} min={0} max={40} unit="px" />
+              <CardDivider />
+              <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">{t("settings.glass_dialog")}</p>
+              <SliderControl title={t("settings.dialog_opacity")} value={dialogOpacity} onChange={setDialogOpacity} min={0} max={100} unit="%" />
+              <SliderControl title={t("settings.dialog_blur")} value={dialogBlur} onChange={setDialogBlur} min={0} max={40} unit="px" />
+            </>
+          )}
         </SettingCard>
       </SectionGroup>
 
@@ -626,37 +672,30 @@ function WidgetsTab(props: any) {
                   ))}
                 </div>
               </div>
-              <PositionSelect value={countdown.position} onChange={(v: any) => setCountdown({ position: v })} />
-              <div className="flex items-center gap-2 text-xs text-gray-400">
+              <div className="flex items-center gap-1.5 text-xs text-gray-400 flex-wrap">
                 <input type="number" min="0" max="23" value={countdown.hours} onChange={(e) => setCountdown({ hours: Number(e.target.value) })}
-                  className="w-12 text-center rounded bg-surface-lighter border border-white/5 py-1 text-xs text-white" />
+                  className="w-11 text-center rounded bg-surface-lighter border border-white/5 py-1 text-xs text-white" />
                 <span>{t("widget.countdown_hours")}</span>
                 <input type="number" min="0" max="59" value={countdown.minutes} onChange={(e) => setCountdown({ minutes: Number(e.target.value) })}
-                  className="w-12 text-center rounded bg-surface-lighter border border-white/5 py-1 text-xs text-white" />
+                  className="w-11 text-center rounded bg-surface-lighter border border-white/5 py-1 text-xs text-white" />
                 <span>{t("widget.countdown_minutes")}</span>
                 <input type="number" min="0" max="59" value={countdown.seconds} onChange={(e) => setCountdown({ seconds: Number(e.target.value) })}
-                  className="w-12 text-center rounded bg-surface-lighter border border-white/5 py-1 text-xs text-white" />
+                  className="w-11 text-center rounded bg-surface-lighter border border-white/5 py-1 text-xs text-white" />
                 <span>{t("widget.countdown_seconds")}</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-400">
+                <span className="w-2" />
                 <span>{t("widget.countdown_loop")}</span>
                 <input type="number" min="0" max="99" value={countdown.loopCount} onChange={(e) => setCountdown({ loopCount: Number(e.target.value) })}
-                  className="w-14 text-center rounded bg-surface-lighter border border-white/5 py-1 text-xs text-white" />
-                <span>{countdown.loopCount === 0 ? t("widget.countdown_unlimited") : t("widget.countdown_times")}</span>
+                  className="w-11 text-center rounded bg-surface-lighter border border-white/5 py-1 text-xs text-white" />
+                <span className="text-gray-500">{countdown.loopCount === 0 ? t("widget.countdown_unlimited") : t("widget.countdown_times")}</span>
+                <span className="w-2" />
+                <span>{t("widget.countdown_voice_interval")}</span>
+                <input type="number" min="30" max="600" value={countdown.voiceInterval ?? 30} onChange={(e) => setCountdown({ voiceInterval: Math.max(30, Number(e.target.value) || 30) })}
+                  className="w-12 text-center rounded bg-surface-lighter border border-white/5 py-1 text-xs text-white" />
+                <span className="text-gray-500">{t("widget.countdown_sec")}</span>
               </div>
-              <div className="space-y-1.5 text-xs text-gray-400">
-                <p className="text-gray-500">{t("widget.countdown_popup_always")}</p>
-                <SettingRow label={t("widget.countdown_glow")}><Toggle active={countdown.alertGlow} onToggle={() => setCountdown({ alertGlow: !countdown.alertGlow })} /></SettingRow>
-                <SettingRow label={t("widget.countdown_voice")}><Toggle active={countdown.alertVoice} onToggle={() => setCountdown({ alertVoice: !countdown.alertVoice })} /></SettingRow>
-                {countdown.alertVoice && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500">{t("widget.countdown_voice_interval")}</span>
-                    <input type="number" min="30" max="600" value={countdown.voiceInterval ?? 30} onChange={(e) => setCountdown({ voiceInterval: Math.max(30, Number(e.target.value) || 30) })}
-                      className="w-14 text-center rounded bg-surface-lighter border border-white/5 py-0.5 text-xs text-white" />
-                    <span className="text-gray-500">{t("widget.countdown_sec")}</span>
-                  </div>
-                )}
-              </div>
+              <PositionSelect value={countdown.position} onChange={(v: any) => setCountdown({ position: v })} />
+              <SettingRow label={t("widget.countdown_glow")}><Toggle active={countdown.alertGlow} onToggle={() => setCountdown({ alertGlow: !countdown.alertGlow })} /></SettingRow>
+              <SettingRow label={t("widget.countdown_voice")}><Toggle active={countdown.alertVoice} onToggle={() => setCountdown({ alertVoice: !countdown.alertVoice })} /></SettingRow>
             </>}
           </WidgetCard>
         </div>

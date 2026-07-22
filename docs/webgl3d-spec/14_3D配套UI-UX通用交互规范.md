@@ -2,7 +2,7 @@
 
 > **优先级**：P2
 > **版本**：v1.0 | **更新日期**：2026-07-22
-> **覆盖**：剧情弹窗、加载进度、主题切换 UI、权限解锁界面、多语言文案自动切换、Free 用户引导
+> **覆盖**：剧情弹窗、加载进度、主题切换 UI、权限解锁界面、多语言文案自动切换、Free 用户引导、错误状态 UI、错误文案 i18n 映射（面向用户的错误提示）
 > **不覆盖**：画布组件实现（见 [12_画布组件](12_WebGL画布通用组件开发规范.md)）、Schema 定义（见 [11_Schema](11_主题元数据通用Schema标准.md)）、状态结构（见 [13_全局状态](13_3D全局状态通用结构.md)）
 
 ---
@@ -349,3 +349,76 @@ function useThemeI18n(): ThemeI18n {
 │                                  │
 └──────────────────────────────────┘
 ```
+
+### 8.3 GPU 不兼容（扩展不支持）
+
+```
+┌──────────────────────────────────┐
+│                                  │
+│         ⚠                       │
+│    当前 GPU 不支持此主题          │
+│    该主题需要您的 GPU 支持        │
+│    特定图形扩展，当前设备不满足   │
+│                                  │
+│   [确定]                         │
+│                                  │
+└──────────────────────────────────┘
+```
+
+---
+
+## 九、错误文案 i18n 映射
+
+### 9.1 设计原则
+
+所有 3D 模块产生的面向用户的错误提示，统一从 i18n 体系获取文案，不在组件代码中硬编码任何语言的错误文本。错误码到用户可见文案的映射链路：
+
+```
+代码中抛出/记录错误码 → i18n.t("error.{errorCode}") → 返回当前语言文案 → 渲染到 UI
+```
+
+错误文案 key 命名空间：`error.{ERROR_CODE}`。i18n 文案存放位置：**客户端内置**（不在主题包中），因为错误提示是软件基础设施，不随主题变化。
+
+### 9.2 默认文案（zh + en）
+
+以下为 3D 模块面向用户的全部错误提示文案。客户端必须内置 `zh` 和 `en` 两个语种，其他语种可后续追加。
+
+| i18n key | zh | en |
+|----------|----|----|
+| `error.NV3D_LOAD_FILE_OPEN` | 无法打开主题文件，请检查文件是否完整 | Unable to open theme file. Please check if the file is intact |
+| `error.NV3D_LOAD_SIGN_INVALID` | 主题文件签名无效，可能已损坏或被篡改 | Theme file signature is invalid. It may be corrupted or tampered with |
+| `error.NV3D_LOAD_MAGIC_MISMATCH` | 不支持的文件格式 | Unsupported file format |
+| `error.NV3D_LOAD_MANIFEST_HASH` | 主题文件校验失败，请重新下载 | Theme file verification failed. Please re-download |
+| `error.NV3D_LOAD_MANIFEST_JSON` | 主题配置解析失败，文件可能已损坏 | Failed to parse theme configuration. The file may be corrupted |
+| `error.NV3D_LOAD_BLOCK_HASH` | 部分资源损坏，已使用低精度替代 | Some resources are corrupted. Low-quality fallback is being used |
+| `error.NV3D_LOAD_EXT_UNSUPPORTED` | 当前 GPU 不支持此主题所需的图形扩展，无法运行 | Your GPU does not support the graphics extensions required by this theme |
+| `error.NV3D_RNDR_CTX_CREATE` | 无法初始化 3D 渲染，已切换为静态预览 | Unable to initialize 3D rendering. Switched to static preview |
+| `error.NV3D_RNDR_CTX_RESTORE_FAIL` | 3D 渲染恢复失败，已切换为静态预览 | 3D rendering recovery failed. Switched to static preview |
+| `error.NV3D_MEM_OOM_CRITICAL` | 内存不足，3D 主题模块已自动关闭以保护软件正常运行 | Memory exhausted. 3D theme module has been disabled to protect normal operation |
+| `error.NV3D_AUTH_PREMIUM_REQUIRED` | 3D 主题为 Member 专属功能，请升级后使用 | 3D themes are a Member-exclusive feature. Please upgrade to use |
+| `error.NV3D_AUTH_LICENSE_EXPIRED` | 会员已过期，3D 主题已暂停。续费后可继续使用 | Membership expired. 3D themes are paused. Renew to continue |
+| `error.NV3D_LOAD_GENERIC` | 主题加载失败，请重试 | Theme loading failed. Please try again |
+| `error.NV3D_LOAD_DOWNLOAD_FAIL` | 主题下载失败，请检查网络后重试 | Theme download failed. Please check your network and try again |
+
+### 9.3 使用方式
+
+```typescript
+// 组件中使用
+function ErrorDialog({ errorCode }: { errorCode: string }) {
+  const appLang = useSettingsStore((s) => s.language);
+  const message = getBuiltInI18n(appLang, `error.${errorCode}`)
+    ?? getBuiltInI18n("en", `error.${errorCode}`)
+    ?? errorCode; // 最终 fallback：显示错误码本身
+
+  return <div className="error-dialog">{message}</div>;
+}
+
+// getBuiltInI18n 从客户端内置的错误文案 JSON 中读取（非主题包 i18n）
+```
+
+### 9.4 与主题 i18n 的关系
+
+- **客户端内置错误文案**（本规范定义）：面向系统级错误，如加载失败、权限不足、GPU 不兼容。key 前缀 `error.`。
+- **主题包 i18n**（[11_Schema](11_主题元数据通用Schema标准.md) 定义）：面向主题内容文本，如对话、场景名称、任务描述。key 前缀 `theme.` / `dialog.` / `scene.` 等。
+
+两者互不重叠，共用同一个 `i18n.t()` 调用模式，只是数据来源不同。

@@ -117,6 +117,13 @@ export type SettingsState = {
   imageWheelMode: ImageWheelMode;
   barOpacity: number;
   barBlur: number;
+  glassMasterEnabled: boolean;
+  globalGlassOpacity: number;
+  globalGlassBlur: number;
+  mainOpacity: number;
+  mainBlur: number;
+  dialogOpacity: number;
+  dialogBlur: number;
   surfaceSaturation: number;
   surfaceOpacity: number;
   bgOverlayOpacity: number;
@@ -174,6 +181,13 @@ export type SettingsState = {
   setImageWheelMode: (v: ImageWheelMode) => void;
   setBarOpacity: (v: number) => void;
   setBarBlur: (v: number) => void;
+  setGlassMasterEnabled: (v: boolean) => void;
+  setGlobalGlassOpacity: (v: number) => void;
+  setGlobalGlassBlur: (v: number) => void;
+  setMainOpacity: (v: number) => void;
+  setMainBlur: (v: number) => void;
+  setDialogOpacity: (v: number) => void;
+  setDialogBlur: (v: number) => void;
   setSurfaceSaturation: (v: number) => void;
   setSurfaceOpacity: (v: number) => void;
   setBgOverlayOpacity: (v: number) => void;
@@ -249,6 +263,8 @@ function schedulePersist() {
     visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
     barOpacity: s.barOpacity,
     barBlur: s.barBlur,
+    glassMasterEnabled: s.glassMasterEnabled, globalGlassOpacity: s.globalGlassOpacity, globalGlassBlur: s.globalGlassBlur,
+    mainOpacity: s.mainOpacity, mainBlur: s.mainBlur, dialogOpacity: s.dialogOpacity, dialogBlur: s.dialogBlur,
     surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
     hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteCustomized: s.paletteCustomized, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
     perfPriority: s.perfPriority, perfIdleReduce: s.perfIdleReduce, perfReduceAnimations: s.perfReduceAnimations, cacheCleanupDays: s.cacheCleanupDays, cacheCleanupLastRun: s.cacheCleanupLastRun,
@@ -430,6 +446,17 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     imageWheelMode: (saved as any).imageWheelMode || "prevNext",
     barOpacity: (saved as any).barOpacity ?? (saved as any).footerOpacity ?? 92,
     barBlur: (saved as any).barBlur ?? 16,
+    glassMasterEnabled: (saved as any).glassMasterEnabled ?? (
+      // Backward compat: if user previously customized bar opacity/blur away from defaults, disable master so their settings stay active.
+      // Check saved values (not current state) to detect prior customization.
+      ((saved as any).barOpacity != null && (saved as any).barOpacity !== 92) || ((saved as any).barBlur != null && (saved as any).barBlur !== 16) ? false : true
+    ),
+    globalGlassOpacity: (saved as any).globalGlassOpacity ?? 92,
+    globalGlassBlur: (saved as any).globalGlassBlur ?? 16,
+    mainOpacity: (saved as any).mainOpacity ?? 92,
+    mainBlur: (saved as any).mainBlur ?? 16,
+    dialogOpacity: (saved as any).dialogOpacity ?? 92,
+    dialogBlur: (saved as any).dialogBlur ?? 16,
     surfaceSaturation: (saved as any).surfaceSaturation ?? 4,
     surfaceOpacity: (saved as any).surfaceOpacity ?? 92,
     bgOverlayOpacity: (saved as any).bgOverlayOpacity ?? 70,
@@ -493,6 +520,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             imageWheelMode: (s.imageWheelMode as any) ?? get().imageWheelMode,
             barOpacity: (s.barOpacity as number) ?? (s as any).footerOpacity ?? get().barOpacity,
             barBlur: (s.barBlur as number) ?? get().barBlur,
+            glassMasterEnabled: (s.glassMasterEnabled as boolean) ?? get().glassMasterEnabled,
+            globalGlassOpacity: (s.globalGlassOpacity as number) ?? get().globalGlassOpacity,
+            globalGlassBlur: (s.globalGlassBlur as number) ?? get().globalGlassBlur,
+            mainOpacity: (s.mainOpacity as number) ?? get().mainOpacity,
+            mainBlur: (s.mainBlur as number) ?? get().mainBlur,
+            dialogOpacity: (s.dialogOpacity as number) ?? get().dialogOpacity,
+            dialogBlur: (s.dialogBlur as number) ?? get().dialogBlur,
             surfaceSaturation: (s.surfaceSaturation as number) ?? get().surfaceSaturation,
             surfaceOpacity: (s.surfaceOpacity as number) ?? get().surfaceOpacity,
             hideTitleBar: (s.hideTitleBar as boolean) ?? get().hideTitleBar,
@@ -561,6 +595,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setImageWheelMode(v) { set({ imageWheelMode: v }); persist(); },
     setBarOpacity(v) { set({ barOpacity: v }); persist(); },
     setBarBlur(v) { set({ barBlur: v }); persist(); },
+    setGlassMasterEnabled(v) { set({ glassMasterEnabled: v }); persist(); },
+    setGlobalGlassOpacity(v) { set({ globalGlassOpacity: v }); persist(); },
+    setGlobalGlassBlur(v) { set({ globalGlassBlur: v }); persist(); },
+    setMainOpacity(v) { set({ mainOpacity: v }); persist(); },
+    setMainBlur(v) { set({ mainBlur: v }); persist(); },
+    setDialogOpacity(v) { set({ dialogOpacity: v }); persist(); },
+    setDialogBlur(v) { set({ dialogBlur: v }); persist(); },
     setSurfaceSaturation(v) { set({ surfaceSaturation: v }); persist(); applySurface(); },
     setSurfaceOpacity(v) { set({ surfaceOpacity: v }); persist(); applySurface(); },
     setBgOverlayOpacity(v) { set({ bgOverlayOpacity: v }); persist(); },
