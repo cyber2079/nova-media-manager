@@ -29,7 +29,7 @@ import CyberGirlBgSwitcher from "@/components/CyberGirlBgSwitcher";
 import UpdateChecker from "@/components/UpdateChecker";
 import WallpaperEngine from "@/components/WallpaperEngine";
 import GlobalConfirmDialog from "@/components/GlobalConfirmDialog";
-import DevToolsMenu from "@/components/DevToolsMenu";
+
 import { useGameStore } from "@/stores/gameStore";
 import { useImageStore } from "@/stores/imageStore";
 import { useMovieStore } from "@/stores/movieStore";
@@ -590,7 +590,7 @@ export default function Layout() {
             <button onClick={() => setSettingsOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={t("settings.title")}>
               <Settings className="h-4 w-4 text-gray-400" />
             </button>
-            {import.meta.env.DEV && <DevToolsMenu />}
+
           </div>
         </div>
       </header>
