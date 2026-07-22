@@ -1,0 +1,750 @@
+{
+  "$schema": "https://scm-think.cn/schemas/nv3d-manifest.json",
+  "formatVersion": "2.0",
+  "themeId": "synthwave-chamber",
+  "themeName": {
+    "zh": "合成波密室",
+    "en": "Synthwave Chamber"
+  },
+  "themeType": "webgl3d",
+  "version": "1.0.0",
+  "minAppVersion": "2.0.0",
+  "resources": {
+    "models": {
+      "arcade/scene.bin": {
+        "path": "models/arcade/scene.bin",
+        "hash": "sha256:fb24da5a4aeea469474e400f2d5d36201387520f7813af5ce976ff4891362a8d",
+        "size": 584792,
+        "format": "bin"
+      },
+      "arcade/scene.gltf": {
+        "path": "models/arcade/scene.gltf",
+        "hash": "sha256:019fcf9932294aeae184287e8ca35161482ac6db341ab7aa21958549b07c0576",
+        "size": 17054,
+        "format": "gltf"
+      },
+      "arcade/textures/lambert2SG_baseColor.png": {
+        "path": "models/arcade/textures/lambert2SG_baseColor.png",
+        "hash": "sha256:03d5dd278acf8a7a6e3d4a3daa0b0f9e8140aabdb093048975bdff9f0ee05b8a",
+        "size": 39303,
+        "format": "png"
+      },
+      "arcade/textures/lambert2SG_emissive.png": {
+        "path": "models/arcade/textures/lambert2SG_emissive.png",
+        "hash": "sha256:8fd5f441e53628f9598843173cd82297bffb7c97b66a6c7e249f4f36e2111618",
+        "size": 32249,
+        "format": "png"
+      },
+      "arcade/textures/lambert2SG_metallicRoughness.png": {
+        "path": "models/arcade/textures/lambert2SG_metallicRoughness.png",
+        "hash": "sha256:def7c3e424555a34d0addc4b7b970f7e32830f2ce77f02cad6a409fc78074260",
+        "size": 34594,
+        "format": "png"
+      },
+      "arcade/textures/lambert3SG_baseColor.png": {
+        "path": "models/arcade/textures/lambert3SG_baseColor.png",
+        "hash": "sha256:2c978ab5cc340ee39b8311fb96c0f37635473db9ea2b411ed76b2caafe5a2069",
+        "size": 4626648,
+        "format": "png"
+      },
+      "arcade/textures/lambert3SG_emissive.png": {
+        "path": "models/arcade/textures/lambert3SG_emissive.png",
+        "hash": "sha256:a65c489e8c7462e97a0106b0babb008fda61f89778f08879bd3b52dd8904adb3",
+        "size": 75919,
+        "format": "png"
+      },
+      "arcade/textures/lambert3SG_metallicRoughness.png": {
+        "path": "models/arcade/textures/lambert3SG_metallicRoughness.png",
+        "hash": "sha256:5768dce69b0cf094e96178b9eb5a1f30e4fed6e3979ab0c415c8b22207e9e2ef",
+        "size": 1129408,
+        "format": "png"
+      },
+      "arcade/textures/lambert5SG_baseColor.png": {
+        "path": "models/arcade/textures/lambert5SG_baseColor.png",
+        "hash": "sha256:369ea790c24f2850ea05018d917afca83b052488b8768a9b5e4d300b2117174f",
+        "size": 505052,
+        "format": "png"
+      },
+      "arcade/textures/lambert5SG_metallicRoughness.png": {
+        "path": "models/arcade/textures/lambert5SG_metallicRoughness.png",
+        "hash": "sha256:8204c214d48eacc06a2e6f5602fb0335ba60e756bd664dad8dc6cc1c496b48da",
+        "size": 19819,
+        "format": "png"
+      },
+      "arcade/textures/lambert6SG_baseColor.png": {
+        "path": "models/arcade/textures/lambert6SG_baseColor.png",
+        "hash": "sha256:56c380204919426f5ff63cfad0d6e4b5fdf58be57422a90cf294c9a552f0627a",
+        "size": 53551,
+        "format": "png"
+      },
+      "arcade/textures/lambert6SG_metallicRoughness.png": {
+        "path": "models/arcade/textures/lambert6SG_metallicRoughness.png",
+        "hash": "sha256:8d8352571bff46f02849f08439cf851523162a801b6db09064dabaa6f579e8f3",
+        "size": 1642409,
+        "format": "png"
+      },
+      "arcade/textures/lambert6SG_normal.png": {
+        "path": "models/arcade/textures/lambert6SG_normal.png",
+        "hash": "sha256:5a15f2a6b864825a4aee104c370e505bab1cd2148d423940bc466f17fc5706d2",
+        "size": 2265946,
+        "format": "png"
+      },
+      "arcade/textures/lambert7SG_baseColor.png": {
+        "path": "models/arcade/textures/lambert7SG_baseColor.png",
+        "hash": "sha256:21fbddeeb42fd9a1d9668a833f38a75871c07463852e5990ba25f4e635af598f",
+        "size": 27807,
+        "format": "png"
+      },
+      "arcade/textures/lambert7SG_emissive.png": {
+        "path": "models/arcade/textures/lambert7SG_emissive.png",
+        "hash": "sha256:b662d4669c9af9deaca4832af6796b7a7da4fb0c9dda4c2f70dcf81850ee87dd",
+        "size": 23147,
+        "format": "png"
+      },
+      "arcade/textures/lambert7SG_metallicRoughness.png": {
+        "path": "models/arcade/textures/lambert7SG_metallicRoughness.png",
+        "hash": "sha256:29bdcc643222b8839e6f357ef847ae41cd961c44050b3410f54bb8b0f5464fe6",
+        "size": 22013,
+        "format": "png"
+      },
+      "arcade/textures/lambert7SG_normal.png": {
+        "path": "models/arcade/textures/lambert7SG_normal.png",
+        "hash": "sha256:0d28e75db55270c270386dd301c6008c770eda4458fa48a4b6e393408bc4a294",
+        "size": 1267546,
+        "format": "png"
+      },
+      "arcade/textures/lambert8SG_baseColor.png": {
+        "path": "models/arcade/textures/lambert8SG_baseColor.png",
+        "hash": "sha256:a129659960436f8c3df94e749e23ea1d4493747cad21e8ee02006dffd396e2af",
+        "size": 672220,
+        "format": "png"
+      },
+      "arcade/textures/lambert8SG_metallicRoughness.png": {
+        "path": "models/arcade/textures/lambert8SG_metallicRoughness.png",
+        "hash": "sha256:4033b5244a9704cf56080cff294c145e2a55d6a480dd3aa13fb8380debbac3cd",
+        "size": 156915,
+        "format": "png"
+      },
+      "atm/scene.bin": {
+        "path": "models/atm/scene.bin",
+        "hash": "sha256:4ee65cfb79548565b69eb379378625feadfbd4f9192097eaa287a889ed268a22",
+        "size": 444696,
+        "format": "bin"
+      },
+      "atm/scene.gltf": {
+        "path": "models/atm/scene.gltf",
+        "hash": "sha256:27eb00147022e749d641b030372fb8a0de3214265ad8cba9f7066436e93be72f",
+        "size": 7691,
+        "format": "gltf"
+      },
+      "atm/textures/amarillo_baseColor.jpeg": {
+        "path": "models/atm/textures/amarillo_baseColor.jpeg",
+        "hash": "sha256:a10c0984293ea7e294d4eb4276ce3b60d31ca73b6582f27a7b7d0e9dd20c2c82",
+        "size": 923159,
+        "format": "jpeg"
+      },
+      "atm/textures/amarillo_emissive.jpeg": {
+        "path": "models/atm/textures/amarillo_emissive.jpeg",
+        "hash": "sha256:f104d3c60dc1f26bbacbc076c6f19d93f489b5e8fcc1c0af66c931e85a37b237",
+        "size": 214299,
+        "format": "jpeg"
+      },
+      "atm/textures/amarillo_metallicRoughness.png": {
+        "path": "models/atm/textures/amarillo_metallicRoughness.png",
+        "hash": "sha256:b21353f598db76cea11c9510e412be925b524de438c2da39f9283a48780c0a88",
+        "size": 1131678,
+        "format": "png"
+      },
+      "atm/textures/amarillo_normal.png": {
+        "path": "models/atm/textures/amarillo_normal.png",
+        "hash": "sha256:fc7cc16c898e437d0218dc89947c1d32838534170a3c24b10bb7b0683ff6b5d2",
+        "size": 722351,
+        "format": "png"
+      },
+      "atm/textures/rosa_baseColor.png": {
+        "path": "models/atm/textures/rosa_baseColor.png",
+        "hash": "sha256:1809b5c29fe20dc2c02ffe1711692ed814c8bb7957b8f78f9a02634b04028488",
+        "size": 4412037,
+        "format": "png"
+      },
+      "atm/textures/rosa_emissive.jpeg": {
+        "path": "models/atm/textures/rosa_emissive.jpeg",
+        "hash": "sha256:cd6c73872d22e1c93ef96d7fed946fc77a01d7085b4ea43980fb4027d29da9da",
+        "size": 338816,
+        "format": "jpeg"
+      },
+      "atm/textures/rosa_metallicRoughness.png": {
+        "path": "models/atm/textures/rosa_metallicRoughness.png",
+        "hash": "sha256:e55318be98c292186b218e85eb552a3cfa41a2d223f93564c6abb280605d6d74",
+        "size": 2834093,
+        "format": "png"
+      },
+      "atm/textures/rosa_normal.png": {
+        "path": "models/atm/textures/rosa_normal.png",
+        "hash": "sha256:e347454058fc03175c8215ddd4bf9930ba09f26a04952ef4ace679c0494e50b8",
+        "size": 2139702,
+        "format": "png"
+      },
+      "desk/cyberpunk_desk.glb": {
+        "path": "models/desk/cyberpunk_desk.glb",
+        "hash": "sha256:9cfc043829f713bfc66db4d3117eb1990a354f67c34a36fa2f60d274f2692ffc",
+        "size": 36484256,
+        "format": "glb"
+      },
+      "gaming_setup/scene.bin": {
+        "path": "models/gaming_setup/scene.bin",
+        "hash": "sha256:871a818aba4e144526f11b741383c9861503932ca9e27b693d342ed92af0ee21",
+        "size": 3282724,
+        "format": "bin"
+      },
+      "gaming_setup/scene.gltf": {
+        "path": "models/gaming_setup/scene.gltf",
+        "hash": "sha256:4958dd134a78e5224618fb0af90c9c9264bde5a5ef108d0059ddcda7897c23ba",
+        "size": 10997,
+        "format": "gltf"
+      },
+      "gaming_setup/textures/Stoo1_baseColor.png": {
+        "path": "models/gaming_setup/textures/Stoo1_baseColor.png",
+        "hash": "sha256:3842fe37730edbd2f47cdb6a709572859fa299feed94b42d52c2a1dff28c434f",
+        "size": 1830790,
+        "format": "png"
+      },
+      "gaming_setup/textures/Stoo1_emissive.jpeg": {
+        "path": "models/gaming_setup/textures/Stoo1_emissive.jpeg",
+        "hash": "sha256:9d7f3e2570f975c93a5d3f638eb8a9f6efe2a6c0c2d879d1b3471da4359272e2",
+        "size": 497152,
+        "format": "jpeg"
+      },
+      "gaming_setup/textures/Stoo1_metallicRoughness.png": {
+        "path": "models/gaming_setup/textures/Stoo1_metallicRoughness.png",
+        "hash": "sha256:716e5e806184aeb9d393cc59a4412765640da0cc0a559588aa44b739e63b9bf3",
+        "size": 1974626,
+        "format": "png"
+      },
+      "gaming_setup/textures/material_2_baseColor.png": {
+        "path": "models/gaming_setup/textures/material_2_baseColor.png",
+        "hash": "sha256:f7fbf2b7e42a8365c59cf71e6bfbfddf5ce524735b87e8aeddcb03b4d3439a37",
+        "size": 2248570,
+        "format": "png"
+      },
+      "gaming_setup/textures/material_2_emissive.jpeg": {
+        "path": "models/gaming_setup/textures/material_2_emissive.jpeg",
+        "hash": "sha256:2f14da4c280185308470c50d2b4267982db00c8d57f3db92da4dcd96f797e542",
+        "size": 319606,
+        "format": "jpeg"
+      },
+      "gaming_setup/textures/material_2_metallicRoughness.png": {
+        "path": "models/gaming_setup/textures/material_2_metallicRoughness.png",
+        "hash": "sha256:7461b39586910ca9e52ffbf65d3420425c7b8a093d23df07eb78e16bdb0d6c8b",
+        "size": 1593221,
+        "format": "png"
+      },
+      "gaming_setup/textures/material_baseColor.png": {
+        "path": "models/gaming_setup/textures/material_baseColor.png",
+        "hash": "sha256:f238c95767850f7839c618521b91b2a30ae6509229ca9a3ae0aea797d038f054",
+        "size": 4109763,
+        "format": "png"
+      },
+      "gaming_setup/textures/material_metallicRoughness.png": {
+        "path": "models/gaming_setup/textures/material_metallicRoughness.png",
+        "hash": "sha256:c8f97c669ae62d8bda4b80b3f6d3b5e46eadfb87715db6b3a4d82f671c36145e",
+        "size": 4019597,
+        "format": "png"
+      },
+      "gaming_setup/textures/material_normal.png": {
+        "path": "models/gaming_setup/textures/material_normal.png",
+        "hash": "sha256:de58b968761f252a1a07b7b5e3074d79d647f9b102b4e0f4a7357237f3d114a3",
+        "size": 6442703,
+        "format": "png"
+      },
+      "neon_sign/scene.bin": {
+        "path": "models/neon_sign/scene.bin",
+        "hash": "sha256:f8cc816c354ba4321998a3ffe2cec735280a779586714dcdc10527fc18d82d0f",
+        "size": 1248464,
+        "format": "bin"
+      },
+      "neon_sign/scene.gltf": {
+        "path": "models/neon_sign/scene.gltf",
+        "hash": "sha256:77278f2cfc64cd28df6c7f0a4ffa63bbfd00d2f3c557e19e61883387cf33a960",
+        "size": 14323,
+        "format": "gltf"
+      },
+      "neon_sign/textures/cables_baseColor.png": {
+        "path": "models/neon_sign/textures/cables_baseColor.png",
+        "hash": "sha256:75a0df6d9dd1b40a201d74ba7065b6525636d7df957a13d0f2dc0d671a039198",
+        "size": 1236831,
+        "format": "png"
+      },
+      "neon_sign/textures/cables_metallicRoughness.png": {
+        "path": "models/neon_sign/textures/cables_metallicRoughness.png",
+        "hash": "sha256:2aae3903aee43fd900d3c9eb70b6b5ae56ec5d1ddb28aced5bb91842dd0a44c1",
+        "size": 2379,
+        "format": "png"
+      },
+      "neon_sign/textures/cables_normal.png": {
+        "path": "models/neon_sign/textures/cables_normal.png",
+        "hash": "sha256:e898c8a9637efc624830d2bad1610af8441a560e848f8ba1b76922af47575087",
+        "size": 2459895,
+        "format": "png"
+      },
+      "neon_sign/textures/cover_baseColor.png": {
+        "path": "models/neon_sign/textures/cover_baseColor.png",
+        "hash": "sha256:4ab8a59c7458830520acca1fa5e48acd1869f95030b08fbb47baf30aa42fa674",
+        "size": 936510,
+        "format": "png"
+      },
+      "neon_sign/textures/cover_metallicRoughness.png": {
+        "path": "models/neon_sign/textures/cover_metallicRoughness.png",
+        "hash": "sha256:224daca8e0facc0ab86f4334b3aa057b88834cb7af6fa7d73843ef236f5af0b7",
+        "size": 937290,
+        "format": "png"
+      },
+      "neon_sign/textures/cover_normal.png": {
+        "path": "models/neon_sign/textures/cover_normal.png",
+        "hash": "sha256:659d9a01ab8040b8edb013141a9461a882388298e26e5dafa9d1508479ff947a",
+        "size": 1862040,
+        "format": "png"
+      },
+      "neon_sign/textures/emission_baseColor.png": {
+        "path": "models/neon_sign/textures/emission_baseColor.png",
+        "hash": "sha256:b56f4f9467d491075e36b621264b8b3250cf6db51f64ba98678f5e903f3bc215",
+        "size": 605,
+        "format": "png"
+      },
+      "neon_sign/textures/supports_baseColor.png": {
+        "path": "models/neon_sign/textures/supports_baseColor.png",
+        "hash": "sha256:7eaac1d6727b95f54d1b4151d86c9c0bd079ba33625c16c3f0c55d6aa1a84e8e",
+        "size": 804122,
+        "format": "png"
+      },
+      "neon_sign/textures/supports_metallicRoughness.png": {
+        "path": "models/neon_sign/textures/supports_metallicRoughness.png",
+        "hash": "sha256:5a6faed12201e2ee5402a13046b241d5d914224618492995152b2d849a7c3420",
+        "size": 85366,
+        "format": "png"
+      },
+      "neon_sign/textures/supports_normal.png": {
+        "path": "models/neon_sign/textures/supports_normal.png",
+        "hash": "sha256:3bf79a2af49b6fe8fc9f7b32582e8ec1c505d55cad26e23bcbce32d15e3a9557",
+        "size": 1722522,
+        "format": "png"
+      },
+      "neon_sign/textures/wall_mount_baseColor.png": {
+        "path": "models/neon_sign/textures/wall_mount_baseColor.png",
+        "hash": "sha256:c3af0fc91e860d1d9528c1e5aca6bd044a6ef910c28571aa705758367d0e857c",
+        "size": 445769,
+        "format": "png"
+      },
+      "neon_sign/textures/wall_mount_metallicRoughness.png": {
+        "path": "models/neon_sign/textures/wall_mount_metallicRoughness.png",
+        "hash": "sha256:53fd3688c3ce0bd808b6a625e3ec9949ab6dd93e24acfcbd892fbd2696c9688e",
+        "size": 499248,
+        "format": "png"
+      },
+      "neon_sign/textures/wall_mount_normal.png": {
+        "path": "models/neon_sign/textures/wall_mount_normal.png",
+        "hash": "sha256:f5a580fbccd044320977f58b53b175e00852826d08000caa14d22081d19e0fb4",
+        "size": 1287459,
+        "format": "png"
+      },
+      "room/room.bin": {
+        "path": "models/room/room.bin",
+        "hash": "sha256:c8c7fe6be291fca1784c4fec12a888c07fe16a007b007f9c03daa3223a7a7060",
+        "size": 700,
+        "format": "bin"
+      },
+      "room/room.gltf": {
+        "path": "models/room/room.gltf",
+        "hash": "sha256:aadfd21627c591256c1db50cfe9436acfb2a6f8c579d8ae3186246aeb26061f0",
+        "size": 10979,
+        "format": "gltf"
+      },
+      "vendingmachine/scene.bin": {
+        "path": "models/vendingmachine/scene.bin",
+        "hash": "sha256:5ed357c9dff4b1cd7f276e433421751068eb40bcf66fc44af06febc07a3596c3",
+        "size": 12960,
+        "format": "bin"
+      },
+      "vendingmachine/scene.gltf": {
+        "path": "models/vendingmachine/scene.gltf",
+        "hash": "sha256:9524084a0514494623e5a6b8bb102777d26677b40f52bd9ef2ebf7ceae9d2c04",
+        "size": 11543,
+        "format": "gltf"
+      },
+      "vendingmachine/textures/Material_baseColor.png": {
+        "path": "models/vendingmachine/textures/Material_baseColor.png",
+        "hash": "sha256:ab1fb065042c5f811627c4a952de215ff229bdcaea2554c07c58f78325c8b2d1",
+        "size": 878059,
+        "format": "png"
+      },
+      "vendingmachine/textures/Material_emissive.png": {
+        "path": "models/vendingmachine/textures/Material_emissive.png",
+        "hash": "sha256:80f6280cf9bd54a5dd4097ead198e94fff942be63a59a630aeb0359b37ac207f",
+        "size": 288132,
+        "format": "png"
+      },
+      "vendingmachine/textures/Material_metallicRoughness.png": {
+        "path": "models/vendingmachine/textures/Material_metallicRoughness.png",
+        "hash": "sha256:67b6c1366d0cd6f50616b67c80250436be1020feebf989b2e950ff813b6c04bc",
+        "size": 254856,
+        "format": "png"
+      }
+    },
+    "textures": {
+      "ceiling_color.jpg": {
+        "path": "textures/ceiling_color.jpg",
+        "hash": "sha256:f444c07a08de291049d0dda880d6fca9faae4b172f293f604c87e5e96ad30370",
+        "size": 3843751,
+        "format": "jpg"
+      },
+      "ceiling_metalness.jpg": {
+        "path": "textures/ceiling_metalness.jpg",
+        "hash": "sha256:b65d6b9091747bd81ee58adedcb6209d8ee21b2bde9298d7216989ada85ef622",
+        "size": 16545,
+        "format": "jpg"
+      },
+      "ceiling_normal.jpg": {
+        "path": "textures/ceiling_normal.jpg",
+        "hash": "sha256:b84a0bfe4639b7e3fac36d04adf1844e0e2654f987a36ece5c966ad77921cd27",
+        "size": 1572994,
+        "format": "jpg"
+      },
+      "ceiling_roughness.jpg": {
+        "path": "textures/ceiling_roughness.jpg",
+        "hash": "sha256:8a0570593c028cf0eca32a0107d7bc936817f0de7076f1b8b8f48ea7745aee27",
+        "size": 2105192,
+        "format": "jpg"
+      },
+      "floor_color.jpg": {
+        "path": "textures/floor_color.jpg",
+        "hash": "sha256:49111877b98409fbc6c39be7e1c42ceda95311d5ed68807f78e48f8346d75d91",
+        "size": 4547901,
+        "format": "jpg"
+      },
+      "floor_normal.jpg": {
+        "path": "textures/floor_normal.jpg",
+        "hash": "sha256:bf1b405b7b577fc8c9d93f041246f9a9864811c84928bf30d77e290f50b3553f",
+        "size": 5745669,
+        "format": "jpg"
+      },
+      "floor_roughness.jpg": {
+        "path": "textures/floor_roughness.jpg",
+        "hash": "sha256:1014509505bf57d0c0c07a3f5b0f89e995727a6695b72e4c2d11ac77ea70df71",
+        "size": 2861968,
+        "format": "jpg"
+      },
+      "wall_ao.jpg": {
+        "path": "textures/wall_ao.jpg",
+        "hash": "sha256:314233c4b7722c4dfbd7e37b437870b55f19ec5dcf4483f1820fbb8cde242767",
+        "size": 678740,
+        "format": "jpg"
+      },
+      "wall_color.jpg": {
+        "path": "textures/wall_color.jpg",
+        "hash": "sha256:1f4fa05addd44550a6366d00dbd639af51739eed504270874eca1efbedc61629",
+        "size": 6041769,
+        "format": "jpg"
+      },
+      "wall_metalness.jpg": {
+        "path": "textures/wall_metalness.jpg",
+        "hash": "sha256:2e9791c1d7ca6d34a5017aeac1637d2fae7aa6f4e2507276cc2912a7f7cd6d77",
+        "size": 1859036,
+        "format": "jpg"
+      },
+      "wall_normal.jpg": {
+        "path": "textures/wall_normal.jpg",
+        "hash": "sha256:964ad5143b9f1c7d0ac892af85af846d8310d5915e00d451d87911b518af7e9e",
+        "size": 6999383,
+        "format": "jpg"
+      },
+      "wall_roughness.jpg": {
+        "path": "textures/wall_roughness.jpg",
+        "hash": "sha256:90671f51a189ddb1d03c5219a68c1602f19ba0923115dff4423a94b7200f47de",
+        "size": 2619497,
+        "format": "jpg"
+      }
+    },
+    "previews": {
+      "thumbnail.jpg": {
+        "path": "preview/thumbnail.jpg",
+        "hash": "sha256:aa7148484a1019cd9a4af5d8532b6147aa2b39d465a234c876889afba8855028",
+        "size": 653,
+        "format": "jpg"
+      }
+    }
+  },
+  "scenes": [
+    {
+      "id": "main_room",
+      "nameKey": "scene.main_room.name",
+      "modelRef": "room",
+      "defaultCamera": {
+        "position": [
+          0,
+          1.8,
+          2.5
+        ],
+        "target": [
+          0,
+          1.5,
+          -3
+        ],
+        "fov": 65,
+        "nearPlane": 0.05,
+        "farPlane": 100,
+        "minDistance": 0.5,
+        "maxDistance": 20,
+        "minPolarAngle": 0.1,
+        "maxPolarAngle": 2.8
+      },
+      "lights": [
+        {
+          "id": "ambient",
+          "type": "ambient",
+          "color": [
+            0.08,
+            0.01,
+            0.12
+          ],
+          "intensity": 0.35
+        },
+        {
+          "id": "neon_pink",
+          "type": "point",
+          "color": [
+            1,
+            0.08,
+            0.4
+          ],
+          "intensity": 10,
+          "position": [
+            0,
+            2.5,
+            -3.8
+          ]
+        },
+        {
+          "id": "neon_cyan",
+          "type": "point",
+          "color": [
+            0.05,
+            0.6,
+            1
+          ],
+          "intensity": 8,
+          "position": [
+            3,
+            1.6,
+            -2
+          ]
+        },
+        {
+          "id": "purple_fill",
+          "type": "point",
+          "color": [
+            0.4,
+            0.05,
+            0.8
+          ],
+          "intensity": 5,
+          "position": [
+            -3,
+            2,
+            1
+          ]
+        },
+        {
+          "id": "warm_rim",
+          "type": "directional",
+          "color": [
+            0.3,
+            0.15,
+            0.05
+          ],
+          "intensity": 1.5,
+          "position": [
+            0,
+            3,
+            5
+          ]
+        }
+      ]
+    }
+  ],
+  "characters": [],
+  "props": [
+    {
+      "id": "neon_center",
+      "nameKey": "prop.neon_sign",
+      "modelRef": "neon_sign",
+      "defaultPosition": [
+        0,
+        1.8,
+        -3.9
+      ],
+      "defaultRotation": [
+        0,
+        0,
+        0
+      ],
+      "pickable": true,
+      "draggable": false
+    },
+    {
+      "id": "atm_left",
+      "nameKey": "prop.atm",
+      "modelRef": "atm",
+      "defaultPosition": [
+        -4.3,
+        0,
+        -2
+      ],
+      "defaultRotation": [
+        0,
+        -0.35,
+        0
+      ],
+      "pickable": true,
+      "draggable": false
+    },
+    {
+      "id": "gaming_right",
+      "nameKey": "prop.gaming_setup",
+      "modelRef": "gaming_setup",
+      "defaultPosition": [
+        3.5,
+        0,
+        -2.5
+      ],
+      "defaultRotation": [
+        0,
+        0.6,
+        0
+      ],
+      "pickable": true,
+      "draggable": false
+    },
+    {
+      "id": "arcade_mid_left",
+      "nameKey": "prop.arcade",
+      "modelRef": "arcade",
+      "defaultPosition": [
+        -2,
+        0,
+        -3.8
+      ],
+      "defaultRotation": [
+        0,
+        0.15,
+        0
+      ],
+      "pickable": true,
+      "draggable": false
+    },
+    {
+      "id": "desk_left_corner",
+      "nameKey": "prop.desk",
+      "modelRef": "desk",
+      "defaultPosition": [
+        -3.5,
+        0,
+        -3.5
+      ],
+      "defaultRotation": [
+        0,
+        0.1,
+        0
+      ],
+      "pickable": true,
+      "draggable": false
+    },
+    {
+      "id": "vending_right_wall",
+      "nameKey": "prop.vendingmachine",
+      "modelRef": "vendingmachine",
+      "defaultPosition": [
+        4.4,
+        0,
+        -3.5
+      ],
+      "defaultRotation": [
+        0,
+        -0.55,
+        0
+      ],
+      "pickable": true,
+      "draggable": false
+    }
+  ],
+  "interactions": [],
+  "quests": [],
+  "i18n": {
+    "en": {
+      "theme.name": "Synthwave Chamber",
+      "theme.description": "A synthwave-themed chamber bathed in neon glow — Japanese neon signs, retro computer terminals, holographic capsules, with dark metal walls reflecting purple ambient light. Full PBR materials.",
+      "scene.main_room.name": "Synthwave Chamber",
+      "prop.neon_sign": "Cocktails Neon Sign",
+      "prop.atm": "ATM Terminal",
+      "prop.gaming_setup": "Gaming Setup",
+      "prop.arcade": "Arcade Machine",
+      "prop.desk": "Metal Work Desk",
+      "prop.vendingmachine": "Vending Machine"
+    },
+    "zh": {
+      "theme.name": "合成波密室",
+      "theme.description": "霓虹灯浸染的合成波风格密室——日式招牌、复古计算机终端、全息投影舱，金属墙面反射着紫色氛围光。完整 PBR 材质。",
+      "scene.main_room.name": "合成波密室",
+      "prop.neon_sign": "鸡尾酒霓虹灯",
+      "prop.atm": "ATM 终端",
+      "prop.gaming_setup": "电竞桌面",
+      "prop.arcade": "街机",
+      "prop.desk": "金属工作台",
+      "prop.vendingmachine": "自动售货机"
+    }
+  },
+  "renderConfig": {
+    "targetFps": 60,
+    "adaptiveQuality": true,
+    "qualityLevels": {
+      "high": {
+        "shadowMapSize": 2048,
+        "textureMaxResolution": 4096,
+        "antialias": true,
+        "postProcessing": true,
+        "particleMaxCount": 500
+      },
+      "medium": {
+        "shadowMapSize": 1024,
+        "textureMaxResolution": 2048,
+        "antialias": false,
+        "postProcessing": true,
+        "particleMaxCount": 200
+      },
+      "low": {
+        "shadowMapSize": 512,
+        "textureMaxResolution": 1024,
+        "antialias": false,
+        "postProcessing": false,
+        "particleMaxCount": 50
+      }
+    },
+    "triangleBudget": 300000,
+    "drawCallBudget": 500,
+    "textureMemoryBudgetMb": 1024,
+    "postProcessing": {
+      "bloom": true,
+      "bloomStrength": 0.9,
+      "bloomThreshold": 0.5,
+      "toneMapping": "ACESFilmic",
+      "vignette": true
+    }
+  },
+  "requiredWebGLExtensions": [],
+  "extensions": {
+    "postProcessing": [
+      "bloom",
+      "toneMapping",
+      "vignette"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "theme.name": "Cyber Den",
+  "theme.description": "An immersive cyberpunk-themed room with neon signs, arcade machines, and vending machines. Dark metal walls and concrete floors. Full PBR materials.",
+  "scene.main_room.name": "Cyber Den",
+  "prop.neon_sign": "Cocktails Neon Sign",
+  "prop.atm": "ATM Terminal",
+  "prop.gaming_setup": "Gaming Setup",
+  "prop.arcade": "Arcade Machine",
+  "prop.desk": "Work Desk",
+  "prop.vendingmachine": "Vending Machine"
+}

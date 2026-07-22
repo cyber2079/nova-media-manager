@@ -1,0 +1,11 @@
+{
+  "theme.name": "赛博密室",
+  "theme.description": "一个沉浸式赛博朋克主题房间，霓虹灯招牌、街机、自动售货机环绕，金属墙面与混凝土地面构筑暗冷氛围。完整 PBR 材质渲染。",
+  "scene.main_room.name": "赛博密室",
+  "prop.neon_sign": "鸡尾酒霓虹灯",
+  "prop.atm": "ATM 终端",
+  "prop.gaming_setup": "电竞桌面",
+  "prop.arcade": "街机",
+  "prop.desk": "工作台",
+  "prop.vendingmachine": "自动售货机"
+}

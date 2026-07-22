@@ -59,5 +59,8 @@ scripts/setup-git-remote.ps1
 # ══ Claude ══
 .claude/worktrees/
 
+# ══ WebGL3D output (large binary files) ══
+scripts/webgl3d/output/
+
 # ══ Dev overrides (local only) ══
 .env

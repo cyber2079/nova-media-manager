@@ -1,0 +1,247 @@
+{
+  "$schema": "https://scm-think.cn/schemas/nv3d-manifest.json",
+  "formatVersion": "2.0",
+  "themeId": "neon-sign",
+  "themeName": {
+    "zh": "鸡尾酒霓虹招牌",
+    "en": "Cocktails Neon Sign"
+  },
+  "themeType": "webgl3d",
+  "version": "1.0.0",
+  "minAppVersion": "2.0.0",
+  "resources": {
+    "models": {
+      "scene": {
+        "path": "models/scene.gltf",
+        "hash": "sha256:657e539c790bbd1f30981270eb6450d9eda34edf6b86046e8088b3ca845cbe9e",
+        "size": 14332,
+        "format": "gltf"
+      },
+      "cables_base_color": {
+        "path": "models/textures/cables_base_color.png",
+        "hash": "sha256:75a0df6d9dd1b40a201d74ba7065b6525636d7df957a13d0f2dc0d671a039198",
+        "size": 1236831,
+        "format": "png"
+      },
+      "cables_metallic_roughness": {
+        "path": "models/textures/cables_metallic_roughness.png",
+        "hash": "sha256:2aae3903aee43fd900d3c9eb70b6b5ae56ec5d1ddb28aced5bb91842dd0a44c1",
+        "size": 2379,
+        "format": "png"
+      },
+      "cables_normal": {
+        "path": "models/textures/cables_normal.png",
+        "hash": "sha256:e898c8a9637efc624830d2bad1610af8441a560e848f8ba1b76922af47575087",
+        "size": 2459895,
+        "format": "png"
+      },
+      "cover_base_color": {
+        "path": "models/textures/cover_base_color.png",
+        "hash": "sha256:4ab8a59c7458830520acca1fa5e48acd1869f95030b08fbb47baf30aa42fa674",
+        "size": 936510,
+        "format": "png"
+      },
+      "cover_metallic_roughness": {
+        "path": "models/textures/cover_metallic_roughness.png",
+        "hash": "sha256:224daca8e0facc0ab86f4334b3aa057b88834cb7af6fa7d73843ef236f5af0b7",
+        "size": 937290,
+        "format": "png"
+      },
+      "cover_normal": {
+        "path": "models/textures/cover_normal.png",
+        "hash": "sha256:659d9a01ab8040b8edb013141a9461a882388298e26e5dafa9d1508479ff947a",
+        "size": 1862040,
+        "format": "png"
+      },
+      "emission_base_color": {
+        "path": "models/textures/emission_base_color.png",
+        "hash": "sha256:b56f4f9467d491075e36b621264b8b3250cf6db51f64ba98678f5e903f3bc215",
+        "size": 605,
+        "format": "png"
+      },
+      "supports_base_color": {
+        "path": "models/textures/supports_base_color.png",
+        "hash": "sha256:7eaac1d6727b95f54d1b4151d86c9c0bd079ba33625c16c3f0c55d6aa1a84e8e",
+        "size": 804122,
+        "format": "png"
+      },
+      "supports_metallic_roughness": {
+        "path": "models/textures/supports_metallic_roughness.png",
+        "hash": "sha256:5a6faed12201e2ee5402a13046b241d5d914224618492995152b2d849a7c3420",
+        "size": 85366,
+        "format": "png"
+      },
+      "supports_normal": {
+        "path": "models/textures/supports_normal.png",
+        "hash": "sha256:3bf79a2af49b6fe8fc9f7b32582e8ec1c505d55cad26e23bcbce32d15e3a9557",
+        "size": 1722522,
+        "format": "png"
+      },
+      "wall_mount_base_color": {
+        "path": "models/textures/wall_mount_base_color.png",
+        "hash": "sha256:c3af0fc91e860d1d9528c1e5aca6bd044a6ef910c28571aa705758367d0e857c",
+        "size": 445769,
+        "format": "png"
+      },
+      "wall_mount_metallic_roughness": {
+        "path": "models/textures/wall_mount_metallic_roughness.png",
+        "hash": "sha256:53fd3688c3ce0bd808b6a625e3ec9949ab6dd93e24acfcbd892fbd2696c9688e",
+        "size": 499248,
+        "format": "png"
+      },
+      "wall_mount_normal": {
+        "path": "models/textures/wall_mount_normal.png",
+        "hash": "sha256:f5a580fbccd044320977f58b53b175e00852826d08000caa14d22081d19e0fb4",
+        "size": 1287459,
+        "format": "png"
+      }
+    },
+    "previews": {
+      "thumbnail": {
+        "path": "preview/thumbnail.jpg",
+        "hash": "sha256:8b272ec758bfa9740bc1fdacce2baf23c6c0e0af6fea4b977f547bc89760eed9",
+        "size": 653,
+        "format": "jpg"
+      }
+    }
+  },
+  "scenes": [
+    {
+      "id": "neon_sign",
+      "nameKey": "scene.neon_sign.name",
+      "modelRef": "scene",
+      "defaultCamera": {
+        "position": [
+          0,
+          1.5,
+          5
+        ],
+        "target": [
+          0,
+          1,
+          0
+        ],
+        "fov": 45,
+        "nearPlane": 0.1,
+        "farPlane": 5000,
+        "minDistance": 2,
+        "maxDistance": 30,
+        "minPolarAngle": 0.1,
+        "maxPolarAngle": 2.8
+      },
+      "lights": [
+        {
+          "id": "ambient",
+          "type": "ambient",
+          "color": [
+            0.1,
+            0.05,
+            0.15
+          ],
+          "intensity": 0.3
+        },
+        {
+          "id": "key_front",
+          "type": "directional",
+          "color": [
+            0.8,
+            0.2,
+            0.9
+          ],
+          "intensity": 1.5,
+          "position": [
+            0,
+            2,
+            4
+          ]
+        },
+        {
+          "id": "rim_back",
+          "type": "point",
+          "color": [
+            0.1,
+            0.3,
+            1
+          ],
+          "intensity": 3,
+          "position": [
+            0,
+            1,
+            -3
+          ]
+        }
+      ]
+    }
+  ],
+  "characters": [],
+  "props": [
+    {
+      "id": "neon_sign_prop",
+      "nameKey": "scene.neon_sign.name",
+      "modelRef": "scene",
+      "defaultPosition": [
+        0,
+        2,
+        -2
+      ],
+      "pickable": true,
+      "draggable": false
+    }
+  ],
+  "interactions": [],
+  "quests": [],
+  "i18n": {
+    "en": {
+      "theme.name": "Cocktails Neon Sign",
+      "theme.description": "Cyberpunk-style illuminated neon sign with metal brackets, cables, and wall mount. Full PBR materials, wall-mountable.",
+      "scene.neon_sign.name": "Neon Sign",
+      "model.cover": "Cover",
+      "model.emission": "Emission Panel",
+      "model.supports": "Metal Brackets",
+      "model.cables": "Cables",
+      "model.wall_mount": "Wall Mount"
+    },
+    "zh": {
+      "theme.name": "鸡尾酒霓虹招牌",
+      "theme.description": "赛博朋克风格的可发光霓虹灯招牌，含金属支架、线缆和壁挂组件。完整 PBR 材质，可悬挂于墙面。",
+      "scene.neon_sign.name": "霓虹招牌",
+      "model.cover": "外壳",
+      "model.emission": "发光面板",
+      "model.supports": "金属支架",
+      "model.cables": "线缆",
+      "model.wall_mount": "壁挂底座"
+    }
+  },
+  "renderConfig": {
+    "targetFps": 60,
+    "adaptiveQuality": true,
+    "qualityLevels": {
+      "high": {
+        "shadowMapSize": 2048,
+        "textureMaxResolution": 4096,
+        "antialias": true,
+        "postProcessing": true,
+        "particleMaxCount": 500
+      },
+      "medium": {
+        "shadowMapSize": 1024,
+        "textureMaxResolution": 2048,
+        "antialias": false,
+        "postProcessing": true,
+        "particleMaxCount": 200
+      },
+      "low": {
+        "shadowMapSize": 512,
+        "textureMaxResolution": 1024,
+        "antialias": false,
+        "postProcessing": false,
+        "particleMaxCount": 50
+      }
+    },
+    "triangleBudget": 200000,
+    "drawCallBudget": 300,
+    "textureMemoryBudgetMb": 512
+  },
+  "requiredWebGLExtensions": [],
+  "extensions": {}
+}

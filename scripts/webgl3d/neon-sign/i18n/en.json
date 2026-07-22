@@ -1,0 +1,10 @@
+{
+  "theme.name": "Cocktails Neon Sign",
+  "theme.description": "Cyberpunk-style illuminated neon sign with metal brackets, cables, and wall mount. Full PBR materials, wall-mountable.",
+  "scene.neon_sign.name": "Neon Sign",
+  "model.cover": "Cover",
+  "model.emission": "Emission Panel",
+  "model.supports": "Metal Brackets",
+  "model.cables": "Cables",
+  "model.wall_mount": "Wall Mount"
+}

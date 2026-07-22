@@ -1,0 +1,11 @@
+{
+  "theme.name": "Synthwave Chamber",
+  "theme.description": "A synthwave-themed chamber bathed in neon glow — Japanese neon signs, retro computer terminals, holographic capsules, with dark metal walls reflecting purple ambient light. Full PBR materials.",
+  "scene.main_room.name": "Synthwave Chamber",
+  "prop.neon_sign": "Cocktails Neon Sign",
+  "prop.atm": "ATM Terminal",
+  "prop.gaming_setup": "Gaming Setup",
+  "prop.arcade": "Arcade Machine",
+  "prop.desk": "Metal Work Desk",
+  "prop.vendingmachine": "Vending Machine"
+}

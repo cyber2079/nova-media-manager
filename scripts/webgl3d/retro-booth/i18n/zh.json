@@ -1,0 +1,11 @@
+{
+  "theme.name": "合成波密室",
+  "theme.description": "霓虹灯浸染的合成波风格密室——日式招牌、复古计算机终端、全息投影舱，金属墙面反射着紫色氛围光。完整 PBR 材质。",
+  "scene.main_room.name": "合成波密室",
+  "prop.neon_sign": "鸡尾酒霓虹灯",
+  "prop.atm": "ATM 终端",
+  "prop.gaming_setup": "电竞桌面",
+  "prop.arcade": "街机",
+  "prop.desk": "金属工作台",
+  "prop.vendingmachine": "自动售货机"
+}

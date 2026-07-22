@@ -219,7 +219,11 @@ function stepManifest() {
       const h = sha256File(f);
       const size = statSync(f).size;
       const ext = extname(f).toLowerCase();
-      const key = basename(f).replace(ext, "");
+      // key = directory_name/basename_no_ext.format to prevent .gltf/.bin collisions
+      const parentDir = relative(catDir, dirname(f)).replace(/\\/g, "/");
+      const baseNoExt = basename(f).replace(ext, "");
+      const suffix = `.${ext.slice(1)}`;
+      const key = parentDir ? `${parentDir}/${baseNoExt}${suffix}` : `${baseNoExt}${suffix}`;
       entries[key] = { path: rel, hash: `sha256:${h}`, size, format: ext.slice(1) };
     }
     if (Object.keys(entries).length > 0) resources[cat] = entries;

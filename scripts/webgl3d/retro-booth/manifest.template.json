@@ -1,0 +1,110 @@
+{
+  "themeName": {
+    "zh": "合成波密室",
+    "en": "Synthwave Chamber"
+  },
+  "scenes": [
+    {
+      "id": "main_room",
+      "nameKey": "scene.main_room.name",
+      "modelRef": "room",
+      "defaultCamera": {
+        "position": [0, 1.8, 2.5],
+        "target": [0, 1.5, -3],
+        "fov": 65,
+        "nearPlane": 0.05,
+        "farPlane": 100,
+        "minDistance": 0.5,
+        "maxDistance": 20,
+        "minPolarAngle": 0.1,
+        "maxPolarAngle": 2.8
+      },
+      "lights": [
+        { "id": "ambient", "type": "ambient", "color": [0.08, 0.01, 0.12], "intensity": 0.35 },
+        { "id": "neon_pink", "type": "point", "color": [1, 0.08, 0.4], "intensity": 10, "position": [0, 2.5, -3.8] },
+        { "id": "neon_cyan", "type": "point", "color": [0.05, 0.6, 1], "intensity": 8, "position": [3, 1.6, -2] },
+        { "id": "purple_fill", "type": "point", "color": [0.4, 0.05, 0.8], "intensity": 5, "position": [-3, 2, 1] },
+        { "id": "warm_rim", "type": "directional", "color": [0.3, 0.15, 0.05], "intensity": 1.5, "position": [0, 3, 5] }
+      ]
+    }
+  ],
+  "props": [
+    {
+      "id": "neon_center",
+      "nameKey": "prop.neon_sign",
+      "modelRef": "neon_sign",
+      "defaultPosition": [0, 1.8, -3.9],
+      "defaultRotation": [0, 0, 0],
+      "pickable": true,
+      "draggable": false
+    },
+    {
+      "id": "atm_left",
+      "nameKey": "prop.atm",
+      "modelRef": "atm",
+      "defaultPosition": [-4.3, 0, -2],
+      "defaultRotation": [0, -0.35, 0],
+      "pickable": true,
+      "draggable": false
+    },
+    {
+      "id": "gaming_right",
+      "nameKey": "prop.gaming_setup",
+      "modelRef": "gaming_setup",
+      "defaultPosition": [3.5, 0, -2.5],
+      "defaultRotation": [0, 0.6, 0],
+      "pickable": true,
+      "draggable": false
+    },
+    {
+      "id": "arcade_mid_left",
+      "nameKey": "prop.arcade",
+      "modelRef": "arcade",
+      "defaultPosition": [-2, 0, -3.8],
+      "defaultRotation": [0, 0.15, 0],
+      "pickable": true,
+      "draggable": false
+    },
+    {
+      "id": "desk_left_corner",
+      "nameKey": "prop.desk",
+      "modelRef": "desk",
+      "defaultPosition": [-3.5, 0, -3.5],
+      "defaultRotation": [0, 0.1, 0],
+      "pickable": true,
+      "draggable": false
+    },
+    {
+      "id": "vending_right_wall",
+      "nameKey": "prop.vendingmachine",
+      "modelRef": "vendingmachine",
+      "defaultPosition": [4.4, 0, -3.5],
+      "defaultRotation": [0, -0.55, 0],
+      "pickable": true,
+      "draggable": false
+    }
+  ],
+  "renderConfig": {
+    "targetFps": 60,
+    "adaptiveQuality": true,
+    "qualityLevels": {
+      "high": { "shadowMapSize": 2048, "textureMaxResolution": 4096, "antialias": true, "postProcessing": true, "particleMaxCount": 500 },
+      "medium": { "shadowMapSize": 1024, "textureMaxResolution": 2048, "antialias": false, "postProcessing": true, "particleMaxCount": 200 },
+      "low": { "shadowMapSize": 512, "textureMaxResolution": 1024, "antialias": false, "postProcessing": false, "particleMaxCount": 50 }
+    },
+    "triangleBudget": 300000,
+    "drawCallBudget": 500,
+    "textureMemoryBudgetMb": 1024,
+    "postProcessing": {
+      "bloom": true,
+      "bloomStrength": 0.9,
+      "bloomThreshold": 0.5,
+      "toneMapping": "ACESFilmic",
+      "vignette": true
+    }
+  },
+  "requiredWebGLExtensions": [],
+  "extensions": {
+    "postProcessing": ["bloom", "toneMapping", "vignette"]
+  }
+}

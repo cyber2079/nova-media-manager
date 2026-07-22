@@ -1,0 +1,52 @@
+{
+  "themeName": {
+    "zh": "鸡尾酒霓虹招牌",
+    "en": "Cocktails Neon Sign"
+  },
+  "scenes": [
+    {
+      "id": "neon_sign",
+      "nameKey": "scene.neon_sign.name",
+      "modelRef": "scene",
+      "defaultCamera": {
+        "position": [0, 1.5, 5],
+        "target": [0, 1, 0],
+        "fov": 45,
+        "nearPlane": 0.1,
+        "farPlane": 5000,
+        "minDistance": 2,
+        "maxDistance": 30,
+        "minPolarAngle": 0.1,
+        "maxPolarAngle": 2.8
+      },
+      "lights": [
+        { "id": "ambient", "type": "ambient", "color": [0.1, 0.05, 0.15], "intensity": 0.3 },
+        { "id": "key_front", "type": "directional", "color": [0.8, 0.2, 0.9], "intensity": 1.5, "position": [0, 2, 4] },
+        { "id": "rim_back", "type": "point", "color": [0.1, 0.3, 1], "intensity": 3, "position": [0, 1, -3] }
+      ]
+    }
+  ],
+  "props": [
+    {
+      "id": "neon_sign_prop",
+      "nameKey": "scene.neon_sign.name",
+      "modelRef": "scene",
+      "defaultPosition": [0, 2, -2],
+      "pickable": true,
+      "draggable": false
+    }
+  ],
+  "renderConfig": {
+    "targetFps": 60,
+    "adaptiveQuality": true,
+    "qualityLevels": {
+      "high": { "shadowMapSize": 2048, "textureMaxResolution": 4096, "antialias": true, "postProcessing": true, "particleMaxCount": 500 },
+      "medium": { "shadowMapSize": 1024, "textureMaxResolution": 2048, "antialias": false, "postProcessing": true, "particleMaxCount": 200 },
+      "low": { "shadowMapSize": 512, "textureMaxResolution": 1024, "antialias": false, "postProcessing": false, "particleMaxCount": 50 }
+    },
+    "triangleBudget": 200000,
+    "drawCallBudget": 300,
+    "textureMemoryBudgetMb": 512
+  },
+  "requiredWebGLExtensions": []
+}

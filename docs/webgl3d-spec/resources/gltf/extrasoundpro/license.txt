@@ -1,0 +1,11 @@
+Model Information:
+* title:	EXTRASOUNDPRO
+* source:	https://sketchfab.com/3d-models/extrasoundpro-e32364a157ac40a8a7ca6c4d1a95ef58
+* author:	Nikitos & 3130 (https://sketchfab.com/vrcityphoto)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "EXTRASOUNDPRO" (https://sketchfab.com/3d-models/extrasoundpro-e32364a157ac40a8a7ca6c4d1a95ef58) by Nikitos & 3130 (https://sketchfab.com/vrcityphoto) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

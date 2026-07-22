@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Film, Image, Gamepad2, Home, Music, Maximize2, Minimize2, Search, Settings, X, LayoutGrid, Gauge } from "lucide-react";
+import { Film, Image, Gamepad2, Home, Music, Maximize2, Minimize2, Search, Settings, X, LayoutGrid, Gauge, Box } from "lucide-react";
+import { lazy } from "react";
+const Nv3dViewer = lazy(() => import("@/webgl3d/canvas/Nv3dViewer"));
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { cn } from "@/lib/utils";
 import { kv } from "@/lib/sqliteStore";
@@ -130,6 +132,7 @@ export default function Layout() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [nv3dOpen, setNv3dOpen] = useState(false);
   const appRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { useLicenseStore.getState().init(); }, []);
@@ -590,6 +593,11 @@ export default function Layout() {
             <button onClick={() => setSettingsOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={t("settings.title")}>
               <Settings className="h-4 w-4 text-gray-400" />
             </button>
+            {import.meta.env.DEV && (
+              <button onClick={() => setNv3dOpen(v => !v)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-purple-500/20 transition-all duration-300 active:scale-90" title="3D 预览">
+                <Box className={cn("h-4 w-4", nv3dOpen ? "text-purple-400" : "text-gray-400")} />
+              </button>
+            )}
 
           </div>
         </div>
@@ -721,6 +729,15 @@ export default function Layout() {
       <ActivationDialog />
       <PrivacyConsent />
       <UpdateChecker />
+
+      {nv3dOpen && (
+        <div className="fixed inset-0 z-[300] bg-black" onClick={e => e.target === e.currentTarget && setNv3dOpen(false)}>
+          <button onClick={() => setNv3dOpen(false)} className="absolute top-4 right-4 z-[310] flex h-9 w-9 items-center justify-center rounded-lg bg-black/50 hover:bg-red-500/30 transition-all active:scale-90" title="关闭 3D 预览">
+            <X className="h-4 w-4 text-white" />
+          </button>
+          <Nv3dViewer />
+        </div>
+      )}
 
       <GlobalConfirmDialog />
       <ImportOverlay isOpen={isImportingAny} />

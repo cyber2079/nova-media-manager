@@ -1,0 +1,10 @@
+{
+  "theme.name": "鸡尾酒霓虹招牌",
+  "theme.description": "赛博朋克风格的可发光霓虹灯招牌，含金属支架、线缆和壁挂组件。完整 PBR 材质，可悬挂于墙面。",
+  "scene.neon_sign.name": "霓虹招牌",
+  "model.cover": "外壳",
+  "model.emission": "发光面板",
+  "model.supports": "金属支架",
+  "model.cables": "线缆",
+  "model.wall_mount": "壁挂底座"
+}

@@ -11,6 +11,7 @@ const ImageLibrary = lazy(() => import("@/pages/ImageLibrary"));
 const MusicLibrary = lazy(() => import("@/pages/MusicLibrary"));
 const GameLibrary = lazy(() => import("@/pages/GameLibrary"));
 const ThemeStudioPage = lazy(() => import("@/pages/ThemeStudio"));
+const Nv3dPreview = lazy(() => import("@/webgl3d/canvas/Nv3dViewer"));
 
 function PageFallback() {
   return (
@@ -41,6 +42,10 @@ export default function App() {
           <Route path="/games" element={<Page><GameLibrary /></Page>} />
           {import.meta.env?.VITE_LICENSE_TIER ? <Route path="/studio" element={<ThemeStudioPage />} /> : null}
         </Route>
+        {/* Dev: NV3D viewer — 拖入 .nv3d 文件预览 3D 场景，不走 Layout */}
+        {import.meta.env.DEV && (
+          <Route path="/nv3d-preview" element={<Page><Nv3dPreview /></Page>} />
+        )}
       </Routes>
     </BrowserRouter>
   );

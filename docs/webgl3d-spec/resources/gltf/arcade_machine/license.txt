@@ -1,0 +1,11 @@
+Model Information:
+* title:	arcade machine
+* source:	https://sketchfab.com/3d-models/arcade-machine-a914bf3651e3496ea708dc0782eca212
+* author:	Logotyp (https://sketchfab.com/Logotyp)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "arcade machine" (https://sketchfab.com/3d-models/arcade-machine-a914bf3651e3496ea708dc0782eca212) by Logotyp (https://sketchfab.com/Logotyp) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

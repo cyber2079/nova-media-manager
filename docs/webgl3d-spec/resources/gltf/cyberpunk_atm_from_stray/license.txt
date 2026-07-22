@@ -1,0 +1,11 @@
+Model Information:
+* title:	Cyberpunk ATM from Stray
+* source:	https://sketchfab.com/3d-models/cyberpunk-atm-from-stray-e1fbc7943362485489dba5a951ebc4b1
+* author:	candelasoriano (https://sketchfab.com/candelasoriano)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Cyberpunk ATM from Stray" (https://sketchfab.com/3d-models/cyberpunk-atm-from-stray-e1fbc7943362485489dba5a951ebc4b1) by candelasoriano (https://sketchfab.com/candelasoriano) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
