@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import glsl from "vite-plugin-glsl";
 import path from "path";
 
 // Strict CSP plugin — injects a meta Content-Security-Policy tag that
@@ -22,7 +23,7 @@ function strictCspPlugin() {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), strictCspPlugin()],
+  plugins: [react(), tailwindcss(), glsl(), strictCspPlugin()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

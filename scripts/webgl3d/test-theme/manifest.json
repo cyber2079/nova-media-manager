@@ -1,0 +1,159 @@
+{
+  "$schema": "https://scm-think.cn/schemas/nv3d-manifest.json",
+  "formatVersion": "2.0",
+  "themeId": "test-theme",
+  "themeName": {
+    "zh": "测试主题",
+    "en": "Test Theme"
+  },
+  "themeType": "webgl3d",
+  "version": "1.0.0",
+  "minAppVersion": "2.0.0",
+  "resources": {
+    "models": {
+      "README": {
+        "path": "models/README.txt",
+        "hash": "sha256:7df4f9ec92f19247dac8502627dce81d87cc69a656303b37d8ddcacf45c485ea",
+        "size": 39,
+        "format": "txt"
+      }
+    },
+    "textures": {
+      "test_diffuse": {
+        "path": "textures/test_diffuse.png",
+        "hash": "sha256:6b6276f9e45b12a6a48d4698721f8a129470c67c1292d0a23f6f823d893fe8fd",
+        "size": 68,
+        "format": "png"
+      }
+    },
+    "previews": {
+      "thumbnail": {
+        "path": "preview/thumbnail.png",
+        "hash": "sha256:6b6276f9e45b12a6a48d4698721f8a129470c67c1292d0a23f6f823d893fe8fd",
+        "size": 68,
+        "format": "png"
+      }
+    }
+  },
+  "scenes": [
+    {
+      "id": "test_room",
+      "nameKey": "scene.test_room.name",
+      "modelRef": "scene_test",
+      "defaultCamera": {
+        "position": [
+          0,
+          1.5,
+          5
+        ],
+        "target": [
+          0,
+          1,
+          0
+        ],
+        "fov": 60,
+        "nearPlane": 0.1,
+        "farPlane": 100,
+        "minDistance": 1,
+        "maxDistance": 10,
+        "minPolarAngle": 0.1,
+        "maxPolarAngle": 1.5
+      },
+      "lights": [
+        {
+          "id": "ambient",
+          "type": "ambient",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "intensity": 0.5
+        }
+      ]
+    }
+  ],
+  "characters": [
+    {
+      "id": "test_char",
+      "nameKey": "character.test_char.name",
+      "modelRef": "char_test",
+      "defaultPosition": [
+        0,
+        0,
+        -1
+      ],
+      "animations": {
+        "idle": {
+          "animRef": "idle_test",
+          "loop": true
+        },
+        "greet": {
+          "animRef": "greet_test",
+          "loop": false,
+          "nextAnim": "idle"
+        }
+      }
+    }
+  ],
+  "props": [
+    {
+      "id": "test_prop",
+      "nameKey": "prop.test_prop.name",
+      "modelRef": "prop_test",
+      "defaultPosition": [
+        0,
+        0,
+        -2
+      ],
+      "pickable": true,
+      "draggable": true
+    }
+  ],
+  "interactions": [],
+  "quests": [],
+  "i18n": {
+    "en": {
+      "theme.name": "Test Theme",
+      "theme.description": "End-to-end verification test theme",
+      "scene.main_room.name": "Test Room"
+    },
+    "zh": {
+      "theme.name": "测试主题",
+      "theme.description": "端到端验证用测试主题",
+      "scene.main_room.name": "测试房间"
+    }
+  },
+  "renderConfig": {
+    "targetFps": 60,
+    "adaptiveQuality": true,
+    "qualityLevels": {
+      "high": {
+        "shadowMapSize": 2048,
+        "textureMaxResolution": 4096,
+        "antialias": true,
+        "postProcessing": true,
+        "particleMaxCount": 500
+      },
+      "medium": {
+        "shadowMapSize": 1024,
+        "textureMaxResolution": 2048,
+        "antialias": false,
+        "postProcessing": true,
+        "particleMaxCount": 200
+      },
+      "low": {
+        "shadowMapSize": 512,
+        "textureMaxResolution": 1024,
+        "antialias": false,
+        "postProcessing": false,
+        "particleMaxCount": 50
+      }
+    },
+    "triangleBudget": 100000,
+    "drawCallBudget": 200,
+    "textureMemoryBudgetMb": 512
+  },
+  "requiredWebGLExtensions": [],
+  "extensions": {}
+}

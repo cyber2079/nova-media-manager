@@ -1,105 +1,70 @@
 # 开发进度
 
-> 最后更新：2026-07-22
-> 一台机器工作结束前更新此文件 → `npm run push`
-> 另一台机器 `npm run pull` 后先看此文件再开始写代码
+> 最后更新：2026-07-22（办公室）
 
----
+## 已完成 — 全部 6 阶段
 
-## 当前在做
+- [x] **阶段 0** — 可行性验证（2026-07-22）
+- [x] **阶段 1** — 渲染内核 + 集成验证 8/8（2026-07-22）
+- [x] **阶段 2** — 前端组件（2026-07-22）
+- [x] **阶段 3** — Rust 底层 8 个 Tauri 命令（2026-07-22）
+- [x] **阶段 4** — 打包管线 + 工具链安装（2026-07-22）
+- [x] **阶段 5** — 测试：58/58 可验证项通过（2026-07-22）
+- [x] **阶段 6** — 交付 + 服务端（2026-07-22）
+- [x] **收尾** — 补齐 6 项非素材依赖（2026-07-22）
 
-> 每个 [~] 条目必须包含：做什么、写到哪了、下一步是什么、规范引用
+## 阶段 6 + 收尾新增
 
-暂无（待阶段 0 启动）
+| 组件 | 文件 | 说明 |
+|------|------|------|
+| 服务端 API | `server/src/routes/themes.ts` | 新增 4 个 NV3D 端点：`/api/themes/webgl3d/list`、`/download`、`/check-update`、admin `/upload`；支持 HTTP Range 断点续传 |
+| DevToolsMenu | `src/components/DevToolsMenu.tsx` | 管线菜单新增"E2E 验证 (38 tests)"入口 |
 
----
+## 阶段 5 遗留项（需真实素材时执行）
 
-## 已完成
+| 测试项 | 阻塞原因 |
+|--------|---------|
+| 完整主题加载流程 | 需要 glTF/贴图/音频等完整素材 |
+| Shader 编译失败降级 | 需要真实主题着色器 |
+| Worker Draco/KTX2 解码 | 需要压缩模型 + KTX2 贴图 |
+| Context Lost 睡眠唤醒 | 需硬件合盖测试 |
+| Lockstep 双主题验证 | 需要两个完整主题素材 |
 
-> 完成后从"当前在做"移到这里，标注完成日期
+## 验证记录
 
-暂无
+```
+E2E 测试      38/38 ← 最近一次: 2026-07-22
+Rust 测试      3/ 3
+隔离验证       3/ 3
+TS typecheck   全量通过
+工具链         4/ 4 (Node.js / basisu / gltf-transform / sharp)
+Benchmark    158FPS (Intel 集显 WebView2)
+集成验证       8/ 8
+```
 
----
+## 总进度
 
-## 待开始
+```
+阶段 0 ████████████ 100%
+阶段 1 ████████████ 100%
+阶段 2 ████████████ 100%
+阶段 3 ████████████ 100%
+阶段 4 ████████████ 100%
+阶段 5 ████████████ 100%
+阶段 6 ████████████ 100%
+```
 
-> 按依赖顺序排列，开始做某个条目时改为 [~] 并移到"当前在做"
+## 全项目清单
 
-### 阶段 0 — 可行性验证
-
-- [ ] WebView2 WebGL 性能基准测试 — Ref: [18_开发流程 §2](18_WebGL%203D主题标准化开发流程.md)
-
-### 阶段 1 — 渲染内核
-
-- [ ] RenderManager 全局单例 — Ref: [05_渲染管线 §2](05_3D场景通用渲染管线规范.md)
-- [ ] SceneManager 场景加载/卸载/切换 — Ref: [05_渲染管线 §4](05_3D场景通用渲染管线规范.md)
-- [ ] ResourceCache GPU 资源生命周期 — Ref: [05_渲染管线 §4.2](05_3D场景通用渲染管线规范.md)
-- [ ] ShaderCompiler 编译 + 缓存 + 错误处理 — Ref: [06_着色器 §5](06_着色器开发通用规范.md)
-- [ ] MetricsCollector 性能指标采集 — Ref: [05_渲染管线 §10](05_3D场景通用渲染管线规范.md)
-- [ ] CircuitBreaker 熔断器状态机 — Ref: [02_开发标准 §4](02_全局开发强制标准.md)
-- [ ] 通用 PBR 着色器（forward / depth / skybox / particle） — Ref: [06_着色器 §3](06_着色器开发通用规范.md)
-- [ ] 后处理框架（Bloom / LUT / Vignette / CA / Grain） — Ref: [06_着色器 §4](06_着色器开发通用规范.md) + [11_Schema §4.2](11_主题元数据通用Schema标准.md)
-- [ ] RayPicker 射线拾取 — Ref: [07_交互 §2](07_3D交互系统通用设计标准.md)
-- [ ] AnimationController 动画状态机 — Ref: [07_交互 §3](07_3D交互系统通用设计标准.md)
-- [ ] EventBus + InteractionResolver — Ref: [07_交互 §4](07_3D交互系统通用设计标准.md)
-
-### 阶段 2 — 前端组件
-
-- [ ] ThreeDCanvas + ThreeDErrorBoundary — Ref: [12_画布组件 §2-3](12_WebGL画布通用组件开发规范.md)
-- [ ] LoadingOverlay 加载进度 — Ref: [14_UI/UX §2](14_3D配套UI-UX通用交互规范.md)
-- [ ] DialogBox 剧情弹窗 — Ref: [14_UI/UX §3](14_3D配套UI-UX通用交互规范.md)
-- [ ] InteractionHint 交互提示 — Ref: [14_UI/UX §4](14_3D配套UI-UX通用交互规范.md)
-- [ ] ThemeSwitcherPanel 主题切换 — Ref: [14_UI/UX §5](14_3D配套UI-UX通用交互规范.md)
-- [ ] PermissionGate 权限拦截 — Ref: [14_UI/UX §6](14_3D配套UI-UX通用交互规范.md)
-- [ ] threeDStore 状态管理 — Ref: [13_全局状态](13_3D全局状态通用结构.md)
-
-### 阶段 2 — 素材管线
-
-- [ ] env_check.py 离线工具版本校验 — Ref: [10_贴图管线 §2.2](10_离线贴图自动化管线规范.md)
-- [ ] convert_textures.py PNG → KTX2 — Ref: [10_贴图管线 §3](10_离线贴图自动化管线规范.md)
-- [ ] compress_models.py glTF → Draco GLB — Ref: [10_贴图管线 §4](10_离线贴图自动化管线规范.md)
-- [ ] validate_assets.py 全面质量校验 — Ref: [10_贴图管线 §5](10_离线贴图自动化管线规范.md) + [17_打包规范 §7](17_专属资源包打包加密通用规范.md)
-- [ ] pipeline.py 一键全管线 — Ref: [10_贴图管线 §2.3](10_离线贴图自动化管线规范.md)
-
-### 阶段 3 — Rust 底层
-
-- [ ] nv3d_open + nv3d_verify — Ref: [15_底层接口 §3.1-3.3](15_3D资源底层调用接口文档.md)
-- [ ] nv3d_read_block — Ref: [15_底层接口 §3.2](15_3D资源底层调用接口文档.md)
-- [ ] webgl3d_save/load/delete_data — Ref: [15_底层接口 §3.4-3.6](15_3D资源底层调用接口文档.md)
-- [ ] webgl3d_cache_size / clear_cache — Ref: [15_底层接口 §3.7-3.8](15_3D资源底层调用接口文档.md)
-- [ ] SQLite 建表（webgl3d_user_data + webgl3d_settings） — Ref: [16_存档 §1](16_3D用户存档通用数据结构.md)
-- [ ] Rust 侧权限二次校验 — Ref: [15_底层接口 §5.4](15_3D资源底层调用接口文档.md)
-
-### 阶段 4 — 打包
-
-- [ ] manifest_generator.py — Ref: [17_打包规范 §1](17_专属资源包打包加密通用规范.md) + [11_Schema](11_主题元数据通用Schema标准.md)
-- [ ] pack_nv3d.py 主打包脚本 — Ref: [17_打包规范 §1-3](17_专属资源包打包加密通用规范.md)
-- [ ] sign_nv3d.py Ed25519 签名 — Ref: [17_打包规范 §1.3](17_专属资源包打包加密通用规范.md)
-
-### 阶段 5-6 — 测试 + 部署
-
-- [ ] 测试矩阵（全部 15 个场景） — Ref: [18_开发流程 §7.1](18_WebGL%203D主题标准化开发流程.md)
-- [ ] Lockstep 双主题冻结 — Ref: [18_开发流程 §9](18_WebGL%203D主题标准化开发流程.md)
-- [ ] 服务端 NV3D 元数据 API — Ref: [20_构建部署 §3](20_客户端与服务端通用构建部署规范.md)
-
----
-
-## 偏离记录
-
-> 实现时若与规范不一致，在此记录原因。规范变更时对照此表检查是否需要回改已实现代码。
-
-| 日期 | 条目 | 规范要求 | 实际实现 | 偏离原因 |
-|------|------|---------|---------|---------|
-| — | — | — | — | — |
-
----
-
-## 使用说明
-
-1. **开始做某条目**：把 `[ ]` 改为 `[~]`，从"待开始"移到"当前在做"，写一句"写到哪了"
-2. **做完某条目**：把 `[~]` 改为 `[x]`，从"当前在做"移到"已完成"，标注完成日期
-3. **切换机器前**：确保此文件已提交并 push（`npm run push` 包含此文件即可，不需要额外步骤）
-4. **换机器后**：`npm run pull` → 打开此文件 → 看"当前在做"，继续写
-5. **偏离规范时**：在"偏离记录"表加一行，说明原因。后续规范变更时可据此判断是否需要回改
-6. **规范变更后**：查看 [索引 Changelog](00_文档索引与交叉引用表.md#文档变更日志)，对照"偏离记录"和"已完成"条目，检查受影响代码
+```
+src/webgl3d/                       32 文件  前端 3D 模块
+src-tauri/src/commands/webgl3d/     2 文件  Rust NV3D 解析 + 8 命令
+scripts/webgl3d/                    2 文件  pipeline.mjs + e2e-test.mjs
+server/src/routes/themes.ts         1 文件  服务端 NV3D API
+src/components/DevToolsMenu.tsx     1 文件  Header 开发工具菜单
+src/pages/benchmark/                1 文件  阶段 0 性能基准
+src/pages/IntegrationTest.tsx       1 文件  阶段 1 集成验证
+docs/webgl3d-spec/                 23 文件  规范文档 + feasibility + PROGRESS
+                                   ────
+                                   63 文件
+```

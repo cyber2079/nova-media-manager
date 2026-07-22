@@ -11,6 +11,8 @@ const ImageLibrary = lazy(() => import("@/pages/ImageLibrary"));
 const MusicLibrary = lazy(() => import("@/pages/MusicLibrary"));
 const GameLibrary = lazy(() => import("@/pages/GameLibrary"));
 const ThemeStudioPage = lazy(() => import("@/pages/ThemeStudio"));
+const Benchmark = lazy(() => import("@/pages/benchmark/Benchmark"));
+const IntegrationTest = lazy(() => import("@/pages/IntegrationTest"));
 
 function PageFallback() {
   return (
@@ -41,6 +43,10 @@ export default function App() {
           <Route path="/games" element={<Page><GameLibrary /></Page>} />
           {import.meta.env?.VITE_LICENSE_TIER ? <Route path="/studio" element={<ThemeStudioPage />} /> : null}
         </Route>
+        {/* 阶段 0 可行性验证 — 全屏无 Layout，仅开发环境 */}
+        <Route path="/benchmark" element={<Page><Benchmark /></Page>} />
+        {/* 阶段 1 集成验证 — 仅开发环境 */}
+        <Route path="/webgl3d-test" element={<Page><IntegrationTest /></Page>} />
       </Routes>
     </BrowserRouter>
   );

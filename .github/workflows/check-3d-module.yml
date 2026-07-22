@@ -1,0 +1,44 @@
+name: Check WebGL 3D Module
+
+on:
+  push:
+    paths:
+      - "src/webgl3d/**"
+      - "src-tauri/src/commands/webgl3d/**"
+      - "scripts/webgl3d/**"
+      - "src/components/DevToolsMenu.tsx"
+  pull_request:
+
+jobs:
+  check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript typecheck
+        run: npx tsc --noEmit -p tsconfig.app.json
+
+      - name: Feature flag check
+        run: |
+          bash scripts/check-webgl3d.sh
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Rust cargo check
+        working-directory: src-tauri
+        run: cargo check
+
+      - name: Rust tests
+        working-directory: src-tauri
+        run: cargo test --lib commands::webgl3d::nv3d::tests
+
+      - name: E2E pipeline test
+        run: node scripts/webgl3d/e2e-test.mjs

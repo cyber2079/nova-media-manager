@@ -103,6 +103,7 @@ export type SettingsState = {
   useCustomColor: boolean;
   bgVideoMode: BgVideoMode;
   bgVideoLoop: BgVideoLoopConfig;
+  videoPaused: boolean;
   lastVolume: number;
   previewOffset: number;
   lyricFontSize: "normal" | "large" | "off";
@@ -168,6 +169,7 @@ export type SettingsState = {
   setUseCustomColor: (on: boolean) => void;
   setBgVideoMode: (mode: BgVideoMode) => void;
   setBgVideoLoop: (cfg: Partial<BgVideoLoopConfig>) => void;
+  setVideoPaused: (paused: boolean) => void;
   setLastVolume: (v: number) => void;
   setPreviewOffset: (v: number) => void;
   setLyricFontSize: (v: "normal" | "large" | "off") => void;
@@ -255,7 +257,7 @@ function schedulePersist() {
     language: s.language, autoStart: s.autoStart, startFullscreen: s.startFullscreen,
     autoHideHeader: s.autoHideHeader, autoHideFooter: s.autoHideFooter,
     customColor: s.customColor, useCustomColor: s.useCustomColor,
-    bgVideoMode: s.bgVideoMode, bgVideoLoop: s.bgVideoLoop,
+    bgVideoMode: s.bgVideoMode, bgVideoLoop: s.bgVideoLoop, videoPaused: s.videoPaused,
     lastVolume: s.lastVolume, previewOffset: s.previewOffset,
     lyricFontSize: s.lyricFontSize, lyricUseCustomColor: s.lyricUseCustomColor,
     lyricCurrentColor: s.lyricCurrentColor, lyricOtherColor: s.lyricOtherColor, lyricFillColor: s.lyricFillColor,
@@ -432,6 +434,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       return "cover";
     })(),
     bgVideoLoop: (saved as any).bgVideoLoop || getDefaultLoop(),
+    videoPaused: saved.videoPaused ?? false,
     lastVolume: (saved as any).lastVolume ?? 0.8,
     previewOffset: (saved as any).previewOffset ?? 0.5,
     lyricFontSize: (saved as any).lyricFontSize || "normal",
@@ -506,6 +509,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
               return (raw as BgVideoMode | undefined) ?? get().bgVideoMode;
             })(),
             bgVideoLoop: s.bgVideoLoop ?? get().bgVideoLoop,
+            videoPaused: s.videoPaused ?? get().videoPaused,
             lastVolume: s.lastVolume ?? get().lastVolume,
             previewOffset: s.previewOffset ?? get().previewOffset,
             lyricFontSize: s.lyricFontSize ?? get().lyricFontSize,
@@ -582,6 +586,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setUseCustomColor(on) { set({ useCustomColor: on }); persist(); },
     setBgVideoMode(mode) { set({ bgVideoMode: mode }); persist(); },
     setBgVideoLoop(cfg) { set((s) => ({ bgVideoLoop: { ...s.bgVideoLoop, ...cfg } })); persist(); },
+    setVideoPaused(paused: boolean) { set({ videoPaused: paused }); persist(); },
     setLastVolume(v) { set({ lastVolume: v }); persist(); },
     setPreviewOffset(v) { set({ previewOffset: v }); persist(); },
     setLyricFontSize(v) { set({ lyricFontSize: v }); persist(); },

@@ -1,0 +1,82 @@
+{
+  "themeName": {
+    "zh": "测试主题",
+    "en": "Test Theme"
+  },
+  "scenes": [
+    {
+      "id": "test_room",
+      "nameKey": "scene.test_room.name",
+      "modelRef": "scene_test",
+      "defaultCamera": {
+        "position": [
+          0,
+          1.5,
+          5
+        ],
+        "target": [
+          0,
+          1,
+          0
+        ],
+        "fov": 60,
+        "nearPlane": 0.1,
+        "farPlane": 100,
+        "minDistance": 1,
+        "maxDistance": 10,
+        "minPolarAngle": 0.1,
+        "maxPolarAngle": 1.5
+      },
+      "lights": [
+        {
+          "id": "ambient",
+          "type": "ambient",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "intensity": 0.5
+        }
+      ]
+    }
+  ],
+  "characters": [
+    {
+      "id": "test_char",
+      "nameKey": "character.test_char.name",
+      "modelRef": "char_test",
+      "defaultPosition": [
+        0,
+        0,
+        -1
+      ],
+      "animations": {
+        "idle": {
+          "animRef": "idle_test",
+          "loop": true
+        },
+        "greet": {
+          "animRef": "greet_test",
+          "loop": false,
+          "nextAnim": "idle"
+        }
+      }
+    }
+  ],
+  "props": [
+    {
+      "id": "test_prop",
+      "nameKey": "prop.test_prop.name",
+      "modelRef": "prop_test",
+      "defaultPosition": [
+        0,
+        0,
+        -2
+      ],
+      "pickable": true,
+      "draggable": true
+    }
+  ],
+  "requiredWebGLExtensions": []
+}

@@ -52,8 +52,18 @@ function useFolderImages(path: string, shuffle: boolean, intervalSec: number): s
 export default function WallpaperEngine() {
   const wp = useSettingsStore((s) => s.wallpaper);
   const bgMode = useSettingsStore((s) => s.bgVideoMode);
+  const videoPaused = useSettingsStore((s) => s.videoPaused);
   const [singleSrc, setSingleSrc] = useState<string | null>(null);
   const [videoFailed, setVideoFailed] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Respond to pause/resume toggle
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (videoPaused) v.pause();
+    else v.play().catch(() => {}); // may fail if no user gesture yet
+  }, [videoPaused]);
   const folderSrc = useFolderImages(
     wp.mode === "folder" ? wp.path : "",
     wp.shuffle === "random",
@@ -99,7 +109,7 @@ export default function WallpaperEngine() {
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
       {isVideo ? (
-        <video key={src.slice(-20)} src={src} autoPlay loop muted playsInline style={fullStyle}
+        <video ref={videoRef} key={src.slice(-20)} src={src} autoPlay loop muted playsInline style={fullStyle}
           onError={() => setVideoFailed(true)} />
       ) : (
         <img key={src.slice(-20)} src={src} alt="" style={fullStyle}

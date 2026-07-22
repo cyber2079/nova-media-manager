@@ -29,6 +29,7 @@ import CyberGirlBgSwitcher from "@/components/CyberGirlBgSwitcher";
 import UpdateChecker from "@/components/UpdateChecker";
 import WallpaperEngine from "@/components/WallpaperEngine";
 import GlobalConfirmDialog from "@/components/GlobalConfirmDialog";
+import DevToolsMenu from "@/components/DevToolsMenu";
 import { useGameStore } from "@/stores/gameStore";
 import { useImageStore } from "@/stores/imageStore";
 import { useMovieStore } from "@/stores/movieStore";
@@ -97,6 +98,7 @@ export default function Layout() {
   const setCacheCleanupLastRun = useSettingsStore((s) => s.setCacheCleanupLastRun);
   const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();
   const bgVideoMode = useSettingsStore((s) => s.bgVideoMode);
+  const videoPaused = useSettingsStore((s) => s.videoPaused);
   const bgOverlayOpacity = useSettingsStore((s) => s.bgOverlayOpacity);
   const barOpacity = useSettingsStore((s) => s.barOpacity);
   const barBlur = useSettingsStore((s) => s.barBlur);
@@ -327,6 +329,19 @@ export default function Layout() {
   const [bgMusicConfirm, setBgMusicConfirm] = useState<string | null>(null);
   const [bgDontAsk, setBgDontAsk] = useState(false);
   const { iceVidRef, iceVidBRef } = useIceBackgroundVideo(isIce);
+
+  // Pause/resume ice girl background video
+  useEffect(() => {
+    const a = iceVidRef.current;
+    const b = iceVidBRef.current;
+    if (videoPaused) {
+      a?.pause();
+      b?.pause();
+    } else {
+      a?.play().catch(() => {});
+      b?.play().catch(() => {});
+    }
+  }, [videoPaused]);
 
   const playerTrack = useAudioPlayerStore((s) => s.track);
   const playerIsPlaying = useAudioPlayerStore((s) => s.isPlaying);
@@ -575,6 +590,7 @@ export default function Layout() {
             <button onClick={() => setSettingsOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={t("settings.title")}>
               <Settings className="h-4 w-4 text-gray-400" />
             </button>
+            {import.meta.env.DEV && <DevToolsMenu />}
           </div>
         </div>
       </header>
@@ -633,6 +649,19 @@ export default function Layout() {
             title={t("settings.toggle_page")}
           >
             <Gauge className="h-4 w-4" />
+          </button>
+
+          {/* Pause/Play background video */}
+          <button
+            onClick={() => useSettingsStore.getState().setVideoPaused(!videoPaused)}
+            className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+            title={videoPaused ? "播放背景视频" : "暂停背景视频"}
+          >
+            {videoPaused ? (
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            ) : (
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            )}
           </button>
 
           {/* Divider between Gauge and QuickLaunch */}
