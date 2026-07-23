@@ -50,13 +50,17 @@ const files = [];
 files.push({ path: "manifest.json", abs: manifestPath, size: statSync(manifestPath).size });
 files.push({ path: "theme.json", abs: themeJsonPath, size: statSync(themeJsonPath).size });
 
-// 2. Nav icons
+// 2. Nav icons — also copy to public/ for Vite dev server
 const iconsDir = join(ASSETS, "nav-icons");
+const publicIconsDir = join(process.cwd(), "public", "themes", "cyberpunk", "icons");
+mkdirSync(publicIconsDir, { recursive: true });
 if (existsSync(iconsDir)) {
   for (const f of readdirSync(iconsDir, { withFileTypes: true })) {
     if (f.isFile() && f.name.endsWith(".webp")) {
       const abs = join(iconsDir, f.name);
       files.push({ path: `icons/${f.name}`, abs, size: statSync(abs).size });
+      // Copy to public/ so Vite dev server can serve them
+      cpSync(abs, join(publicIconsDir, f.name));
     }
   }
 }
