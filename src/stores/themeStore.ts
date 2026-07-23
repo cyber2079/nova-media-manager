@@ -72,6 +72,9 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       applySurface();
       const { paletteCustomized, resetPaletteToTheme } = useSettingsStore.getState();
       if (!paletteCustomized) { resetPaletteToTheme("default"); persist(t); }
+    } else {
+      // Reset palette customization — non-default themes own their own colors
+      useSettingsStore.setState({ paletteCustomized: false });
     }
     if (prev !== t) {
       analytics.track("theme_switch", { from: prev, to: t });

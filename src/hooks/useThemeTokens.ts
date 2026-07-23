@@ -17,7 +17,7 @@ const CACHE_KEY = "nv-theme-tokens-v2";
 function buildUserOverrides(): string {
   const s = useSettingsStore.getState();
   const ov: Record<string, unknown> = {};
-  if (s.paletteCustomized && s.paletteAccent) ov["colors"] = { primary: s.paletteAccent, primaryLight: s.paletteAccent };
+  // Colors are defined by theme.json — never override from user settings
   if (s.glassMasterEnabled) {
     ov["glass"] = { header:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, footer:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, main:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, dialog:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, card:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, widget:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, quickhub:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur} };
   } else {
@@ -138,8 +138,12 @@ export function useThemeTokens() {
         writeCache(theme, tokens);
 
         // Diagnostic
-        console.log("[Nova Theme] %c" + (tokens["__primary"] || "?"),
-          "color:#0f0;font-weight:bold");
+        console.log("[Nova Theme]", {
+          __primary: tokens["__primary"],
+          __diag: tokens["__diag"],
+          __build: tokens["__build_ts"],
+          nvPrimary: tokens["--nv-color-primary"],
+        });
       } catch (err) {
         console.error("[useThemeTokens] Failed:", err);
       }

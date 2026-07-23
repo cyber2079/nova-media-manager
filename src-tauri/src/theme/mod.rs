@@ -165,5 +165,6 @@ pub fn get_theme_css_json(
     let primary = flat.get("--nv-color-primary")
         .and_then(|v| v.as_str()).unwrap_or("missing");
     flat.insert("__primary".into(), serde_json::Value::String(primary.to_string()));
+    flat.insert("__build_ts".into(), serde_json::Value::String("2026-07-24T04:15:00Z".to_string()));
     serde_json::to_string(&flat).map_err(|e| e.to_string())
 }
