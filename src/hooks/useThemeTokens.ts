@@ -12,7 +12,7 @@ import { useThemeStore } from "@/stores/themeStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { themeUrl } from "@/lib/themeBase";
 
-const CACHE_KEY = "nv-theme-tokens-v1";
+const CACHE_KEY = "nv-theme-tokens-v2";
 
 function buildUserOverrides(): string {
   const s = useSettingsStore.getState();
@@ -68,11 +68,33 @@ function injectTokens(tokens: Record<string, string>) {
     const val = tokens[nvKey];
     if (val) root.style.setProperty(colorKey, val, "important");
   }
-  // Load theme.css for visual effects
-  if (tokens["--nv-nav-home-icon"]) {
-    let linkEl = document.getElementById("nv-theme-css") as HTMLLinkElement | null;
-    if (!linkEl) { linkEl = document.createElement("link"); linkEl.id = "nv-theme-css"; linkEl.rel = "stylesheet"; document.head.appendChild(linkEl); }
-    linkEl.href = themeUrl(tokens["__themeId"] || "unknown", "theme.css");
+  // Load neon-icons.css + theme.css as inline <style> tags
+  const themeId = tokens["__themeId"];
+  if (tokens["--nv-nav-home-icon"] && themeId) {
+    // Step A: load IconsNeon CSS first (neon-icons.css)
+    const neonCssUrl = themeUrl(themeId, "neon-icons.css");
+    fetch(neonCssUrl)
+      .then(r => { if (r.ok) return r.text(); throw new Error("404"); })
+      .then(cssText => {
+        let el = document.getElementById("nv-neon-icons") as HTMLStyleElement | null;
+        if (!el) { el = document.createElement("style"); el.id = "nv-neon-icons"; document.head.appendChild(el); }
+        el.textContent = cssText;
+        console.log("[useThemeTokens] neon-icons.css loaded, " + cssText.length + " bytes");
+      })
+      .catch(e => console.warn("[useThemeTokens] neon-icons.css load failed:", e.message));
+
+    // Step B: load theme CSS (CyberUI effects)
+    const cssUrl = themeUrl(themeId, "theme.css");
+    fetch(cssUrl)
+      .then(r => { if (r.ok) return r.text(); throw new Error("404"); })
+      .then(cssText => {
+        let el = document.getElementById("nv-theme-css") as HTMLStyleElement | null;
+        if (!el) { el = document.createElement("style"); el.id = "nv-theme-css"; document.head.appendChild(el); }
+        // Strip @import since we loaded neon-icons.css separately
+        el.textContent = cssText.replace(/@import\s+["'][^"']*neon-icons[^"']*["'];?/g, '');
+        console.log("[useThemeTokens] theme.css loaded, " + cssText.length + " bytes");
+      })
+      .catch(e => console.warn("[useThemeTokens] theme.css load failed:", e.message));
   }
 }
 
@@ -80,6 +102,7 @@ function cleanupInline() {
   const root = document.documentElement;
   for (const [, colorKey] of BRIDGE_COLORS) root.style.removeProperty(colorKey);
   document.getElementById("nv-theme-css")?.remove();
+  document.getElementById("nv-neon-icons")?.remove();
 }
 
 export function useThemeTokens() {

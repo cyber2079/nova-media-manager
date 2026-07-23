@@ -548,9 +548,9 @@ export default function Layout() {
                     s.toggleContentMinimized(key);
                   }
                 }}>
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full overflow-hidden">
+                  <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center", isDefault ? "rounded-full overflow-hidden" : "rounded-lg")}>
                     {charIcon ? (
-                      <img src={charIcon} alt="" className="h-full w-full object-cover" />
+                      <img src={charIcon} alt="" className={cn(isDefault ? "h-full w-full object-cover" : "h-6 w-6 object-contain")} />
                     ) : (
                       <item.icon className="h-5 w-5" />
                     )}
