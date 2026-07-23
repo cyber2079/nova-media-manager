@@ -13,8 +13,7 @@ import BgVideoTuner from "@/components/BgVideoTuner";
 import { Palette, Monitor, SlidersHorizontal, Music, RotateCcw, Gauge, Sparkles, EyeOff, Eye, Copy, Check, Key, Crown, Cpu, Clock, Calendar, Timer, FolderOpen, ImageIcon, Shuffle, Home, LogOut } from "lucide-react";
 import { useLicenseStore } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS } from "@/stores/settingsStore";
-import { useWidgetStore, pageKeys } from "@/stores/widgetStore";
-import type { PageKey } from "@/stores/widgetStore";
+import { useWidgetStore } from "@/stores/widgetStore";
 
 interface Props { open: boolean; onClose: () => void; }
 
@@ -39,9 +38,7 @@ const DEFAULTS = {
   appearance: { theme: "default" as ThemeName, bgVideoMode: "cover" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "inter", paletteAccent: "#4788f0", paletteSaturation: 50, paletteCustomized: false, glassMasterEnabled: true, globalGlassOpacity: 70, globalGlassBlur: 3, barOpacity: 92, barBlur: 16, mainOpacity: 92, mainBlur: 16, dialogOpacity: 92, dialogBlur: 16, autoHideHeader: false, autoHideFooter: false, wallpaper: { mode: "none" as const, path: "", shuffle: "sequential" as const, interval: 30, fit: "none" as const } },
   media: { previewOffset: 0.5, lyricFontSize: "normal" as const, lyricUseCustomColor: false, lyricCurrentColor: "#ffffff", lyricOtherColor: "#8899aa", lyricFillColor: "#ffb6c1", playerBgMode: "follow" as const, playerBgColor: "", cyberBgmEnabled: true, imageWheelMode: "prevNext" as ImageWheelMode, externalPlayer: { mode: "auto" as const, kind: "", path: "" } },
   widgets: {
-    globalWidgets: true,
     widgetTextColor: "#e8f4ff",
-    widgetPages: {} as Record<string, boolean>,
     myComputer: { enabled: false, position: "bottom-left" as const, myComputerMode: "default" as const },
     systemMonitor: { enabled: false, position: "bottom-right" as const },
     clock: { enabled: false, position: "top-right" as const },
@@ -82,7 +79,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
     perfReduceAnimations, setPerfReduceAnimations, cacheCleanupDays, setCacheCleanupDays,
     applyPerfSettings,
   } = useSettingsStore();
-  const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages, setEnabled, setPosition, setMyComputerMode, setGlobalWidgets, setPageWidget, setCountdown } = useWidgetStore();
+  const { myComputer, systemMonitor, clock, calendar, countdown, setEnabled, setPosition, setMyComputerMode, setCountdown } = useWidgetStore();
   const [autoLoading, setAutoLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("general");
   const [confirmReset, setConfirmReset] = useState<"all" | TabId | null>(null);
@@ -146,8 +143,6 @@ export default function SettingsDialog({ open, onClose }: Props) {
       }
       case "widgets": {
         const d = DEFAULTS.widgets;
-        setGlobalWidgets(d.globalWidgets);
-        for (const k of pageKeys) setPageWidget(k as PageKey, d.widgetPages[k] ?? false);
         setEnabled("myComputer", d.myComputer.enabled); setPosition("myComputer", d.myComputer.position); setMyComputerMode(d.myComputer.myComputerMode);
         setEnabled("systemMonitor", d.systemMonitor.enabled); setPosition("systemMonitor", d.systemMonitor.position);
         setEnabled("clock", d.clock.enabled); setPosition("clock", d.clock.position);
@@ -172,12 +167,10 @@ export default function SettingsDialog({ open, onClose }: Props) {
       setGlassMasterEnabled, setGlobalGlassOpacity, setGlobalGlassBlur, setMainOpacity, setMainBlur, setDialogOpacity, setDialogBlur,
       setPreviewOffset, setLyricFontSize, setLyricUseCustomColor, setLyricCurrentColor, setLyricOtherColor, setLyricFillColor, setImageWheelMode,
       setPlayerBgMode, setPlayerBgColor, setCyberBgmEnabled,
-      setGlobalWidgets, setPageWidget, setEnabled, setPosition, setMyComputerMode, setCountdown,
+      setEnabled, setPosition, setMyComputerMode, setCountdown,
       setPerfPriority, setPerfIdleReduce, setPerfReduceAnimations, setCacheCleanupDays, applyPerfSettings]);
 
   const doResetAll = useCallback(() => { for (const tab of tabs) doResetTab(tab.id); setConfirmReset(null); }, [doResetTab]);
-
-  const isCG = theme === "cyber-girl";
 
   // Dialog glass: unified formula, same as bar / main area
   const effDialogOpacity = glassMasterEnabled ? globalGlassOpacity : dialogOpacity;
@@ -186,8 +179,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
     background: `color-mix(in srgb, var(--color-surface) ${effDialogOpacity}%, transparent)`,
     backdropFilter: `blur(${effDialogBlur}px) saturate(140%)`,
     WebkitBackdropFilter: `blur(${effDialogBlur}px) saturate(140%)`,
-    border: isCG ? "1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)" : "1px solid color-mix(in srgb, var(--color-primary) 6%, transparent)",
-    boxShadow: isCG ? "0 0 40px color-mix(in srgb, var(--color-primary) 12%, transparent), 0 0 80px color-mix(in srgb, var(--color-accent) 6%, transparent)" : undefined,
+    border: "1px solid color-mix(in srgb, var(--color-primary) 6%, transparent)",
   };
 
   return (
@@ -198,15 +190,15 @@ export default function SettingsDialog({ open, onClose }: Props) {
       }}>
         {/* Title bar */}
         <div className={cn("relative flex items-center justify-between px-6 pt-5 pb-3 border-b",
-          isCG ? "border-[var(--color-primary)]/15" : "border-white/5")}>
-          <DialogTitle className={cn(isCG && "cg-text-glow")}>{t("settings.title")}</DialogTitle>
+          "border-white/5")}>
+          <DialogTitle className="theme-text-glow">{t("settings.title")}</DialogTitle>
         </div>
 
         {/* Body */}
         <div className="flex flex-1 min-h-0 relative">
           {/* Left tab nav */}
           <div className={cn("w-44 shrink-0 py-4 px-3 flex flex-col gap-0.5 overflow-y-auto border-r",
-            isCG ? "border-[var(--color-primary)]/15" : "border-white/5")}>
+            "border-white/5")}>
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -239,8 +231,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
 
             {activeTab === "media" && <MediaTab t={t} previewOffset={previewOffset} setPreviewOffset={setPreviewOffset} lyricFontSize={lyricFontSize} setLyricFontSize={setLyricFontSize} lyricUseCustomColor={lyricUseCustomColor} setLyricUseCustomColor={setLyricUseCustomColor} lyricCurrentColor={lyricCurrentColor} setLyricCurrentColor={setLyricCurrentColor} lyricOtherColor={lyricOtherColor} setLyricOtherColor={setLyricOtherColor} lyricFillColor={lyricFillColor} setLyricFillColor={setLyricFillColor} playerBgMode={playerBgMode} playerBgColor={playerBgColor} setPlayerBgMode={setPlayerBgMode} setPlayerBgColor={setPlayerBgColor} cyberBgmEnabled={cyberBgmEnabled} setCyberBgmEnabled={setCyberBgmEnabled} imageWheelMode={imageWheelMode} setImageWheelMode={setImageWheelMode} resetTab={() => setConfirmReset("media")} />}
 
-            {activeTab === "widgets" && <WidgetsTab t={t} globalWidgets={globalWidgets} setGlobalWidgets={setGlobalWidgets} widgetPages={widgetPages} setPageWidget={setPageWidget} myComputer={myComputer} systemMonitor={systemMonitor} clock={clock} calendar={calendar} countdown={countdown} setEnabled={setEnabled} setPosition={setPosition} setMyComputerMode={setMyComputerMode} setCountdown={setCountdown} widgetTextColor={widgetTextColor} setWidgetTextColor={setWidgetTextColor} resetTab={() => setConfirmReset("widgets")} />}
-
+            {activeTab === "widgets" && <WidgetsTab t={t} myComputer={myComputer} systemMonitor={systemMonitor} clock={clock} calendar={calendar} countdown={countdown} setEnabled={setEnabled} setPosition={setPosition} setMyComputerMode={setMyComputerMode} setCountdown={setCountdown} widgetTextColor={widgetTextColor} setWidgetTextColor={setWidgetTextColor} resetTab={() => setConfirmReset("widgets")} />}
             {activeTab === "performance" && <PerformanceTab t={t} perfPriority={perfPriority} setPerfPriority={setPerfPriority} perfIdleReduce={perfIdleReduce} setPerfIdleReduce={setPerfIdleReduce} perfReduceAnimations={perfReduceAnimations} setPerfReduceAnimations={setPerfReduceAnimations} cacheCleanupDays={cacheCleanupDays} setCacheCleanupDays={setCacheCleanupDays} hardwareAcceleration={hardwareAcceleration} setHardwareAcceleration={setHardwareAcceleration} applyPerfSettings={applyPerfSettings} resetTab={() => setConfirmReset("performance")} />}
 
             <ScrollFade height={48} />
@@ -249,7 +240,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
 
         {/* Footer */}
         <div className={cn("relative px-6 py-3 border-t flex items-center gap-2",
-          isCG ? "border-[var(--color-primary)]/15" : "border-white/5")}>
+          "border-white/5")}>
           <Button variant="ghost" size="sm" onClick={onClose} className="flex-1">{t("settings.close")}</Button>
           <Button variant="ghost" size="sm" onClick={() => setConfirmReset("all")} className="gap-1.5 text-gray-400">
             <RotateCcw className="h-3.5 w-3.5" />{t("settings.reset_defaults")}
@@ -627,28 +618,9 @@ function MediaTab(props: any) {
 // ═══════════════ WIDGETS TAB ═══════════════
 
 function WidgetsTab(props: any) {
-  const { t, globalWidgets, setGlobalWidgets, widgetPages, setPageWidget, myComputer, systemMonitor, clock, calendar, countdown, setEnabled, setPosition, setMyComputerMode, setCountdown, widgetTextColor, setWidgetTextColor, resetTab } = props;
+  const { t, myComputer, systemMonitor, clock, calendar, countdown, setEnabled, setPosition, setMyComputerMode, setCountdown, widgetTextColor, setWidgetTextColor, resetTab } = props;
   return (
     <>
-      <SectionGroup title={t("settings.widgets_global")}>
-        <SettingCard>
-          <SettingRow label={t("settings.widgets_global_desc")}><Toggle active={globalWidgets} onToggle={() => setGlobalWidgets(!globalWidgets)} /></SettingRow>
-          {!globalWidgets && (
-            <>
-              <CardDivider />
-              <div className="grid grid-cols-2 gap-3">
-                {pageKeys.map((p: string) => (
-                  <label key={p} className="flex items-center justify-between cursor-pointer group bg-surface-lighter/30 rounded-lg px-4 py-3">
-                    <span className="text-sm text-gray-300">{p === "home" ? t("settings.home_page") : p === "movies" ? t("settings.movies_page") : p === "images" ? t("settings.images_page") : p === "music" ? t("settings.music_page") : t("settings.games_page")}</span>
-                    <Toggle active={widgetPages[p] || false} onToggle={() => setPageWidget(p as PageKey, !widgetPages[p])} />
-                  </label>
-                ))}
-              </div>
-            </>
-          )}
-        </SettingCard>
-      </SectionGroup>
-
       <SectionGroup title={t("settings.widgets_config")}>
         <div className="space-y-3">
           <WidgetCard icon={Monitor} title={t("settings.my_computer")} enabled={myComputer.enabled} onToggle={() => setEnabled("myComputer", !myComputer.enabled)}>

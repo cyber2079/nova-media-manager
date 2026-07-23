@@ -2,6 +2,7 @@ pub mod crypto;
 pub mod loader;
 pub mod packer;
 pub mod protocol;
+pub mod tokens;
 
 use crate::db::Database;
 use loader::InstalledTheme;
@@ -45,4 +46,58 @@ pub fn list_installed_themes(db: State<'_, Database>) -> Vec<InstalledTheme> {
 #[tauri::command]
 pub fn remove_installed_theme(db: State<'_, Database>, theme_id: String) -> Result<(), String> {
     loader::remove_theme(db.data_dir(), &theme_id)
+}
+
+/// Resolve the full CSS variable block for a theme.
+///
+/// * `theme_id` — the active theme id ("default" or installed theme id)
+/// * `user_overrides` — optional JSON of user-customized tokens (from SettingsStore)
+///
+/// Returns a CSS string like `:root { --nv-color-primary: #...; ... }`.
+#[tauri::command]
+pub fn get_theme_css_vars(
+    theme_id: String,
+    user_overrides: Option<String>,
+) -> Result<String, String> {
+    // 1. Load default as base
+    let base = tokens::load_default();
+
+    // 2. If the active theme is not "default", try to load its theme.json from the nvtp
+    let merged = if theme_id == "default" {
+        base
+    } else {
+        // Try to load theme.json from the installed theme's in-memory protocol cache
+        let proto = protocol::global().lock().map_err(|e| e.to_string())?;
+        match proto.read_file(&theme_id, "theme.json") {
+            Some(theme_json_bytes) => {
+                let theme_json = String::from_utf8_lossy(&theme_json_bytes);
+                tokens::merge_tokens(&base, &theme_json)?
+            }
+            None => {
+                // Theme not preloaded — return default CSS vars
+                // (frontend should retry after theme is installed)
+                log::warn!(
+                    "[theme] theme_id '{}' not found in protocol cache, using default",
+                    theme_id
+                );
+                base
+            }
+        }
+    };
+
+    // 3. Apply user overrides on top
+    let final_tokens = match user_overrides {
+        Some(ref ov) if !ov.is_empty() => tokens::merge_tokens(&merged, ov)?,
+        _ => merged,
+    };
+
+    // 4. Flatten to CSS
+    Ok(tokens::to_css_vars(&final_tokens))
+}
+
+/// Return the default theme token JSON (for SettingsDialog palette defaults, etc.).
+#[tauri::command]
+pub fn get_default_theme_tokens() -> String {
+    let t = tokens::load_default();
+    serde_json::to_string_pretty(&t).unwrap_or_default()
 }

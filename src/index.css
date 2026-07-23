@@ -14,24 +14,41 @@ html:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
 }
 
 /* ═══════════ Theme tokens ═══════════ */
+/*
+ * Token bridge: CSS variables are sourced from --nv-* custom properties
+ * injected by the Rust theme engine (get_theme_css_vars). The hardcoded
+ * values here are fallbacks used before the engine initializes.
+ *
+ * Per-theme [data-theme] selectors below serve as overrides for the
+ * non-default themes' palette defaults (used by applyPalette).
+ */
 :root, [data-theme="default"] {
-  --color-primary: #4788f0; --color-primary-light: #7aafff; --color-primary-dark: #3366cc;
-  --color-accent: #6366f1; --font-display: "Inter", system-ui, sans-serif;
+  --color-primary:       var(--nv-color-primary, #4788f0);
+  --color-primary-light: var(--nv-color-primaryLight, #7aafff);
+  --color-primary-dark:  var(--nv-color-primaryDark, #3366cc);
+  --color-accent:        var(--nv-color-accent, #6366f1);
+  --font-display:        var(--nv-global-fontFamily, "Inter", system-ui, sans-serif);
 }
 [data-theme="ice-girl"] {
-  --color-primary: #87ceeb; --color-primary-light: #b0e0ff; --color-primary-dark: #5b9bd5;
-  --color-accent: #4488ff; --font-display: "Cinzel", serif;
+  --color-primary:       var(--nv-color-primary, #87ceeb);
+  --color-primary-light: var(--nv-color-primaryLight, #b0e0ff);
+  --color-primary-dark:  var(--nv-color-primaryDark, #5b9bd5);
+  --color-accent:        var(--nv-color-accent, #4488ff);
+  --font-display:        var(--nv-global-fontFamily, "Cinzel", serif);
 }
 [data-theme="cyber-girl"] {
-  --color-primary: #c74dff; --color-primary-light: #e890ff; --color-primary-dark: #8b30cc;
-  --color-accent: #ff4da6; --font-display: "Rajdhani", "Inter", sans-serif;
+  --color-primary:       var(--nv-color-primary, #c74dff);
+  --color-primary-light: var(--nv-color-primaryLight, #e890ff);
+  --color-primary-dark:  var(--nv-color-primaryDark, #8b30cc);
+  --color-accent:        var(--nv-color-accent, #ff4da6);
+  --font-display:        var(--nv-global-fontFamily, "Rajdhani", "Inter", sans-serif);
 }
 
 /* ── Surface colors ── */
 :root {
-  --color-surface:        color-mix(in srgb, var(--color-primary) 4%, #080c14);
-  --color-surface-light:  color-mix(in srgb, var(--color-primary) 6%, #101520);
-  --color-surface-lighter:color-mix(in srgb, var(--color-primary) 8%, #1a1f2a);
+  --color-surface:        var(--nv-color-surface,        color-mix(in srgb, var(--color-primary) 4%, #080c14));
+  --color-surface-light:  var(--nv-color-surfaceLight,   color-mix(in srgb, var(--color-primary) 6%, #101520));
+  --color-surface-lighter:var(--nv-color-surfaceLighter, color-mix(in srgb, var(--color-primary) 8%, #1a1f2a));
 }
 
 /* Premium themes: let the background video/images show through on homepage.*/
@@ -155,6 +172,11 @@ main[data-route="home"] {
   background: color-mix(in srgb, var(--color-primary) 6%, rgba(8,12,20,0.88));
   border: 1px solid rgba(255,255,255,0.04);
 }
+/* ── Generic theme text glow (powered by --nv-home-heroGlow) ── */
+.theme-text-glow { text-shadow: var(--nv-home-heroGlow, none); }
+.theme-title { color: var(--nv-home-heroTitleColor, var(--font-primary)); }
+.theme-subtitle { color: var(--nv-home-heroSubtitleColor, var(--font-secondary)); }
+
 /* ═══════════ ICE GIRL THEME ═══════════ */
 [data-theme="ice-girl"] .ice-title { font-family: var(--font-display); letter-spacing: 0.15em; text-transform: uppercase; color: #b0e0ff; }
 [data-theme="ice-girl"] .ice-text-glow { text-shadow: 0 0 15px rgba(135,206,250,0.5), 0 0 30px rgba(135,206,250,0.2); }

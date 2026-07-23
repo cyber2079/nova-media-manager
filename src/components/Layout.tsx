@@ -7,7 +7,7 @@ import DevToolsMenu from "@/components/DevToolsMenu";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { cn } from "@/lib/utils";
 import { kv } from "@/lib/sqliteStore";
-import { useThemeStore, type ThemeName } from "@/stores/themeStore";
+import { useThemeStore } from "@/stores/themeStore";
 import { useTranslation } from "react-i18next";
 import { languages } from "@/i18n";
 import QuickLaunchBar from "@/components/QuickLaunchBar";
@@ -42,6 +42,7 @@ import { useLicenseStore, isPaid } from "@/stores/licenseStore";
 import { useThemePackStore } from "@/stores/themePackStore";
 import { useIceBackgroundVideo } from "@/hooks/useIceBackgroundVideo";
 import { useThemeEffects } from "@/hooks/useThemeEffects";
+import { useThemeTokens } from "@/hooks/useThemeTokens";
 import { useAnalyticsPageView } from "@/lib/analytics";
 import { invoke } from "@tauri-apps/api/core";
 import { compareVersions } from "@/lib/compareVersions";
@@ -56,36 +57,24 @@ const navItems = [
   { to: "/games", key: "games", icon: Gamepad2 },
 ];
 
-// Ice Girl nav icons
-const iceIcons: Record<string, string> = { "/": "home.webp", "/movies": "movie.webp", "/images": "pic.webp", "/music": "music.webp", "/games": "game.webp" };
-const iceNames: Record<string, string> = { "/": "home.ice_icestorm_name", "/movies": "home.ice_icestorm_name", "/images": "home.ice_icestorm_name", "/music": "home.ice_icestorm_name", "/games": "home.ice_icestorm_name" };
-const iceColors: Record<string, string> = { "/": "#87ceeb", "/movies": "#b0e0e6", "/images": "#00bfff", "/music": "#4488ff", "/games": "#6a5acd" };
-
-// Cyber Girl nav icons
-const cgIcons: Record<string, string> = { "/": "home.webp", "/movies": "movie.webp", "/images": "pic.webp", "/music": "music.webp", "/games": "game.webp" };
-const cgNames: Record<string, string> = { "/": "home.cg_skill1_name", "/movies": "home.cg_skill2_name", "/images": "home.cg_skill3_name", "/music": "home.cg_skill4_name", "/games": "home.cg_skill5_name" };
-const cgColors: Record<string, string> = { "/": "#ff69b4", "/movies": "#da70d6", "/images": "#ff1493", "/music": "#00bfff", "/games": "#ff6347" };
-
-const noIcons: Record<string,string> = {};
-const themeMeta: Record<ThemeName, { heroIcons: Record<string,string>; heroNames: Record<string,string>; heroColors: Record<string,string>; heroLabels: Record<string,string> }> = {
-  default: { heroIcons: noIcons, heroNames: noIcons, heroColors: noIcons, heroLabels: noIcons },
-  "ice-girl": { heroIcons: iceIcons, heroNames: iceNames, heroColors: iceColors, heroLabels: iceNames },
-  "cyber-girl": { heroIcons: cgIcons, heroNames: cgNames, heroColors: cgColors, heroLabels: cgNames },
-};
-
-function layoutBandHue(theme: string, idx: number, total: number): number {
-  const base = theme === "cyber-girl" ? 290 : 195;
-  const position = total > 1 ? idx / (total - 1) : 0;
-  const hue = base - 40 + position * 80;
-  return Math.round(((hue % 360) + 360) % 360);
-}
-
+  /**
+   * Build a theme nav icon URL from CSS var --nv-nav-{page}-icon.
+   * Returns "" when no theme icon configured (fallback to Lucide icon).
+   */
+  function navThemeIcon(theme: string, path: string): string {
+    const pageKey = path === "/" ? "home" : path.replace("/", "");
+    const iconFile = getComputedStyle(document.documentElement)
+      .getPropertyValue(`--nv-nav-${pageKey}-icon`)
+      .trim()
+      .replace(/^"(.*)"$/, "$1");
+    if (!iconFile) return "";
+    return themeUrl(theme, iconFile);
+  }
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme } = useThemeStore();
   const { t, i18n } = useTranslation();
-  const meta = themeMeta[theme];
   const isIce = theme === "ice-girl";
   const isDefault = theme === "default";
   const isCG = theme === "cyber-girl";
@@ -99,7 +88,7 @@ export default function Layout() {
   const cacheCleanupDays = useSettingsStore((s) => s.cacheCleanupDays);
   const cacheCleanupLastRun = useSettingsStore((s) => s.cacheCleanupLastRun);
   const setCacheCleanupLastRun = useSettingsStore((s) => s.setCacheCleanupLastRun);
-  const { myComputer, systemMonitor, clock, calendar, countdown, globalWidgets, widgetPages } = useWidgetStore();
+  const { myComputer, systemMonitor, clock, calendar, countdown } = useWidgetStore();
   const bgVideoMode = useSettingsStore((s) => s.bgVideoMode);
   const videoPaused = useSettingsStore((s) => s.videoPaused);
   const bgOverlayOpacity = useSettingsStore((s) => s.bgOverlayOpacity);
@@ -126,7 +115,6 @@ export default function Layout() {
     });
     return unsub;
   }, [pageKey]);
-  const showWidgets = globalWidgets || (widgetPages[pageKey] ?? false);
   // Start with a safe default; actual state is read from the Tauri window on mount.
   const [isFS, setIsFS] = useState(false);
   const wantsFS = useRef(false);
@@ -449,6 +437,9 @@ export default function Layout() {
   // ── Theme CSS-variable effects (color / font / icon / font-family / font-color) ──
   useThemeEffects();
 
+  // ── Theme Token Engine — injects --nv-* CSS variables from Rust ──
+  useThemeTokens();
+
   // Sync fullscreen state with actual Tauri window state.
   // On page refresh (Ctrl+R) the native window stays fullscreen, but React
   // state resets to false, which defeats the drag guard and lets the user
@@ -539,7 +530,7 @@ export default function Layout() {
           <nav className="flex items-center gap-1">
             {navItems.map((item) => {
               const isActive = item.to === "/" ? location.pathname === "/" : location.pathname.startsWith(item.to);
-              const charIcon = meta.heroIcons[item.to];
+              const charIcon = navThemeIcon(theme, item.to);
               return (
                 <NavLink key={item.to} to={item.to} className={cn(
                   "flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all duration-300 active:scale-95",
@@ -555,12 +546,12 @@ export default function Layout() {
                 }}>
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full overflow-hidden">
                     {charIcon ? (
-                      <img src={themeUrl(theme, `icons/${charIcon}`)} alt="" className="h-full w-full object-cover" />
+                      <img src={charIcon} alt="" className="h-full w-full object-cover" />
                     ) : (
                       <item.icon className="h-5 w-5" />
                     )}
                   </div>
-                  <span className={cn(isIce && "tracking-wider", isCG && "tracking-[0.1em]")}>{t(`nav.${item.key}`)}</span>
+                  <span>{t(`nav.${item.key}`)}</span>
                 </NavLink>
               );
             })}
@@ -712,11 +703,11 @@ export default function Layout() {
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
       <KeyboardHelp open={helpOpen} onClose={() => setHelpOpen(false)} />
 
-      {myComputer.enabled && showWidgets && <MyComputerWidget config={myComputer} />}
-      {systemMonitor.enabled && showWidgets && <SystemMonitorWidget config={systemMonitor} />}
-      {clock.enabled && showWidgets && <ClockWidget config={clock} />}
-      {calendar.enabled && showWidgets && <CalendarWidget config={calendar} />}
-      {countdown.enabled && showWidgets && <CountdownWidget config={countdown} />}
+      {myComputer.enabled && <MyComputerWidget config={myComputer} />}
+      {systemMonitor.enabled && <SystemMonitorWidget config={systemMonitor} />}
+      {clock.enabled && <ClockWidget config={clock} />}
+      {calendar.enabled && <CalendarWidget config={calendar} />}
+      {countdown.enabled && <CountdownWidget config={countdown} />}
       <CountdownAlert />
       <OnboardingDialog />
       <ActivationDialog />

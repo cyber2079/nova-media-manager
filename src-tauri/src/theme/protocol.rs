@@ -48,6 +48,37 @@ impl ProtocolState {
         self.nvtp_dir.join(format!("{}.nvtp", theme_id)).exists()
     }
 
+    /// Read a single file from a loaded theme's ZIP archive.
+    /// Returns `None` if the theme is not loaded or the file doesn't exist.
+    pub fn read_file(&self, theme_id: &str, asset_path: &str) -> Option<Vec<u8>> {
+        let mut guard = self.archives.lock().ok()?;
+        let archive = guard.get_mut(theme_id)?;
+
+        // Try exact match
+        if let Ok(mut file) = archive.zip.by_name(asset_path) {
+            let mut buf = Vec::new();
+            if file.read_to_end(&mut buf).is_ok() {
+                return Some(buf);
+            }
+        }
+
+        // Case-insensitive fallback
+        let lower = asset_path.to_lowercase();
+        for i in 0..archive.zip.len() {
+            if let Ok(mut file) = archive.zip.by_index(i) {
+                if let Some(n) = file.name().to_lowercase().into() {
+                    if n == lower {
+                        let mut buf = Vec::new();
+                        if file.read_to_end(&mut buf).is_ok() {
+                            return Some(buf);
+                        }
+                    }
+                }
+            }
+        }
+        None
+    }
+
     fn serve_impl(&self, uri: &str) -> (u16, String, Vec<u8>) {
         let path = uri
             .strip_prefix("https://nova.localhost/")

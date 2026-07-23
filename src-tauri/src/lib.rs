@@ -316,6 +316,8 @@ pub fn run() {
             theme::install_theme_bytes,
             theme::list_installed_themes,
             theme::remove_installed_theme,
+            theme::get_theme_css_vars,
+            theme::get_default_theme_tokens,
             commands::theme_studio::theme_studio_list_projects,
             commands::theme_studio::theme_studio_get_project,
             commands::theme_studio::theme_studio_update_manifest,

@@ -1,0 +1,162 @@
+{
+  "global": {
+    "fontFamily": "\"Inter\", system-ui, sans-serif",
+    "fontSizeScale": 1.0,
+    "iconSizeScale": 1.0,
+    "bgMode": "video",
+    "bgVideoFill": "cover",
+    "bgOverlayOpacity": 0.3
+  },
+
+  "colors": {
+    "primary":            "#4788f0",
+    "primaryLight":       "#7aafff",
+    "primaryDark":        "#3366cc",
+    "accent":             "#6366f1",
+    "success":            "#10b981",
+    "warning":            "#f59e0b",
+    "danger":             "#ef4444",
+    "info":               "#0ea5e9",
+    "text":               "#ffffff",
+    "textSecondary":      "#8899aa",
+    "textMuted":          "#556677",
+    "surface":            "color-mix(in srgb, var(--nv-color-primary) 4%, #080c14)",
+    "surfaceLight":       "color-mix(in srgb, var(--nv-color-primary) 6%, #101520)",
+    "surfaceLighter":     "color-mix(in srgb, var(--nv-color-primary) 8%, #1a1f2a)",
+    "surfaceDark":        "#060810",
+    "border":             "rgba(255,255,255,0.06)",
+    "borderFocus":        "rgba(71,136,240,0.50)",
+    "shadow":             "rgba(0,0,0,0.4)"
+  },
+
+  "glass": {
+    "header":   { "opacity": 92, "blur": 16, "saturation": 140 },
+    "footer":   { "opacity": 92, "blur": 16, "saturation": 140 },
+    "main":     { "opacity": 92, "blur": 16, "saturation": 140 },
+    "dialog":   { "opacity": 92, "blur": 16, "saturation": 140 },
+    "card":     { "opacity": 88, "blur": 12, "saturation": 130 },
+    "widget":   { "opacity": 85, "blur": 10, "saturation": 120 },
+    "quickhub": { "opacity": 90, "blur": 14, "saturation": 135 }
+  },
+
+  "header": {
+    "height": 64,
+    "logo": "icons/logo.webp",
+    "logoSize": 32,
+    "titleGradient": "linear-gradient(135deg, var(--nv-color-primaryLight), var(--nv-color-primary))",
+    "navButtonRadius": 9999,
+    "navButtonGap": 4,
+    "navIconSize": 32,
+    "navIconStyle": "lucide",
+    "navActiveBg": "color-mix(in srgb, var(--nv-color-primary) 15%, transparent)",
+    "navInactiveColor": "#8899aa",
+    "navHoverBg": "color-mix(in srgb, var(--nv-color-primary) 10%, transparent)",
+    "actionButtonSize": 36,
+    "actionButtonColor": "#808890"
+  },
+
+  "nav": {
+    "home":   { "icon": "", "iconActive": "", "color": "#4788f0" },
+    "movies": { "icon": "", "iconActive": "", "color": "#6366f1" },
+    "images": { "icon": "", "iconActive": "", "color": "#0ea5e9" },
+    "music":  { "icon": "", "iconActive": "", "color": "#f59e0b" },
+    "games":  { "icon": "", "iconActive": "", "color": "#10b981" }
+  },
+
+  "footer": {
+    "height": 48,
+    "buttonSize": 32,
+    "buttonRadius": 8,
+    "buttonGap": 10,
+    "buttonDefaultColor": "#808890",
+    "buttonHoverColor": "#ffffff",
+    "buttonActiveColor": "var(--nv-color-primaryLight)",
+    "dividerColor": "rgba(255,255,255,0.08)"
+  },
+
+  "card": {
+    "radius": 12,
+    "borderWidth": 1,
+    "borderStyle": "solid",
+    "hoverElevation": 2,
+    "hoverGlowColor": "var(--nv-color-primary)",
+    "hoverGlowIntensity": 0.15,
+    "padding": 16,
+    "gap": 16
+  },
+
+  "button": {
+    "primaryBg": "var(--nv-color-primary)",
+    "primaryText": "#ffffff",
+    "primaryHoverBg": "color-mix(in srgb, var(--nv-color-primary) 90%, transparent)",
+    "primaryActiveBg": "color-mix(in srgb, var(--nv-color-primary) 80%, transparent)",
+    "ghostHoverBg": "rgba(255,255,255,0.05)",
+    "radius": 8,
+    "fontWeight": 500,
+    "transitionSpeed": 200
+  },
+
+  "input": {
+    "bg": "var(--nv-color-surfaceLight)",
+    "border": "rgba(255,255,255,0.05)",
+    "focusBorder": "color-mix(in srgb, var(--nv-color-primary) 50%, transparent)",
+    "focusGlow": "0 0 0 2px color-mix(in srgb, var(--nv-color-primary) 30%, transparent)",
+    "text": "var(--nv-color-textSecondary)",
+    "placeholder": "var(--nv-color-textMuted)",
+    "radius": 8
+  },
+
+  "scrollbar": {
+    "thumbBg": "linear-gradient(180deg, var(--nv-color-primary), var(--nv-color-accent))",
+    "thumbHoverBg": "linear-gradient(180deg, var(--nv-color-primaryLight), var(--nv-color-primary))",
+    "width": 6,
+    "trackBg": "transparent"
+  },
+
+  "dialog": {
+    "overlayOpacity": 0.6,
+    "overlayBlur": 12,
+    "radius": 16,
+    "borderStyle": "solid",
+    "glowColor": "color-mix(in srgb, var(--nv-color-primary) 30%, transparent)"
+  },
+
+  "home": {
+    "heroTitleColor": "#ffffff",
+    "heroSubtitleColor": "#8899aa",
+    "heroGlow": "none",
+    "entranceAnimation": "fade",
+    "entranceSpeed": 400,
+    "cardLayout": "grid"
+  },
+
+  "widget": {
+    "bg": "color-mix(in srgb, var(--nv-color-primary) 8%, rgba(8,12,20,0.85))",
+    "text": "#e8f4ff",
+    "iconColor": "var(--nv-color-primaryLight)",
+    "radius": 12,
+    "shadow": "0 4px 20px rgba(0,0,0,0.3)",
+    "borderColor": "rgba(255,255,255,0.06)"
+  },
+
+  "sfx": {
+    "enabled": true,
+    "hover":           "",
+    "click":           "",
+    "menuOpen":        "",
+    "menuClose":       "",
+    "dialogOpen":      "",
+    "dialogClose":     "",
+    "notification":    "",
+    "pageTransition":  "",
+    "startup":         "",
+    "countdownAlert":  "",
+    "countdownTick":   ""
+  },
+
+  "skeleton": {
+    "base": "#1a2030",
+    "shine": "#2a3040",
+    "speed": 1.5
+  }
+}
