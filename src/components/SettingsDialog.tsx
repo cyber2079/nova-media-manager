@@ -371,7 +371,7 @@ function AppearanceTab(props: any) {
           <div className="grid grid-cols-3 gap-2">
             {filteredThemeList.map((item: any) => (
               <button key={item.key} onClick={() => handleTheme(item.key)}
-                className={cn("flex flex-col items-center gap-1.5 px-2 py-3 rounded-lg text-xs border transition-all duration-200",
+                className={cn("flex flex-col items-center gap-1.5 px-2 py-3 rounded-lg text-xs border transition-all duration-200 cursor-pointer select-none",
                   theme === item.key ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
                 {item.image ? <img src={item.image} alt="" className="w-10 h-10 rounded-full object-cover" /> : item.key === "default" ? <Home className="h-5 w-5" /> : <span className="text-base">{item.emoji}</span>}
                 <span>{item.labelKey ? t(item.labelKey) : item.label}</span>

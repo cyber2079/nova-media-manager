@@ -11,13 +11,16 @@ import { useThemePackStore } from "./themePackStore";
  * - "default" is the built-in root theme — always available, no license required.
  * - Premium themes are installed as .nvtp packages and listed by themePackStore.
  * - This store holds the *selected* theme ID (a string).
- * - Available themes = ["default"] + installed premium themes (license-gated).
+ * - themeVersion is a monotonically increasing counter — every setTheme() bumps it,
+ *   so consumers can react even when the same theme is selected again.
  */
 
 export type ThemeName = string;
 
 interface ThemeState {
   theme: ThemeName;
+  /** Bumped on every setTheme call — use as effect dependency to force CSS reload */
+  themeVersion: number;
   init: () => Promise<void>;
   setTheme: (t: ThemeName) => void;
   toggleTheme: () => void;
@@ -50,21 +53,23 @@ export function useAvailableThemes(): ThemeName[] {
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
   theme: resolveTheme(localStorage.getItem("app-theme")),
+  themeVersion: 0,
 
   init: async () => {
     const raw = await kv.get("app-theme");
     if (raw) {
       const t = resolveTheme(raw);
-      set({ theme: t });
+      set({ theme: t, themeVersion: 1 });
       document.documentElement.setAttribute("data-theme", t);
     }
   },
 
   setTheme: (t) => {
     const prev = get().theme;
-    set({ theme: t }); persist(t);
+    set((s) => ({ theme: t, themeVersion: s.themeVersion + 1 }));
+    persist(t);
     if (t === "default") {
-      applySurface(); // legacy palette for default theme
+      applySurface();
       const { paletteCustomized, resetPaletteToTheme } = useSettingsStore.getState();
       if (!paletteCustomized) { resetPaletteToTheme("default"); persist(t); }
     }

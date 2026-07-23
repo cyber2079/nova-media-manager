@@ -77,6 +77,7 @@ const LEGACY_INLINE_VARS = [
  */
 export function useThemeTokens() {
   const theme = useThemeStore((s) => s.theme);
+  const themeVersion = useThemeStore((s) => s.themeVersion);
   const {
     paletteAccent, paletteSaturation,
     glassMasterEnabled, globalGlassOpacity, globalGlassBlur,
@@ -124,7 +125,7 @@ export function useThemeTokens() {
     load();
     return () => { cancelled = true; };
   }, [
-    theme,
+    theme, themeVersion,
     paletteAccent, paletteSaturation,
     glassMasterEnabled, globalGlassOpacity, globalGlassBlur,
     barOpacity, barBlur, mainOpacity, mainBlur,
