@@ -99,3 +99,34 @@ pub fn get_default_theme_tokens() -> String {
     let t = tokens::load_default();
     serde_json::to_string_pretty(&t).unwrap_or_default()
 }
+
+/// Return all --nv-* CSS variables as a flat JSON object, already merged with
+/// inherit + user overrides. Frontend writes them as inline styles on <html>.
+#[tauri::command]
+pub fn get_theme_css_json(
+    theme_id: String,
+    user_overrides: Option<String>,
+) -> Result<String, String> {
+    let base = tokens::load_default();
+    let merged = if theme_id == "default" {
+        base
+    } else {
+        let proto = protocol::global().lock().map_err(|e| e.to_string())?;
+        match proto.ensure_loaded(&theme_id) {
+            Ok(()) => {},
+            Err(e) => { log::warn!("[theme] ensure_loaded failed for '{theme_id}': {e}"); return Err(e); }
+        }
+        match proto.read_file(&theme_id, "theme.json") {
+            Some(b) => tokens::merge_tokens(&base, &String::from_utf8_lossy(&b)).unwrap_or(base),
+            None => base,
+        }
+    };
+    let final_tokens = match user_overrides {
+        Some(ref ov) if !ov.is_empty() => tokens::merge_tokens(&merged, ov)?,
+        _ => merged,
+    };
+    let css = tokens::to_css_vars(&final_tokens);
+    // Parse the :root {} CSS into a flat JSON object
+    let flat = tokens::parse_css_vars_to_json(&css);
+    serde_json::to_string(&flat).map_err(|e| e.to_string())
+}

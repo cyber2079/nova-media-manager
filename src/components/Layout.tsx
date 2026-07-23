@@ -578,21 +578,23 @@ export default function Layout() {
         </div>
       </header>
 
+      {/* Full-width transparent home is only for ice-girl/cyber-girl (legacy video bg).
+          .nvtp themes (like cyberpunk) use the same constrained layout as default. */}
       <main
         className={cn(
           "mx-auto max-w-7xl px-6 overflow-hidden relative rounded-xl transition-opacity duration-300",
-          isHome && !isDefault && "!max-w-none !px-0 !overflow-visible !rounded-none pointer-events-none",
+          isHome && (isIce || isCG) && "!max-w-none !px-0 !overflow-visible !rounded-none pointer-events-none",
           pageMinimized && "!opacity-0 !pointer-events-none",
         )}
         style={(() => {
           if (isHomeStrip) return { height: "auto", marginTop: 0, background: "transparent", borderColor: "transparent", zIndex: 48 } as React.CSSProperties;
-          if (isHome && !isDefault) return { height: "auto", marginTop: 0, zIndex: 48 };
+          if (isHome && (isIce || isCG)) return { height: "auto", marginTop: 0, zIndex: 48 };
           return { height: "calc(100vh - 5rem - 3rem - 1rem)", marginTop: "5rem", marginBottom: "1rem", zIndex: 48 };
         })()}
         data-route={isHome ? "home" : "page"}>
         <div className={cn(
           "relative z-[48]",
-          isHome && !isDefault
+          isHome && (isIce || isCG)
             ? "overflow-visible [&>*]:pointer-events-auto"
             : "h-full overflow-y-auto overscroll-contain px-0 pt-6 pb-6",
           perfReduceAnimations && "reduce-motion",

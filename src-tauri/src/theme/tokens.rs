@@ -76,6 +76,27 @@ pub fn to_css_vars(tokens: &Value) -> String {
     format!(":root {{\n{}}}", decls)
 }
 
+/// Parse a CSS `:root { ... }` block into a flat JSON object of { "--nv-xxx": "value" }.
+pub fn parse_css_vars_to_json(css: &str) -> serde_json::Map<String, serde_json::Value> {
+    let mut map = serde_json::Map::new();
+    // Extract declarations inside :root { }
+    let body = css
+        .strip_prefix(":root {\n")
+        .and_then(|s| s.strip_suffix("}"))
+        .unwrap_or("");
+    for line in body.lines() {
+        let line = line.trim();
+        if let Some((key, value)) = line.split_once(':') {
+            let key = key.trim().to_string();
+            let val = value.trim().trim_end_matches(';').trim().to_string();
+            if !key.is_empty() && !val.is_empty() {
+                map.insert(key, serde_json::Value::String(val));
+            }
+        }
+    }
+    map
+}
+
 // ═══════════════ TOKEN FLATTENING ═══════════════
 
 fn flatten_value(out: &mut Vec<(String, String)>, val: &Value, prefix: &str) {
