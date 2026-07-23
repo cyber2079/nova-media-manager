@@ -260,72 +260,76 @@ export default function Nv3dViewer() {
       const scene = sceneRef.current;
       if (!scene) return;
 
+      // ── Detect: monolithic scene.glb vs multi-prop room ──────────
+      const sceneBlock = blocks.find(b => b.id === "scene" || b.path?.endsWith("scene.glb"));
+      const isMonolithic = sceneBlock && blocks.length <= 3; // 1 model + 0-2 misc resources
+
       // Clear
       while (scene.children.length > 0) scene.remove(scene.children[0]);
 
-      // Lights
-      lightRoom(scene);
+      if (isMonolithic && sceneBlock) {
+        // ── Monolithic: load scene.glb directly ──────────────────
+        setStatus("加载完整场景...");
+        const url = blobMap.get(sceneBlock.id);
+        if (!url) throw new Error("scene block has no blob URL");
+        const gl = new GLTFLoader();
+        const g = await gl.loadAsync(url);
+        scene.add(g.scene);
 
-      // ── Room ──
-      const room = buildRoom(blobMap);
-      scene.add(room);
+        // Add lights — GLB may not have its own (KHR_lights_punctual is optional)
+        const sun = new THREE.DirectionalLight(0xffffff, 2);
+        sun.position.set(5, 10, 5);
+        scene.add(sun);
+        const amb = new THREE.AmbientLight(0x333344, 1.5);
+        scene.add(amb);
 
-      // Debug grid
-      const grid = new THREE.GridHelper(12, 12, 0xff1188, 0x332244);
-      grid.position.y = 0.001;
-      scene.add(grid);
-      setStatus("✅ 房间已就绪");
-
-      // ── Props ──
-      const gltfLoader = new GLTFLoader();
-
-      // Map: model directory → blob url
-      const dirUrls = new Map<string, string>();
-      for (const b of blocks) {
-        if (b.ext === ".gltf" || b.ext === ".glb") {
-          const dir = b.path.includes("/") ? b.path.split("/")[1] : b.id;
-          if (!dirUrls.has(dir)) dirUrls.set(dir, blobMap.get(b.id)!);
+        const box = new THREE.Box3().setFromObject(g.scene);
+        const sz = box.getSize(new THREE.Vector3());
+        const ct = box.getCenter(new THREE.Vector3());
+        if (controlsRef.current) {
+          controlsRef.current.target.copy(ct);
         }
+        setStatus(`✅ ${blocks.length} 资源 · ${(sceneBlock.data.byteLength / (1024*1024)).toFixed(0)}MB`);
+        setMeta(`场景: ${(sz.x).toFixed(1)}×${(sz.y).toFixed(1)}×${(sz.z).toFixed(1)}m · ${g.scene.children.length} nodes`);
+      } else {
+        // ── Multi-prop room layout ───────────────────────────────
+        lightRoom(scene);
+        const room = buildRoom(blobMap);
+        scene.add(room);
+        const grid = new THREE.GridHelper(12, 12, 0xff1188, 0x332244);
+        grid.position.y = 0.001;
+        scene.add(grid);
+        setStatus("✅ 房间已就绪");
+
+        const gltfLoader = new GLTFLoader();
+        const dirUrls = new Map<string, string>();
+        for (const b of blocks) {
+          if (b.ext === ".gltf" || b.ext === ".glb") {
+            const dir = b.path.includes("/") ? b.path.split("/")[1] : b.id;
+            if (!dirUrls.has(dir)) dirUrls.set(dir, blobMap.get(b.id)!);
+          }
+        }
+
+        let ok = 0, fail = 0;
+        const layout: Array<[string, string, "back"|"left"|"right", number, number, number]> = [
+          ["🎆霓虹招牌", "neon_sign", "back", 0, 2.4, 2.0],
+          ["街机", "arcade", "back", -2.8, 0, 2.0],
+          ["售货机", "vendingmachine", "back", 3.5, 0, 2.0],
+          ["ATM", "atm", "left", -2, 0, 2.0],
+          ["金属桌", "desk", "left", -3, 0, 1.0],
+          ["电竞桌+椅", "gaming_setup", "right", -2.5, 0, 1.4],
+        ];
+
+        for (const [label, dirKey, wallSide, along, yOff, th] of layout) {
+          const url = dirUrls.get(dirKey);
+          if (!url) { fail++; continue; }
+          const obj = await loadAndPlace(gltfLoader, url, wallSide, along, yOff, th, label);
+          if (obj) { scene.add(obj); ok++; } else fail++;
+          setStatus(`✅ ${ok}/${ok + fail} | ${label}`);
+        }
+        setStatus(`✅ ${ok}/${ok + fail} 模型 + 房间已渲染`);
+        setMeta("10×3.5×8m 房间 · 6 道具 · 金属墙/混凝土地板/暗金天花板");
       }
-
-      let ok = 0; let fail = 0;
-
-      const { w, h, d } = ROOM;
-      const halfW = w / 2; const halfD = d / 2;
-
-      // Layout: each prop assigned to a wall. "along" = position along that wall.
-      // Back wall: z=-4,  along=x (-4.5..4.5)
-      // Left wall: x=-5,  along=z (-3.5..3.5)
-      // Right wall: x=+5, along=z (-3.5..3.5)
-      // yOff=0 floor, >0 wall-mounted above floor.
-      //
-      //         ┌──back wall (z=-4)──────────┐
-      //  ATM    │ 街机  🎆霓虹招牌(2.2m高) 售货机│
-      // (left)  │                             │  (right)
-      //  金属桌 │              电竞桌(右墙)    │
-      //         └─────────────────────────────┘
-
-      type LayoutEntry = [string, string, "back"|"left"|"right", number, number, number];
-      const layout: LayoutEntry[] = [
-        // label,      dirKey,          wallSide, along, yOff, targetH
-        ["🎆霓虹招牌",  "neon_sign",     "back",    0,   2.4,  2.0],
-        ["街机",       "arcade",        "back",   -2.8, 0,    2.0],
-        ["售货机",     "vendingmachine","back",    3.5,  0,    2.0],
-        ["ATM",        "atm",           "left",   -2,   0,    2.0],
-        ["金属桌",     "desk",          "left",   -3,   0,    1.0],
-        ["电竞桌+椅",  "gaming_setup",  "right",  -2.5, 0,    1.4],
-      ];
-
-      for (const [label, dirKey, wallSide, along, yOff, th] of layout) {
-        const url = dirUrls.get(dirKey);
-        if (!url) { fail++; console.warn(`No URL for ${dirKey}`); continue; }
-        const obj = await loadAndPlace(gltfLoader, url, wallSide, along, yOff, th, label);
-        if (obj) { scene.add(obj); ok++; }
-        else fail++;
-        setStatus(`✅ ${ok}/${ok + fail} | ${label}`);
-      }
-      setStatus(`✅ ${ok}/${ok + fail} 模型 + 房间已渲染`);
-      setMeta(`10×3.5×8m 房间 · 6 道具 · 4 灯光 · 金属墙/混凝土地板/暗金天花板`);
 
     } catch (e) {
       setStatus(`❌ ${String(e)}`);

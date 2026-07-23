@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import ScrollFade from "@/components/ScrollFade";
 import ThemeManager from "@/components/ThemeManager";
 import BgVideoTuner from "@/components/BgVideoTuner";
-import { Palette, Monitor, SlidersHorizontal, Music, RotateCcw, Gauge, Sparkles, EyeOff, Eye, Copy, Check, Key, Crown, Cpu, Clock, Calendar, Timer, FolderOpen, ImageIcon, Shuffle, Home } from "lucide-react";
+import { Palette, Monitor, SlidersHorizontal, Music, RotateCcw, Gauge, Sparkles, EyeOff, Eye, Copy, Check, Key, Crown, Cpu, Clock, Calendar, Timer, FolderOpen, ImageIcon, Shuffle, Home, LogOut } from "lucide-react";
 import { useLicenseStore } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS } from "@/stores/settingsStore";
 import { useWidgetStore, pageKeys } from "@/stores/widgetStore";
@@ -36,7 +36,7 @@ const tabs: { id: TabId; icon: typeof SlidersHorizontal; labelKey: string }[] = 
 // ═══════════════ DEFAULTS ═══════════════
 const DEFAULTS = {
   general: { language: "zh", autoStart: true, startFullscreen: true },
-  appearance: { theme: "default" as ThemeName, bgVideoMode: "cover" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "inter", paletteAccent: "#4788f0", paletteSaturation: 50, paletteCustomized: false, glassMasterEnabled: true, globalGlassOpacity: 92, globalGlassBlur: 16, barOpacity: 92, barBlur: 16, mainOpacity: 92, mainBlur: 16, dialogOpacity: 92, dialogBlur: 16, autoHideHeader: false, autoHideFooter: false, hideTitleBar: true, wallpaper: { mode: "none" as const, path: "", shuffle: "sequential" as const, interval: 30, fit: "none" as const } },
+  appearance: { theme: "default" as ThemeName, bgVideoMode: "cover" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "inter", paletteAccent: "#4788f0", paletteSaturation: 50, paletteCustomized: false, glassMasterEnabled: true, globalGlassOpacity: 70, globalGlassBlur: 3, barOpacity: 92, barBlur: 16, mainOpacity: 92, mainBlur: 16, dialogOpacity: 92, dialogBlur: 16, autoHideHeader: false, autoHideFooter: false, wallpaper: { mode: "none" as const, path: "", shuffle: "sequential" as const, interval: 30, fit: "none" as const } },
   media: { previewOffset: 0.5, lyricFontSize: "normal" as const, lyricUseCustomColor: false, lyricCurrentColor: "#ffffff", lyricOtherColor: "#8899aa", lyricFillColor: "#ffb6c1", playerBgMode: "follow" as const, playerBgColor: "", cyberBgmEnabled: true, imageWheelMode: "prevNext" as ImageWheelMode, externalPlayer: { mode: "auto" as const, kind: "", path: "" } },
   widgets: {
     globalWidgets: true,
@@ -70,7 +70,6 @@ export default function SettingsDialog({ open, onClose }: Props) {
     mainOpacity, setMainOpacity, mainBlur, setMainBlur,
     dialogOpacity, setDialogOpacity, dialogBlur, setDialogBlur,
     bgOverlayOpacity, setBgOverlayOpacity,
-    hideTitleBar, setHideTitleBar,
     fontPrimaryColor, fontSecondaryColor, widgetTextColor, setFontPrimaryColor, setFontSecondaryColor, setWidgetTextColor,
     scrollFadeOpacity, setScrollFadeOpacity,
     playerBgColor, playerBgMode, setPlayerBgColor, setPlayerBgMode,
@@ -87,6 +86,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
   const [autoLoading, setAutoLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("general");
   const [confirmReset, setConfirmReset] = useState<"all" | TabId | null>(null);
+  const [confirmQuit, setConfirmQuit] = useState(false);
   const loadedRef = useRef(false);
 
   if (open && !loadedRef.current) {
@@ -130,7 +130,6 @@ export default function SettingsDialog({ open, onClose }: Props) {
         setMainOpacity(d.mainOpacity); setMainBlur(d.mainBlur);
         setDialogOpacity(d.dialogOpacity); setDialogBlur(d.dialogBlur);
         setAutoHideHeader(d.autoHideHeader); setAutoHideFooter(d.autoHideFooter);
-        setHideTitleBar(d.hideTitleBar);
         setWallpaperConfig(d.wallpaper);
         setTimeout(() => applySurface(), 0);
         break;
@@ -168,7 +167,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
     }
     setConfirmReset(null);
   }, [setLanguage, i18n, setAutoStart, setStartFullscreen, setAutoHideHeader, setAutoHideFooter,
-      setTheme, setBgVideoMode, setFontSize, setFontFamily, setHideTitleBar,
+      setTheme, setBgVideoMode, setFontSize, setFontFamily,
       setPaletteAccent, setPaletteSaturation, setBarOpacity, setBarBlur,
       setGlassMasterEnabled, setGlobalGlassOpacity, setGlobalGlassBlur, setMainOpacity, setMainBlur, setDialogOpacity, setDialogBlur,
       setPreviewOffset, setLyricFontSize, setLyricUseCustomColor, setLyricCurrentColor, setLyricOtherColor, setLyricFillColor, setImageWheelMode,
@@ -221,13 +220,22 @@ export default function SettingsDialog({ open, onClose }: Props) {
                 </button>
               );
             })}
+            {/* Spacer pushes quit to bottom */}
+            <div className="flex-1" />
+            <div className="border-t border-white/[0.06] pt-1 mt-1">
+              <button onClick={() => setConfirmQuit(true)}
+                className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-200 text-left rounded-lg w-full text-red-400/70 hover:bg-red-400/8 hover:text-red-400">
+                <LogOut className="h-4 w-4 shrink-0" />
+                <span>{t("settings.tab_quit")}</span>
+              </button>
+            </div>
           </div>
 
           {/* Right content */}
           <div className="flex-1 overflow-y-auto px-6 py-5 relative">
             {activeTab === "general" && <GeneralTab t={t} language={language} handleLanguage={handleLanguage} languages={languages} autoStart={autoStart} autoLoading={autoLoading} handleAutoStart={handleAutoStart} startFullscreen={startFullscreen} setStartFullscreen={setStartFullscreen} resetTab={() => setConfirmReset("general")} />}
 
-            {activeTab === "appearance" && <AppearanceTab t={t} theme={theme} filteredThemeList={filteredThemeList} handleTheme={handleTheme} paletteAccent={paletteAccent} paletteSaturation={paletteSaturation} setPaletteAccent={setPaletteAccent} setPaletteSaturation={setPaletteSaturation} resetPaletteToTheme={resetPaletteToTheme} bgVideoMode={bgVideoMode} setBgVideoMode={setBgVideoMode} hideTitleBar={hideTitleBar} setHideTitleBar={setHideTitleBar} autoHideHeader={autoHideHeader} setAutoHideHeader={setAutoHideHeader} autoHideFooter={autoHideFooter} setAutoHideFooter={setAutoHideFooter} barOpacity={barOpacity} setBarOpacity={setBarOpacity} barBlur={barBlur} setBarBlur={setBarBlur} glassMasterEnabled={glassMasterEnabled} setGlassMasterEnabled={setGlassMasterEnabled} globalGlassOpacity={globalGlassOpacity} setGlobalGlassOpacity={setGlobalGlassOpacity} globalGlassBlur={globalGlassBlur} setGlobalGlassBlur={setGlobalGlassBlur} mainOpacity={mainOpacity} setMainOpacity={setMainOpacity} mainBlur={mainBlur} setMainBlur={setMainBlur} dialogOpacity={dialogOpacity} setDialogOpacity={setDialogOpacity} dialogBlur={dialogBlur} setDialogBlur={setDialogBlur} dashboardMode={dashboardMode} setDashboardMode={setDashboardMode} fontSize={fontSize} setFontSize={setFontSize} iconSize={iconSize} setIconSize={setIconSize} fontFamily={fontFamily} setFontFamily={setFontFamily} resetTab={() => setConfirmReset("appearance")} />}
+            {activeTab === "appearance" && <AppearanceTab t={t} theme={theme} filteredThemeList={filteredThemeList} handleTheme={handleTheme} paletteAccent={paletteAccent} paletteSaturation={paletteSaturation} setPaletteAccent={setPaletteAccent} setPaletteSaturation={setPaletteSaturation} resetPaletteToTheme={resetPaletteToTheme} bgVideoMode={bgVideoMode} setBgVideoMode={setBgVideoMode} autoHideHeader={autoHideHeader} setAutoHideHeader={setAutoHideHeader} autoHideFooter={autoHideFooter} setAutoHideFooter={setAutoHideFooter} barOpacity={barOpacity} setBarOpacity={setBarOpacity} barBlur={barBlur} setBarBlur={setBarBlur} glassMasterEnabled={glassMasterEnabled} setGlassMasterEnabled={setGlassMasterEnabled} globalGlassOpacity={globalGlassOpacity} setGlobalGlassOpacity={setGlobalGlassOpacity} globalGlassBlur={globalGlassBlur} setGlobalGlassBlur={setGlobalGlassBlur} mainOpacity={mainOpacity} setMainOpacity={setMainOpacity} mainBlur={mainBlur} setMainBlur={setMainBlur} dialogOpacity={dialogOpacity} setDialogOpacity={setDialogOpacity} dialogBlur={dialogBlur} setDialogBlur={setDialogBlur} dashboardMode={dashboardMode} setDashboardMode={setDashboardMode} fontSize={fontSize} setFontSize={setFontSize} iconSize={iconSize} setIconSize={setIconSize} fontFamily={fontFamily} setFontFamily={setFontFamily} resetTab={() => setConfirmReset("appearance")} />}
 
             {activeTab === "media" && <MediaTab t={t} previewOffset={previewOffset} setPreviewOffset={setPreviewOffset} lyricFontSize={lyricFontSize} setLyricFontSize={setLyricFontSize} lyricUseCustomColor={lyricUseCustomColor} setLyricUseCustomColor={setLyricUseCustomColor} lyricCurrentColor={lyricCurrentColor} setLyricCurrentColor={setLyricCurrentColor} lyricOtherColor={lyricOtherColor} setLyricOtherColor={setLyricOtherColor} lyricFillColor={lyricFillColor} setLyricFillColor={setLyricFillColor} playerBgMode={playerBgMode} playerBgColor={playerBgColor} setPlayerBgMode={setPlayerBgMode} setPlayerBgColor={setPlayerBgColor} cyberBgmEnabled={cyberBgmEnabled} setCyberBgmEnabled={setCyberBgmEnabled} imageWheelMode={imageWheelMode} setImageWheelMode={setImageWheelMode} resetTab={() => setConfirmReset("media")} />}
 
@@ -251,8 +259,16 @@ export default function SettingsDialog({ open, onClose }: Props) {
 
       {confirmReset && (
         <ConfirmDialog message={confirmReset === "all" ? t("settings.confirm_reset_all") : t("settings.confirm_reset_tab", { tab: t(`settings.tab_${confirmReset}`) })}
+          confirmLabel={t("settings.confirm_reset")}
           onConfirm={() => { if (confirmReset === "all") doResetAll(); else doResetTab(confirmReset); }}
           onCancel={() => setConfirmReset(null)} />
+      )}
+
+      {confirmQuit && (
+        <ConfirmDialog message={t("settings.confirm_quit")}
+          confirmLabel={t("settings.tab_quit")}
+          onConfirm={async () => { const { exit } = await import("@tauri-apps/plugin-process"); exit(0); }}
+          onCancel={() => setConfirmQuit(false)} />
       )}
     </Dialog>
   );
@@ -331,7 +347,7 @@ function GeneralTab({ t, language, handleLanguage, languages, autoStart, autoLoa
 // ═══════════════ APPEARANCE TAB ═══════════════
 
 function AppearanceTab(props: any) {
-  const { t, theme, filteredThemeList, handleTheme, paletteAccent, paletteSaturation, setPaletteAccent, setPaletteSaturation, resetPaletteToTheme, bgVideoMode, setBgVideoMode, hideTitleBar, setHideTitleBar, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, barOpacity, setBarOpacity, barBlur, setBarBlur, glassMasterEnabled, setGlassMasterEnabled, globalGlassOpacity, setGlobalGlassOpacity, globalGlassBlur, setGlobalGlassBlur, mainOpacity, setMainOpacity, mainBlur, setMainBlur, dialogOpacity, setDialogOpacity, dialogBlur, setDialogBlur, dashboardMode, setDashboardMode, fontSize, setFontSize, iconSize, setIconSize, fontFamily, setFontFamily, resetTab } = props;
+  const { t, theme, filteredThemeList, handleTheme, paletteAccent, paletteSaturation, setPaletteAccent, setPaletteSaturation, resetPaletteToTheme, bgVideoMode, setBgVideoMode, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, barOpacity, setBarOpacity, barBlur, setBarBlur, glassMasterEnabled, setGlassMasterEnabled, globalGlassOpacity, setGlobalGlassOpacity, globalGlassBlur, setGlobalGlassBlur, mainOpacity, setMainOpacity, mainBlur, setMainBlur, dialogOpacity, setDialogOpacity, dialogBlur, setDialogBlur, dashboardMode, setDashboardMode, fontSize, setFontSize, iconSize, setIconSize, fontFamily, setFontFamily, resetTab } = props;
   return (
     <>
       {/* ═══ Theme ═══ */}
@@ -403,8 +419,6 @@ function AppearanceTab(props: any) {
               ))}
             </div>
           </div>
-          <CardDivider />
-          <SettingRow label={t("settings.hide_title_bar")} hint={t("settings.hide_title_bar_hint")}><Toggle active={hideTitleBar} onToggle={() => setHideTitleBar(!hideTitleBar)} /></SettingRow>
           <CardDivider />
           <SettingRow label={t("settings.auto_hide_header")}><Toggle active={autoHideHeader} onToggle={() => setAutoHideHeader(!autoHideHeader)} /></SettingRow>
           <CardDivider />
@@ -1101,7 +1115,7 @@ function ColorInput({ value, onChange }: { value: string; onChange: (v: string) 
   );
 }
 
-function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) {
+function ConfirmDialog({ message, confirmLabel, onConfirm, onCancel }: { message: string; confirmLabel?: string; onConfirm: () => void; onCancel: () => void }) {
   const { t } = useTranslation();
   return (
     <Dialog open onOpenChange={() => onCancel()}>
@@ -1109,7 +1123,7 @@ function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onCo
         <p className="text-sm text-gray-300">{message}</p>
         <div className="flex justify-end gap-2 mt-2">
           <Button variant="ghost" size="sm" onClick={onCancel}>{t("settings.cancel")}</Button>
-          <Button variant="ghost" size="sm" onClick={onConfirm} className="text-red-400">{t("settings.confirm_reset")}</Button>
+          <Button variant="ghost" size="sm" onClick={onConfirm} className="text-red-400">{confirmLabel || t("settings.confirm_reset")}</Button>
         </div>
       </DialogContent>
     </Dialog>

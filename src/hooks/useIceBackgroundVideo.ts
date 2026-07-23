@@ -7,6 +7,7 @@ import { useSettingsStore } from "@/stores/settingsStore";
 export function useIceBackgroundVideo(isActive: boolean) {
   const iceVidRef = useRef<HTMLVideoElement>(null);
   const iceVidBRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     const vidA = iceVidRef.current;
@@ -70,12 +71,15 @@ export function useIceBackgroundVideo(isActive: boolean) {
       capSnapshot(); switching = true; blendF = 0;
       const old = active; active = chaser; chaser = old; chaser.pause();
       if (firstPlayDone) chaser.currentTime = nextLoopTime(chaser);
-      requestAnimationFrame(() => { active.play().catch(() => {}); scheduleLoopEnd(active); });
+      requestAnimationFrame(() => { if (!isPaused()) active.play().catch(() => {}); scheduleLoopEnd(active); });
     };
+
+    const isPaused = () => useSettingsStore.getState().videoPaused;
 
     const setup = () => {
       const c = getCfg(); readCfg();
       canvas = document.createElement('canvas');
+      canvasRef.current = canvas;
       canvas.className = 'ice-bg-video';
       canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;';
       vidA.parentNode?.insertBefore(canvas, vidA);
@@ -87,6 +91,7 @@ export function useIceBackgroundVideo(isActive: boolean) {
       const rate = c.playbackRate;
       vidA.playbackRate = rate; vidB.playbackRate = rate;
       active = vidA; chaser = vidB; loopCount = c.loopCount;
+      if (!isPaused()) { active.play().catch(() => {}); }
       if (c.firstPlayStart > 0 && vidA.duration > c.firstPlayStart) {
         vidA.currentTime = c.firstPlayStart;
         if (c.firstPlayEnd > c.firstPlayStart)
@@ -141,6 +146,10 @@ export function useIceBackgroundVideo(isActive: boolean) {
         vidA.playbackRate = s.bgVideoLoop.playbackRate;
         vidB.playbackRate = s.bgVideoLoop.playbackRate;
       }
+      if (s.videoPaused !== prev.videoPaused) {
+        if (s.videoPaused) { active?.pause(); chaser?.pause(); }
+        else { active?.play().catch(() => {}); }
+      }
     });
 
     if (vidA.readyState >= 1) { setup(); draw(); }
@@ -156,10 +165,11 @@ export function useIceBackgroundVideo(isActive: boolean) {
       vidB.removeEventListener('ended', onEnded);
       window.removeEventListener('resize', resize);
       canvas?.remove();
+      canvasRef.current = null;
       vidA.style.opacity = ''; vidA.style.pointerEvents = '';
       vidB.style.opacity = ''; vidB.style.pointerEvents = '';
     };
   }, [isActive]);
 
-  return { iceVidRef, iceVidBRef };
+  return { iceVidRef, iceVidBRef, iceCanvasRef: canvasRef };
 }

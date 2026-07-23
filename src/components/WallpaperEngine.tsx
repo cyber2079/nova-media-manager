@@ -49,21 +49,15 @@ function useFolderImages(path: string, shuffle: boolean, intervalSec: number): s
   }
 }
 
-export default function WallpaperEngine() {
+export default function WallpaperEngine({ videoRef }: { videoRef?: React.MutableRefObject<HTMLVideoElement | null> }) {
   const wp = useSettingsStore((s) => s.wallpaper);
   const bgMode = useSettingsStore((s) => s.bgVideoMode);
   const videoPaused = useSettingsStore((s) => s.videoPaused);
   const [singleSrc, setSingleSrc] = useState<string | null>(null);
   const [videoFailed, setVideoFailed] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const internalVideoRef = useRef<HTMLVideoElement>(null);
+  const videoElRef = videoRef || internalVideoRef;
 
-  // Respond to pause/resume toggle
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (videoPaused) v.pause();
-    else v.play().catch(() => {}); // may fail if no user gesture yet
-  }, [videoPaused]);
   const folderSrc = useFolderImages(
     wp.mode === "folder" ? wp.path : "",
     wp.shuffle === "random",
@@ -83,6 +77,17 @@ export default function WallpaperEngine() {
   }, [wp.mode, wp.path]);
 
   const src = wp.mode === "single" ? singleSrc : wp.mode === "folder" ? folderSrc : null;
+
+  // Sync video playback with videoPaused — runs on mount (when src becomes
+  // available) and whenever the toggle changes. Without autoPlay on the
+  // <video> element, this is the sole controller of play/pause.
+  useEffect(() => {
+    const v = videoElRef.current;
+    if (!v) return;
+    if (videoPaused) v.pause();
+    else v.play().catch(() => {});
+  }, [videoPaused, src]);
+
   if (!src) return null;
 
   const isVideo = /\.(mp4|mkv|webm|avi|mov)$/i.test(wp.path || "");
@@ -109,7 +114,7 @@ export default function WallpaperEngine() {
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
       {isVideo ? (
-        <video ref={videoRef} key={src.slice(-20)} src={src} autoPlay loop muted playsInline style={fullStyle}
+        <video ref={videoElRef} key={src.slice(-20)} src={src} crossOrigin="anonymous" loop muted playsInline style={fullStyle}
           onError={() => setVideoFailed(true)} />
       ) : (
         <img key={src.slice(-20)} src={src} alt="" style={fullStyle}

@@ -61,6 +61,7 @@ scripts/setup-git-remote.ps1
 
 # ══ WebGL3D output (large binary files) ══
 scripts/webgl3d/output/
+scripts/webgl3d/**/*.glb
 
 # ══ Dev overrides (local only) ══
 .env

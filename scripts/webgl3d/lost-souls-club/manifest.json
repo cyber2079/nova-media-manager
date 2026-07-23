@@ -1,0 +1,71 @@
+{
+  "$schema": "https://scm-think.cn/schemas/nv3d-manifest.json",
+  "formatVersion": "2.0",
+  "themeId": "lost-souls-club",
+  "themeName": {
+    "zh": "lost-souls-club",
+    "en": "lost-souls-club"
+  },
+  "themeType": "webgl3d",
+  "version": "1.0.0",
+  "minAppVersion": "2.0.0",
+  "resources": {
+    "models": {
+      "scene.glb": {
+        "path": "models/scene.glb",
+        "hash": "sha256:cbbc2d68642e8e1feff7271f8d85c7ba5ecb2655d5fd053068f62f2298b9f2fa",
+        "size": 1550586924,
+        "format": "glb"
+      }
+    }
+  },
+  "scenes": [],
+  "characters": [],
+  "props": [],
+  "interactions": [],
+  "quests": [],
+  "i18n": {
+    "en": {
+      "theme.name": "Lost Souls Club",
+      "theme.description": "Lazaro's Lost Souls Club — Cyberpunk underground club scene",
+      "scene.main_room.name": "Main Hall"
+    },
+    "zh": {
+      "theme.name": "失落灵魂俱乐部",
+      "theme.description": "Lazaro 的 Lost Souls Club — 赛博朋克地下俱乐部场景",
+      "scene.main_room.name": "主厅"
+    }
+  },
+  "renderConfig": {
+    "targetFps": 60,
+    "adaptiveQuality": true,
+    "qualityLevels": {
+      "high": {
+        "shadowMapSize": 2048,
+        "textureMaxResolution": 4096,
+        "antialias": true,
+        "postProcessing": true,
+        "particleMaxCount": 500
+      },
+      "medium": {
+        "shadowMapSize": 1024,
+        "textureMaxResolution": 2048,
+        "antialias": false,
+        "postProcessing": true,
+        "particleMaxCount": 200
+      },
+      "low": {
+        "shadowMapSize": 512,
+        "textureMaxResolution": 1024,
+        "antialias": false,
+        "postProcessing": false,
+        "particleMaxCount": 50
+      }
+    },
+    "triangleBudget": 100000,
+    "drawCallBudget": 200,
+    "textureMemoryBudgetMb": 512
+  },
+  "requiredWebGLExtensions": [],
+  "extensions": {}
+}

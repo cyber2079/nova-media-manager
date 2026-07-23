@@ -297,6 +297,7 @@ pub fn run() {
             commands::performance::get_performance_info,
             commands::performance::set_process_priority,
             commands::performance::cleanup_invalid_covers,
+            commands::screenshot::save_screenshot,
             commands::hevc::install_hevc_if_needed,
             commands::webgl3d::nv3d_open,
             commands::webgl3d::nv3d_verify,

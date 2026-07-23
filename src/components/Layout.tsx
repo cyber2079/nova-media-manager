@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Film, Image, Gamepad2, Home, Music, Maximize2, Minimize2, Search, Settings, X, LayoutGrid, Gauge, Box } from "lucide-react";
+import { Film, Image, Gamepad2, Home, Music, Maximize2, Minimize2, Search, Settings, X, LayoutGrid, Gauge, Box, Camera } from "lucide-react";
 import { lazy } from "react";
 const Nv3dViewer = lazy(() => import("@/webgl3d/canvas/Nv3dViewer"));
+import DevToolsMenu from "@/components/DevToolsMenu";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { cn } from "@/lib/utils";
 import { kv } from "@/lib/sqliteStore";
@@ -331,7 +332,35 @@ export default function Layout() {
   const [footerVisible, setFooterVisible] = useState(true);
   const [bgMusicConfirm, setBgMusicConfirm] = useState<string | null>(null);
   const [bgDontAsk, setBgDontAsk] = useState(false);
-  const { iceVidRef, iceVidBRef } = useIceBackgroundVideo(isIce);
+  const { iceVidRef, iceVidBRef, iceCanvasRef } = useIceBackgroundVideo(isIce);
+  const wallpaperVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Capture screenshot from background video at native resolution (lossless PNG)
+  const captureScreenshot = useCallback(async () => {
+    try {
+      if (isIce) {
+        const c = iceCanvasRef.current;
+        if (!c || c.width === 0) { console.warn("[screenshot] ice canvas not ready"); return; }
+        const dataUrl = c.toDataURL("image/png");
+        console.log("[screenshot] invoking save_screenshot, len=", dataUrl.length);
+        const savedPath = await invoke<string>("save_screenshot", { data: dataUrl });
+        console.log("[screenshot] saved:", savedPath);
+      } else {
+        const v = wallpaperVideoRef.current;
+        if (!v || v.videoWidth === 0) { console.warn("[screenshot] wallpaper video not ready"); return; }
+        const out = document.createElement("canvas");
+        out.width = v.videoWidth; out.height = v.videoHeight;
+        out.getContext("2d")!.drawImage(v, 0, 0, out.width, out.height);
+        const dataUrl = out.toDataURL("image/png");
+        out.remove();
+        console.log("[screenshot] invoking save_screenshot, len=", dataUrl.length);
+        const savedPath = await invoke<string>("save_screenshot", { data: dataUrl });
+        console.log("[screenshot] saved:", savedPath);
+      }
+    } catch (e) {
+      console.error("[screenshot] failed:", e);
+    }
+  }, [isIce, iceCanvasRef]);
 
   // Pause/resume ice girl background video
   useEffect(() => {
@@ -420,19 +449,6 @@ export default function Layout() {
   // ── Theme CSS-variable effects (color / font / icon / font-family / font-color) ──
   useThemeEffects();
 
-  // Title bar
-  useEffect(() => {
-    const sync = () => {
-      const { hideTitleBar } = useSettingsStore.getState();
-      getCurrentWindow().setDecorations(!hideTitleBar).catch(() => {});
-    };
-    const t = setTimeout(sync, 100);
-    const unsub = useSettingsStore.subscribe((s, prev) => {
-      if (s.hideTitleBar !== prev.hideTitleBar) sync();
-    });
-    return () => { clearTimeout(t); unsub(); };
-  }, []);
-
   // Sync fullscreen state with actual Tauri window state.
   // On page refresh (Ctrl+R) the native window stays fullscreen, but React
   // state resets to false, which defeats the drag guard and lets the user
@@ -464,31 +480,6 @@ export default function Layout() {
     }
   }, []);
 
-  // Decorations guard — prevent title bar from reappearing after resize
-  useEffect(() => {
-    let unlistenFn: (() => void) | null = null;
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const win = getCurrentWindow();
-        const { hideTitleBar } = useSettingsStore.getState();
-        if (!hideTitleBar) return;
-        unlistenFn = await win.onResized(() => {
-          if (cancelled) return;
-          requestAnimationFrame(() => { win.setDecorations(false).catch(() => {}); });
-        });
-        // If component unmounted while await was in-flight, clean up immediately
-        if (cancelled) { unlistenFn(); unlistenFn = null; }
-      } catch {}
-    })();
-
-    return () => {
-      cancelled = true;
-      unlistenFn?.();
-    };
-  }, []);
-
   // Fullscreen restore
   useEffect(() => {
     const restoreFS = () => {
@@ -504,16 +495,8 @@ export default function Layout() {
   const toggleFullscreen = async () => {
     const win = getCurrentWindow();
     const next = !isFS; wantsFS.current = next;
-    const { hideTitleBar } = useSettingsStore.getState();
-    if (hideTitleBar) {
-      win.setDecorations(false).catch(() => {});
-      setTimeout(() => win.setDecorations(false).catch(() => {}), 150);
-    }
     await win.setFullscreen(next);
     setIsFS(next);
-    if (hideTitleBar) {
-      setTimeout(() => win.setDecorations(false).catch(() => {}), 100);
-    }
   };
 
   const headerClass = "fixed top-0 left-0 right-0 z-50";
@@ -526,12 +509,12 @@ export default function Layout() {
   return (
     <div className={cn("min-h-screen", isDefault && !isHomeStrip && "bg-surface")} id="app" ref={appRef}>
       {/* ── Default theme wallpaper engine ── */}
-      {isDefault && <WallpaperEngine />}
+      {isDefault && <WallpaperEngine videoRef={wallpaperVideoRef} />}
 
       {/* ── Ice Girl background ── */}
       {isIce && <>
-        <video ref={iceVidRef} className="ice-bg-video fixed inset-0 object-cover w-full h-full" autoPlay muted playsInline poster={ThemeAssets.ice.bg} src={ThemeAssets.ice.bgVideo} />
-        <video ref={iceVidBRef} className="hidden" muted playsInline preload="auto" src={ThemeAssets.ice.bgVideo} />
+        <video ref={iceVidRef} className="ice-bg-video fixed inset-0 object-cover w-full h-full" crossOrigin="anonymous" muted playsInline poster={ThemeAssets.ice.bg} src={ThemeAssets.ice.bgVideo} />
+        <video ref={iceVidBRef} className="hidden" crossOrigin="anonymous" muted playsInline preload="auto" src={ThemeAssets.ice.bgVideo} />
       </>}
 
       {/* ── Cyber Girl background ── */}
@@ -598,6 +581,7 @@ export default function Layout() {
                 <Box className={cn("h-4 w-4", nv3dOpen ? "text-purple-400" : "text-gray-400")} />
               </button>
             )}
+            {import.meta.env.DEV && <DevToolsMenu />}
 
           </div>
         </div>
@@ -663,7 +647,7 @@ export default function Layout() {
           <button
             onClick={() => useSettingsStore.getState().setVideoPaused(!videoPaused)}
             className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
-            title={videoPaused ? "播放背景视频" : "暂停背景视频"}
+            title={videoPaused ? t("settings.bg_video_play") : t("settings.bg_video_pause")}
           >
             {videoPaused ? (
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -671,6 +655,15 @@ export default function Layout() {
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
             )}
           </button>
+
+          {/* Capture current frame from background video */}
+          {(isIce || isDefault) && (
+            <button onClick={captureScreenshot}
+              className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+              title={t("settings.bg_video_capture")}>
+              <Camera className="h-4 w-4" />
+            </button>
+          )}
 
           {/* Divider between Gauge and QuickLaunch */}
           <div className="w-px h-5 bg-white/[0.08] shrink-0" />
@@ -687,7 +680,7 @@ export default function Layout() {
             className="absolute left-1/2 bottom-14 w-full rounded-2xl"
             style={{
               transform: "translateX(-50%)",
-              maxWidth: "min(900px, calc(100vw - 2rem))",
+              maxWidth: "min(576px, calc(100vw - 2rem))",
               maxHeight: "calc(100vh - 5rem)",
               overflowY: "auto",
             }}

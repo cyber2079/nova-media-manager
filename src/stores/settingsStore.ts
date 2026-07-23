@@ -128,7 +128,6 @@ export type SettingsState = {
   surfaceSaturation: number;
   surfaceOpacity: number;
   bgOverlayOpacity: number;
-  hideTitleBar: boolean;
   fontPrimaryColor: string;
   fontSecondaryColor: string;
   widgetTextColor: string;
@@ -193,7 +192,6 @@ export type SettingsState = {
   setSurfaceSaturation: (v: number) => void;
   setSurfaceOpacity: (v: number) => void;
   setBgOverlayOpacity: (v: number) => void;
-  setHideTitleBar: (v: boolean) => void;
   setFontPrimaryColor: (v: string) => void;
   setFontSecondaryColor: (v: string) => void;
   setWidgetTextColor: (v: string) => void;
@@ -268,7 +266,7 @@ function schedulePersist() {
     glassMasterEnabled: s.glassMasterEnabled, globalGlassOpacity: s.globalGlassOpacity, globalGlassBlur: s.globalGlassBlur,
     mainOpacity: s.mainOpacity, mainBlur: s.mainBlur, dialogOpacity: s.dialogOpacity, dialogBlur: s.dialogBlur,
     surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
-    hideTitleBar: s.hideTitleBar, fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteCustomized: s.paletteCustomized, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
+    fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteCustomized: s.paletteCustomized, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
     perfPriority: s.perfPriority, perfIdleReduce: s.perfIdleReduce, perfReduceAnimations: s.perfReduceAnimations, cacheCleanupDays: s.cacheCleanupDays, cacheCleanupLastRun: s.cacheCleanupLastRun,
     dashboardMode: s.dashboardMode, contentMinimized: s.contentMinimized,
   });
@@ -367,15 +365,6 @@ export function applyLyricColors() {
   }
 }
 
-/** Toggle Windows title bar decorations via Tauri API */
-export async function applyTitleBar() {
-  const hide = useSettingsStore.getState().hideTitleBar;
-  try {
-    const { getCurrentWindow } = await import("@tauri-apps/api/window");
-    await getCurrentWindow().setDecorations(!hide);
-  } catch {}
-}
-
 /** Apply global font family + load Google Font if needed */
 export function applyFontFamily(v?: string) {
   const family = v ?? useSettingsStore.getState().fontFamily ?? "system";
@@ -454,8 +443,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       // Check saved values (not current state) to detect prior customization.
       ((saved as any).barOpacity != null && (saved as any).barOpacity !== 92) || ((saved as any).barBlur != null && (saved as any).barBlur !== 16) ? false : true
     ),
-    globalGlassOpacity: (saved as any).globalGlassOpacity ?? 92,
-    globalGlassBlur: (saved as any).globalGlassBlur ?? 16,
+    globalGlassOpacity: (saved as any).globalGlassOpacity ?? 70,
+    globalGlassBlur: (saved as any).globalGlassBlur ?? 3,
     mainOpacity: (saved as any).mainOpacity ?? 92,
     mainBlur: (saved as any).mainBlur ?? 16,
     dialogOpacity: (saved as any).dialogOpacity ?? 92,
@@ -463,7 +452,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     surfaceSaturation: (saved as any).surfaceSaturation ?? 4,
     surfaceOpacity: (saved as any).surfaceOpacity ?? 92,
     bgOverlayOpacity: (saved as any).bgOverlayOpacity ?? 70,
-    hideTitleBar: (saved as any).hideTitleBar ?? true,
     fontPrimaryColor: (saved as any).fontPrimaryColor || "#ffffff",
     fontSecondaryColor: (saved as any).fontSecondaryColor || "#9ab8d4",
     widgetTextColor: (saved as any).widgetTextColor || "#e8f4ff",
@@ -533,7 +521,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             dialogBlur: (s.dialogBlur as number) ?? get().dialogBlur,
             surfaceSaturation: (s.surfaceSaturation as number) ?? get().surfaceSaturation,
             surfaceOpacity: (s.surfaceOpacity as number) ?? get().surfaceOpacity,
-            hideTitleBar: (s.hideTitleBar as boolean) ?? get().hideTitleBar,
             fontPrimaryColor: (s.fontPrimaryColor as string) ?? get().fontPrimaryColor,
             fontSecondaryColor: (s.fontSecondaryColor as string) ?? get().fontSecondaryColor,
             widgetTextColor: (s.widgetTextColor as string) ?? get().widgetTextColor,
@@ -610,7 +597,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setSurfaceSaturation(v) { set({ surfaceSaturation: v }); persist(); applySurface(); },
     setSurfaceOpacity(v) { set({ surfaceOpacity: v }); persist(); applySurface(); },
     setBgOverlayOpacity(v) { set({ bgOverlayOpacity: v }); persist(); },
-    setHideTitleBar(v) { set({ hideTitleBar: v }); persist(); applyTitleBar(); },
     setFontPrimaryColor(v) { set({ fontPrimaryColor: v }); persist(); applyFontColors(); },
     setFontSecondaryColor(v) { set({ fontSecondaryColor: v }); persist(); applyFontColors(); },
     setWidgetTextColor(v) { set({ widgetTextColor: v }); persist(); applyFontColors(); },

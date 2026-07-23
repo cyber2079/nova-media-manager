@@ -1,33 +1,53 @@
+/*
+  ═══════════════════════════════════════════════════════════════
+  QuickHub — Design Token System
+  ═══════════════════════════════════════════════════════════════
+  U = 4px               base grid unit — all spacing derives from this
+
+  ICON_SM  =  4U  16px   h-4/w-4  (item icons)
+  ICON_LG  =  7U  28px   h-7/w-7  (sidebar category icons)
+  GAP_SM   =  2U   8px   gap-2    (item↔item, icon↔label)
+  GAP_MD   =  3U  12px   gap-3    (music player internals)
+  GAP_LG   =  4U  16px   gap-4    (sidebar↔items)
+  PAD_SM   =  3U  12px   px-3     (item button inner x)
+  PAD_LG   =  5U  20px   px-5     (section outer x padding)
+  SIDEBAR  = 24U  96px   w-24     (category label column)
+
+  item button  = PAD_SM×2 + ICON_SM + GAP_SM + text_avg(48) = 96px
+  items grid   = MAX_PER_ROW × 96 + (MAX_PER_ROW-1) × GAP_SM = 408px
+  content row  = SIDEBAR + GAP_LG + grid = 520px
+  container    = PAD_LG×2 + content = 560px → round 576px
+  MAX_PER_ROW  = 4
+  ═══════════════════════════════════════════════════════════════
+*/
+
 import { useState, useRef, useCallback, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
-  Film, Image, Gamepad2, Music,
-  ChevronLeft, ChevronRight, Maximize2, X,
+  LogOut, Maximize2,
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Volume1,
   Trash2, Terminal, Cog, FileText, FolderOpen, Monitor,
   Download, Folder, ImageIcon, FolderHeart, Clapperboard,
   Lock, Moon, Power, RotateCcw, MonitorX,
-  Scissors, Calculator, HardDrive, ScanSearch, ShieldAlert, Info, Loader2,
+  Scissors, Calculator, HardDrive, ScanSearch, ShieldAlert, Info,
   Video, Wifi, Bluetooth,
 } from "lucide-react";
-import { invoke, convertFileSrc } from "@tauri-apps/api/core";
-import { useMovieStore } from "@/stores/movieStore";
-import { useImageStore } from "@/stores/imageStore";
-import { useMusicStore } from "@/stores/musicStore";
-import { useGameStore } from "@/stores/gameStore";
+import { invoke } from "@tauri-apps/api/core";
 import { useAudioPlayerStore, fmtTime } from "@/stores/audioPlayerStore";
 import { getMusicCoverFallback, musicCoverSrc } from "@/lib/musicCoverFallback";
 import { useTranslation } from "react-i18next";
-import { setHomeMode } from "@/lib/homeMode";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
-const SWIPE_THRESHOLD = 40;
+// ── derived constants ─────────────────────────────────────
+const SIDEBAR_W = 96; // 24U — category label column
+const MAX_PER_ROW = 4; // items per row in tool grids
+const CONTAINER_W = 576; // 144U — max container width, see token calc above
 
 interface QuickHubProps { onClose: () => void }
 
 export default function QuickHub({ onClose }: QuickHubProps) {
-  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const [confirmQuit, setConfirmQuit] = useState(false);
   return (
     <div
       className="w-full rounded-2xl overflow-hidden animate-media-strip-up"
@@ -37,67 +57,50 @@ export default function QuickHub({ onClose }: QuickHubProps) {
         WebkitBackdropFilter: "blur(18px) saturate(150%)",
         border: "1px solid rgba(255,255,255,0.08)",
         boxShadow: "0 -6px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04)",
+        maxWidth: CONTAINER_W,
       }}
     >
-      <div className="flex items-center justify-between px-4 pt-3 pb-0.5">
-        <span className="text-[10px] text-gray-500 tracking-[0.15em] uppercase select-none">快捷中心</span>
-        <div className="flex items-center gap-1">
-          <button onClick={onClose}
-            className="h-7 w-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/8 transition-colors" title="收起">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-        </div>
+      {/* title bar — PAD_LG x, compact y */}
+      <div className="flex items-center justify-between px-5 pt-3 pb-1">
+        <span className="text-[10px] text-gray-500 tracking-[0.15em] uppercase select-none">{t("settings.quick_hub")}</span>
+        <button onClick={onClose}
+          className="h-7 w-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/8 transition-colors" title={t("quickHub.collapse")}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
       </div>
 
-      <MediaNav />
-      <div className="mx-3 h-px bg-white/[0.06]" />
       <HubMusicPlayer />
-      <div className="mx-3 h-px bg-white/[0.06]" />
+      <div className="mx-5 h-px bg-white/[0.06]" />
       <SystemTools />
-    </div>
-  );
-}
 
-// ═══════════════════════════════════════════════════════
-// MediaNav — 分类快捷入口（最近使用轮播已按需求移除）
-// ═══════════════════════════════════════════════════════
-
-function MediaNav() {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const movies = useMovieStore((s) => s.movies);
-  const images = useImageStore((s) => s.images);
-  const music = useMusicStore((s) => s.music);
-  const games = useGameStore((s) => s.games);
-
-  const pages = [
-    { key: "movies", icon: Film,     count: movies.length, color: "var(--color-primary)",       to: "/movies" },
-    { key: "images", icon: Image,    count: images.length, color: "var(--color-accent)",        to: "/images" },
-    { key: "music",  icon: Music,    count: music.length,  color: "var(--color-primary-light)", to: "/music" },
-    { key: "games",  icon: Gamepad2, count: games.length,  color: "var(--color-primary-dark)",  to: "/games" },
-  ];
-
-  return (
-    <div className="flex items-center justify-center gap-2 h-12 px-3">
-      {pages.map((p) => (
-        <button key={p.key} onClick={() => navigate(p.to)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors">
-          <p.icon className="h-4 w-4" style={{ color: p.color, filter: "brightness(1.3)" }} />
-          <span className="text-xs font-medium text-white">{t(`nav.${p.key}`)}</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.08] text-gray-400 leading-none">{p.count}</span>
+      {/* quit button */}
+      <div className="mx-5 h-px bg-white/[0.06]" />
+      <div className="px-5 py-3 flex justify-end">
+        <button onClick={() => setConfirmQuit(true)}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-red-400/60 hover:text-red-400 hover:bg-red-400/6 transition-colors">
+          <LogOut className="h-4 w-4" />
+          <span>{t("quickHub.quit")}</span>
         </button>
-      ))}
+      </div>
+
+      {confirmQuit && (
+        <ConfirmDialog open message={t("quickHub.confirm_quit")}
+          confirmLabel={t("quickHub.quit")}
+          onConfirm={async () => { const { exit } = await import("@tauri-apps/plugin-process"); exit(0); }}
+          onCancel={() => setConfirmQuit(false)} />
+      )}
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════
-// HubMusicPlayer
+// HubMusicPlayer — PAD_LG x, PAD_MD (3U=12px) y
 // ═══════════════════════════════════════════════════════
 
 function HubMusicPlayer() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const track = useAudioPlayerStore((s) => s.track);
   const dur = useAudioPlayerStore((s) => s.duration);
@@ -135,8 +138,8 @@ function HubMusicPlayer() {
 
   return (
     <>
-      <div className="mx-4 h-px bg-white/[0.06]" />
-      <div className="flex items-center gap-3 px-4 py-2.5">
+      <div className="mx-5 h-px bg-white/[0.06]" />
+      <div className="flex items-center gap-3 px-5 py-3">
         <div className="w-9 h-9 rounded-lg overflow-hidden bg-white/[0.06] shrink-0">
           <img src={musicCoverSrc(track.coverPath)} alt="" className="w-full h-full object-cover"
             onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
@@ -163,7 +166,7 @@ function HubMusicPlayer() {
           </button>
           <button onClick={doNext} className="h-7 w-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/8 transition-colors"><SkipForward className="h-3.5 w-3.5" /></button>
           <button onClick={() => { doSetBg(false); navigate("/music"); }}
-            className="h-7 w-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/8 transition-colors ml-1" title="打开完整播放器">
+            className="h-7 w-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/8 transition-colors ml-1" title={t("quickHub.open_player")}>
             <Maximize2 className="h-3 w-3" />
           </button>
         </div>
@@ -173,51 +176,52 @@ function HubMusicPlayer() {
 }
 
 // ═══════════════════════════════════════════════════════
-// SystemTools
+// SystemTools — grid-cols-4, SIDEBAR_W sidebar, PAD_LG outer
 // ═══════════════════════════════════════════════════════
 
-interface ToolItem { key: string; icon: React.ComponentType<{className?: string}>; label: string; cmd: string; danger?: boolean }
-interface ToolGroup { key: string; icon: React.ComponentType<{className?: string}>; label: string; items: ToolItem[] }
-
-const TOOL_GROUPS: ToolGroup[] = [
-  { key: "folders", icon: FolderOpen, label: "常用文件夹", items: [
-    { key: "mycomputer",   icon: Monitor,      label: "我的电脑", cmd: "open_my_computer" },
-    { key: "desktop",      icon: Folder,       label: "桌面",     cmd: "open_desktop" },
-    { key: "downloads",    icon: Download,     label: "下载",     cmd: "open_downloads" },
-    { key: "documents",    icon: FolderOpen,   label: "文档",     cmd: "open_documents" },
-    { key: "pictures",     icon: ImageIcon,    label: "图片",     cmd: "open_pictures" },
-    { key: "music-folder", icon: FolderHeart,  label: "音乐",     cmd: "open_music_folder" },
-    { key: "videos",       icon: Clapperboard, label: "视频",     cmd: "open_videos" },
-  ]},
-  { key: "power", icon: Power, label: "电源 / 会话", items: [
-    { key: "lock",     icon: Lock,      label: "锁屏", cmd: "lock_screen" },
-    { key: "sleep",    icon: Moon,      label: "睡眠", cmd: "sleep" },
-    { key: "restart",  icon: RotateCcw, label: "重启", cmd: "restart",  danger: true },
-    { key: "shutdown", icon: Power,     label: "关机", cmd: "shutdown", danger: true },
-  ]},
-  { key: "tools", icon: Cog, label: "系统工具", items: [
-    { key: "taskmgr",       icon: MonitorX,    label: "任务管理", cmd: "open_taskmgr" },
-    { key: "snipping",      icon: Scissors,    label: "截图工具", cmd: "open_snipping_tool" },
-    { key: "gamebar",       icon: Video,       label: "视频录制", cmd: "open_game_bar" },
-    { key: "calculator",    icon: Calculator,  label: "计算器",   cmd: "open_calculator" },
-    { key: "devmgmt",       icon: HardDrive,   label: "设备管理", cmd: "open_device_manager" },
-    { key: "cleanmgr",      icon: ScanSearch,  label: "磁盘清理", cmd: "open_disk_cleanup" },
-    { key: "regedit",       icon: ShieldAlert, label: "注册表",   cmd: "open_registry_editor" },
-    { key: "msinfo32",      icon: Info,        label: "系统信息", cmd: "open_system_info" },
-    { key: "control-panel", icon: Cog,         label: "控制面板", cmd: "open_control_panel" },
-    { key: "cmd-admin",     icon: Terminal,    label: "CMD",      cmd: "open_cmd_admin" },
-    { key: "empty-recycle", icon: Trash2,      label: "清空回收站", cmd: "empty_recycle_bin" },
-    { key: "notepad",       icon: FileText,    label: "记事本",   cmd: "open_notepad" },
-  ]},
-];
+interface ToolItem { key: string; icon: React.ComponentType<{className?: string}>; i18nKey: string; cmd: string; danger?: boolean }
+interface ToolGroup { key: string; icon: React.ComponentType<{className?: string}>; i18nKey: string; items: ToolItem[] }
 
 function SystemTools() {
+  const { t } = useTranslation();
   const [sysVol, setSysVol] = useState(0.5);
   const [sysMuted, setSysMuted] = useState(false);
   const [volLoaded, setVolLoaded] = useState(false);
   const [confirming, setConfirming] = useState<ToolItem | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pendingVol = useRef<{ level: number; muted: boolean } | null>(null);
+
+  const TOOL_GROUPS: ToolGroup[] = [
+    { key: "folders", icon: FolderOpen, i18nKey: "quickHub.folders", items: [
+      { key: "mycomputer",   icon: Monitor,      i18nKey: "quickHub.my_computer",  cmd: "open_my_computer" },
+      { key: "desktop",      icon: Folder,       i18nKey: "quickHub.desktop",      cmd: "open_desktop" },
+      { key: "downloads",    icon: Download,     i18nKey: "quickHub.downloads",    cmd: "open_downloads" },
+      { key: "documents",    icon: FolderOpen,   i18nKey: "quickHub.documents",    cmd: "open_documents" },
+      { key: "pictures",     icon: ImageIcon,    i18nKey: "quickHub.pictures",     cmd: "open_pictures" },
+      { key: "music-folder", icon: FolderHeart,  i18nKey: "quickHub.music_folder", cmd: "open_music_folder" },
+      { key: "videos",       icon: Clapperboard, i18nKey: "quickHub.videos",       cmd: "open_videos" },
+    ]},
+    { key: "power", icon: Power, i18nKey: "quickHub.power_session", items: [
+      { key: "lock",     icon: Lock,      i18nKey: "quickHub.lock_screen", cmd: "lock_screen" },
+      { key: "sleep",    icon: Moon,      i18nKey: "quickHub.sleep",       cmd: "sleep" },
+      { key: "restart",  icon: RotateCcw, i18nKey: "quickHub.restart",    cmd: "restart",  danger: true },
+      { key: "shutdown", icon: Power,     i18nKey: "quickHub.shutdown",   cmd: "shutdown", danger: true },
+    ]},
+    { key: "tools", icon: Cog, i18nKey: "quickHub.sys_tools", items: [
+      { key: "taskmgr",       icon: MonitorX,    i18nKey: "quickHub.taskmgr",       cmd: "open_taskmgr" },
+      { key: "snipping",      icon: Scissors,    i18nKey: "quickHub.snipping",      cmd: "open_snipping_tool" },
+      { key: "gamebar",       icon: Video,       i18nKey: "quickHub.gamebar",       cmd: "open_game_bar" },
+      { key: "calculator",    icon: Calculator,  i18nKey: "quickHub.calculator",    cmd: "open_calculator" },
+      { key: "devmgmt",       icon: HardDrive,   i18nKey: "quickHub.devmgmt",       cmd: "open_device_manager" },
+      { key: "cleanmgr",      icon: ScanSearch,  i18nKey: "quickHub.cleanmgr",      cmd: "open_disk_cleanup" },
+      { key: "regedit",       icon: ShieldAlert, i18nKey: "quickHub.regedit",       cmd: "open_registry_editor" },
+      { key: "msinfo32",      icon: Info,        i18nKey: "quickHub.system_info",   cmd: "open_system_info" },
+      { key: "control-panel", icon: Cog,         i18nKey: "quickHub.control_panel", cmd: "open_control_panel" },
+      { key: "cmd-admin",     icon: Terminal,    i18nKey: "quickHub.cmd",           cmd: "open_cmd_admin" },
+      { key: "empty-recycle", icon: Trash2,      i18nKey: "quickHub.empty_recycle", cmd: "empty_recycle_bin" },
+      { key: "notepad",       icon: FileText,    i18nKey: "quickHub.notepad",       cmd: "open_notepad" },
+    ]},
+  ];
 
   useEffect(() => {
     invoke<number>("get_system_volume")
@@ -232,7 +236,6 @@ function SystemTools() {
     debounceRef.current = setTimeout(() => {
       const p = pendingVol.current;
       if (!p) return;
-      // unmute first if needed, then set volume
       if (!p.muted) invoke("set_system_mute", { muted: false }).catch(() => {});
       invoke("set_system_volume", { level: p.muted ? 0 : p.level }).catch(() => {});
       pendingVol.current = null;
@@ -261,11 +264,12 @@ function SystemTools() {
 
   return (
     <>
-      <div className="mx-4 h-px bg-white/[0.06]" />
+      {/* systemTools always renders its own top separator so HubMusicPlayer can be absent without a stray line */}
+      <div className="mx-5 h-px bg-white/[0.06]" />
       <div className="px-5 py-4 space-y-4 select-none">
 
         {/* Volume + quick toggles */}
-        <div className="flex items-center gap-3 max-w-sm">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => applyVolume(sysVol, !sysMuted)}
             className="h-9 w-9 flex items-center justify-center rounded-xl text-gray-400 hover:text-white hover:bg-white/6 transition-colors shrink-0"
@@ -282,9 +286,8 @@ function SystemTools() {
           <span className="text-xs text-gray-400 w-9 text-right tabular-nums shrink-0 font-medium">
             {sysMuted ? "--" : `${Math.round(sysVol * 100)}`}
           </span>
-          {/* Wireless toggles */}
           <button onClick={() => invoke("open_bluetooth_settings").catch(() => {})}
-            className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-blue-400 hover:bg-white/5 transition-colors" title="蓝牙">
+            className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-blue-400 hover:bg-white/5 transition-colors" title={t("quickHub.bluetooth")}>
             <Bluetooth className="h-4 w-4" />
           </button>
           <button onClick={() => invoke("open_network_settings").catch(() => {})}
@@ -296,27 +299,35 @@ function SystemTools() {
         <ConfirmDialog
           open={!!confirming}
           message={confirming?.cmd === "empty_recycle_bin"
-            ? "确定要清空回收站吗？此操作不可撤销。"
-            : `确定要${confirming?.label ?? ""}吗？`}
-          confirmLabel="确定"
+            ? t("quickHub.confirm_empty_recycle")
+            : t("quickHub.confirm_danger", { action: confirming ? t(confirming.i18nKey) : "" })}
+          confirmLabel={t("quickHub.confirm_label")}
           onConfirm={doConfirm}
           onCancel={() => setConfirming(null)}
         />
 
         {TOOL_GROUPS.map((grp) => (
           <div key={grp.key} className="flex gap-4">
-            <div className="shrink-0 w-[100px] flex flex-col items-center justify-center rounded-xl bg-white/[0.03] border border-white/[0.05] py-3 gap-1.5">
+            {/* sidebar — SIDEBAR_W (24U = 96px) */}
+            <div
+              className="shrink-0 flex flex-col items-center justify-center rounded-xl bg-white/[0.03] border border-white/[0.05] py-3 gap-1.5"
+              style={{ width: SIDEBAR_W }}
+            >
               <grp.icon className="h-7 w-7 text-gray-400" />
-              <span className="text-[11px] text-gray-500 font-medium text-center leading-tight">{grp.label}</span>
+              <span className="text-[11px] text-gray-500 font-medium text-center leading-tight">{t(grp.i18nKey)}</span>
             </div>
-            <div className="flex-1 flex flex-wrap gap-2 content-start">
-              {grp.items.map((t) => (
-                <button key={t.key} onClick={() => handleTool(t)}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs transition-colors group ${
-                    t.danger ? "text-gray-500 hover:text-red-400 hover:bg-red-400/6" : "text-gray-300 hover:text-white hover:bg-white/5"
-                  }`} title={t.label}>
-                  <t.icon className={`h-4 w-4 transition-colors ${t.danger ? "group-hover:text-red-400" : "group-hover:text-primary-light"}`} />
-                  <span className={t.danger ? "group-hover:text-red-300" : "group-hover:text-gray-200"}>{t.label}</span>
+            {/* items grid — MAX_PER_ROW columns, GAP_SM gap */}
+            <div
+              className="flex-1 grid gap-2 items-start"
+              style={{ gridTemplateColumns: `repeat(${MAX_PER_ROW}, 1fr)` }}
+            >
+              {grp.items.map((tool) => (
+                <button key={tool.key} onClick={() => handleTool(tool)}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs transition-colors group min-w-0 ${
+                    tool.danger ? "text-gray-500 hover:text-red-400 hover:bg-red-400/6" : "text-gray-300 hover:text-white hover:bg-white/5"
+                  }`} title={t(tool.i18nKey)}>
+                  <tool.icon className={`h-4 w-4 shrink-0 transition-colors ${tool.danger ? "group-hover:text-red-400" : "group-hover:text-primary-light"}`} />
+                  <span className={`truncate ${tool.danger ? "group-hover:text-red-300" : "group-hover:text-gray-200"}`}>{t(tool.i18nKey)}</span>
                 </button>
               ))}
             </div>

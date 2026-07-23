@@ -16,9 +16,9 @@
  * Ref: [17_打包规范](docs/webgl3d-spec/17_专属资源包打包加密通用规范.md)
  */
 
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync } from "fs";
+import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync, openSync, readSync, writeSync, closeSync } from "fs";
 import { join, relative, extname, basename, dirname } from "path";
-import { createHash, randomUUID } from "crypto";
+import { createHash } from "crypto";
 import { gzipSync } from "zlib";
 import { execSync } from "child_process";
 import { fileURLToPath } from "url";
@@ -293,15 +293,15 @@ const BLOCK_TYPE = { ".glb": BLOCK_STORE, ".ktx2": BLOCK_STORE, ".png": BLOCK_ST
   ".glsl": BLOCK_GZIP, ".json": BLOCK_GZIP, ".ogg": BLOCK_STORE };
 
 function stepPack(sign = false) {
-  step("pack — 打包 .nv3d");
+  step("pack — 打包 .nv3d (流式写入)");
   const mfPath = join(SOURCE, "manifest.json");
   if (!existsSync(mfPath)) { fail("manifest.json 不存在"); return; }
 
   const manifest = JSON.parse(readFileSync(mfPath, "utf-8"));
   const resources = manifest.resources || {};
 
-  // Collect blocks
-  const blocks = [];
+  // ── Pass 1: scan all files, compute hashes (metadata only) ──────
+  const blockMeta = [];
   for (const cat of Object.keys(resources).sort()) {
     const entries = resources[cat];
     if (typeof entries !== "object") continue;
@@ -310,17 +310,16 @@ function stepPack(sign = false) {
       if (!entry.path) continue;
       const fp = join(SOURCE, entry.path);
       if (!existsSync(fp)) { warn(`missing: ${entry.path}`); continue; }
-      let data = readFileSync(fp);
       const ext = extname(fp).toLowerCase();
       const btype = BLOCK_TYPE[ext] ?? BLOCK_RAW;
-      if (btype === BLOCK_GZIP) data = gzip(data);
-      blocks.push({ id: key, data, type: btype, path: entry.path });
+      const fileSize = statSync(fp).size;
+      blockMeta.push({ id: key, path: fp, type: btype, fileSize, ext });
     }
   }
 
   // Compress manifest
   const manifestJson = JSON.stringify(manifest);
-  const manifestGz = gzip(Buffer.from(manifestJson, "utf-8"));
+  const manifestGz = gzipSync(Buffer.from(manifestJson, "utf-8"));
   const manifestHash = sha256BufRaw(manifestGz);
 
   // Flags
@@ -330,46 +329,112 @@ function stepPack(sign = false) {
 
   // Header (64 bytes)
   const header = Buffer.alloc(64);
-  header.writeUInt16LE(1, 0);                                     // version = 1
-  header.writeUInt16LE(flags, 2);                                   // flags
-  header.writeUInt32LE(manifestGz.length, 4);                     // manifestSize
-  manifestHash.copy(header, 8, 0, 32);                             // manifestHash
-  header.writeUInt16LE(blocks.length, 40);                         // blockCount
-  // reserved[22] already zeroed
+  header.writeUInt16LE(1, 0);
+  header.writeUInt16LE(flags, 2);
+  header.writeUInt32LE(manifestGz.length, 4);
+  manifestHash.copy(header, 8, 0, 32);
+  header.writeUInt16LE(blockMeta.length, 40);
 
-  // Block buffer
-  const blockChunks = [];
-  for (const b of blocks) {
-    const bh = Buffer.from(sha256Buf(b.data), "hex");
-    const chunk = Buffer.alloc(1 + 4 + 32 + b.data.length);
-    chunk.writeUInt8(b.type, 0);
-    chunk.writeUInt32LE(b.data.length, 1);
-    bh.copy(chunk, 5, 0, 32);
-    b.data.copy(chunk, 37);
-    blockChunks.push(chunk);
-  }
-  const blockBuf = Buffer.concat(blockChunks);
-
-  // Content hash (header + manifest + blocks)
-  const contentForHash = Buffer.concat([MAGIC, header, manifestGz, blockBuf]);
-  const contentHash = Buffer.from(sha256Buf(contentForHash), "hex");
-
-  // Footer
-  const footer = Buffer.alloc(4 + 32 + 32 + 64 + 4);
-  footer.writeUInt32LE(manifestGz.length, 0);          // manifestSize
-  manifestHash.copy(footer, 4);                          // manifestHash
-  contentHash.copy(footer, 4 + 32);                      // contentHash
-  // signature[64] stays zeroed — filled by sign step
-  MAGIC.copy(footer, 4 + 32 + 32 + 64);                 // tail magic
-
-  // Write
+  // ── Pass 2: stream-write everything ─────────────────────────
   mkdirSync(dirname(OUTPUT), { recursive: true });
-  const chunks = [MAGIC, header, manifestGz, blockBuf, footer];
-  writeFileSync(OUTPUT, Buffer.concat(chunks));
+  const outFd = openSync(OUTPUT, "w");
+
+  // Running content hash (MAGIC + header + manifest + all block headers + all block data)
+  const contentHash = createHash("sha256");
+  contentHash.update(MAGIC);
+  contentHash.update(header);
+  contentHash.update(manifestGz);
+
+  // Write MAGIC + header + manifest
+  writeSync(outFd, MAGIC);
+  writeSync(outFd, header);
+  writeSync(outFd, manifestGz);
+
+  const CHUNK = 64 * 1024; // 64KB read chunks
+  const buf = Buffer.alloc(CHUNK);
+
+  for (const bm of blockMeta) {
+    // Read file in chunks, compute hash, write block header + data
+    const fFd = openSync(bm.path, "r");
+    const blockHash = createHash("sha256");
+    let rawSize = 0;
+
+    // First pass: read entire file to compute hash (we need hash before writing block header)
+    // Optimisation: for STORE type, we could stream-hash + stream-write if we wrote hash later,
+    // but the NV3D format puts hash BEFORE data. So we must compute hash first.
+    let rawData;
+    try {
+      // For files up to ~100MB, it's fine to load into memory.
+      // For 1.5GB files, use chunked read + hash, then stream-write.
+      if (bm.fileSize > 500 * 1024 * 1024) {
+        // Large file: read in chunks, hash data, write to temp
+        let bytesRead;
+        while ((bytesRead = readSync(fFd, buf, 0, CHUNK, rawSize)) > 0) {
+          rawSize += bytesRead;
+          blockHash.update(buf.slice(0, bytesRead));
+        }
+        closeSync(fFd);
+
+        // Write block header
+        const bh = blockHash.digest();
+        const hdr = Buffer.alloc(37);
+        hdr.writeUInt8(bm.type, 0);
+        hdr.writeUInt32LE(rawSize, 1);
+        bh.copy(hdr, 5, 0, 32);
+        writeSync(outFd, hdr);
+        contentHash.update(hdr);
+
+        // Stream the file data through
+        const rdFd = openSync(bm.path, "r");
+        let written = 0, b;
+        while ((b = readSync(rdFd, buf, 0, CHUNK, written)) > 0) {
+          writeSync(outFd, buf, 0, b);
+          contentHash.update(buf.slice(0, b));
+          written += b;
+        }
+        closeSync(rdFd);
+        info(`  ${bm.id}: ${(rawSize / (1024*1024)).toFixed(0)}MB (streamed)`);
+      } else {
+        // Normal file: read into memory
+        rawData = readFileSync(bm.path);
+        rawSize = rawData.length;
+        closeSync(fFd);
+
+        // Compress if needed
+        const data = bm.type === BLOCK_GZIP ? gzipSync(rawData) : rawData;
+        const hashHex = sha256Buf(data);
+        const bh = sha256BufRaw(data);
+
+        // Write block header: type(u8) + size(u32) + hash(32B)
+        const hdr = Buffer.alloc(37);
+        hdr.writeUInt8(bm.type, 0);
+        hdr.writeUInt32LE(data.length, 1);
+        Buffer.from(bh).copy(hdr, 5, 0, 32);
+        writeSync(outFd, hdr);
+        writeSync(outFd, data);
+        contentHash.update(hdr);
+        contentHash.update(data);
+        info(`  ${bm.id}: ${(rawSize / 1024).toFixed(0)}KB → ${(data.length / 1024).toFixed(0)}KB`);
+      }
+    } catch (e) {
+      warn(`无法读取 ${bm.path}: ${e.message}`);
+      try { closeSync(fFd); } catch {}
+    }
+  }
+
+  // ── Footer ──────────────────────────────────────────────────────
+  const contentHashHex = contentHash.digest("hex");
+  const footer = Buffer.alloc(4 + 32 + 32 + 64 + 4);
+  footer.writeUInt32LE(manifestGz.length, 0);
+  manifestHash.copy(footer, 4);
+  Buffer.from(contentHashHex, "hex").copy(footer, 4 + 32);
+  MAGIC.copy(footer, 4 + 32 + 32 + 64);
+  writeSync(outFd, footer);
+  closeSync(outFd);
 
   const sizeMb = statSync(OUTPUT).size / (1024 * 1024);
-  ok(`${OUTPUT} — ${blocks.length} blocks / ${sizeMb.toFixed(1)} MB`);
-  info(`content hash: ${sha256Buf(contentForHash)}`);
+  ok(`${OUTPUT} — ${blockMeta.length} blocks / ${sizeMb.toFixed(1)} MB`);
+  info(`content hash: ${contentHashHex}`);
 }
 
 // ─── Step: sign ──────────────────────────────────────────────────────────
