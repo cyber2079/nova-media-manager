@@ -57,7 +57,6 @@ export default function MovieLibrary() {
 
   const handleSetWallpaper = useCallback((filePath: string) => {
     useSettingsStore.getState().setWallpaperConfig({ mode: "single", path: filePath });
-    useThemeStore.getState().setTheme("default");
   }, []);
 
   const videoRef = useRef<HTMLVideoElement>(null);

@@ -242,8 +242,6 @@ export default function ImageLibrary() {
 
   const handleSetWallpaper = useCallback((filePath: string) => {
     useSettingsStore.getState().setWallpaperConfig({ mode: "single", path: filePath });
-    // Auto-switch to default theme so the wallpaper engine renders
-    useThemeStore.getState().setTheme("default");
   }, []);
 
   const filtered = useMemo(() => {
