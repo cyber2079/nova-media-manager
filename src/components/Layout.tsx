@@ -43,6 +43,7 @@ import { useThemePackStore } from "@/stores/themePackStore";
 import { useIceBackgroundVideo } from "@/hooks/useIceBackgroundVideo";
 import { useThemeEffects } from "@/hooks/useThemeEffects";
 import { useThemeTokens } from "@/hooks/useThemeTokens";
+import { useThemeSfx } from "@/hooks/useThemeSfx";
 import { useAnalyticsPageView } from "@/lib/analytics";
 import { invoke } from "@tauri-apps/api/core";
 import { compareVersions } from "@/lib/compareVersions";
@@ -439,6 +440,9 @@ export default function Layout() {
 
   // ── Theme Token Engine — injects --nv-* CSS variables from Rust ──
   useThemeTokens();
+
+  // ── Theme SFX Engine — plays UI sounds (hover/click/menu/dialog/etc.) ──
+  const sfx = useThemeSfx(theme);
 
   // Sync fullscreen state with actual Tauri window state.
   // On page refresh (Ctrl+R) the native window stays fullscreen, but React

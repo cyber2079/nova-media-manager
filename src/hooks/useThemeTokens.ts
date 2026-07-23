@@ -15,6 +15,7 @@ import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useThemeStore } from "@/stores/themeStore";
 import { useSettingsStore } from "@/stores/settingsStore";
+import { themeUrl } from "@/lib/themeBase";
 
 function buildUserOverrides(): string {
   const s = useSettingsStore.getState();
@@ -94,6 +95,21 @@ export function useThemeTokens() {
         // Write ALL --nv-* vars as inline styles on <html>
         for (const [key, value] of Object.entries(tokens)) {
           root.style.setProperty(key, value);
+        }
+
+        // Load theme.css if this theme has custom styles
+        if (tokens["--nv-nav-home-icon"] && theme !== "default") {
+          let linkEl = document.getElementById("nv-theme-css") as HTMLLinkElement | null;
+          if (!linkEl) {
+            linkEl = document.createElement("link");
+            linkEl.id = "nv-theme-css";
+            linkEl.rel = "stylesheet";
+            document.head.appendChild(linkEl);
+          }
+          // In dev: served from Vite public/. In prod: served from nova:// protocol.
+          linkEl.href = themeUrl(theme, "theme.css");
+        } else {
+          document.getElementById("nv-theme-css")?.remove();
         }
 
         // Bridge --nv-color-* → --color-* for Tailwind (inline too)

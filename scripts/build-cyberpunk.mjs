@@ -46,9 +46,18 @@ console.log(`🎨 theme.json: ${Object.keys(themeTokens).length} 个分类`);
 // ── Build file list ──
 const files = [];
 
-// 1. manifest + theme.json from PROJ
+// 1. manifest + theme.json + theme.css from PROJ
 files.push({ path: "manifest.json", abs: manifestPath, size: statSync(manifestPath).size });
 files.push({ path: "theme.json", abs: themeJsonPath, size: statSync(themeJsonPath).size });
+const themeCssPath = join(PROJ, "theme.css");
+if (existsSync(themeCssPath)) {
+  files.push({ path: "theme.css", abs: themeCssPath, size: statSync(themeCssPath).size });
+  // Also copy to public/ for Vite dev server
+  const publicThemeDir = join(process.cwd(), "public", "themes", "cyberpunk");
+  mkdirSync(publicThemeDir, { recursive: true });
+  cpSync(themeCssPath, join(publicThemeDir, "theme.css"));
+  console.log("🎨 样式特效: theme.css");
+}
 
 // 2. Nav icons — also copy to public/ for Vite dev server
 const iconsDir = join(ASSETS, "nav-icons");
@@ -71,11 +80,14 @@ const tempAudioDir = join(ASSETS, "temp-audio");
 mkdirSync(tempAudioDir, { recursive: true });
 
 let sfxCount = 0;
+const publicAudioDir = join(process.cwd(), "public", "themes", "cyberpunk", "audio");
+mkdirSync(publicAudioDir, { recursive: true });
 for (const [sfxName, srcPath] of Object.entries(SFX_MAP)) {
   const src = join(SOUNDS, srcPath);
   const dest = join(tempAudioDir, sfxName + ".mp3");
   if (existsSync(src)) {
     cpSync(src, dest);
+    cpSync(src, join(publicAudioDir, sfxName + ".mp3"));
     files.push({ path: `audio/${sfxName}.mp3`, abs: dest, size: statSync(dest).size });
     sfxCount++;
   } else {

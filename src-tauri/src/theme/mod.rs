@@ -93,6 +93,21 @@ pub fn get_theme_css_vars(
     Ok(tokens::to_css_vars(&final_tokens))
 }
 
+/// Return the theme.css content from a loaded theme (if any).
+#[tauri::command]
+pub fn get_theme_css_content(theme_id: String) -> Result<String, String> {
+    if theme_id == "default" { return Ok(String::new()); }
+    let proto = protocol::global().lock().map_err(|e| e.to_string())?;
+    match proto.ensure_loaded(&theme_id) {
+        Ok(()) => {},
+        Err(e) => return Err(e),
+    }
+    match proto.read_file(&theme_id, "theme.css") {
+        Some(bytes) => Ok(String::from_utf8_lossy(&bytes).to_string()),
+        None => Ok(String::new()),
+    }
+}
+
 /// Return the default theme token JSON (for SettingsDialog palette defaults, etc.).
 #[tauri::command]
 pub fn get_default_theme_tokens() -> String {
