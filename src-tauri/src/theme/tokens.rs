@@ -76,23 +76,14 @@ pub fn to_css_vars(tokens: &Value) -> String {
     format!(":root {{\n{}}}", decls)
 }
 
-/// Parse a CSS `:root { ... }` block into a flat JSON object of { "--nv-xxx": "value" }.
-pub fn parse_css_vars_to_json(css: &str) -> serde_json::Map<String, serde_json::Value> {
+/// Directly flatten a theme.json Value tree into flat JSON: { "--nv-xxx": "value", ... }.
+/// No CSS string intermediate — avoids parse errors.
+pub fn to_json_map(tokens: &Value) -> serde_json::Map<String, serde_json::Value> {
+    let mut vars = Vec::new();
+    flatten_value(&mut vars, tokens, "");
     let mut map = serde_json::Map::new();
-    // Extract declarations inside :root { }
-    let body = css
-        .strip_prefix(":root {\n")
-        .and_then(|s| s.strip_suffix("}"))
-        .unwrap_or("");
-    for line in body.lines() {
-        let line = line.trim();
-        if let Some((key, value)) = line.split_once(':') {
-            let key = key.trim().to_string();
-            let val = value.trim().trim_end_matches(';').trim().to_string();
-            if !key.is_empty() && !val.is_empty() {
-                map.insert(key, serde_json::Value::String(val));
-            }
-        }
+    for (key, value) in vars {
+        map.insert(key, serde_json::Value::String(value));
     }
     map
 }

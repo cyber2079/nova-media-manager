@@ -160,11 +160,10 @@ pub fn get_theme_css_json(
         Some(ref ov) if !ov.is_empty() => tokens::merge_tokens(&merged, ov)?,
         _ => merged,
     };
-    let css = tokens::to_css_vars(&final_tokens);
-    let mut flat = tokens::parse_css_vars_to_json(&css);
+    let mut flat = tokens::to_json_map(&final_tokens);
     flat.insert("__diag".into(), serde_json::Value::String(diag.join(" | ")));
-    flat.insert("__primary".into(), serde_json::Value::String(
-        flat.get("--nv-color-primary").map(|v| v.as_str().unwrap_or("?").to_string()).unwrap_or_else(|| "missing".into())
-    ));
+    let primary = flat.get("--nv-color-primary")
+        .and_then(|v| v.as_str()).unwrap_or("missing");
+    flat.insert("__primary".into(), serde_json::Value::String(primary.to_string()));
     serde_json::to_string(&flat).map_err(|e| e.to_string())
 }
