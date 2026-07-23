@@ -50,11 +50,52 @@ D:\nova-themes-assets\      ← Syncthing 同步 — AI 生成的素材
 
 ## 主题架构
 
-- **default** — 唯一内置主题，永久免费，无 license 要求
-- **ice-girl**（冰霜女皇）、**cyber-girl**（代码幽灵）— premium 主题，Member 可用
-- 分发：`.nvtp` 单文件（ZIP + XOR/SHA256 加密），密钥派生自编译种子 + theme_id
-- 未来：AES-256-GCM + 内存解密 + `nova://` custom protocol，图片不落地
-- 代码路径：`poe_*` 已全部重命名为 `ice_*`
+### 基本概念
+
+- **default** — 内置根主题（编译时嵌入 `default/theme.json`），所有主题的 fallback 基线
+- **Premium 主题** — `.nvtp` 单文件安装（ZIP + XOR 加密），通过 `nova://` protocol 服务素材
+- **ThemeName** — `string` 类型，不能用字面量联合类型。主题列表从 `themePackStore.installedThemes` 动态生成
+- **Token 引擎** — Rust 侧合并 default + 主题 theme.json + inherits → 前端 `html.style.setProperty(key, val, "important")` 行内注入
+- **设计文档**：[docs/theme-system-design.md](docs/theme-system-design.md) — 完整 Token 定义 + .nvtp 格式 + AI Prompt
+
+### 必须遵守的铁律（每条都踩过坑）
+
+1. **CSS 用行内样式注入，不用 stylesheet** — `document.documentElement.style.setProperty(k, v, "important")`，否则被 Tailwind v4 `@theme` 编译覆盖
+2. **`useThemeEffects` 跳过非 default 主题** — `applySurface()/applyPalette()` 只对 default 生效。非 default 的 CSS 由 `useThemeTokens` 全权接管
+3. **userOverrides 不发 colors 字段** — `theme.json` 定义主题色，用户色板不得覆盖。切非 default 主题时重置 `paletteCustomized = false`
+4. **protocol 和 loader 用同一路径** — 都走 `database.data_dir().join("themes").join("nvtp")`
+5. **读 protocol 缓存前必须 `ensure_loaded`** — 重启后缓存为空
+6. **Manifest JSON 用 camelCase** — `requiresLicense`、`cssFile`（Rust `#[serde(rename_all = "camelCase")]`）
+7. **构建 .nvtp 用 `Buffer.concat([header, body])`** — 不要 `Buffer.alloc` 预分配（会多零填充字节）
+8. **Dev 模式素材必须复制到 `public/`** — `nova://` 协议 dev 下不支持 `<img>`，Vite 静态服务替代
+9. **转 WebP 前烧入 hex 色 + SVG 内嵌 feGaussianBlur 发光** — WebP 是位图，不支持 `currentColor` 和 CSS filter
+10. **不要用 `isDefault` 门控功能** — 改用 `!(isIce || isCG)`。ice-girl/cyber-girl 是老主题，新 .nvtp 主题和 default 一样需要壁纸引擎
+11. **`setTheme` 带 `themeVersion` 自增计数器** — 同主题重复选择时确保 `useThemeTokens` 重新注入
+12. **主题 CSS 文件用 `fetch()`+`<style>.textContent` 注入** — 不用 `<link>` 标签，不用 `@import`
+
+### 主题文件开发流程
+
+1. 写 `theme.json` — 只写与 default 不同的 Token（inherits 自动补齐其余）
+2. 素材放 `D:\nova-themes-assets\{theme-id}\` — icons/ + audio/ + fonts/
+3. 写 `theme.css` — 视觉效果（霓虹发光/动画/卡片/按钮等组件样式）
+4. 打包：`node scripts/build-cyberpunk.mjs`（或新主题的对应脚本）
+5. 测试：应用 → 主题管理 → 安装本地 .nvtp
+
+### 主题相关文件
+
+| 文件 | 用途 |
+|------|------|
+| `src-tauri/src/theme/tokens.rs` | Token 合并 + 扁平化引擎 |
+| `src-tauri/src/theme/default_theme.json` | 内置全量 Token 基线 |
+| `src/hooks/useThemeTokens.ts` | 前端 Token 注入 + CSS 桥接 |
+| `src/hooks/useThemeEffects.ts` | Legacy palette（仅 default 主题） |
+| `src/hooks/useThemeSfx.ts` | UI 音效播放引擎 |
+| `src/stores/themeStore.ts` | 主题选择状态 + themeVersion |
+| `src/stores/themePackStore.ts` | .nvtp 安装/管理 |
+| `src/lib/themeBase.ts` | 素材 URL 构建（dev→public/, prod→nova://） |
+| `scripts/build-cyberpunk.mjs` | cyberpunk 主题打包脚本 |
+| `D:\nova-proprietary\themes\{id}\theme.json` | 主题 Token 定义 |
+| `D:\nova-proprietary\themes\{id}\theme.css` | 主题视觉效果 CSS |
 
 ## 许可证系统
 

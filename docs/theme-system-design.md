@@ -831,6 +831,141 @@ UI sound effect set — [主题名]
 
 ---
 
+## 8. 实现踩坑记录 (Lessons Learned)
+
+> **以下每个坑都真实踩过，每个修复方案都经过验证。开发新主题时必须逐条核对。**
+
+### 8.1 CSS 注入优先级
+
+**问题**：`get_theme_css_vars` 返回 `:root { --nv-xxx: ... }` CSS 块，注入到 `<style>` 标签后，被 Tailwind v4 的 `@theme` 编译规则和后续样式表覆盖。`!important` 在 stylesheet 中也不能保证优先级。
+
+**修复**：用 `document.documentElement.style.setProperty(key, value, "important")` **行内样式**注入。行内样式优先级高于任何 stylesheet。
+
+**规则**：**主题 Token 的前端注入必须用 JavaScript 行内样式，不能依赖 CSS 样式表。**
+
+### 8.2 Tailwind v4 `@theme` 编译覆盖
+
+**问题**：`index.css` 中的 `@theme { --color-primary: var(--color-primary); }` 被 Tailwind v4 编译为 `:root, :host { --color-primary: #4788f0; }`，把 CSS 变量解析为编译时的字面值，绕过了 `var()` 间接引用。
+
+**修复**：行内样式 + `"important"` 优先级。不做 `@theme` 桥接，直接在 `<html>` 行长写入最终值。
+
+**规则**：**不要在 `@theme` 块中做 `var()` 桥接。Tailwind v4 会编译时展开变量。**
+
+### 8.3 `useThemeEffects` 覆盖 Token 引擎
+
+**问题**：`useThemeEffects` → `applySurface()` → `applyPalette()` 每次渲染时把 `--color-primary` 写成 default 蓝色行内样式，覆盖了 Token 引擎的注入。
+
+**修复**：`useThemeEffects` 中判断 `if (!isDefault) return`，跳过所有 `applySurface()` 调用。
+
+**规则**：**useThemeEffects 的 applySurface/applyPalette 只对 default 主题生效。非 default 主题的 CSS 变量由 useThemeTokens 全权接管。**
+
+### 8.4 用户色板覆盖主题色
+
+**问题**：`buildUserOverrides()` 发送 `{colors: {primary: "#4788f0"}}` 作为 userOverrides，Rust 合并时直接覆盖了主题定义的颜色。
+
+**根因**：`paletteCustomized` 默认为 `true`（老版本遗留），`paletteAccent` 默认 `#4788f0`。
+
+**修复**：
+1. `useThemeTokens` 的 `buildUserOverrides()` 不再发送 `colors` 字段 — 主题色由 `theme.json` 定义
+2. `setTheme` 切换到非 default 主题时，重置 `paletteCustomized = false`
+
+**规则**：**非 default 主题不使用用户色板。theme.json 中的 colors 是主题的权威色值。**
+
+### 8.5 `.nvtp` 文件存储路径不一致
+
+**问题**：`loader::install_theme` 写入 `{app_data_dir}/data/themes/nvtp/`（`Database.data_dir()`），`protocol::init_protocol` 读取 `{app_data_dir}/themes/nvtp/`（`app.path().app_data_dir()`）。重启后 protocol 找不到已安装的 `.nvtp`。
+
+**修复**：`lib.rs` 中 protocol 路径改为 `database.data_dir().join("themes").join("nvtp")`，与 loader 保持一致。
+
+**规则**：**protocol 和 loader 必须使用同一个 nvtp 目录。都走 `Database.data_dir()`。**
+
+### 8.6 Protocol 缓存为空
+
+**问题**：`get_theme_css_vars` 调用 `proto.read_file()` 读 theme.json，但 protocol 缓存只在安装时或 `nova://` URL 请求时加载。重启后缓存为空，`read_file` 返回 `None` → fallback 到 default token。
+
+**修复**：`get_theme_css_vars` / `get_theme_css_json` 中先调 `proto.ensure_loaded(&theme_id)` 再读文件。
+
+**规则**：**读 protocol 缓存前必须先 ensure_loaded。不要假设缓存已经存在。**
+
+### 8.7 Manifest 字段命名
+
+**问题**：Rust `ThemeManifest` 标注 `#[serde(rename_all = "camelCase")]`，要求 `requiresLicense`、`cssFile`。构建脚本（`theme-pack.mjs`/`build-cyberpunk.mjs`）写的是 `requires_license`、`css_file`，导致 parse error。
+
+**修复**：构建脚本改为 camelCase。
+
+**规则**：**Manifest JSON 与 Rust ThemeManifest 的字段命名必须一致（camelCase）。构建脚本必须输出 camelCase。**
+
+### 8.8 `.nvtp` 二进制偏移量
+
+**问题**：用 `Buffer.alloc(10 + 2 + idLen + 4 + mjLen + 8 + bodyLen)` 预分配，`1*0 + 2` ≠ `1*2`，多出来的零填充字节被写入文件，导致 Rust unpacker 校验 `zlen ≠ remaining`。
+
+**修复**：Header 和 Body 分别用 `Buffer.concat([header, body])` 拼接，精确控制字节数。
+
+**规则**：**构建 .nvtp 二进制时使用 Buffer.concat，不要 Buffer.alloc 预分配。写完后验证 zlen = 文件剩余字节。**
+
+### 8.9 `nova://` 协议在 Dev 模式不支持 `<img>` 标签
+
+**问题**：Vite 开发服务器不识别 `nova://` 协议，`<img src="nova://localhost/cyberpunk/icons/home.webp">` 加载失败（`ERR_UNKNOWN_URL_SCHEME`）。
+
+**修复**：构建时把图标、theme.css、SFX 复制到 `public/themes/{id}/`，Vite 开发服务器直接提供静态文件。`themeUrl()` 对已知主题返回 `/themes/...` 路径。
+
+**规则**：**Dev 模式下的主题素材必须复制到 public/ 目录。themeUrl 对 VITE_LICENSE_TIER 环境返回 Vite 路径。**
+
+### 8.10 导航图标容器裁剪
+
+**问题**：`Layout.tsx` 中导航图标用 `rounded-full overflow-hidden` 包裹，非圆形的 WebP 图标被裁剪成不规则的圆形。
+
+**修复**：非 default 主题改用 `rounded-lg`，不裁剪 `overflow-hidden`。
+
+**规则**：**导航图标容器不要用 rounded-full。用 rounded-lg，让图标保持原始形状。**
+
+### 8.11 WebP 图标颜色 vs CSS 发光
+
+**问题**：IconsNeon 图标转 WebP 后，SVG 的 `currentColor` 和 CSS `drop-shadow` 发光特效全部丢失。WebP 是静态位图，不支持 CSS 滤镜叠加。
+
+**修复**：渲染 WebP 时把 hex 颜色**烧进 SVG stroke 属性**，并**在 SVG 内部嵌入 feGaussianBlur 发光滤镜**，然后再 rasterize。CSS glow 作为额外的 drop-shadow 增强。
+
+**规则**：**转 WebP 前必须把 hex 色烧进 stroke，并在 SVG 内嵌 feGaussianBlur 发光滤镜。WebP 是位图，不支持 currentColor。**
+
+### 8.12 `isDefault` 条件导致非 default 主题功能缺失
+
+**问题**：多处代码硬编码了 `theme === "default"` 门控：
+- `WallpaperEngine` 只在 `isDefault` 渲染 → 非 default 主题无法显示壁纸
+- Settings 壁纸面板 `{theme === "default" && ...}` → 非 default 主题无法配置壁纸
+- MovieLibrary/ImageLibrary 设壁纸后 `setTheme("default")` → 强制切回默认主题
+
+**修复**：改为 `!(isIce || isCG)` — 只有 ice-girl 和 cyber-girl 两个老主题用自定义视频背景，其他所有主题（包括新 .nvtp 主题）都走 WallpaperEngine。
+
+**规则**：**不要用 `isDefault` 门控功能。用 `!(isIce || isCG)`，确保 .nvtp 主题能正常使用壁纸。**
+
+### 8.13 `ThemeName` 类型不能写死
+
+**问题**：`ThemeName = "default" | "ice-girl" | "cyber-girl"` 字面量联合类型，无法表示新安装的 .nvtp 主题 ID。
+
+**修复**：`ThemeName = string`。`useAvailableThemes()` 从 `themePackStore.installedThemes` 动态读取已安装主题 ID。
+
+**规则**：**ThemeName 必须是 string，不能是字面量联合类型。主题列表从 themePackStore 动态生成。**
+
+### 8.14 同一主题再次选择不触发渲染
+
+**问题**：用户点击 cyberpunk 时 `setTheme("cyberpunk")`，但 `prev === t`，state 不变，`useThemeTokens` 的 `useEffect` 不重新执行。
+
+**修复**：`themeStore` 增加 `themeVersion` 计数器，每次 `setTheme` 自增。`useThemeTokens` 监听 `themeVersion`。
+
+**规则**：**非 default 主题的 CSS 注入逻辑必须监听 themeVersion，确保同主题重复选择时也能刷新。**
+
+### 8.15 主题 CSS 文件加载方式
+
+**问题**：用 `<link rel="stylesheet">` 动态加载 theme.css，链接 URL 在 dev 和 prod 间不一致，且 `<style>` 标签更可靠。`@import` 在 fetch 注入的 `<style>` 中不会解析相对路径。
+
+**修复**：
+1. neon-icons.css 和 theme.css 分别 `fetch()` → `<style>.textContent` 注入
+2. theme.css 中的 `@import` 移除，改为两个独立 `<style>` 标签
+
+**规则**：**主题 CSS 用 fetch() + textContent 注入 <style>，不用 <link>。多个 CSS 文件各自独立注入，不用 @import。**
+
+---
+
 ## 附录 A：现有代码改造映射
 
 | 当前实现 | 位置 | 改造方向 |
