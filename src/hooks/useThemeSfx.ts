@@ -98,13 +98,6 @@ export function useThemeSfx(themeId: string) {
   }, [themeId]);
 
   useEffect(() => {
-    const handleMouseEnter = (e: MouseEvent) => {
-      if (!enabledRef.current) return;
-      const target = e.target as HTMLElement;
-      if (target.closest("button, a, [role=button], .cursor-pointer")) {
-        if (shouldPlay("hover")) playSfx(pathsRef.current.hover);
-      }
-    };
     const handleClick = (e: MouseEvent) => {
       if (!enabledRef.current) return;
       const target = e.target as HTMLElement;
@@ -113,11 +106,9 @@ export function useThemeSfx(themeId: string) {
       }
     };
 
-    document.addEventListener("mouseover", handleMouseEnter, { passive: true });
     document.addEventListener("click", handleClick);
 
     return () => {
-      document.removeEventListener("mouseover", handleMouseEnter);
       document.removeEventListener("click", handleClick);
     };
   }, [themeId]);
