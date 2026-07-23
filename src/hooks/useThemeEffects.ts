@@ -1,14 +1,19 @@
-// ── Theme CSS-variable effects ──
-// bundles theme color injection, font/icon scaling, font family, and font color
-// so Layout.tsx stays focused on layout rather than CSS plumbing.
+// Theme CSS-variable effects — legacy palette system for default theme ONLY.
+// Non-default themes use the Token Engine (useThemeTokens) which injects
+// --nv-* vars + bridges them to --color-* via inline styles on <html>.
 
 import { useEffect } from "react";
 import { useSettingsStore, computeThemeColors, fontSizeScale, iconSizeScale, applySurface, applyFontFamily, applyFontColors } from "@/stores/settingsStore";
+import { useThemeStore } from "@/stores/themeStore";
 
-/** Apply theme color + font + icon cascading effects. Call once near the top of Layout. */
 export function useThemeEffects() {
-  // ── Custom theme color injection ──
+  const theme = useThemeStore((s) => s.theme);
+  const isDefault = theme === "default";
+
+  // ── Palette (default theme only — token engine handles non-default) ──
   useEffect(() => {
+    if (!isDefault) return; // Token engine owns --color-* for non-default themes
+
     const apply = () => {
       const { useCustomColor, customColor } = useSettingsStore.getState();
       const el = document.documentElement;
@@ -28,9 +33,9 @@ export function useThemeEffects() {
     return useSettingsStore.subscribe((s, prev) => {
       if (s.useCustomColor !== prev.useCustomColor || s.customColor !== prev.customColor) apply();
     });
-  }, []);
+  }, [isDefault]);
 
-  // ── Font + icon size ──
+  // ── Font + icon size (all themes) ──
   useEffect(() => {
     const apply = () => {
       const { fontSize, iconSize } = useSettingsStore.getState();
@@ -43,7 +48,7 @@ export function useThemeEffects() {
     });
   }, []);
 
-  // ── Font family ──
+  // ── Font family (all themes) ──
   useEffect(() => {
     applyFontFamily();
     return useSettingsStore.subscribe((s, prev) => {
@@ -51,7 +56,7 @@ export function useThemeEffects() {
     });
   }, []);
 
-  // ── Font colors ──
+  // ── Font colors (all themes) ──
   useEffect(() => {
     applyFontColors();
     return useSettingsStore.subscribe((s, prev) => {

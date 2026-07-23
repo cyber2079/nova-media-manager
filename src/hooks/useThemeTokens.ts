@@ -1,15 +1,9 @@
-// Theme Token Engine — inline style on <html> (bulletproof)
+// Theme Token Engine — inline styles on <html> (bulletproof)
 //
-// Calls Rust `get_theme_css_json` which:
-//   1. Loads default/theme.json (embedded)
-//   2. Loads active theme's theme.json from .nvtp
-//   3. Merges user overrides
-//   4. Returns flat JSON: { "--nv-color-primary": "#ff005d", ... }
+// For non-default themes: calls Rust → gets flat JSON of --nv-* CSS vars,
+// writes them + legacy --color-* bridges as inline styles with !important.
 //
-// Then writes every --nv-* value as `html.style.setProperty()`.
-// Inline styles ALWAYS win over any stylesheet — no priority issues.
-//
-// Also bridges --nv-color-* → --color-* for Tailwind compatibility.
+// For default theme: does nothing (useThemeEffects handles legacy palette).
 
 import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -19,50 +13,32 @@ import { themeUrl } from "@/lib/themeBase";
 
 function buildUserOverrides(): string {
   const s = useSettingsStore.getState();
-  const overrides: Record<string, unknown> = {};
-  if (s.paletteAccent) {
-    overrides["colors"] = { primary: s.paletteAccent, primaryLight: s.paletteAccent };
-  }
+  const ov: Record<string, unknown> = {};
+  if (s.paletteAccent) ov["colors"] = { primary: s.paletteAccent, primaryLight: s.paletteAccent };
   if (s.glassMasterEnabled) {
-    overrides["glass"] = {
-      header: { opacity: s.globalGlassOpacity, blur: s.globalGlassBlur },
-      footer: { opacity: s.globalGlassOpacity, blur: s.globalGlassBlur },
-      main: { opacity: s.globalGlassOpacity, blur: s.globalGlassBlur },
-      dialog: { opacity: s.globalGlassOpacity, blur: s.globalGlassBlur },
-      card: { opacity: s.globalGlassOpacity, blur: s.globalGlassBlur },
-      widget: { opacity: s.globalGlassOpacity, blur: s.globalGlassBlur },
-      quickhub: { opacity: s.globalGlassOpacity, blur: s.globalGlassBlur },
-    };
+    ov["glass"] = { header:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, footer:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, main:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, dialog:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, card:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, widget:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, quickhub:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur} };
   } else {
-    overrides["glass"] = {
-      header: { opacity: s.barOpacity, blur: s.barBlur },
-      footer: { opacity: s.barOpacity, blur: s.barBlur },
-      main: { opacity: s.mainOpacity, blur: s.mainBlur },
-      dialog: { opacity: s.dialogOpacity, blur: s.dialogBlur },
-    };
+    ov["glass"] = { header:{opacity:s.barOpacity,blur:s.barBlur}, footer:{opacity:s.barOpacity,blur:s.barBlur}, main:{opacity:s.mainOpacity,blur:s.mainBlur}, dialog:{opacity:s.dialogOpacity,blur:s.dialogBlur} };
   }
-  overrides["global"] = { bgOverlayOpacity: s.bgOverlayOpacity };
-  return JSON.stringify(overrides);
+  ov["global"] = { bgOverlayOpacity: s.bgOverlayOpacity };
+  return JSON.stringify(ov);
 }
 
-// Map --nv-color-* to legacy --color-* for Tailwind, --font-* for text colors
-const BRIDGE_MAP: Record<string, string> = {
-  "--nv-color-primary":       "--color-primary",
-  "--nv-color-primaryLight":  "--color-primary-light",
-  "--nv-color-primaryDark":   "--color-primary-dark",
-  "--nv-color-accent":        "--color-accent",
-  "--nv-color-surface":       "--color-surface",
-  "--nv-color-surfaceLight":   "--color-surface-light",
-  "--nv-color-surfaceLighter": "--color-surface-lighter",
-  "--nv-color-text":          "--font-primary",
-  "--nv-color-textSecondary": "--font-secondary",
-};
-
-const LEGACY_CLEANUP = [
-  "--color-primary", "--color-primary-light", "--color-primary-dark",
-  "--color-accent", "--color-surface", "--color-surface-light",
-  "--color-surface-lighter", "--font-primary", "--font-secondary",
-  "--scroll-fade-opacity", "--cg-text-color", "--cg-text-bg",
+// Every --nv-color-* var → --color-* bridge needed by Tailwind & legacy code
+const BRIDGE_COLORS: [string, string][] = [
+  ["--nv-color-primary",        "--color-primary"],
+  ["--nv-color-primaryLight",   "--color-primary-light"],
+  ["--nv-color-primaryDark",    "--color-primary-dark"],
+  ["--nv-color-accent",         "--color-accent"],
+  ["--nv-color-surface",        "--color-surface"],
+  ["--nv-color-surfaceLight",    "--color-surface-light"],
+  ["--nv-color-surfaceLighter",  "--color-surface-lighter"],
+  ["--nv-color-surfaceDark",    "--color-surface-dark"],
+  ["--nv-color-text",           "--font-primary"],
+  ["--nv-color-textSecondary",  "--font-secondary"],
+  ["--nv-color-textMuted",      "--font-widget"],
+  ["--nv-color-border",         "--color-border"],
+  ["--nv-color-borderFocus",    "--color-border-focus"],
 ];
 
 export function useThemeTokens() {
@@ -76,6 +52,13 @@ export function useThemeTokens() {
   } = useSettingsStore();
 
   useEffect(() => {
+    if (theme === "default") {
+      // Clean up !important inline vars so useThemeEffects can take over
+      const root = document.documentElement;
+      for (const [, colorKey] of BRIDGE_COLORS) root.style.removeProperty(colorKey);
+      document.getElementById("nv-theme-css")?.remove();
+      return;
+    }
     let cancelled = false;
 
     async function load() {
@@ -89,16 +72,19 @@ export function useThemeTokens() {
         const tokens: Record<string, string> = JSON.parse(json);
         const root = document.documentElement;
 
-        // Clean legacy
-        for (const v of LEGACY_CLEANUP) root.style.removeProperty(v);
-
-        // Write ALL --nv-* vars as inline styles on <html>
+        // Step 1: inject ALL --nv-* vars with !important priority
         for (const [key, value] of Object.entries(tokens)) {
-          root.style.setProperty(key, value);
+          root.style.setProperty(key, value, "important");
         }
 
-        // Load theme.css if this theme has custom styles
-        if (tokens["--nv-nav-home-icon"] && theme !== "default") {
+        // Step 2: bridge --nv-color-* → --color-* with !important
+        for (const [nvKey, colorKey] of BRIDGE_COLORS) {
+          const val = tokens[nvKey];
+          if (val) root.style.setProperty(colorKey, val, "important");
+        }
+
+        // Step 3: load theme.css for visual effects (neon glow, animations)
+        if (tokens["--nv-nav-home-icon"]) {
           let linkEl = document.getElementById("nv-theme-css") as HTMLLinkElement | null;
           if (!linkEl) {
             linkEl = document.createElement("link");
@@ -106,18 +92,15 @@ export function useThemeTokens() {
             linkEl.rel = "stylesheet";
             document.head.appendChild(linkEl);
           }
-          // In dev: served from Vite public/. In prod: served from nova:// protocol.
           linkEl.href = themeUrl(theme, "theme.css");
         } else {
           document.getElementById("nv-theme-css")?.remove();
         }
 
-        // Bridge --nv-color-* → --color-* for Tailwind (inline too)
-        for (const [nvKey, colorKey] of Object.entries(BRIDGE_MAP)) {
-          const val = tokens[nvKey];
-          if (val) root.style.setProperty(colorKey, val);
-
-        }
+        // Step 4: confirm visually
+        root.style.setProperty("--theme-loaded", theme, "important");
+        console.log("%c[Nova Theme] %c" + theme + "%c loaded — primary: " + (tokens["--nv-color-primary"] || "?"),
+          "color:#0f0", "color:#ff0;font-weight:bold", "color:inherit");
       } catch (err) {
         console.error("[useThemeTokens] Failed:", err);
       }
