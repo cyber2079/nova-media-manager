@@ -1,7 +1,8 @@
-// Theme Token Engine — inline styles on <html> (bulletproof)
+// Theme Token Engine
 //
-// For non-default themes: calls Rust → gets flat JSON of --nv-* CSS vars,
-// writes them + legacy --color-* bridges as inline styles with !important.
+// For non-default themes:
+//   1. On mount: sync-apply cached tokens from localStorage (no flash)
+//   2. Async: fetch fresh from Rust → inject → update cache
 //
 // For default theme: does nothing (useThemeEffects handles legacy palette).
 
@@ -11,10 +12,12 @@ import { useThemeStore } from "@/stores/themeStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { themeUrl } from "@/lib/themeBase";
 
+const CACHE_KEY = "nv-theme-tokens-v1";
+
 function buildUserOverrides(): string {
   const s = useSettingsStore.getState();
   const ov: Record<string, unknown> = {};
-  if (s.paletteAccent) ov["colors"] = { primary: s.paletteAccent, primaryLight: s.paletteAccent };
+  if (s.paletteCustomized && s.paletteAccent) ov["colors"] = { primary: s.paletteAccent, primaryLight: s.paletteAccent };
   if (s.glassMasterEnabled) {
     ov["glass"] = { header:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, footer:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, main:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, dialog:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, card:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, widget:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, quickhub:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur} };
   } else {
@@ -24,7 +27,6 @@ function buildUserOverrides(): string {
   return JSON.stringify(ov);
 }
 
-// Every --nv-color-* var → --color-* bridge needed by Tailwind & legacy code
 const BRIDGE_COLORS: [string, string][] = [
   ["--nv-color-primary",        "--color-primary"],
   ["--nv-color-primaryLight",   "--color-primary-light"],
@@ -41,27 +43,65 @@ const BRIDGE_COLORS: [string, string][] = [
   ["--nv-color-borderFocus",    "--color-border-focus"],
 ];
 
+function readCache(themeId: string): Record<string, string> | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const cache = JSON.parse(raw);
+    if (cache.themeId === themeId && cache.tokens) return cache.tokens;
+  } catch {}
+  return null;
+}
+
+function writeCache(themeId: string, tokens: Record<string, string>) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ themeId, tokens, ts: Date.now() })); } catch {}
+}
+
+function injectTokens(tokens: Record<string, string>) {
+  const root = document.documentElement;
+  // ALL --nv-* vars with !important
+  for (const [key, value] of Object.entries(tokens)) {
+    if (key.startsWith("--nv-")) root.style.setProperty(key, value, "important");
+  }
+  // Bridge to --color-* with !important
+  for (const [nvKey, colorKey] of BRIDGE_COLORS) {
+    const val = tokens[nvKey];
+    if (val) root.style.setProperty(colorKey, val, "important");
+  }
+  // Load theme.css for visual effects
+  if (tokens["--nv-nav-home-icon"]) {
+    let linkEl = document.getElementById("nv-theme-css") as HTMLLinkElement | null;
+    if (!linkEl) { linkEl = document.createElement("link"); linkEl.id = "nv-theme-css"; linkEl.rel = "stylesheet"; document.head.appendChild(linkEl); }
+    linkEl.href = themeUrl(tokens["__themeId"] || "unknown", "theme.css");
+  }
+}
+
+function cleanupInline() {
+  const root = document.documentElement;
+  for (const [, colorKey] of BRIDGE_COLORS) root.style.removeProperty(colorKey);
+  document.getElementById("nv-theme-css")?.remove();
+}
+
 export function useThemeTokens() {
   const theme = useThemeStore((s) => s.theme);
   const themeVersion = useThemeStore((s) => s.themeVersion);
   const {
-    paletteAccent, paletteSaturation,
+    paletteAccent, paletteSaturation, paletteCustomized,
     glassMasterEnabled, globalGlassOpacity, globalGlassBlur,
     barOpacity, barBlur, mainOpacity, mainBlur,
     dialogOpacity, dialogBlur, bgOverlayOpacity,
   } = useSettingsStore();
 
   useEffect(() => {
-    if (theme === "default") {
-      // Clean up !important inline vars so useThemeEffects can take over
-      const root = document.documentElement;
-      for (const [, colorKey] of BRIDGE_COLORS) root.style.removeProperty(colorKey);
-      document.getElementById("nv-theme-css")?.remove();
-      return;
-    }
+    if (theme === "default") { cleanupInline(); return; }
     let cancelled = false;
 
-    async function load() {
+    // Sync apply from cache (no flash on startup)
+    const cached = readCache(theme);
+    if (cached) injectTokens(cached);
+
+    // Async fetch fresh tokens from Rust, then update
+    (async () => {
       try {
         const json = await invoke<string>("get_theme_css_json", {
           themeId: theme,
@@ -70,47 +110,22 @@ export function useThemeTokens() {
         if (cancelled || !json) return;
 
         const tokens: Record<string, string> = JSON.parse(json);
-        const root = document.documentElement;
+        tokens["__themeId"] = theme;
+        injectTokens(tokens);
+        writeCache(theme, tokens);
 
-        // Step 1: inject ALL --nv-* vars with !important priority
-        for (const [key, value] of Object.entries(tokens)) {
-          root.style.setProperty(key, value, "important");
-        }
-
-        // Step 2: bridge --nv-color-* → --color-* with !important
-        for (const [nvKey, colorKey] of BRIDGE_COLORS) {
-          const val = tokens[nvKey];
-          if (val) root.style.setProperty(colorKey, val, "important");
-        }
-
-        // Step 3: load theme.css for visual effects (neon glow, animations)
-        if (tokens["--nv-nav-home-icon"]) {
-          let linkEl = document.getElementById("nv-theme-css") as HTMLLinkElement | null;
-          if (!linkEl) {
-            linkEl = document.createElement("link");
-            linkEl.id = "nv-theme-css";
-            linkEl.rel = "stylesheet";
-            document.head.appendChild(linkEl);
-          }
-          linkEl.href = themeUrl(theme, "theme.css");
-        } else {
-          document.getElementById("nv-theme-css")?.remove();
-        }
-
-        // Step 4: confirm visually
-        root.style.setProperty("--theme-loaded", theme, "important");
-        console.log("%c[Nova Theme] %c" + theme + "%c loaded — primary: " + (tokens["--nv-color-primary"] || "?"),
-          "color:#0f0", "color:#ff0;font-weight:bold", "color:inherit");
+        // Diagnostic
+        console.log("[Nova Theme] %c" + (tokens["__primary"] || "?"),
+          "color:#0f0;font-weight:bold");
       } catch (err) {
         console.error("[useThemeTokens] Failed:", err);
       }
-    }
+    })();
 
-    load();
     return () => { cancelled = true; };
   }, [
     theme, themeVersion,
-    paletteAccent, paletteSaturation,
+    paletteAccent, paletteSaturation, paletteCustomized,
     glassMasterEnabled, globalGlassOpacity, globalGlassBlur,
     barOpacity, barBlur, mainOpacity, mainBlur,
     dialogOpacity, dialogBlur, bgOverlayOpacity,

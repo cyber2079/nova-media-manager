@@ -123,17 +123,37 @@ pub fn get_theme_css_json(
     user_overrides: Option<String>,
 ) -> Result<String, String> {
     let base = tokens::load_default();
+    let mut diag = Vec::new();
     let merged = if theme_id == "default" {
         base
     } else {
-        let proto = protocol::global().lock().map_err(|e| e.to_string())?;
+        diag.push(format!("theme_id={}", theme_id));
+        let proto = match protocol::global().lock() {
+            Ok(p) => p,
+            Err(e) => { diag.push(format!("LOCK_ERR:{}", e)); return Err(e.to_string()); }
+        };
+        diag.push("locked".into());
         match proto.ensure_loaded(&theme_id) {
-            Ok(()) => {},
-            Err(e) => { log::warn!("[theme] ensure_loaded failed for '{theme_id}': {e}"); return Err(e); }
+            Ok(()) => diag.push("loaded".into()),
+            Err(e) => { diag.push(format!("LOAD_ERR:{}", e)); return Err(e); }
         }
         match proto.read_file(&theme_id, "theme.json") {
-            Some(b) => tokens::merge_tokens(&base, &String::from_utf8_lossy(&b)).unwrap_or(base),
-            None => base,
+            Some(b) => {
+                let s = String::from_utf8_lossy(&b);
+                diag.push(format!("json_bytes={}", s.len()));
+                match tokens::merge_tokens(&base, &s) {
+                    Ok(m) => {
+                        let p = m["colors"]["primary"].as_str().unwrap_or("?");
+                        diag.push(format!("primary={}", p));
+                        m
+                    }
+                    Err(e) => {
+                        diag.push(format!("MERGE_ERR:{}", e));
+                        base
+                    }
+                }
+            }
+            None => { diag.push("NO_FILE".into()); base }
         }
     };
     let final_tokens = match user_overrides {
@@ -141,7 +161,10 @@ pub fn get_theme_css_json(
         _ => merged,
     };
     let css = tokens::to_css_vars(&final_tokens);
-    // Parse the :root {} CSS into a flat JSON object
-    let flat = tokens::parse_css_vars_to_json(&css);
+    let mut flat = tokens::parse_css_vars_to_json(&css);
+    flat.insert("__diag".into(), serde_json::Value::String(diag.join(" | ")));
+    flat.insert("__primary".into(), serde_json::Value::String(
+        flat.get("--nv-color-primary").map(|v| v.as_str().unwrap_or("?").to_string()).unwrap_or_else(|| "missing".into())
+    ));
     serde_json::to_string(&flat).map_err(|e| e.to_string())
 }
