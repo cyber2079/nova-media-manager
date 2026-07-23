@@ -71,7 +71,10 @@ export const useThemePackStore = create<ThemePackState>((set, get) => ({
     set({ loading: true });
     try {
       const theme = await invoke<InstalledTheme>("install_theme_file", { filePath });
-      set((s) => ({ installedThemes: [...s.installedThemes, theme], loading: false }));
+      set((s) => ({
+        installedThemes: [...s.installedThemes.filter((t) => t.id !== theme.id), theme],
+        loading: false,
+      }));
       return theme;
     } catch (err) {
       set({ loading: false });

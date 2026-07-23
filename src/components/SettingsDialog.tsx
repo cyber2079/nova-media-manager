@@ -59,16 +59,22 @@ export default function SettingsDialog({ open, onClose }: Props) {
   const availableThemes = useAvailableThemes();
   const installedThemes = useThemePackStore((s) => s.installedThemes);
 
-  // Build theme list dynamically: default + installed .nvtp themes
+  // Build theme list dynamically: default + deduplicated installed .nvtp themes
+  const seen = new Set<string>(["default"]);
   const themeList: ThemeListItem[] = [
     { key: "default", labelKey: "settings.theme_default", label: t("settings.theme_default"), emoji: "🏠" },
-    ...installedThemes.filter(t => t.enabled).map(t => ({
-      key: t.id,
-      labelKey: "",
-      label: t.name,
-      emoji: "🧩",
-      image: t.preview ? `nova://localhost/${t.id}/${t.preview}` : undefined,
-    })),
+    ...installedThemes.filter(t => t.enabled).reduce<ThemeListItem[]>((acc, t) => {
+      if (seen.has(t.id)) return acc;
+      seen.add(t.id);
+      acc.push({
+        key: t.id,
+        labelKey: "",
+        label: t.name,
+        emoji: "🧩",
+        image: undefined, // preview via nova:// only works in production; skip in dev
+      });
+      return acc;
+    }, []),
   ];
   const filteredThemeList = themeList.filter(t => availableThemes.includes(t.key));
   const {
