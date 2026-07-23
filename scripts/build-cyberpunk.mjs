@@ -52,11 +52,17 @@ files.push({ path: "theme.json", abs: themeJsonPath, size: statSync(themeJsonPat
 const themeCssPath = join(PROJ, "theme.css");
 if (existsSync(themeCssPath)) {
   files.push({ path: "theme.css", abs: themeCssPath, size: statSync(themeCssPath).size });
-  // Also copy to public/ for Vite dev server
   const publicThemeDir = join(process.cwd(), "public", "themes", "cyberpunk");
   mkdirSync(publicThemeDir, { recursive: true });
   cpSync(themeCssPath, join(publicThemeDir, "theme.css"));
   console.log("🎨 样式特效: theme.css");
+}
+// Also bundle neon-icons.css for 185 IconsNeon icons
+const neonCssPath = join(PROJ, "neon-icons.css");
+if (existsSync(neonCssPath)) {
+  files.push({ path: "neon-icons.css", abs: neonCssPath, size: statSync(neonCssPath).size });
+  cpSync(neonCssPath, join(process.cwd(), "public", "themes", "cyberpunk", "neon-icons.css"));
+  console.log("💎 IconsNeon: 185个霓虹图标");
 }
 
 // 2. Nav icons — also copy to public/ for Vite dev server

@@ -672,7 +672,7 @@ export default function Layout() {
 
       {/* ── QuickHub popover — above footer toolbar, centered horizontally ── */}
       {showQuickHub && stripOpen && (
-        <div className="fixed inset-0 z-[45]" onClick={() => setStripOpen(false)}>
+        <div className="fixed inset-0 z-[55]" onClick={() => setStripOpen(false)}>
           <div
             className="absolute left-1/2 bottom-14 w-full rounded-2xl"
             style={{
