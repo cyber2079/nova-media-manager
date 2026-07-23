@@ -43,6 +43,25 @@ if (!existsSync(manifestPath)) { console.error(`❌ ${manifestPath} 不存在`);
 const m = JSON.parse(readFileSync(manifestPath, "utf-8"));
 console.log(`\n📦 ${m.name} v${m.version}`);
 
+// ── 校验/生成 theme.json ──
+const themeJsonPath = join(PROJ, themeId, "theme.json");
+let themeTokens = null;
+if (existsSync(themeJsonPath)) {
+  themeTokens = JSON.parse(readFileSync(themeJsonPath, "utf-8"));
+  console.log(`🎨 theme.json 已就绪 (${Object.keys(themeTokens).length} 个分类)`);
+} else {
+  // 自动生成最小 theme.json — 只覆盖颜色 + 字体
+  themeTokens = {
+    global: { fontFamily: m.config?.fontDisplay ? `"${m.config.fontDisplay}", system-ui, sans-serif` : undefined },
+    colors: m.config?.accent ? { primary: m.config.accent } : {},
+  };
+  // 清理 undefined 值
+  const clean = (obj) => { for (const k of Object.keys(obj)) { if (obj[k] === undefined || (typeof obj[k] === 'object' && Object.keys(obj[k]).length === 0)) delete obj[k]; else if (typeof obj[k] === 'object') clean(obj[k]); } };
+  clean(themeTokens);
+  writeFileSync(themeJsonPath, JSON.stringify(themeTokens, null, 2) + "\n", "utf-8");
+  console.log(`⚠️ 自动生成 theme.json (请手动完善!)`);
+}
+
 // ── 收集文件 ──
 function collect(dir, files, prefix = "") {
   if (!existsSync(dir)) return;
@@ -54,6 +73,11 @@ function collect(dir, files, prefix = "") {
 const files = [];
 collect(join(PROJ, themeId), files);
 collect(assetsDir, files);
+
+// 确保 theme.json 在文件列表中 (可能刚生成)
+if (!files.find(f => f.path === "theme.json")) {
+  files.push({ path: "theme.json", abs: themeJsonPath, size: statSync(themeJsonPath).size });
+}
 console.log(`📁 ${files.length} 个文件`);
 
 // ── 构建 .nvtp ──
@@ -82,8 +106,8 @@ const body = Buffer.concat([hash, enc]);
 const mid = Buffer.from(themeId, "utf-8");
 const mj = Buffer.from(JSON.stringify({
   name: m.name, author: m.author || "Nova", version: m.version || "1.0.0",
-  requires_license: m.requiresLicense || "pro", preview: m.preview || "preview.webp",
-  css_file: m.cssFile || "theme.css", files: files.map(f => ({ path: f.path, size: f.size })),
+  requiresLicense: m.requiresLicense || "pro", preview: m.preview || "preview.webp",
+  cssFile: m.cssFile || "theme.css", files: files.map(f => ({ path: f.path, size: f.size })),
   config: m.config || {},
 }), "utf-8");
 

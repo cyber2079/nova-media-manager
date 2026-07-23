@@ -7,8 +7,10 @@
 //   4. Flattens to :root { --nv-... } CSS block
 //
 // The returned CSS is injected into <style id="nv-theme-vars">.
+// Additionally, we bridge --nv-* → --color-* for Tailwind compatibility
+// and clear any inline style overrides left by the legacy applyPalette().
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useThemeStore } from "@/stores/themeStore";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -18,15 +20,13 @@ function buildUserOverrides(): string {
   const s = useSettingsStore.getState();
   const overrides: Record<string, unknown> = {};
 
-  // Palette accent → colors.primary / primaryLight / primaryDark
   if (s.paletteAccent) {
     overrides["colors"] = {
       primary: s.paletteAccent,
-      primaryLight: s.paletteAccent, // lightness will be adjusted client-side if needed
+      primaryLight: s.paletteAccent,
     };
   }
 
-  // Glass overrides
   if (s.glassMasterEnabled) {
     overrides["glass"] = {
       header: { opacity: s.globalGlassOpacity, blur: s.globalGlassBlur },
@@ -46,15 +46,11 @@ function buildUserOverrides(): string {
     };
   }
 
-  // Global overrides
-  overrides["global"] = {
-    bgOverlayOpacity: s.bgOverlayOpacity,
-  };
+  overrides["global"] = { bgOverlayOpacity: s.bgOverlayOpacity };
 
   return JSON.stringify(overrides);
 }
 
-/** Ensure the <style id="nv-theme-vars"> element exists in <head>. */
 function ensureStyleElement(): HTMLStyleElement {
   const existing = document.getElementById("nv-theme-vars") as HTMLStyleElement | null;
   if (existing) return existing;
@@ -63,6 +59,17 @@ function ensureStyleElement(): HTMLStyleElement {
   document.head.appendChild(el);
   return el;
 }
+
+// CSS variables that the legacy applyPalette() may have set as inline styles.
+// We remove these so the token engine's stylesheet values take effect.
+const LEGACY_INLINE_VARS = [
+  "--color-primary", "--color-primary-light", "--color-primary-dark",
+  "--color-accent",
+  "--color-surface", "--color-surface-light", "--color-surface-lighter",
+  "--font-primary", "--font-secondary",
+  "--scroll-fade-opacity",
+  "--cg-text-color", "--cg-text-bg",
+];
 
 /**
  * Load theme tokens from Rust and inject as CSS custom properties.
@@ -77,15 +84,7 @@ export function useThemeTokens() {
     dialogOpacity, dialogBlur, bgOverlayOpacity,
   } = useSettingsStore();
 
-  const mountedRef = useRef(false);
-
   useEffect(() => {
-    // Skip first render — themeStore.init() hasn't run yet
-    if (!mountedRef.current) {
-      mountedRef.current = true;
-      return;
-    }
-
     let cancelled = false;
 
     async function load() {
@@ -97,7 +96,25 @@ export function useThemeTokens() {
         });
         if (!cancelled) {
           const el = ensureStyleElement();
-          el.textContent = css;
+
+          // Inject token vars + bridge to --color-* for Tailwind
+          el.textContent = css + `
+:root {
+  --color-primary:       var(--nv-color-primary, #4788f0);
+  --color-primary-light: var(--nv-color-primaryLight, #7aafff);
+  --color-primary-dark:  var(--nv-color-primaryDark, #3366cc);
+  --color-accent:        var(--nv-color-accent, #6366f1);
+  --color-surface:       var(--nv-color-surface, color-mix(in srgb, var(--color-primary) 4%, #080c14));
+  --color-surface-light:  var(--nv-color-surfaceLight, color-mix(in srgb, var(--color-primary) 6%, #101520));
+  --color-surface-lighter:var(--nv-color-surfaceLighter, color-mix(in srgb, var(--color-primary) 8%, #1a1f2a));
+}
+`;
+
+          // Clean up legacy inline styles that would override the token engine
+          const root = document.documentElement;
+          for (const v of LEGACY_INLINE_VARS) {
+            root.style.removeProperty(v);
+          }
         }
       } catch (err) {
         console.error("[useThemeTokens] Failed to load theme CSS:", err);

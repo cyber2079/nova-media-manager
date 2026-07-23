@@ -528,7 +528,7 @@
     "confirm": "确认",
     "confirm_reset": "确认重置",
     "widgets_global": "全局显示",
-    "widgets_global_desc": "在所有页面显示小组件",
+    "widgets_global_desc": "显示小组件",
     "widgets_per_page": "按页面显示",
     "widget_text_color": "小组件文字颜色",
     "widgets_config": "小组件配置",

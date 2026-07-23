@@ -5,9 +5,6 @@ export type WidgetPosition = "top-left" | "top-right" | "center-left" | "center-
 
 export type MyComputerMode = "default" | "custom";
 
-export const pageKeys = ["home", "movies", "images", "music", "games"] as const;
-export type PageKey = typeof pageKeys[number];
-
 export interface WidgetConfig {
   id: string;
   enabled: boolean;
@@ -38,8 +35,6 @@ interface WidgetState {
   clock: WidgetConfig;
   calendar: WidgetConfig;
   countdown: CountdownConfig;
-  globalWidgets: boolean;
-  widgetPages: Record<PageKey | string, boolean>;
 
   init: () => Promise<void>;
   setEnabled: (id: string, on: boolean) => void;
@@ -48,9 +43,6 @@ interface WidgetState {
   setLabel: (id: string, label: string) => void;
   setAppPath: (id: string, path: string) => void;
   setMyComputerMode: (mode: MyComputerMode) => void;
-  setGlobalWidgets: (on: boolean) => void;
-  setPageWidget: (page: PageKey, on: boolean) => void;
-  isWidgetVisible: (page: PageKey) => boolean;
   setCountdown: (cfg: Partial<CountdownConfig>) => void;
 }
 
@@ -60,17 +52,11 @@ function loadLocal(): Record<string, any> {
   try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; }
 }
 
-function defaultPages(): Record<PageKey, boolean> {
-  return { home: true, movies: false, images: false, music: false, games: false };
-}
-
 async function persist(state: WidgetState) {
   const payload = JSON.stringify({
     myComputer: state.myComputer, systemMonitor: state.systemMonitor,
     clock: state.clock, calendar: state.calendar,
     countdown: state.countdown,
-    globalWidgets: state.globalWidgets,
-    widgetPages: state.widgetPages,
   });
   localStorage.setItem(KEY, payload);
   await kv.set(KEY, payload).catch(() => {});
@@ -101,9 +87,6 @@ export const useWidgetStore = create<WidgetState>((set, get) => {
       voiceInterval: saved.countdown?.voiceInterval ?? 30,
     },
 
-    globalWidgets: saved.globalWidgets !== false,
-    widgetPages: { ...defaultPages(), ...(saved.widgetPages || {}) },
-
     init: async () => {
       const raw = await kv.get(KEY);
       if (raw) {
@@ -115,8 +98,6 @@ export const useWidgetStore = create<WidgetState>((set, get) => {
             clock: def("clock", { ...prev.clock, ...(s.clock || {}) }),
             calendar: def("calendar", { ...prev.calendar, ...(s.calendar || {}) }),
             countdown: { ...prev.countdown, ...(s.countdown || {}) },
-            globalWidgets: s.globalWidgets ?? prev.globalWidgets,
-            widgetPages: { ...prev.widgetPages, ...(s.widgetPages || {}) },
           }));
         } catch {}
       }
@@ -168,30 +149,6 @@ export const useWidgetStore = create<WidgetState>((set, get) => {
 
     setMyComputerMode(mode: MyComputerMode) {
       set((s) => { const n = { ...s.myComputer, myComputerMode: mode }; const st = { ...s, myComputer: n }; persist(st); return st; });
-    },
-
-    setGlobalWidgets(on) {
-      set((s) => {
-        const st = { ...s, globalWidgets: on };
-        if (on) st.widgetPages = { ...st.widgetPages, home: true, movies: true, images: true, music: true, games: true };
-        persist(st);
-        return st;
-      });
-    },
-
-    setPageWidget(page, on) {
-      set((s) => {
-        const next = { ...s.widgetPages, [page]: on };
-        const st = { ...s, widgetPages: next };
-        persist(st);
-        return st;
-      });
-    },
-
-    isWidgetVisible(page) {
-      const s = get();
-      if (s.globalWidgets) return true;
-      return !!s.widgetPages[page];
     },
 
     setCountdown(cfg) {

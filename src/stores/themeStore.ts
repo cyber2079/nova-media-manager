@@ -62,11 +62,14 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 
   setTheme: (t) => {
     const prev = get().theme;
-    set({ theme: t }); persist(t); applySurface();
+    set({ theme: t }); persist(t);
+    if (t === "default") {
+      applySurface(); // legacy palette for default theme
+      const { paletteCustomized, resetPaletteToTheme } = useSettingsStore.getState();
+      if (!paletteCustomized) { resetPaletteToTheme("default"); persist(t); }
+    }
     if (prev !== t) {
       analytics.track("theme_switch", { from: prev, to: t });
-      const { paletteCustomized, resetPaletteToTheme } = useSettingsStore.getState();
-      if (!paletteCustomized) { resetPaletteToTheme(t); persist(t); }
     }
   },
 

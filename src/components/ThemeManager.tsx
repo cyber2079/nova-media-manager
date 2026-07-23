@@ -46,14 +46,16 @@ export default function ThemeManager() {
         setStatus("ok");
         setStatusMsg(t("themeManager.install_success"));
         setFilePath("");
-      } catch (e) {
+      } catch (e: any) {
         setStatus("error");
-        setStatusMsg(String(e));
+        setStatusMsg(String(e?.message || e));
+        setFilePath("");
       }
-      setInstalling(false);
-    } catch (e) {
+    } catch (e: any) {
       setStatus("error");
-      setStatusMsg(String(e));
+      setStatusMsg(String(e?.message || e));
+      setFilePath("");
+    } finally {
       setInstalling(false);
     }
   };

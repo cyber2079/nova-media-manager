@@ -485,7 +485,7 @@
     "confirm": "Confirm",
     "confirm_reset": "Confirm Reset",
     "widgets_global": "Global Widgets",
-    "widgets_global_desc": "Show widgets on all pages",
+    "widgets_global_desc": "Show Widgets",
     "widgets_per_page": "Per-Page Widgets",
     "widget_text_color": "Widget Text Color",
     "widgets_config": "Widget Configuration",

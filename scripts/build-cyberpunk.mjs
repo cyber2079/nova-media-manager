@@ -146,28 +146,31 @@ const enc = Buffer.alloc(zipBuf.length);
 for (let i = 0; i < zipBuf.length; i++) enc[i] = zipBuf[i] ^ keystream[i];
 const body = Buffer.concat([hash, enc]);
 
-// 3. .nvtp binary layout
+// 3. .nvtp binary layout — build header + body separately, then concat
 const mid = Buffer.from(themeId, "utf-8");
 const mj = Buffer.from(JSON.stringify({
   name: manifest.name, author: manifest.author || "Nova", version: manifest.version,
-  requires_license: manifest.requiresLicense || "member",
+  requiresLicense: manifest.requiresLicense || "member",
   preview: "preview.webp",
-  css_file: "theme.css",
+  cssFile: "theme.css",
   files: files.map(f => ({ path: f.path, size: f.size })),
   config: { accent: themeTokens.colors?.primary },
 }), "utf-8");
 
-const buf = Buffer.alloc(10 + 2 + mid.length + 4 + mj.length + 8 + body.length);
-let off = 0;
-buf.write("NVTP", off, 4); off += 4;
-buf.writeUInt16LE(1, off); off += 2;
-buf.writeUInt16LE(0, off); off += 2;
-buf.writeUInt16LE(mid.length, off); off += 2;
-mid.copy(buf, off); off += mid.length;
-buf.writeUInt32LE(mj.length, off); off += 4;
-mj.copy(buf, off); off += mj.length;
-buf.writeBigUInt64LE(BigInt(body.length), off); off += 8;
-body.copy(buf, off);
+// Header: Magic(4) + Ver(2) + Flags(2) + ID_len(2) + ID + M_len(4) + Manifest + Z_len(8)
+const headerLen = 4 + 2 + 2 + 2 + mid.length + 4 + mj.length + 8;
+const header = Buffer.alloc(headerLen);
+let hp = 0;
+header.write("NVTP", hp, 4); hp += 4;
+header.writeUInt16LE(1, hp); hp += 2;
+header.writeUInt16LE(0, hp); hp += 2;
+header.writeUInt16LE(mid.length, hp); hp += 2;
+mid.copy(header, hp); hp += mid.length;
+header.writeUInt32LE(mj.length, hp); hp += 4;
+mj.copy(header, hp); hp += mj.length;
+header.writeBigUInt64LE(BigInt(body.length), hp); // hp = headerLen - 8 = where zlen is
+
+const buf = Buffer.concat([header, body]);
 
 // 4. 输出
 mkdirSync(OUT, { recursive: true });
