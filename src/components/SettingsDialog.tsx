@@ -514,8 +514,8 @@ function AppearanceTab(props: any) {
         </SettingCard>
       </SectionGroup>
 
-      {/* ═══ Wallpaper ═══ */}
-      {theme === "default" && <SectionGroup title={t("settings.wallpaper_title")}><WallpaperSection t={t} /></SectionGroup>}
+      {/* ═══ Wallpaper — all themes except ice-girl/cyber-girl (those have their own bg) ═══ */}
+      {theme !== "ice-girl" && theme !== "cyber-girl" && <SectionGroup title={t("settings.wallpaper_title")}><WallpaperSection t={t} /></SectionGroup>}
 
       {/* ═══ Theme packs ═══ */}
       <SectionGroup title={t("settings.theme_plugins")}><ThemeManager /></SectionGroup>

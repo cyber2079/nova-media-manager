@@ -503,8 +503,8 @@ export default function Layout() {
 
   return (
     <div className={cn("min-h-screen", isDefault && !isHomeStrip && "bg-surface")} id="app" ref={appRef}>
-      {/* ── Default theme wallpaper engine ── */}
-      {isDefault && <WallpaperEngine videoRef={wallpaperVideoRef} />}
+      {/* ── Wallpaper engine — all themes except ice-girl/cyber-girl (those use video bg) ── */}
+      {!(isIce || isCG) && <WallpaperEngine videoRef={wallpaperVideoRef} />}
 
       {/* ── Ice Girl background ── */}
       {isIce && <>
@@ -654,7 +654,7 @@ export default function Layout() {
           </button>
 
           {/* Capture current frame from background video */}
-          {(isIce || isDefault) && (
+          {!(isIce || isCG) && (
             <button onClick={captureScreenshot}
               className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
               title={t("settings.bg_video_capture")}>
