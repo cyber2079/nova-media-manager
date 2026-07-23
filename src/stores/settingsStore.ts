@@ -88,10 +88,9 @@ export const ACCENT_OPTIONS = [
   { value: "#f5f5f5", label: "纯白", i18nKey: "colors.white" },
 ];
 
-export const THEME_PALETTE_DEFAULTS: Record<ThemeName, PaletteConfig> = {
-  default:     { accent: "#4788f0", saturation: 50 },
-  "ice-girl":   { accent: "#87ceeb", saturation: 40 },
-  "cyber-girl": { accent: "#8b5cf6", saturation: 80 }};
+export const THEME_PALETTE_DEFAULTS: Record<string, PaletteConfig> = {
+  default: { accent: "#4788f0", saturation: 50 },
+};
 
 export type SettingsState = {
   language: string;

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { ThemeName } from "./themeStore";
+// ThemeName is now `string` — no type import needed
 import { kv } from "@/lib/sqliteStore";
 
 const SQLITE_KEY = "app-theme-shortcuts";
@@ -37,30 +37,14 @@ export interface ThemeCharacter {
 
 import { themeUrl } from "@/lib/themeBase";
 
-const DEFAULT_CHARACTERS: Record<ThemeName, DefaultChar[]> = {
+const DEFAULT_CHARACTERS: Record<string, DefaultChar[]> = {
   default: [],
-  "ice-girl": [
-    { id: "ice_icestorm",     name: "home.ice_icestorm_name",     fileName: "skill-01.webp", subtitle: "home.ice_icestorm_subtitle",     color: "#87ceeb" },
-    { id: "ice_arcticarmour", name: "home.ice_arcticarmour_name", fileName: "skill-02.webp", subtitle: "home.ice_arcticarmour_subtitle", color: "#b0e0e6" },
-    { id: "ice_frostwall",    name: "home.ice_frostwall_name",    fileName: "skill-03.webp", subtitle: "home.ice_frostwall_subtitle",    color: "#00bfff" },
-    { id: "ice_icenova",      name: "home.ice_icenova_name",      fileName: "skill-04.webp", subtitle: "home.ice_icenova_subtitle",      color: "#4488ff" },
-    { id: "ice_comet",        name: "home.ice_comet_name",        fileName: "skill-05.webp", subtitle: "home.ice_comet_subtitle",        color: "#6a5acd" },
-    { id: "ice_eyeofwinter",  name: "home.ice_eyeofwinter_name",  fileName: "skill-06.webp", subtitle: "home.ice_eyeofwinter_subtitle",  color: "#4169e1" },
-  ],
-  "cyber-girl": [
-    { id: "cg_skill1", name: "home.cg_skill1_name", fileName: "skill-01.webp", subtitle: "home.cg_skill1_subtitle", color: "#ff69b4" },
-    { id: "cg_skill2", name: "home.cg_skill2_name", fileName: "skill-02.webp", subtitle: "home.cg_skill2_subtitle", color: "#da70d6" },
-    { id: "cg_skill3", name: "home.cg_skill3_name", fileName: "skill-03.webp", subtitle: "home.cg_skill3_subtitle", color: "#ff1493" },
-    { id: "cg_skill4", name: "home.cg_skill4_name", fileName: "skill-04.webp", subtitle: "home.cg_skill4_subtitle", color: "#00bfff" },
-    { id: "cg_skill5", name: "home.cg_skill5_name", fileName: "skill-05.webp", subtitle: "home.cg_skill5_subtitle", color: "#9400d3" },
-    { id: "cg_skill6", name: "home.cg_skill6_name", fileName: "skill-06.webp", subtitle: "home.cg_skill6_subtitle", color: "#ff6347" },
-  ],
 };
 
 // ── Helpers ──
 
 function resolveIconPath(
-  theme: ThemeName,
+  theme: string,
   fileName: string,
   customIconPath: string | undefined
 ): string {
@@ -75,7 +59,7 @@ interface ThemeShortcutState {
   overrides: Record<string, CharOverride>;
 
   init: () => Promise<void>;
-  getCharacters: (theme: ThemeName) => ThemeCharacter[];
+  getCharacters: (theme: string) => ThemeCharacter[];
   saveOverride: (id: string, override: CharOverride) => void;
   resetCharacter: (id: string) => void;
   hasOverrides: (id: string) => boolean;
@@ -103,7 +87,7 @@ export const useThemeShortcutStore = create<ThemeShortcutState>()(
         } catch {}
       },
 
-      getCharacters(theme: ThemeName): ThemeCharacter[] {
+      getCharacters(theme: string): ThemeCharacter[] {
         const defaults = DEFAULT_CHARACTERS[theme] || [];
         const { overrides } = get();
 

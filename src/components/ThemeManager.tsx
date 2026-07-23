@@ -18,6 +18,7 @@ export default function ThemeManager() {
   const [filePath, setFilePath] = useState("");
   const [status, setStatus] = useState<"" | "loading" | "ok" | "error">("");
   const [statusMsg, setStatusMsg] = useState("");
+  const [installing, setInstalling] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -25,6 +26,37 @@ export default function ThemeManager() {
       if (isPaid(license.tier)) fetchAvailable();
     }
   }, [open]);
+
+  const pickAndInstall = async () => {
+    try {
+      const { open: openDialog } = await import("@tauri-apps/plugin-dialog");
+      const selected = await openDialog({
+        multiple: false,
+        title: "选择主题文件",
+        filters: [{ name: "Nova Theme Pack", extensions: ["nvtp"] }],
+      });
+      if (!selected) return;
+      const path = selected as string;
+      setFilePath(path);
+      setInstalling(true);
+      setStatus("loading");
+      setStatusMsg(t("themeManager.installing"));
+      try {
+        await installFromFile(path);
+        setStatus("ok");
+        setStatusMsg(t("themeManager.install_success"));
+        setFilePath("");
+      } catch (e) {
+        setStatus("error");
+        setStatusMsg(String(e));
+      }
+      setInstalling(false);
+    } catch (e) {
+      setStatus("error");
+      setStatusMsg(String(e));
+      setInstalling(false);
+    }
+  };
 
   const handleInstallFromServer = async (info: ThemePackInfo) => {
     const ok = isPaid(license.tier);
@@ -76,21 +108,16 @@ export default function ThemeManager() {
           <h4 className="text-sm font-semibold text-white mb-3">
             {t("themeManager.install_local")}
           </h4>
-          <div className="flex gap-2">
-            <input type="text" value={filePath} onChange={(e) => setFilePath(e.target.value)}
-              placeholder="D:\\themes\\my-theme.nvtp"
-              className="flex-1 px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white text-xs focus:outline-none focus:border-primary/50" />
-            <button onClick={async () => {
-              if (!filePath) return;
-              setStatus("loading");
-              setStatusMsg(t("themeManager.installing"));
-              try { await installFromFile(filePath); setStatus("ok"); setStatusMsg(t("themeManager.install_success")); setFilePath(""); }
-              catch (e) { setStatus("error"); setStatusMsg(String(e)); }
-            }} disabled={loading} className="px-4 py-2 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 disabled:opacity-50 whitespace-nowrap">
-              <FolderOpen className="h-3.5 w-3.5 inline mr-1" />
-              {t("themeManager.install")}
-            </button>
-          </div>
+          <button onClick={pickAndInstall}
+            disabled={installing}
+            className="w-full px-4 py-3 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
+            {installing ? (
+              <><Loader2 className="h-4 w-4 animate-spin" />{t("themeManager.installing")}</>
+            ) : (
+              <><FolderOpen className="h-4 w-4" />{t("themeManager.install")}</>
+            )}
+          </button>
+          {filePath && <p className="text-[11px] text-gray-500 mt-2 truncate font-mono">{filePath}</p>}
         </div>
 
         {/* ── Installed themes ── */}

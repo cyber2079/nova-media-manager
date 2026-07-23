@@ -14,12 +14,17 @@ import { Palette, Monitor, SlidersHorizontal, Music, RotateCcw, Gauge, Sparkles,
 import { useLicenseStore } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS } from "@/stores/settingsStore";
 import { useWidgetStore } from "@/stores/widgetStore";
+import { useThemePackStore } from "@/stores/themePackStore";
 
 interface Props { open: boolean; onClose: () => void; }
 
-const themeList: { key: ThemeName; labelKey: string; emoji: string; image?: string }[] = [
-  { key: "default", labelKey: "settings.theme_default", emoji: "🏠" },
-];
+interface ThemeListItem {
+  key: string;
+  labelKey: string;
+  label: string;
+  emoji: string;
+  image?: string;
+}
 
 // ═══════════════ TABS ═══════════════
 type TabId = "general" | "appearance" | "media" | "widgets" | "performance";
@@ -52,6 +57,19 @@ export default function SettingsDialog({ open, onClose }: Props) {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useThemeStore();
   const availableThemes = useAvailableThemes();
+  const installedThemes = useThemePackStore((s) => s.installedThemes);
+
+  // Build theme list dynamically: default + installed .nvtp themes
+  const themeList: ThemeListItem[] = [
+    { key: "default", labelKey: "settings.theme_default", label: t("settings.theme_default"), emoji: "🏠" },
+    ...installedThemes.filter(t => t.enabled).map(t => ({
+      key: t.id,
+      labelKey: "",
+      label: t.name,
+      emoji: "🧩",
+      image: t.preview ? `nova://localhost/${t.id}/${t.preview}` : undefined,
+    })),
+  ];
   const filteredThemeList = themeList.filter(t => availableThemes.includes(t.key));
   const {
     language, autoStart, startFullscreen, autoHideHeader, autoHideFooter,
@@ -350,7 +368,7 @@ function AppearanceTab(props: any) {
                 className={cn("flex flex-col items-center gap-1.5 px-2 py-3 rounded-lg text-xs border transition-all duration-200",
                   theme === item.key ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
                 {item.image ? <img src={item.image} alt="" className="w-10 h-10 rounded-full object-cover" /> : item.key === "default" ? <Home className="h-5 w-5" /> : <span className="text-base">{item.emoji}</span>}
-                <span>{t(item.labelKey)}</span>
+                <span>{item.labelKey ? t(item.labelKey) : item.label}</span>
               </button>
             ))}
           </div>

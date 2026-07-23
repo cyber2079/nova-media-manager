@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { useThemeStore, type ThemeName } from "@/stores/themeStore";
+// themeStore not needed — voice is now theme-agnostic
 
 interface AlertConfig {
   active: boolean;
@@ -10,31 +10,15 @@ interface AlertConfig {
   voiceInterval: number;
 }
 
-// ── Theme voice/text mapping ──
-const themeVoice: Record<string, { prefix: string; zh: string; en: string }> = {
-  "ice-girl": {
-    prefix: "ice",
-    zh: "看到窗外的雪了吗？每一片都在提醒你——时间不等人。趁我还没把这条路冰封，去做你该做的事。",
-    en: "See the snow outside the window? Each flake is reminding you — time waits for no one. Before I freeze this path over with ice, go do what you're meant to do.",
-  },
-  "cyber-girl": {
-    prefix: "ling",
-    zh: "倒计时归零，数据流已同步，该行动了，不遵守时间规则的代价可不小",
-    en: "Time's up. Shadow, mark the next target.\nCountdown zero. Data stream synced — move out.\nTimer complete. Neural link confirms — advancing to next phase.",
-  },
-};
-
-function getVoiceInfo(theme: ThemeName, isZh: boolean) {
-  const v = themeVoice[theme] ?? themeVoice["ice-girl"]!;
-  const lang = isZh ? "zh" : "en";
-  const text = isZh ? v.zh : v.en;
-  const src = `/sound/${v.prefix}-${isZh ? "cn" : "en"}.mp3`;
-  return { text, src };
+function getVoiceInfo(isZh: boolean) {
+  return {
+    text: isZh ? "倒计时结束" : "Countdown finished",
+    src: "",
+  };
 }
 
 export default function CountdownAlert() {
   const { t, i18n } = useTranslation();
-  const theme = useThemeStore((s) => s.theme);
   const [cfg, setCfg] = useState<AlertConfig | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const repeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -56,7 +40,7 @@ export default function CountdownAlert() {
   useEffect(() => {
     if (!cfg) return;
     const isZh = i18n.language.startsWith("zh");
-    const { src } = getVoiceInfo(theme, isZh);
+    const { src } = getVoiceInfo(isZh);
 
     const playNow = () => {
       if (audioRef.current) {
@@ -81,7 +65,7 @@ export default function CountdownAlert() {
         audioRef.current.currentTime = 0;
       }
     };
-  }, [cfg, theme, i18n.language]);
+  }, [cfg, i18n.language]);
 
   const dismiss = useCallback(() => {
     if (repeatRef.current) { clearInterval(repeatRef.current); repeatRef.current = null; }
@@ -97,7 +81,7 @@ export default function CountdownAlert() {
   if (!cfg) return null;
 
   const isZh = i18n.language.startsWith("zh");
-  const { text: message } = getVoiceInfo(theme, isZh);
+  const { text: message } = getVoiceInfo(isZh);
 
   return createPortal(
     <div className="fixed inset-0 z-[300] flex items-center justify-center select-none">
