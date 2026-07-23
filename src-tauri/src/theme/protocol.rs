@@ -48,6 +48,10 @@ impl ProtocolState {
         self.nvtp_dir.join(format!("{}.nvtp", theme_id)).exists()
     }
 
+    pub fn loaded_count(&self) -> usize {
+        self.archives.lock().map(|g| g.len()).unwrap_or(0)
+    }
+
     /// Read a single file from a loaded theme's ZIP archive.
     /// Returns `None` if the theme is not loaded or the file doesn't exist.
     pub fn read_file(&self, theme_id: &str, asset_path: &str) -> Option<Vec<u8>> {

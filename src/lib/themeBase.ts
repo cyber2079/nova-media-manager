@@ -1,28 +1,29 @@
 /**
  * Central URL builder for theme assets.
  *
- * Dev mode: returns direct filesystem paths via Vite's public/ dir.
- * Production: returns nova:// protocol URLs (Rust decrypts assets in memory).
- *
- * Usage: themeUrl("ice-girl", "faces/angry.webp")
+ * VITE_LICENSE_TIER (dev): known themes have assets on disk in public/.
+ *   Unknown themes (installed .nvtp) use nova:// protocol — works in dev too.
+ * Production: always uses nova:// protocol (Rust decrypts assets in memory).
  */
-const THEME_PATH_MAP: Record<string, string> = {
+const KNOWN_THEMES: Record<string, string> = {
   "ice-girl": "/themes/ice%20girl",
   "cyber-girl": "/themes/cyber%20girl",
+  default: "",
 };
 
 export function themeUrl(themeId: string, assetPath: string): string {
   if ((import.meta as any).env?.VITE_LICENSE_TIER) {
-    const base = THEME_PATH_MAP[themeId] || `/themes/${themeId}`;
-    return `${base}/${assetPath}`;
+    // Dev: known themes have assets on disk
+    if (KNOWN_THEMES[themeId] !== undefined) {
+      if (themeId === "default") return "";
+      return `${KNOWN_THEMES[themeId]}/${assetPath}`;
+    }
   }
-  return `https://nova.localhost/${themeId}/${assetPath}`;
+  // Installed .nvtp themes → nova:// protocol (works in both dev & production)
+  return `nova://localhost/${themeId}/${assetPath}`;
 }
 
-/**
- * Pre-built URLs for common theme assets.
- * Use these to avoid string concatenation spread across multiple files.
- */
+// ── Legacy ThemeAssets (used by existing ice-girl/cyber-girl components) ──
 export const ThemeAssets = {
   ice: {
     base: (path: string) => themeUrl("ice-girl", path),

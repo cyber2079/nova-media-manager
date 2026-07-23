@@ -157,12 +157,13 @@ pub fn run() {
 
             let license_state = license::init_license(&database);
 
-            // Theme protocol state — nvtp blobs stored in {app_data}/themes/nvtp/
-            let nvtp_dir = app_data_dir.join("themes").join("nvtp");
+            // Theme protocol state — nvtp blobs stored in {app_data}/data/themes/nvtp/
+            // Must match the path used by loader::install_theme (<db.data_dir()>/themes/nvtp/)
+            let nvtp_dir = database.data_dir().join("themes").join("nvtp");
             theme::protocol::init_protocol(nvtp_dir);
 
             // Preload installed themes into memory on startup
-            let installed = theme::loader::list_themes(&app_data_dir);
+            let installed = theme::loader::list_themes(database.data_dir());
             let proto = theme::protocol::global();
             for t in &installed {
                 let _ = proto.lock().map(|s| s.ensure_loaded(&t.id));

@@ -66,20 +66,18 @@ pub fn get_theme_css_vars(
     let merged = if theme_id == "default" {
         base
     } else {
-        // Try to load theme.json from the installed theme's in-memory protocol cache
         let proto = protocol::global().lock().map_err(|e| e.to_string())?;
+        match proto.ensure_loaded(&theme_id) {
+            Ok(()) => {},
+            Err(e) => { log::warn!("[theme] ensure_loaded failed for '{theme_id}': {e}"); return Err(e); }
+        }
         match proto.read_file(&theme_id, "theme.json") {
             Some(theme_json_bytes) => {
                 let theme_json = String::from_utf8_lossy(&theme_json_bytes);
-                tokens::merge_tokens(&base, &theme_json)?
+                tokens::merge_tokens(&base, &theme_json).unwrap_or(base)
             }
             None => {
-                // Theme not preloaded — return default CSS vars
-                // (frontend should retry after theme is installed)
-                log::warn!(
-                    "[theme] theme_id '{}' not found in protocol cache, using default",
-                    theme_id
-                );
+                log::warn!("[theme] theme.json not found in '{theme_id}' .nvtp");
                 base
             }
         }
