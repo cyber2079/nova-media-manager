@@ -370,7 +370,7 @@ export default function MusicLibrary() {
               <Button variant="outline" onClick={batch.leaveBatchMode} className="h-8 w-8 p-0" title={t("batch.exit")}><NeonIcon name="X" size={16}><X className="h-4 w-4" /></NeonIcon></Button>
             )}
             <LayoutSwitch mode={layoutMode} onChange={setLayoutMode} hideBanner />
-            <NeonIcon name="Info" size={16}><Info className="h-4 w-4 text-gray-500 cursor-help" title={t("music.filename_hint")} /></NeonIcon>
+            <span title={t("music.filename_hint")} className="cursor-help"><NeonIcon name="Info" size={16}><Info className="h-4 w-4 text-gray-500" /></NeonIcon></span>
           </>
         )}
       </div>
