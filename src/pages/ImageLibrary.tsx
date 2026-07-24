@@ -396,7 +396,7 @@ export default function ImageLibrary() {
                       <BatchCheckbox checked={batch.selected.has(img.id)} onToggle={() => batch.toggle(img.id)} />
                     </div>
                   )}
-                  <ImageCard image={img} onDelete={(id) => confirm(t("image.confirm_delete"), () => deleteImage(id))} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagEditItem(img)} compact={layoutMode === "small"} favorited={isFavorite(img.id)} onToggleFav={() => toggleFavorite(img.id, "image")} />
+                  <ImageCard image={img} onDelete={(id) => confirm(t("image.confirm_delete"), () => deleteImage(id))} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagEditItem(img)} compact={layoutMode === "small"} horizontal={layoutMode === "banner"} favorited={isFavorite(img.id)} onToggleFav={() => toggleFavorite(img.id, "image")} />
                 </div>
               ))}
             </div>

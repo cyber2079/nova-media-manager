@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import SafeImage from "@/components/SafeImage";
 import { memo } from "react";
 import type { Movie } from "@/types/movie";
@@ -19,11 +20,12 @@ interface MovieCardProps {
   onSetWallpaper?: (path: string) => void;
   onRegenCover?: () => void;
   compact?: boolean;
+  horizontal?: boolean;
   favorited?: boolean;
   onToggleFav?: () => void;
 }
 
-export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, onSetWallpaper, onRegenCover, compact, favorited, onToggleFav }: MovieCardProps) {
+export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, onSetWallpaper, onRegenCover, compact, horizontal, favorited, onToggleFav }: MovieCardProps) {
   const { t } = useTranslation();
   const isProcessing = movie.status === "processing";
   // 内置引擎放不了的格式 → 角标提示走外接（诚实化，避免"点了没声音/黑屏"的困惑）
@@ -31,7 +33,72 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
   const needsExternal = EXTERNAL_PLAYER_EXTS.includes((movie.format || "").toLowerCase());
   const showExtBadge = needsExternal && extPlayer.mode !== "never";
 
-  return (
+  // ── Horizontal banner layout ──
+  if (horizontal) {
+    return (
+      <div className="relative rounded-xl overflow-hidden bg-surface-lighter border border-primary/10 hover:border-primary/30 transition-all duration-300 cursor-pointer group"
+        onClick={() => { if (!isProcessing) onPlay(movie); }}>
+        <div className="relative aspect-[2.4/1] overflow-hidden bg-surface-lighter">
+          <FavoriteStar active={!!favorited} onToggle={onToggleFav || (() => {})} />
+          {showExtBadge && (
+            <div className="absolute top-2 right-2 z-10 rounded bg-black/70 px-1.5 py-0.5 text-[9px] text-white/80 backdrop-blur-sm">
+              {extPlayer.path ? t("movie.external_player") : t("movie.need_external_player")}
+            </div>
+          )}
+          {isProcessing ? (
+            <div className="flex h-full flex-col items-center justify-center gap-3 text-gray-500">
+              <NeonIcon name="Loader2" size={16}><Loader2 className="h-8 w-8 animate-spin text-primary-light" /></NeonIcon>
+              <span className="text-xs">{t("movie.processing")}</span>
+            </div>
+          ) : movie.coverPath ? (
+            <SafeImage src={movie.coverPath} alt={movie.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" fallback={<div className="flex h-full items-center justify-center"><NeonIcon name="Play" size={16}><Play className="h-12 w-12 text-gray-600" /></NeonIcon></div>} />
+          ) : (
+            <div className="flex h-full items-center justify-center"><NeonIcon name="Play" size={16}><Play className="h-12 w-12 text-gray-600" /></NeonIcon></div>
+          )}
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/40">
+            <Button size="icon" className="h-12 w-12 rounded-full opacity-0 transition-all group-hover:opacity-100"
+              onClick={(e) => { e.stopPropagation(); onPlay(movie); }}>
+              <NeonIcon name="Play" size={16}><Play className="h-5 w-5 fill-white" /></NeonIcon>
+            </Button>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 px-3 py-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-medium text-gray-200 truncate">{movie.name}</h3>
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <span>{movie.duration}{movie.resolution ? ` · ${movie.resolution}` : ""}</span>
+              {movie.tags && movie.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {movie.tags.slice(0, 3).map((tag) => {
+                    const c = tagColor(tag);
+                    return <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full font-medium border" style={{ backgroundColor: c.bg, color: c.fg, borderColor: c.fg + "40" }}>{tag}</span>;
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            {onSetWallpaper && isPaid(useLicenseStore.getState().license.tier) && (
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); onSetWallpaper(movie.filePath); }} title={t("movie.set_wallpaper")}>
+                <NeonIcon name="Monitor" size={16}><Monitor className="h-3.5 w-3.5" /></NeonIcon>
+              </Button>
+            )}
+            {onEditTags && (
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); onEditTags(); }} title={t("movie.edit_tags")}>
+                <NeonIcon name="Tag" size={16}><Tag className="h-3.5 w-3.5" /></NeonIcon>
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400/70 hover:text-red-400" onClick={(e) => { e.stopPropagation(); onDelete(movie.id); }} title={t("movie.confirm_delete")}>
+              <NeonIcon name="Trash2" size={16}><Trash2 className="h-3.5 w-3.5" /></NeonIcon>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Portrait card layout ──
+    return (
     <Card
       className={cn(
         "group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10",

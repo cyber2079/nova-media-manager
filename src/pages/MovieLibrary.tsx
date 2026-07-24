@@ -321,7 +321,7 @@ export default function MovieLibrary() {
                 <div key={movie.id} className="relative group"
                   onClick={() => { if (batch.showCheckboxes) batch.toggle(movie.id); }}>
                   {batch.showCheckboxes && <BatchCheckbox checked={batch.selected.has(movie.id)} onToggle={() => batch.toggle(movie.id)} />}
-                  <MovieCard movie={movie} onDelete={(id) => confirm(t("movie.confirm_delete"), () => deleteMovie(id))} onPlay={batch.showCheckboxes ? () => {} : handlePlayMovie} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagDialogMovie(movie)} onRegenCover={() => useMovieStore.getState().regenerateCover(movie.id).catch(() => {})} compact={layoutMode === "small"} favorited={isFavorite(movie.id)} onToggleFav={() => toggleFavorite(movie.id, "movie")} />
+                  <MovieCard movie={movie} onDelete={(id) => confirm(t("movie.confirm_delete"), () => deleteMovie(id))} onPlay={batch.showCheckboxes ? () => {} : handlePlayMovie} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagDialogMovie(movie)} onRegenCover={() => useMovieStore.getState().regenerateCover(movie.id).catch(() => {})} compact={layoutMode === "small"} horizontal={layoutMode === "banner"} favorited={isFavorite(movie.id)} onToggleFav={() => toggleFavorite(movie.id, "movie")} />
                 </div>
               ))}
             </div>
