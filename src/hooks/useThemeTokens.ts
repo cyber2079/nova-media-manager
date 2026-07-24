@@ -11,6 +11,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useThemeStore } from "@/stores/themeStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { themeUrl } from "@/lib/themeBase";
+import { hexToHSL, hslToHex } from "@/lib/colorUtils";
 
 const CACHE_KEY = "nv-theme-tokens-v2";
 
@@ -68,6 +69,40 @@ function injectTokens(tokens: Record<string, string>) {
   for (const [nvKey, colorKey] of BRIDGE_COLORS) {
     const val = tokens[nvKey];
     if (val) root.style.setProperty(colorKey, val, "important");
+  }
+
+  // Palette mode: if user customized palette, derive ALL dependent colors from chosen hex
+  const s = useSettingsStore.getState();
+  if (s.paletteCustomized && s.paletteAccent && !s.paletteRandomEnabled) {
+    const hex = s.paletteAccent;
+    const [h, sat, lum] = hexToHSL(hex);
+    const pLight = hslToHex(h, Math.min(100, sat + 10), Math.min(94, lum + 20));
+    const pDark  = hslToHex(h, Math.min(100, sat + 5), Math.max(6, lum - 18));
+    const baseBg  = "#080c14";
+    const midBg   = "#101520";
+    const liteBg  = "#1a1f2a";
+    // Compute surface colors using color-mix with the chosen hex
+    const surface    = `color-mix(in srgb, ${hex} 4%, ${baseBg})`;
+    const surfLight  = `color-mix(in srgb, ${hex} 6%, ${midBg})`;
+    const surfLighter= `color-mix(in srgb, ${hex} 8%, ${liteBg})`;
+    const derived: [string,string][] = [
+      ["--color-primary",        hex],
+      ["--color-primary-light",  pLight],
+      ["--color-primary-dark",   pDark],
+      ["--color-accent",         hex],
+      ["--color-surface",        surface],
+      ["--color-surface-light",  surfLight],
+      ["--color-surface-lighter",surfLighter],
+      ["--color-border",         `color-mix(in srgb, ${hex} 18%, transparent)`],
+      ["--nv-color-primary",     hex],
+      ["--nv-color-primaryLight",pLight],
+      ["--nv-color-primaryDark", pDark],
+      ["--nv-color-accent",      hex],
+      ["--nv-color-surface",     surface],
+      ["--nv-color-surfaceLight", surfLight],
+      ["--nv-color-surfaceLighter",surfLighter],
+    ];
+    for (const [k, v] of derived) root.style.setProperty(k, v, "important");
   }
   // Load neon-icons.css + theme.css as inline <style> tags
   const themeId = tokens["__themeId"];
