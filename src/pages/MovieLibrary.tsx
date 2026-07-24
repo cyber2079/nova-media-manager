@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { useMovieStore } from "@/stores/movieStore";
 import { useSettingsStore, EXTERNAL_PLAYER_EXTS } from "@/stores/settingsStore";
@@ -47,7 +47,7 @@ export default function MovieLibrary() {
   } = useMovieStore();
 
   const sortOptions = useMovieSortOptions();
-  const { animating, triggerSort } = useSortAnim();
+  const { triggerSort } = useSortAnim();
   const handleSort = useCallback((key: string) => triggerSort(() => setSortConfig(key)), [triggerSort, setSortConfig]);
 
   const [layoutMode, setLayoutMode] = useLayoutMode("layout-movies", "card");
@@ -262,7 +262,7 @@ export default function MovieLibrary() {
       {filteredMovies.length > 0 ? (
         <>
           {layoutMode === "list" ? (
-            <div className={cn("flex flex-col gap-1", animating && "sort-shatter")}>
+            <div className={cn("flex flex-col gap-1")}>
               {paginated.map((movie) => (
                 <div key={movie.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group"
                   onClick={() => { if (batch.showCheckboxes) { batch.toggle(movie.id); return; } handlePlayMovie(movie); }}>
@@ -314,7 +314,7 @@ export default function MovieLibrary() {
               ))}
             </div>
           ) : layoutMode === "banner" ? (
-            <div className={cn("flex flex-col gap-3", animating && "sort-shatter")}>
+            <div className={cn("flex flex-col gap-3")}>
               {paginated.map((movie) => (
                 <motion.div layout key={movie.id} className="relative group"
                   onClick={() => { if (batch.showCheckboxes) batch.toggle(movie.id); }}>
@@ -326,8 +326,7 @@ export default function MovieLibrary() {
           ) : (
             <div className={cn(layoutMode === "card"
               ? "grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-              : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10",
-              animating && "sort-shatter")}>
+              : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10")}>
               {paginated.map((movie) => (
                 <motion.div layout key={movie.id} className="relative group"
                   onClick={() => { if (batch.showCheckboxes) batch.toggle(movie.id); }}>

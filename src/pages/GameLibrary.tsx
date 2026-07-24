@@ -36,7 +36,7 @@ export default function GameLibrary() {
   const { t } = useTranslation();
   const { games, isLoading, isImporting, sortConfig, loadGames, addGame, deleteGame, launchGame, updateTags, scanSteam, isScanning, scanResult, scanDiagnostic, setSortConfig } = useGameStore();
   const sortOptions = useNameSortOptions();
-  const { animating, triggerSort } = useSortAnim();
+  const { triggerSort } = useSortAnim();
   const handleSort = useCallback((key: string) => triggerSort(() => setSortConfig(key)), [triggerSort, setSortConfig]);
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const { getByType, toggleFavorite, isFavorite } = useFavoritesStore();
@@ -178,7 +178,7 @@ export default function GameLibrary() {
       {filtered.length > 0 ? (
         <>
           {layoutMode === "banner" ? (
-            <div className={cn("flex flex-col gap-3", animating && "sort-shatter")}>
+            <div className={cn("flex flex-col gap-3")}>
               {paginated.map((game) => (
                 <motion.div layout key={game.id} className="relative group"
                   onContextMenu={(e: React.MouseEvent) => onContext(e, game.executablePath)}
@@ -197,7 +197,7 @@ export default function GameLibrary() {
               ))}
             </div>
           ) : layoutMode === "list" ? (
-            <div className={cn("flex flex-col gap-1", animating && "sort-shatter")}>
+            <div className={cn("flex flex-col gap-1")}>
               {paginated.map((game) => (
                 <div key={game.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group"
                   onClick={() => { if (batch.showCheckboxes) { batch.toggle(game.id); return; } launchGame(game.id); }}
@@ -242,8 +242,7 @@ export default function GameLibrary() {
           ) : (
             <div className={cn(layoutMode === "card"
               ? "grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-              : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10",
-              animating && "sort-shatter")}>
+              : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10")}>
               {paginated.map((game) => (
                 <motion.div layout key={game.id} className="relative group" onContextMenu={(e: React.MouseEvent) => onContext(e, game.executablePath)}
                   onClick={() => { if (batch.showCheckboxes) batch.toggle(game.id); }}>

@@ -47,7 +47,7 @@ export default function MusicLibrary() {
   const { t } = useTranslation();
   const { music, isLoading, isImporting, searchQuery, activeTags, sortConfig, loadMusic, addMusic, deleteMusic, setSearchQuery, toggleTag, setActiveTags, updateTags, setSortConfig } = useMusicStore();
   const sortOptions = useNameSortOptions();
-  const { animating, triggerSort } = useSortAnim();
+  const { triggerSort } = useSortAnim();
   const handleSort = useCallback((key: string) => triggerSort(() => setSortConfig(key)), [triggerSort, setSortConfig]);
   const { getByType, toggleFavorite, isFavorite } = useFavoritesStore();
   const { playlists, create, remove, addSong, addSongs, removeSong, removeSongs } = usePlaylistStore();
@@ -639,7 +639,7 @@ export default function MusicLibrary() {
           {filtered.length > 0 ? (
             <>
               {layoutMode === "list" ? (
-                <div className={cn("flex flex-col gap-1", animating && "sort-shatter")}>
+                <div className={cn("flex flex-col gap-1")}>
                   {paginated.map((m, idx) => (
                     <div key={m.id} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group border relative",
                       playing?.id === m.id ? "bg-primary/10 border-primary/20" : "border-transparent")}
@@ -695,8 +695,7 @@ export default function MusicLibrary() {
               ) : (
                 <div className={cn(layoutMode === "card"
                   ? "grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-                  : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10",
-                  animating && "sort-shatter")}>
+                  : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10")}>
                   {paginated.map((m) => (
                     <div key={m.id} className="relative group"
                       onClick={() => { if (batch.showCheckboxes) batch.toggle(m.id); }}>
