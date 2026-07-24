@@ -615,7 +615,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setCgTextBgColor(v) { set({ cgTextBgColor: v }); persist(); },
     setCgTextBgOpacity(v) { set({ cgTextBgOpacity: v }); persist(); },
     setFontFamily(v) { set({ fontFamily: v }); persist(); applyFontFamily(v); },
-    setPaletteAccent(v) { set({ paletteAccent: v, paletteCustomized: true }); persist(); applyPalette(); },
+    setPaletteAccent(v) { set({ paletteAccent: v, paletteCustomized: true, paletteRandomEnabled: false }); persist(); applyPalette(); },
     setPaletteSaturation(v) { set({ paletteSaturation: v, paletteCustomized: true, paletteRandomEnabled: false }); persist(); applyPalette(); },
     setPaletteRandomSeed(seed: number) { set({ paletteRandomSeed: seed, paletteRandomEnabled: true, paletteCustomized: true }); persist(); },
     setPaletteRandomEnabled(on: boolean) { set({ paletteRandomEnabled: on }); if (!on) applyPalette(); persist(); },
