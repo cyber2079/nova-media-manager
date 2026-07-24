@@ -1,101 +1,16 @@
 // ── Cyber Grid Blueprint Home Dashboard ──
-// Full HomeDashboard feature parity in blueprint bento layout.
-// Data sources: Rust dashboard_stats + Steam trending + Netease/TMDB recs + play history.
+// 数据来自 useDashboardData() 共享 hook；纯布局层。
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
-import { Video, Music, Gamepad2, Image as ImageIcon, RotateCcw, Clock, Sunrise, Sun, Moon, Calendar, ExternalLink, Pencil } from "lucide-react";
+import { Video, Music, Gamepad2, Image as ImageIcon, RotateCcw, Clock, Sunrise, Sun, Moon, Calendar, Pencil } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
 import { useTranslation } from "react-i18next";
-import { useChartColors } from "@/lib/useChartColors";
-import { usePlayHistoryStore } from "@/stores/playHistoryStore";
-import { getTrending, fmtPrice, TRENDING_TAGS, type TrendingData, type TrendingGame } from "@/lib/trending";
-import { getRecommendMovies, getRecommendMusic, type RecItem } from "@/lib/recommend";
-import { useCheckInStats } from "@/stores/checkinStore";
-import SafeImage from "@/components/SafeImage";
+import { TRENDING_TAGS } from "@/lib/trending";
+import { useDashboardData } from "@/hooks/useDashboardData";
+import TrendingCard from "@/components/TrendingCard";
 import { BentoGrid, BentoItem } from "@/components/ui/blueprint-bento-grid";
-
-// ── Types ──
-interface DailyCount { date: string; movies: number; music: number; games: number; total: number }
-interface TypeCounts { movies: number; music: number; games: number }
-interface TopItem { id: string; name: string; count: number; coverPath: string }
-interface TagCount { tag: string; count: number }
-interface RevisitItem { id: string; name: string; itemType: string; daysSince: number }
-interface Stats {
-  daily: DailyCount[]; hourly: number[];
-  weekNow: TypeCounts; weekPrev: TypeCounts;
-  topMusic: TopItem[]; topTags: TagCount[]; revisit: RevisitItem[];
-  library: TypeCounts; imagesCount: number;
-}
-
-// ── Count-up animation ──
-function useCountUp(target: number, ms = 700): number {
-  const [v, setV] = useState(0);
-  const started = useRef(false);
-  useEffect(() => {
-    if (started.current && target === 0) { setV(0); return; }
-    started.current = true;
-    let raf = 0;
-    const t0 = performance.now();
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - t0) / ms);
-      setV(Math.round(target * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, ms]);
-  return v;
-}
-
-// ── Hour persona ──
-function hourPersona(hourly: number[], t: (k: string) => string): string {
-  const total = hourly.reduce((a, b) => a + b, 0);
-  if (total < 5) return "";
-  const sum = (a: number, b: number) => hourly.slice(a, b).reduce((x, y) => x + y, 0);
-  const zones = [
-    { label: t("dashboard.hourly_night"), v: sum(0, 6) },
-    { label: t("dashboard.hourly_morning"), v: sum(6, 12) },
-    { label: t("dashboard.hourly_afternoon"), v: sum(12, 18) },
-    { label: t("dashboard.hourly_evening"), v: sum(18, 24) },
-  ];
-  return zones.reduce((a, b) => (b.v > a.v ? b : a)).label;
-}
-
-// ── Steam trending card ──
-function TrendingCard({ g, delay, onOpen }: { g: TrendingGame; delay: number; onOpen: () => void }) {
-  const [src, setSrc] = useState(g.image);
-  const [failed, setFailed] = useState(false);
-  const handleError = () => {
-    if (g.logo && src !== g.logo) setSrc(g.logo);
-    else setFailed(true);
-  };
-  return (
-    <button onClick={onOpen} className="shrink-0 w-40 text-left group opacity-0 animate-fade-in-up"
-      style={{ animationDelay: `${delay}ms`, animationFillMode: "forwards" }}>
-      <div className="relative rounded overflow-hidden bg-surface-lighter aspect-[460/215] mb-1.5">
-        {failed ? (
-          <div className="w-full h-full flex items-center justify-center px-2"
-            style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 25%, #101520), #101520)" }}>
-            <span className="text-[11px] text-white/80 text-center leading-tight">{g.name}</span>
-          </div>
-        ) : (
-          <img src={src} alt="" loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={handleError} />
-        )}
-        {g.discount > 0 && (
-          <span className="absolute top-1 right-1 rounded bg-green-600/90 px-1.5 py-0.5 text-[10px] font-bold text-white">-{g.discount}%</span>
-        )}
-      </div>
-      <p className="text-[11px] text-[#c8ddf0] truncate group-hover:text-white transition-colors">{g.name}</p>
-      {fmtPrice(g.finalPrice, g.currency) && (
-        <p className="text-[10px] text-[#6a8aa8] tabular-nums">{fmtPrice(g.finalPrice, g.currency)}</p>
-      )}
-    </button>
-  );
-}
 
 // ── Editable title (hover → edit button, localStorage custom text, falls back to i18n) ──
 const TITLE_KEY = "blueprint-custom-title";
@@ -128,17 +43,16 @@ function EditableBlueprintTitle({ t }: { t: (k: string) => string }) {
           <h1 className="blueprint-title text-4xl md:text-5xl font-bold text-center cursor-default">
             {display}
           </h1>
-          {/* Edit + reset buttons — inside the span, right next to the text, CSS group hover */}
           <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1">
             <button onClick={() => setEditing(true)}
               className="w-7 h-7 flex items-center justify-center rounded-sm bg-[rgba(0,229,255,0.12)] border border-[rgba(0,229,255,0.3)] text-[#80f0ff] hover:bg-[rgba(0,229,255,0.25)] hover:scale-105 transition-all"
-              title={customTitle ? t("settings.edit") : "Edit title"}>
+              title={customTitle ? "Edit" : "Edit title"}>
               <NeonIcon name="Pencil" size={14}><Pencil className="h-3.5 w-3.5" /></NeonIcon>
             </button>
             {customTitle && (
               <button onClick={() => { setCustomTitle(""); localStorage.removeItem(TITLE_KEY); }}
                 className="w-7 h-7 flex items-center justify-center rounded-sm bg-[rgba(255,61,79,0.12)] border border-[rgba(255,61,79,0.3)] text-[#ff3d4f] hover:bg-[rgba(255,61,79,0.25)] hover:scale-105 transition-all"
-                title={t("settings.palette_reset")}>
+                title="Reset">
                 <NeonIcon name="RotateCcw" size={14}><RotateCcw className="h-3.5 w-3.5" /></NeonIcon>
               </button>
             )}
@@ -152,63 +66,26 @@ function EditableBlueprintTitle({ t }: { t: (k: string) => string }) {
 export default function BlueprintBentoGrid() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const colors = useChartColors();
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [trending, setTrending] = useState<TrendingData | null>(null);
-  const [trendLoading, setTrendLoading] = useState(true);
-  const [trendTag, setTrendTag] = useState(() => localStorage.getItem("trending-tag") || "");
-  const [recMovies, setRecMovies] = useState<RecItem[]>([]);
-  const [recMusic, setRecMusic] = useState<RecItem[]>([]);
+  const {
+    stats, trending, trendTag, setTrendTag, trendLoading,
+    recMovies, recMusic,
+    openSteamPage,
+    recentWatched,
+    hourlyData, persona,
+    totalActiveDays, streakDays,
+    totalUp, composition, compTotal,
+  } = useDashboardData();
 
-  useEffect(() => {
-    invoke<Stats>("dashboard_stats").then(setStats).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("trending-tag", trendTag);
-    let cancelled = false;
-    setTrendLoading(true);
-    setTrending(null);
-    getTrending(trendTag)
-      .then((d) => { if (!cancelled) setTrending(d); })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setTrendLoading(false); });
-    return () => { cancelled = true; };
-  }, [trendTag]);
-
-  useEffect(() => { getRecommendMovies().then(setRecMovies).catch(() => {}); }, []);
-  useEffect(() => { getRecommendMusic().then(setRecMusic).catch(() => {}); }, []);
-
-  const openSteamPage = (appId: number) => {
-    import("@tauri-apps/plugin-shell")
-      .then((m) => m.open(`https://store.steampowered.com/app/${appId}/`))
-      .catch(() => {});
-  };
-
-  const playHistory = usePlayHistoryStore((s) => s.recent);
-  const recentWatched = useMemo(() =>
-    playHistory.filter((e) => e.type === "movie").slice(0, 5),
-  [playHistory]);
-
-  const hourlyData = useMemo(() =>
-    (stats?.hourly || new Array(24).fill(0)).map((v, h) => ({ h, v, label: `${h}:00` })),
-  [stats]);
-  const persona = stats ? hourPersona(stats.hourly, t) : "";
-
-  const checkInStats = useCheckInStats();
-  const totalActiveDays = checkInStats?.totalActiveDays ?? 0;
-  const streakDays = checkInStats?.streakDays ?? 0;
-
-  const total = stats ? stats.library.movies + stats.library.music + stats.library.games + stats.imagesCount : 0;
-  const totalUp = useCountUp(total);
-
-  const composition = stats ? [
-    { key: "movies", label: t("nav.movies"), value: stats.library.movies, color: colors.primary, icon: Video },
-    { key: "music", label: t("nav.music"), value: stats.library.music, color: colors.accent, icon: Music },
-    { key: "games", label: t("nav.games"), value: stats.library.games, color: colors.primaryDark, icon: Gamepad2 },
-    { key: "images", label: t("nav.images"), value: stats.imagesCount, color: colors.primaryLight, icon: ImageIcon },
-  ] : [];
-  const compTotal = Math.max(1, composition.reduce((a, c) => a + c.value, 0));
+  const renderSkeletonRow = () => (
+    <div className="space-y-1 py-2">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <div className="h-3 w-3 rounded-sm bg-[rgba(0,229,255,0.06)] animate-pulse shrink-0" />
+          <div className="h-3 flex-1 rounded-sm bg-[rgba(0,229,255,0.06)] animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="w-full max-w-6xl mx-auto z-10 px-4">
@@ -355,7 +232,8 @@ export default function BlueprintBentoGrid() {
           ) : trending ? (
             <div key={trendTag} className="flex gap-3 overflow-x-auto pb-1">
               {trending.games.map((g, i) => (
-                <TrendingCard key={g.id} g={g} delay={i * 40} onOpen={() => openSteamPage(g.id)} />
+                <TrendingCard key={g.id} g={g} delay={i * 40} onOpen={() => openSteamPage(g.id)}
+                  rounded="sm" nameColor="text-[#c8ddf0]" priceColor="text-[#6a8aa8]" />
               ))}
             </div>
           ) : (
@@ -374,7 +252,7 @@ export default function BlueprintBentoGrid() {
           {stats && stats.topMusic.length > 0 ? (
             <div className="space-y-0.5">
               {stats.topMusic.slice(0, 5).map((m, i) => (
-                <button key={m.id} onClick={() => navigate("/music")}
+                <button key={m.id} onClick={() => navigate("/music", { state: { playId: m.id } })}
                   className="w-full flex items-center gap-2 px-1.5 py-0.5 rounded-sm text-left hover:bg-[rgba(0,229,255,0.05)] transition-colors opacity-0 animate-fade-in-up"
                   style={{ animationDelay: `${i * 50}ms`, animationFillMode: "forwards", minHeight: 22 }}>
                   <span className={`w-4 text-center text-[10px] font-bold tabular-nums ${i < 3 ? "text-[#80f0ff]" : "text-[#5c7a9e]"}`}>{i + 1}</span>
@@ -430,14 +308,7 @@ export default function BlueprintBentoGrid() {
               ))}
             </div>
           ) : (
-            <div className="space-y-1 py-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-sm bg-[rgba(0,229,255,0.06)] animate-pulse shrink-0" />
-                  <div className="h-3 flex-1 rounded-sm bg-[rgba(0,229,255,0.06)] animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
-                </div>
-              ))}
-            </div>
+            renderSkeletonRow()
           )}
         </BentoItem>
 
@@ -461,14 +332,7 @@ export default function BlueprintBentoGrid() {
               ))}
             </div>
           ) : (
-            <div className="space-y-1 py-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-sm bg-[rgba(0,229,255,0.06)] animate-pulse shrink-0" />
-                  <div className="h-3 flex-1 rounded-sm bg-[rgba(0,229,255,0.06)] animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
-                </div>
-              ))}
-            </div>
+            renderSkeletonRow()
           )}
         </BentoItem>
 
@@ -482,7 +346,7 @@ export default function BlueprintBentoGrid() {
             <div className="flex flex-wrap gap-1.5">
               {stats.revisit.map((r) => (
                 <button key={`${r.itemType}-${r.id}`}
-                  onClick={() => navigate(r.itemType === "movie" ? "/movies" : "/music", r.itemType === "movie" ? { state: { playId: r.id } } : undefined)}
+                  onClick={() => navigate(r.itemType === "movie" ? "/movies" : "/music", { state: { playId: r.id } })}
                   className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-[rgba(0,229,255,0.15)] text-[11px] text-[#c8e6ff] hover:bg-[rgba(0,229,255,0.08)] hover:text-white transition-colors">
                   {r.itemType === "movie" ? <NeonIcon name="Video" size={14}><Video className="h-3 w-3" /></NeonIcon> : <NeonIcon name="Music" size={14}><Music className="h-3 w-3" /></NeonIcon>}
                   <span className="max-w-[160px] truncate">{r.name}</span>

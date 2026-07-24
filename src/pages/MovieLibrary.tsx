@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Upload, Loader2, Video, Tag, Play, Pause, Clock, Maximize, Trash2, X, Star, CheckSquare, Monitor } from "lucide-react";
+import { Upload, Loader2, Video, Tag, Play, Pause, Clock, Maximize, Trash2, X, Star, CheckSquare, Monitor, ImageIcon, RefreshCw } from "lucide-react";
 import TagFilterBar from "@/components/TagFilterBar";
 import TagEditDialog from "@/components/TagEditDialog";
 import SortBar, { useMovieSortOptions, useSortAnim } from "@/components/SortBar";
@@ -289,6 +289,14 @@ export default function MovieLibrary() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    <button onClick={async (e) => { e.stopPropagation(); try { const { open } = await import("@tauri-apps/plugin-dialog"); const sel = await open({ multiple: false, filters: [{ name: "Images", extensions: ["jpg","jpeg","png","webp"] }] }); if (sel) { const { invoke } = await import("@tauri-apps/api/core"); await invoke("set_movie_cover", { id: movie.id, sourcePath: sel }); useMovieStore.getState().loadMovies(); } } catch {} }}
+                      className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title={t("movie.set_custom_cover")}>
+                      <NeonIcon name="ImageIcon" size={16}><ImageIcon className="h-4 w-4" /></NeonIcon>
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); useMovieStore.getState().regenerateCover(movie.id).catch(() => {}); }}
+                      className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title={t("movie.regen_cover")}>
+                      <NeonIcon name="RefreshCw" size={16}><RefreshCw className="h-4 w-4" /></NeonIcon>
+                    </button>
                     <button onClick={(e) => { e.stopPropagation(); handleSetWallpaper(movie.filePath); }}
                       className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title={t("movie.set_wallpaper")}>
                       <NeonIcon name="Monitor" size={16}><Monitor className="h-4 w-4" /></NeonIcon>

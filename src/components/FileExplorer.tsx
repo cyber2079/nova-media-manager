@@ -17,7 +17,7 @@ async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T
 }
 // endregion
 
-export default function FileExplorer({ open, onClose }: { open: boolean; onClose: () => void }) {
+export default function FileExplorer({ open, onClose, initialPath }: { open: boolean; onClose: () => void; initialPath?: string }) {
   // region State
   const [drives, setDrives] = useState<DriveInfo[]>([]);
   const [currentPath, setCurrentPath] = useState("");
@@ -38,8 +38,10 @@ export default function FileExplorer({ open, onClose }: { open: boolean; onClose
   useEffect(() => { if (!open) return; (async () => {
     const d = await invoke<DriveInfo[]>("list_drives");
     const pf = await invoke<{ name: string; path: string }[]>("list_pinned_folders");
-    if (d) { setDrives(d); if (d.length > 0 && !currentPath) navigateTo(d[0].path); }
+    if (d) setDrives(d);
     if (pf) setPinned(pf);
+    if (initialPath) { navigateTo(initialPath); }
+    else if (d && d.length > 0 && !currentPath) { navigateTo(d[0].path); }
   })(); }, [open]);
   // endregion
 
@@ -119,7 +121,10 @@ export default function FileExplorer({ open, onClose }: { open: boolean; onClose
   // region Open item
   const openItem = useCallback(async (entry: DirEntry) => {
     if (entry.isDir) { navigateTo(entry.path); } else {
-      try { const { open: shellOpen } = await import("@tauri-apps/plugin-shell"); await shellOpen(entry.path); } catch {}
+      try {
+        const { invoke: tauriInvoke } = await import("@tauri-apps/api/core");
+        await tauriInvoke("open_file", { path: entry.path });
+      } catch { flash(`无法打开: ${entry.name}`); }
     }
   }, [navigateTo]);
   // endregion

@@ -351,6 +351,15 @@ main[data-route="page"], main[data-route="home"] {
 .tag-badge { transition: all 0.2s ease; }
 .tag-badge:hover { transform: scale(1.1); filter: brightness(1.2); }
 
+/* ── Headphones icon breathing glow ── */
+@keyframes neon-breathe {
+  0%, 100% { opacity: 0.55; filter: drop-shadow(0 0 3px var(--color-primary-light)); }
+  50%      { opacity: 1;    filter: drop-shadow(0 0 16px var(--color-primary-light)) drop-shadow(0 0 32px var(--color-primary)); }
+}
+.animate-neon-breathe {
+  animation: neon-breathe 2.4s ease-in-out infinite;
+}
+
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }

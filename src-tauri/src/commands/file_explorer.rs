@@ -128,6 +128,37 @@ pub fn list_pinned_folders() -> Vec<PinnedFolder> {
     folders
 }
 
+/// Resolve a known-folder key to its filesystem path (for themed FileExplorer).
+/// Keys: desktop, downloads, documents, pictures, music, videos
+#[tauri::command]
+pub fn get_known_folder_path(kind: String) -> Result<String, String> {
+    let path = match kind.as_str() {
+        "desktop"   => dirs::desktop_dir(),
+        "downloads" => dirs::download_dir(),
+        "documents" => dirs::document_dir(),
+        "pictures"  => dirs::picture_dir(),
+        "music"     => dirs::audio_dir(),
+        "videos"    => dirs::video_dir(),
+        _ => None,
+    };
+    path.map(|p| p.to_string_lossy().to_string())
+        .ok_or_else(|| format!("unknown folder: {}", kind))
+}
+
+/// Open a file or folder with the OS default handler.
+/// Folders open in File Explorer; files open with their registered application.
+#[tauri::command]
+pub fn open_file(path: String) -> Result<(), String> {
+    if cfg!(target_os = "windows") {
+        StdCommand::new("explorer").arg(&path).spawn().map_err(|e| e.to_string())?;
+    } else if cfg!(target_os = "macos") {
+        StdCommand::new("open").arg(&path).spawn().map_err(|e| e.to_string())?;
+    } else {
+        StdCommand::new("xdg-open").arg(&path).spawn().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 #[tauri::command]
 pub fn open_my_computer() -> Result<(), String> {
     if cfg!(target_os = "windows") {

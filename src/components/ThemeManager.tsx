@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemePackStore, type InstalledTheme, type ThemePackInfo } from "@/stores/themePackStore";
 import { useLicenseStore, isPaid } from "@/stores/licenseStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Package, Download, Trash2, Loader2, FolderOpen } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
@@ -15,6 +16,8 @@ export default function ThemeManager() {
   const { t } = useTranslation();
   const { installedThemes, availableThemes, loading, refresh, installFromFile, installFromServer, remove, fetchAvailable } = useThemePackStore();
   const { license } = useLicenseStore();
+  const systemDialogStyle = useSettingsStore((s) => s.systemDialogStyle);
+  const isThemedDialog = systemDialogStyle === "theme";
   const [open, setOpen] = useState(false);
   const [filePath, setFilePath] = useState("");
   const [status, setStatus] = useState<"" | "loading" | "ok" | "error">("");
@@ -92,7 +95,10 @@ export default function ThemeManager() {
     </button>
 
     <Dialog open={open} onOpenChange={(o) => { if (!o) setOpen(false); }}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto p-6 rounded-2xl bg-surface-light/98 backdrop-blur-xl border border-primary/30">
+      <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto p-6 rounded-2xl ${isThemedDialog ? "" : "bg-surface-light/98"} backdrop-blur-xl`} style={isThemedDialog ? {
+        background: "color-mix(in srgb, var(--color-primary) 6%, rgba(8,12,20,0.88))",
+        border: "1px solid rgba(255,255,255,0.06)",
+      } : { border: "1px solid rgba(var(--color-primary), 0.3)" }}>
         <DialogTitle className="flex items-center gap-2 text-lg font-semibold mb-6">
           <NeonIcon name="Package" size={16}><Package className="h-5 w-5 text-primary-light" /></NeonIcon>
           {t("themeManager.dialog_title")}

@@ -57,14 +57,21 @@ export default function NeonIcon({ name, size = 16, className = "", children }: 
   const entry = (iconData as unknown as Record<string, [string, string]>)[name];
   if (!entry) return children ?? null;
 
-  if (theme === "default" && children) return children;
+  if (theme === "default" && children) {
+    return (
+      <span className={`neon-icon ${className} pointer-events-none`}
+        style={{ width: size, height: size, fontSize: size }}>
+        {children}
+      </span>
+    );
+  }
 
   const colorClass = finalColorClass || entry[0];
   const svgInner = entry[1];
   const svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + svgInner + '</svg>';
 
   return (
-    <span className={`neon-icon ${colorClass} ${className}`}
+    <span className={`neon-icon ${colorClass} ${className} pointer-events-none`}
       style={{ width: size, height: size, fontSize: size }}
       dangerouslySetInnerHTML={{ __html: svg }} />
   );

@@ -56,14 +56,14 @@ export default function SystemMonitorWidget({ config }: { config: WidgetConfig }
   const netPct = Math.min(((info.net_down + info.net_up) / 10240) * 100, 100);
 
   return (
-    <DesktopWidget position={config.position}>
+    <DesktopWidget id="systemMonitor" position={config.position}>
       <div
         className="flex flex-col items-center gap-1"
         onMouseEnter={() => setTooltip(`CPU ${info.cpu.toFixed(1)}%\n内存 ${info.memory.toFixed(1)}%\n↓ ${formatSpeed(info.net_down)} ↑ ${formatSpeed(info.net_up)}`)}
         onMouseLeave={() => setTooltip("")}
       >
         <div className="relative">
-          <svg width="100" height="100" viewBox="0 0 100 100" className="drop-shadow-lg">
+          <svg width="100" height="100" viewBox="0 0 100 100">
             {/* Background rings — theme colors at low opacity */}
             <circle cx="50" cy="50" r={38} fill="none" stroke={cpuColor} strokeOpacity="0.1" strokeWidth="6" />
             <circle cx="50" cy="50" r={29} fill="none" stroke={memColor} strokeOpacity="0.1" strokeWidth="5" />

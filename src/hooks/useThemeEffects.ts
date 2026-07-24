@@ -3,7 +3,7 @@
 // --nv-* vars + bridges them to --color-* via inline styles on <html>.
 
 import { useEffect } from "react";
-import { useSettingsStore, computeThemeColors, fontSizeScale, iconSizeScale, applySurface, applyFontFamily, applyFontColors } from "@/stores/settingsStore";
+import { useSettingsStore, computeThemeColors, fontSizeScale, iconSizeScale, applyPalette, applyFontFamily, applyFontColors } from "@/stores/settingsStore";
 import { useThemeStore } from "@/stores/themeStore";
 
 export function useThemeEffects() {
@@ -27,7 +27,7 @@ export function useThemeEffects() {
         ["primary","primary-light","primary-dark"].forEach(k => el.style.removeProperty("--color-" + k));
         el.removeAttribute("data-custom-theme");
       }
-      applySurface();
+      applyPalette();
     };
     apply();
     return useSettingsStore.subscribe((s, prev) => {
@@ -53,7 +53,7 @@ export function useThemeEffects() {
   useEffect(() => {
     applyFontFamily();
     return useSettingsStore.subscribe((s, prev) => {
-      if (s.fontFamily !== prev.fontFamily) applyFontFamily(s.fontFamily);
+      if (s.fontFamily !== prev.fontFamily || s.fontFamilyCJK !== prev.fontFamilyCJK || s.fontFamilyEN !== prev.fontFamilyEN) applyFontFamily();
     });
   }, []);
 

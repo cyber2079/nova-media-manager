@@ -41,7 +41,7 @@ export default function ClockWidget({ config }: { config: WidgetConfig }) {
   const loc=localeMap[i18n.language]||"en-US";
 
   return (
-    <DesktopWidget position={config.position}>
+    <DesktopWidget id="clock" position={config.position}>
       <div className="flex flex-col items-center gap-1">
         <div className="relative">
           <svg width="100" height="100" viewBox="0 0 100 100" className="drop-shadow-lg">

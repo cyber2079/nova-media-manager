@@ -268,3 +268,68 @@ pub fn update_music_tags(db: State<Database>, id: String, tags: Vec<String>) -> 
         .map_err(|e| e.to_string())?;
     Ok(true)
 }
+
+/// Set a custom cover image for a music track.
+/// Copies the source image into the music covers directory and updates the DB.
+#[tauri::command]
+pub fn set_music_cover(db: State<Database>, id: String, source_path: String) -> Result<String, String> {
+    let data_dir = db.data_dir();
+    let covers_dir = data_dir.join("music_covers");
+    std::fs::create_dir_all(&covers_dir).map_err(|e| e.to_string())?;
+
+    let ext = std::path::Path::new(&source_path)
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("jpg");
+    let dest = covers_dir.join(format!("{}.{}", id, ext));
+    std::fs::copy(&source_path, &dest).map_err(|e| e.to_string())?;
+
+    let cover_path = dest.to_string_lossy().to_string();
+    let conn = db.conn();
+    conn.execute("UPDATE music SET cover_path = ?1 WHERE id = ?2",
+        rusqlite::params![cover_path, id])
+        .map_err(|e| e.to_string())?;
+
+    Ok(cover_path)
+}
+
+/// Reset cover to default — clears cover_path in DB so fallback icon shows.
+#[tauri::command]
+pub fn clear_music_cover(db: State<Database>, id: String) -> Result<(), String> {
+    let conn = db.conn();
+    conn.execute("UPDATE music SET cover_path = '' WHERE id = ?1", rusqlite::params![id])
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Re-generate cover for a music track by re-extracting embedded album art from the audio file.
+#[tauri::command]
+pub fn regenerate_music_cover(db: State<Database>, id: String) -> Result<String, String> {
+    let conn = db.conn();
+    let file_path: String = conn.query_row(
+        "SELECT file_path FROM music WHERE id = ?1",
+        rusqlite::params![id],
+        |r| r.get(0),
+    ).map_err(|e| e.to_string())?;
+
+    let data_dir = db.data_dir();
+    let covers_dir = data_dir.join("music_covers");
+    std::fs::create_dir_all(&covers_dir).map_err(|e| e.to_string())?;
+
+    let dest = covers_dir.join(format!("{}.jpg", id));
+    if !extract_cover(&file_path, &dest.to_string_lossy()) {
+        // If no embedded art, try ffmpeg thumbnail as fallback
+        let thumb = covers_dir.join(format!("{}_thumb.jpg", id));
+        if generate_thumbnail(&file_path, &dest.to_string_lossy()) {
+        } else {
+            return Err("Could not extract cover from audio file".into());
+        }
+    }
+
+    let cover_path = dest.to_string_lossy().to_string();
+    conn.execute("UPDATE music SET cover_path = ?1 WHERE id = ?2",
+        rusqlite::params![cover_path, id])
+        .map_err(|e| e.to_string())?;
+
+    Ok(cover_path)
+}

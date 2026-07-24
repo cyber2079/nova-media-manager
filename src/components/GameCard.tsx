@@ -104,7 +104,7 @@ export default memo(function GameCard({ game, onDelete, onLaunch, onEditTags, co
   // ── Horizontal landscape card ──
   if (horizontal) {
     return (
-      <div className="relative rounded-xl overflow-hidden bg-surface-lighter border border-primary/10 hover:border-primary/30 transition-all duration-300 cursor-pointer group"
+      <div className="relative rounded-xl overflow-hidden bg-surface-lighter shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
         onClick={() => onLaunch(game)}>
         {/* Landscape banner */}
         <div className="relative aspect-[2.4/1] overflow-hidden bg-surface-lighter">
@@ -165,7 +165,7 @@ export default memo(function GameCard({ game, onDelete, onLaunch, onEditTags, co
   // ── Portrait card (grid modes) ──
   return (
     <Card
-      className={cn("group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] theme-enter-card cursor-pointer")}
+      className={cn("group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] theme-enter-card cursor-pointer shadow-lg hover:shadow-xl hover:shadow-primary/10")}
       onClick={() => onLaunch(game)}
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-surface-lighter">

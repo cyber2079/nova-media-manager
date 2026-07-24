@@ -356,3 +356,36 @@ pub fn update_movie_tags(db: State<Database>, id: String, tags: Vec<String>) -> 
         .map_err(|e| e.to_string())?;
     Ok(true)
 }
+
+/// Set a custom cover image for a movie.
+/// Copies the source image into the covers directory and updates the DB.
+#[tauri::command]
+pub fn set_movie_cover(db: State<Database>, id: String, source_path: String) -> Result<String, String> {
+    let data_dir = db.data_dir();
+    let covers_dir = data_dir.join("covers").join("custom");
+    std::fs::create_dir_all(&covers_dir).map_err(|e| e.to_string())?;
+
+    let ext = std::path::Path::new(&source_path)
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("jpg");
+    let dest = covers_dir.join(format!("{}.{}", id, ext));
+    std::fs::copy(&source_path, &dest).map_err(|e| e.to_string())?;
+
+    let cover_path = dest.to_string_lossy().to_string();
+    let conn = db.conn();
+    conn.execute("UPDATE movies SET cover_path = ?1 WHERE id = ?2",
+        rusqlite::params![cover_path, id])
+        .map_err(|e| e.to_string())?;
+
+    Ok(cover_path)
+}
+
+/// Reset cover to default — clears cover_path so regeneration/fallback happens.
+#[tauri::command]
+pub fn clear_movie_cover(db: State<Database>, id: String) -> Result<(), String> {
+    let conn = db.conn();
+    conn.execute("UPDATE movies SET cover_path = '' WHERE id = ?1", rusqlite::params![id])
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}

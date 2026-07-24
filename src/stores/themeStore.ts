@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { kv } from "@/lib/sqliteStore";
-import { applySurface, useSettingsStore } from "./settingsStore";
+import { applyPalette, useSettingsStore } from "./settingsStore";
 import { analytics } from "@/lib/analytics";
 import { useGate } from "@/lib/useGate";
 import { useLicenseStore } from "./licenseStore";
@@ -73,7 +73,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       const root = document.documentElement;
       const css = root.style.cssText;
       root.style.cssText = css.split(";").filter(s => !s.trim().startsWith("--nv-")).join(";");
-      applySurface();
+      applyPalette();
       const { paletteCustomized, resetPaletteToTheme } = useSettingsStore.getState();
       if (!paletteCustomized) { resetPaletteToTheme("default"); persist(t); }
     } else {

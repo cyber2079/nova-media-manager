@@ -28,7 +28,7 @@ export default memo(function ImageCard({ image, onDelete, onClick, onEditTags, o
   // ── Horizontal banner layout ──
   if (horizontal) {
     return (
-      <div className="relative rounded-xl overflow-hidden bg-surface-lighter border border-primary/10 hover:border-primary/30 transition-all duration-300 cursor-pointer group"
+      <div className="relative rounded-xl overflow-hidden bg-surface-lighter shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
         onClick={onClick}>
         <div className="relative aspect-[2.4/1] overflow-hidden bg-surface-lighter">
           <FavoriteStar active={!!favorited} onToggle={onToggleFav || (() => {})} />

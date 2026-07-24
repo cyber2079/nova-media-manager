@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { useThemeStore, useAvailableThemes, type ThemeName } from "@/stores/themeStore";
 import { kv } from "@/lib/sqliteStore";
-import { useSettingsStore, applySurface, FONT_LIST, type BgVideoMode, type FontSize, type IconSize, type ImageWheelMode, DEFAULT_SCANLINE } from "@/stores/settingsStore";
+import { useSettingsStore, applyPalette, COMBINED_FONT_LIST, CJK_FONT_LIST, EN_FONT_LIST, type BgVideoMode, type FontSize, type IconSize, type ImageWheelMode, DEFAULT_SCANLINE } from "@/stores/settingsStore";
 import { languages } from "@/i18n";
 import { cn } from "@/lib/utils";
 import ScrollFade from "@/components/ScrollFade";
 import ThemeManager from "@/components/ThemeManager";
 import BgVideoTuner from "@/components/BgVideoTuner";
-import { Palette, Monitor, SlidersHorizontal, Music, RotateCcw, Gauge, Sparkles, EyeOff, Eye, Copy, Check, Key, Crown, Cpu, Clock, Calendar, Timer, FolderOpen, ImageIcon, Shuffle, Home, LogOut } from "lucide-react";
+import DevToolsMenu from "@/components/DevToolsMenu";
+import { lazy } from "react";
+const Nv3dViewer = lazy(() => import("@/webgl3d/canvas/Nv3dViewer"));
+import { Palette, Monitor, SlidersHorizontal, Music, RotateCcw, Gauge, Sparkles, EyeOff, Eye, Copy, Check, Key, Crown, Terminal, Cpu, Clock, Calendar, Timer, FolderOpen, ImageIcon, Shuffle, Home, LogOut, Box, X } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
 import { useLicenseStore } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS } from "@/stores/settingsStore";
@@ -28,20 +31,24 @@ interface ThemeListItem {
 }
 
 // ═══════════════ TABS ═══════════════
-type TabId = "general" | "appearance" | "media" | "widgets" | "performance";
+type TabId = "general" | "appearance" | "themes" | "media" | "widgets" | "performance" | "dev";
 
-const tabs: { id: TabId; icon: typeof SlidersHorizontal; labelKey: string }[] = [
+const tabs: { id: TabId; icon: typeof SlidersHorizontal; labelKey: string; devOnly?: boolean }[] = [
   { id: "general", icon: SlidersHorizontal, labelKey: "settings.tab_general" },
+  { id: "themes", icon: Sparkles, labelKey: "settings.tab_themes" },
   { id: "appearance", icon: Palette, labelKey: "settings.tab_appearance" },
   { id: "media", icon: Music, labelKey: "settings.tab_media" },
   { id: "widgets", icon: Monitor, labelKey: "settings.tab_widgets" },
   { id: "performance", icon: Gauge, labelKey: "settings.tab_performance" },
+  { id: "dev", icon: Terminal, labelKey: "settings.tab_dev", devOnly: true },
 ];
 
 // ═══════════════ DEFAULTS ═══════════════
 const DEFAULTS = {
   general: { language: "zh", autoStart: true, startFullscreen: true },
-  appearance: { theme: "default" as ThemeName, bgVideoMode: "cover" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "inter", paletteAccent: "#4788f0", paletteSaturation: 50, paletteCustomized: false, glassMasterEnabled: true, globalGlassOpacity: 70, globalGlassBlur: 3, barOpacity: 92, barBlur: 16, mainOpacity: 92, mainBlur: 16, dialogOpacity: 92, dialogBlur: 16, autoHideHeader: false, autoHideFooter: false, wallpaper: { mode: "none" as const, path: "", shuffle: "sequential" as const, interval: 30, fit: "none" as const } },
+  themes: { theme: "default" as ThemeName },
+  appearance: { bgVideoMode: "cover" as BgVideoMode, fontSize: "normal" as FontSize, fontFamily: "", fontFamilyCJK: "", fontFamilyEN: "", systemDialogStyle: "windows" as const, paletteAccent: "#4788f0", paletteSaturation: 50, paletteCustomized: false, glassMasterEnabled: true, globalGlassOpacity: 70, globalGlassBlur: 3, barOpacity: 92, barBlur: 16, mainOpacity: 92, mainBlur: 16, dialogOpacity: 92, dialogBlur: 16, autoHideHeader: false, autoHideFooter: false, wallpaper: { mode: "none" as const, path: "", shuffle: "sequential" as const, interval: 30, fit: "none" as const } },
+  dev: {},
   media: { previewOffset: 0.5, lyricFontSize: "normal" as const, lyricUseCustomColor: false, lyricCurrentColor: "#ffffff", lyricOtherColor: "#8899aa", lyricFillColor: "#ffb6c1", playerBgMode: "follow" as const, playerBgColor: "", cyberBgmEnabled: true, imageWheelMode: "prevNext" as ImageWheelMode, externalPlayer: { mode: "auto" as const, kind: "", path: "" } },
   widgets: {
     widgetTextColor: "#e8f4ff",
@@ -85,7 +92,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
     previewOffset, setPreviewOffset, lyricFontSize, setLyricFontSize,
     lyricUseCustomColor, setLyricUseCustomColor, lyricCurrentColor, setLyricCurrentColor,
     lyricOtherColor, setLyricOtherColor, lyricFillColor, setLyricFillColor,
-    fontSize, iconSize, setFontSize, setIconSize, fontFamily, setFontFamily,
+    fontSize, iconSize, setFontSize, setIconSize, fontFamily, setFontFamily, fontFamilyCJK, setFontFamilyCJK, fontFamilyEN, setFontFamilyEN, systemDialogStyle, setSystemDialogStyle,
     imageWheelMode, setImageWheelMode,
     barOpacity, setBarOpacity, barBlur, setBarBlur,
     glassMasterEnabled, setGlassMasterEnabled, globalGlassOpacity, setGlobalGlassOpacity, globalGlassBlur, setGlobalGlassBlur,
@@ -145,8 +152,8 @@ export default function SettingsDialog({ open, onClose }: Props) {
       }
       case "appearance": {
         const d = DEFAULTS.appearance;
-        setTheme(d.theme); setBgVideoMode(d.bgVideoMode);
-        setFontSize(d.fontSize); setFontFamily(d.fontFamily);
+        setBgVideoMode(d.bgVideoMode);
+        setFontSize(d.fontSize); setFontFamily(d.fontFamily); setFontFamilyCJK(d.fontFamilyCJK); setFontFamilyEN(d.fontFamilyEN); setSystemDialogStyle(d.systemDialogStyle);
         setPaletteAccent(d.paletteAccent); setPaletteSaturation(d.paletteSaturation);
         setBarOpacity(d.barOpacity); setBarBlur(d.barBlur);
         setGlassMasterEnabled(d.glassMasterEnabled); setGlobalGlassOpacity(d.globalGlassOpacity); setGlobalGlassBlur(d.globalGlassBlur);
@@ -154,7 +161,15 @@ export default function SettingsDialog({ open, onClose }: Props) {
         setDialogOpacity(d.dialogOpacity); setDialogBlur(d.dialogBlur);
         setAutoHideHeader(d.autoHideHeader); setAutoHideFooter(d.autoHideFooter);
         setWallpaperConfig(d.wallpaper);
-        setTimeout(() => applySurface(), 0);
+        setTimeout(() => applyPalette(), 0);
+        break;
+      }
+      case "themes": {
+        const d = DEFAULTS.themes;
+        setTheme(d.theme);
+        break;
+      }
+      case "dev": {
         break;
       }
       case "media": {
@@ -188,7 +203,8 @@ export default function SettingsDialog({ open, onClose }: Props) {
     }
     setConfirmReset(null);
   }, [setLanguage, i18n, setAutoStart, setStartFullscreen, setAutoHideHeader, setAutoHideFooter,
-      setTheme, setBgVideoMode, setFontSize, setFontFamily,
+      setTheme, setBgVideoMode, setFontSize, setFontFamily, setFontFamilyCJK, setFontFamilyEN, setSystemDialogStyle,
+      setWallpaperConfig,
       setPaletteAccent, setPaletteSaturation, setBarOpacity, setBarBlur,
       setGlassMasterEnabled, setGlobalGlassOpacity, setGlobalGlassBlur, setMainOpacity, setMainBlur, setDialogOpacity, setDialogBlur,
       setPreviewOffset, setLyricFontSize, setLyricUseCustomColor, setLyricCurrentColor, setLyricOtherColor, setLyricFillColor, setImageWheelMode,
@@ -225,7 +241,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
           {/* Left tab nav */}
           <div className={cn("w-44 shrink-0 py-4 px-3 flex flex-col gap-0.5 overflow-y-auto border-r",
             "border-white/5")}>
-            {tabs.map((tab) => {
+            {tabs.filter(tab => !tab.devOnly || import.meta.env.DEV).map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -253,12 +269,15 @@ export default function SettingsDialog({ open, onClose }: Props) {
           <div className="flex-1 overflow-y-auto px-6 py-5 relative">
             {activeTab === "general" && <GeneralTab t={t} language={language} handleLanguage={handleLanguage} languages={languages} autoStart={autoStart} autoLoading={autoLoading} handleAutoStart={handleAutoStart} startFullscreen={startFullscreen} setStartFullscreen={setStartFullscreen} resetTab={() => setConfirmReset("general")} />}
 
-            {activeTab === "appearance" && <AppearanceTab t={t} theme={theme} filteredThemeList={filteredThemeList} handleTheme={handleTheme} paletteAccent={paletteAccent} paletteSaturation={paletteSaturation} paletteRandomEnabled={paletteRandomEnabled} paletteRandomSeed={paletteRandomSeed} setPaletteAccent={setPaletteAccent} setPaletteSaturation={setPaletteSaturation} setPaletteRandomSeed={setPaletteRandomSeed} setPaletteRandomEnabled={setPaletteRandomEnabled} resetPaletteToTheme={resetPaletteToTheme} themeEffects={themeEffects} setThemeEffects={setThemeEffects} resetThemeEffects={resetThemeEffects} bgVideoMode={bgVideoMode} setBgVideoMode={setBgVideoMode} autoHideHeader={autoHideHeader} setAutoHideHeader={setAutoHideHeader} autoHideFooter={autoHideFooter} setAutoHideFooter={setAutoHideFooter} barOpacity={barOpacity} setBarOpacity={setBarOpacity} barBlur={barBlur} setBarBlur={setBarBlur} glassMasterEnabled={glassMasterEnabled} setGlassMasterEnabled={setGlassMasterEnabled} globalGlassOpacity={globalGlassOpacity} setGlobalGlassOpacity={setGlobalGlassOpacity} globalGlassBlur={globalGlassBlur} setGlobalGlassBlur={setGlobalGlassBlur} mainOpacity={mainOpacity} setMainOpacity={setMainOpacity} mainBlur={mainBlur} setMainBlur={setMainBlur} dialogOpacity={dialogOpacity} setDialogOpacity={setDialogOpacity} dialogBlur={dialogBlur} setDialogBlur={setDialogBlur} dashboardMode={dashboardMode} setDashboardMode={setDashboardMode} fontSize={fontSize} setFontSize={setFontSize} iconSize={iconSize} setIconSize={setIconSize} fontFamily={fontFamily} setFontFamily={setFontFamily} resetTab={() => setConfirmReset("appearance")} />}
+            {activeTab === "appearance" && <AppearanceTab t={t} theme={theme} paletteAccent={paletteAccent} paletteSaturation={paletteSaturation} paletteRandomEnabled={paletteRandomEnabled} paletteRandomSeed={paletteRandomSeed} setPaletteAccent={setPaletteAccent} setPaletteSaturation={setPaletteSaturation} setPaletteRandomSeed={setPaletteRandomSeed} setPaletteRandomEnabled={setPaletteRandomEnabled} resetPaletteToTheme={resetPaletteToTheme} bgVideoMode={bgVideoMode} setBgVideoMode={setBgVideoMode} autoHideHeader={autoHideHeader} setAutoHideHeader={setAutoHideHeader} autoHideFooter={autoHideFooter} setAutoHideFooter={setAutoHideFooter} barOpacity={barOpacity} setBarOpacity={setBarOpacity} barBlur={barBlur} setBarBlur={setBarBlur} glassMasterEnabled={glassMasterEnabled} setGlassMasterEnabled={setGlassMasterEnabled} globalGlassOpacity={globalGlassOpacity} setGlobalGlassOpacity={setGlobalGlassOpacity} globalGlassBlur={globalGlassBlur} setGlobalGlassBlur={setGlobalGlassBlur} mainOpacity={mainOpacity} setMainOpacity={setMainOpacity} mainBlur={mainBlur} setMainBlur={setMainBlur} dialogOpacity={dialogOpacity} setDialogOpacity={setDialogOpacity} dialogBlur={dialogBlur} setDialogBlur={setDialogBlur} dashboardMode={dashboardMode} setDashboardMode={setDashboardMode} fontSize={fontSize} setFontSize={setFontSize} iconSize={iconSize} setIconSize={setIconSize} fontFamily={fontFamily} setFontFamily={setFontFamily} fontFamilyCJK={fontFamilyCJK} setFontFamilyCJK={setFontFamilyCJK} fontFamilyEN={fontFamilyEN} setFontFamilyEN={setFontFamilyEN} systemDialogStyle={systemDialogStyle} setSystemDialogStyle={setSystemDialogStyle} resetTab={() => setConfirmReset("appearance")} />}
+
+            {activeTab === "themes" && <ThemesTab t={t} theme={theme} filteredThemeList={filteredThemeList} handleTheme={handleTheme} themeEffects={themeEffects} setThemeEffects={setThemeEffects} resetThemeEffects={resetThemeEffects} resetTab={() => setConfirmReset("themes")} />}
 
             {activeTab === "media" && <MediaTab t={t} previewOffset={previewOffset} setPreviewOffset={setPreviewOffset} lyricFontSize={lyricFontSize} setLyricFontSize={setLyricFontSize} lyricUseCustomColor={lyricUseCustomColor} setLyricUseCustomColor={setLyricUseCustomColor} lyricCurrentColor={lyricCurrentColor} setLyricCurrentColor={setLyricCurrentColor} lyricOtherColor={lyricOtherColor} setLyricOtherColor={setLyricOtherColor} lyricFillColor={lyricFillColor} setLyricFillColor={setLyricFillColor} playerBgMode={playerBgMode} playerBgColor={playerBgColor} setPlayerBgMode={setPlayerBgMode} setPlayerBgColor={setPlayerBgColor} cyberBgmEnabled={cyberBgmEnabled} setCyberBgmEnabled={setCyberBgmEnabled} imageWheelMode={imageWheelMode} setImageWheelMode={setImageWheelMode} resetTab={() => setConfirmReset("media")} />}
 
             {activeTab === "widgets" && <WidgetsTab t={t} myComputer={myComputer} systemMonitor={systemMonitor} clock={clock} calendar={calendar} countdown={countdown} setEnabled={setEnabled} setPosition={setPosition} setMyComputerMode={setMyComputerMode} setCountdown={setCountdown} widgetTextColor={widgetTextColor} setWidgetTextColor={setWidgetTextColor} resetTab={() => setConfirmReset("widgets")} />}
             {activeTab === "performance" && <PerformanceTab t={t} perfPriority={perfPriority} setPerfPriority={setPerfPriority} perfIdleReduce={perfIdleReduce} setPerfIdleReduce={setPerfIdleReduce} perfReduceAnimations={perfReduceAnimations} setPerfReduceAnimations={setPerfReduceAnimations} cacheCleanupDays={cacheCleanupDays} setCacheCleanupDays={setCacheCleanupDays} hardwareAcceleration={hardwareAcceleration} setHardwareAcceleration={setHardwareAcceleration} applyPerfSettings={applyPerfSettings} resetTab={() => setConfirmReset("performance")} />}
+            {activeTab === "dev" && <DevToolsTab t={t} resetTab={() => setConfirmReset("dev")} />}
 
             <ScrollFade height={48} />
           </div>
@@ -364,26 +383,10 @@ function GeneralTab({ t, language, handleLanguage, languages, autoStart, autoLoa
 // ═══════════════ APPEARANCE TAB ═══════════════
 
 function AppearanceTab(props: any) {
-  const { t, theme, filteredThemeList, handleTheme, paletteAccent, paletteSaturation, paletteRandomEnabled, paletteRandomSeed, setPaletteAccent, setPaletteSaturation, setPaletteRandomSeed, setPaletteRandomEnabled, resetPaletteToTheme, themeEffects, setThemeEffects, resetThemeEffects, bgVideoMode, setBgVideoMode, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, barOpacity, setBarOpacity, barBlur, setBarBlur, glassMasterEnabled, setGlassMasterEnabled, globalGlassOpacity, setGlobalGlassOpacity, globalGlassBlur, setGlobalGlassBlur, mainOpacity, setMainOpacity, mainBlur, setMainBlur, dialogOpacity, setDialogOpacity, dialogBlur, setDialogBlur, dashboardMode, setDashboardMode, fontSize, setFontSize, iconSize, setIconSize, fontFamily, setFontFamily, resetTab } = props;
+  const { t, theme, paletteAccent, paletteSaturation, paletteRandomEnabled, paletteRandomSeed, setPaletteAccent, setPaletteSaturation, setPaletteRandomSeed, setPaletteRandomEnabled, resetPaletteToTheme, bgVideoMode, setBgVideoMode, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, barOpacity, setBarOpacity, barBlur, setBarBlur, glassMasterEnabled, setGlassMasterEnabled, globalGlassOpacity, setGlobalGlassOpacity, globalGlassBlur, setGlobalGlassBlur, mainOpacity, setMainOpacity, mainBlur, setMainBlur, dialogOpacity, setDialogOpacity, dialogBlur, setDialogBlur, dashboardMode, setDashboardMode, fontSize, setFontSize, iconSize, setIconSize, fontFamily, setFontFamily, fontFamilyCJK, setFontFamilyCJK, fontFamilyEN, setFontFamilyEN, systemDialogStyle, setSystemDialogStyle, resetTab } = props;
   const isNonDefault = theme !== "default";
   return (
     <>
-      {/* ═══ Theme ═══ */}
-      <SectionGroup title={t("settings.theme")}>
-        <SettingCard>
-          <div className="grid grid-cols-3 gap-2">
-            {filteredThemeList.map((item: any) => (
-              <button key={item.key} onClick={() => handleTheme(item.key)}
-                className={cn("flex flex-col items-center gap-1.5 px-2 py-3 rounded-lg text-xs border transition-all duration-200 cursor-pointer select-none",
-                  theme === item.key ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
-                {item.image ? <img src={item.image} alt="" className="w-10 h-10 rounded-full object-cover" /> : item.key === "default" ? <NeonIcon name="Home" size={16}><Home className="h-5 w-5" /></NeonIcon> : <span className="text-base">{item.emoji}</span>}
-                <span>{item.labelKey ? t(item.labelKey) : item.label}</span>
-              </button>
-            ))}
-          </div>
-        </SettingCard>
-      </SectionGroup>
-
       {/* ═══ Palette ═══ */}
       <SectionGroup title={t("settings.palette_title")}>
         <SettingCard>
@@ -427,9 +430,11 @@ function AppearanceTab(props: any) {
               })}
             </div>
             {paletteRandomEnabled && (
-              <button onClick={() => setPaletteRandomSeed(Date.now())} className="mt-2 text-xs text-gray-500 hover:text-yellow-400 transition-colors">
-                🎲 {t("settings.palette_rerandom")}
-              </button>
+              <div className="mt-3 pt-2 border-t border-white/[0.05]">
+                <button onClick={() => setPaletteRandomSeed(Date.now())} className="text-xs text-gray-500 hover:text-yellow-400 transition-colors">
+                  🎲 {t("settings.palette_rerandom")}
+                </button>
+              </div>
             )}
           </>) : (<>
             {/* Default 18-color palette */}
@@ -525,16 +530,57 @@ function AppearanceTab(props: any) {
       {/* ═══ Font ═══ */}
       <SectionGroup title={t("settings.look_font")}>
         <SettingCard>
+          {/* Combined fonts — one preset covers CJK + Latin */}
           <div>
-            <p className="text-xs text-gray-400 mb-2">{t("settings.font_family")}</p>
+            <p className="text-xs text-gray-400 mb-2">{t("settings.font_combined")}</p>
             <div className="grid grid-cols-2 gap-2">
-              {FONT_LIST.map((f) => (
-                <button key={f.value} onClick={() => setFontFamily(f.value)}
-                  className={cn("px-3 py-2 rounded-lg text-xs border transition-all text-left truncate",
-                    fontFamily === f.value ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
-                  {f.i18nKey ? t(f.i18nKey) : f.label}
-                </button>
-              ))}
+              {COMBINED_FONT_LIST.map((f) => {
+                const isActive = fontFamily === f.value;
+                return (
+                  <button key={f.value} onClick={() => {
+                    if (isActive) setFontFamily(""); // deselect → back to split mode
+                    else setFontFamily(f.value);
+                  }}
+                    className={cn("px-3 py-2 rounded-lg text-xs border transition-all text-left truncate",
+                      isActive ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
+                    {f.i18nKey ? t(f.i18nKey) : f.label}
+                  </button>
+                );
+              })}
+            </div>
+            {fontFamily && <p className="text-[10px] text-gray-500 mt-1.5">{t("settings.font_combined_active")}</p>}
+          </div>
+          {/* Split mode — independent CJK + Latin picks */}
+          <CardDivider />
+          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">{t("settings.font_split_title")}</p>
+          <div>
+            <p className="text-xs text-gray-400 mb-2">{t("settings.font_cjk")}</p>
+            <div className="grid grid-cols-2 gap-2">
+              {CJK_FONT_LIST.map((f) => {
+                const isActive = fontFamilyCJK === f.value && !fontFamily;
+                return (
+                  <button key={f.value || "__"} onClick={() => setFontFamilyCJK(f.value)}
+                    className={cn("px-3 py-2 rounded-lg text-xs border transition-all text-left truncate",
+                      isActive ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
+                    {f.i18nKey ? t(f.i18nKey) : f.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 mb-2">{t("settings.font_en")}</p>
+            <div className="grid grid-cols-2 gap-2">
+              {EN_FONT_LIST.map((f) => {
+                const isActive = fontFamilyEN === f.value && !fontFamily;
+                return (
+                  <button key={f.value || "__"} onClick={() => setFontFamilyEN(f.value)}
+                    className={cn("px-3 py-2 rounded-lg text-xs border transition-all text-left truncate",
+                      isActive ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
+                    {f.i18nKey ? t(f.i18nKey) : f.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
           <div>
@@ -564,21 +610,55 @@ function AppearanceTab(props: any) {
         </SettingCard>
       </SectionGroup>
 
+      {/* ═══ System dialogs style ═══ */}
+      <SectionGroup title={t("settings.dialog_style_title")}>
+        <SettingCard>
+          <div className="grid grid-cols-2 gap-2">
+            {(["windows", "theme"] as const).map((v) => (
+              <button key={v} onClick={() => setSystemDialogStyle(v)}
+                className={cn("px-3 py-2 rounded-lg text-xs border transition-all",
+                  systemDialogStyle === v ? "bg-primary/15 border-primary/40 text-primary-light" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
+                {v === "windows" ? t("settings.windows_default") : t("settings.theme_custom")}
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-gray-500">{t("settings.dialog_style_hint")}</p>
+        </SettingCard>
+      </SectionGroup>
+
       {/* ═══ Wallpaper — all themes except ice-girl/cyber-girl (those have their own bg) ═══ */}
       {theme !== "ice-girl" && theme !== "cyber-girl" && <SectionGroup title={t("settings.wallpaper_title")}><WallpaperSection t={t} /></SectionGroup>}
 
+      <ResetButton tab="appearance" t={t} onReset={resetTab} />
+    </>
+  );
+}
+
+// ═══════════════ THEMES TAB ═══════════════
+
+function ThemesTab(props: any) {
+  const { t, theme, filteredThemeList, handleTheme, themeEffects, setThemeEffects, resetThemeEffects, resetTab } = props;
+  const isNonDefault = theme !== "default";
+  return (
+    <>
+      {/* ═══ Theme selection ═══ */}
+      <SectionGroup title={t("settings.theme")}>
+        <SettingCard>
+          <div className="grid grid-cols-3 gap-2">
+            {filteredThemeList.map((item: any) => (
+              <button key={item.key} onClick={() => handleTheme(item.key)}
+                className={cn("flex flex-col items-center gap-1.5 px-2 py-3 rounded-lg text-xs border transition-all duration-200 cursor-pointer select-none",
+                  theme === item.key ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
+                {item.image ? <img src={item.image} alt="" className="w-10 h-10 rounded-full object-cover" /> : item.key === "default" ? <NeonIcon name="Home" size={16}><Home className="h-5 w-5" /></NeonIcon> : <span className="text-base">{item.emoji}</span>}
+                <span>{item.labelKey ? t(item.labelKey) : item.label}</span>
+              </button>
+            ))}
+          </div>
+        </SettingCard>
+      </SectionGroup>
+
       {/* ═══ Theme packs ═══ */}
       <SectionGroup title={t("settings.theme_plugins")}><ThemeManager /></SectionGroup>
-
-      {/* ═══ Dev tools ═══ */}
-      {import.meta.env?.VITE_LICENSE_TIER && (
-        <SectionGroup title={t("settings.dev_tools")}>
-          <div className="flex gap-2 flex-wrap">
-            <NavigationStudioBtn t={t} />
-            <BgTunerBtn />
-          </div>
-        </SectionGroup>
-      )}
 
       {/* ═══ Theme Effects ═══ */}
       {isNonDefault && (
@@ -588,7 +668,6 @@ function AppearanceTab(props: any) {
               const fx = themeEffects[theme]?.scanline ?? DEFAULT_SCANLINE;
               return (
                 <>
-                  {/* Toggle */}
                   <SettingRow label={t("settings.scanline_enabled")}>
                     <Toggle active={fx.enabled} onToggle={() => setThemeEffects(theme, {
                       ...themeEffects[theme],
@@ -598,7 +677,6 @@ function AppearanceTab(props: any) {
                   {fx.enabled && (
                     <>
                       <CardDivider />
-                      {/* Color */}
                       <SettingRow label={t("settings.scanline_color")}>
                         <input type="color" value={fx.color}
                           onChange={(e) => setThemeEffects(theme, {
@@ -608,7 +686,6 @@ function AppearanceTab(props: any) {
                           className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" />
                       </SettingRow>
                       <CardDivider />
-                      {/* Opacity slider */}
                       <SliderControl title={t("settings.scanline_opacity")}
                         value={fx.opacity} min={0} max={20} unit="%"
                         onChange={(v) => setThemeEffects(theme, {
@@ -616,7 +693,6 @@ function AppearanceTab(props: any) {
                           scanline: { ...fx, opacity: v },
                         })} />
                       <CardDivider />
-                      {/* Thickness slider */}
                       <SliderControl title={t("settings.scanline_thickness")}
                         value={fx.thickness} min={1} max={4} unit="px"
                         onChange={(v) => setThemeEffects(theme, {
@@ -625,7 +701,6 @@ function AppearanceTab(props: any) {
                         })} />
                     </>
                   )}
-                  {/* Reset button */}
                   <button
                     onClick={() => resetThemeEffects(theme)}
                     className="text-xs text-gray-500 hover:text-primary-light transition-colors">
@@ -638,7 +713,43 @@ function AppearanceTab(props: any) {
         </SectionGroup>
       )}
 
-      <ResetButton tab="appearance" t={t} onReset={resetTab} />
+      <ResetButton tab="themes" t={t} onReset={resetTab} />
+    </>
+  );
+}
+
+// ═══════════════ DEV TOOLS TAB ═══════════════
+
+function DevToolsTab(_props: any) {
+  const { t } = useTranslation();
+  const [nv3dOpen, setNv3dOpen] = useState(false);
+  return (
+    <>
+      <SectionGroup title={t("settings.dev_theme_tools")}>
+        <div className="flex gap-2 flex-wrap">
+          <NavigationStudioBtn t={t} />
+          <BgTunerBtn />
+        </div>
+      </SectionGroup>
+
+      <SectionGroup title={t("settings.dev_3d_tools")}>
+        <div className="flex gap-2 flex-wrap">
+          <button onClick={() => setNv3dOpen(true)}
+            className="px-3 py-2 rounded-lg border border-primary/30 text-xs text-gray-300 hover:bg-primary/10 transition-colors flex items-center gap-1.5">
+            <NeonIcon name="Box" size={16}><Box className="h-3.5 w-3.5" /></NeonIcon>{t("settings.dev_3d_viewer")}
+          </button>
+          <DevToolsMenu showText />
+        </div>
+      </SectionGroup>
+
+      {nv3dOpen && (
+        <div className="fixed inset-0 z-[300] bg-black" onClick={e => e.target === e.currentTarget && setNv3dOpen(false)}>
+          <button onClick={() => setNv3dOpen(false)} className="absolute top-4 right-4 z-[310] flex h-9 w-9 items-center justify-center rounded-lg bg-black/50 hover:bg-red-500/30 transition-all active:scale-90" title={t("settings.close")}>
+            <NeonIcon name="X" size={16}><X className="h-4 w-4 text-white" /></NeonIcon>
+          </button>
+          <Nv3dViewer />
+        </div>
+      )}
     </>
   );
 }

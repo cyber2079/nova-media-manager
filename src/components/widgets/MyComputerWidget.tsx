@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import DesktopWidget from "@/components/DesktopWidget";
 import FileExplorer from "@/components/FileExplorer";
 import type { WidgetConfig } from "@/stores/widgetStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 
 interface DiskInfo { disk: number; disk_used: number; disk_total: number; }
 
@@ -36,8 +37,10 @@ export default function MyComputerWidget({ config }: { config: WidgetConfig }) {
   const [explorerOpen, setExplorerOpen] = useState(false);
 
   const handleClick = async () => {
-    const mode = config.myComputerMode || "default";
-    if (mode === "custom") {
+    // Per-widget custom mode, or global themed dialog style — both open themed FileExplorer
+    const widgetMode = config.myComputerMode || "default";
+    const globalStyle = useSettingsStore.getState().systemDialogStyle;
+    if (widgetMode === "custom" || globalStyle === "theme") {
       setExplorerOpen(true);
     } else {
       try {
@@ -74,8 +77,8 @@ export default function MyComputerWidget({ config }: { config: WidgetConfig }) {
 
   return (
     <>
-    <DesktopWidget position={config.position}>
-      <div className="flex flex-col items-center gap-1">
+    <DesktopWidget id="myComputer" position={config.position}>
+      <div className="flex flex-col items-center gap-1 pointer-events-none">
         <button
           onClick={handleClick}
           className="group flex flex-col items-center gap-1 pointer-events-auto"
@@ -83,10 +86,10 @@ export default function MyComputerWidget({ config }: { config: WidgetConfig }) {
         >
           {/* SVG outer ring */}
           <div className="relative">
-            <svg width="100" height="100" viewBox="0 0 100 100" className="drop-shadow-lg pointer-events-none">
+            <svg width="100" height="100" viewBox="0 0 100 100" className="pointer-events-none">
               <circle cx="50" cy="50" r={44} fill="none" stroke="var(--color-primary)" strokeOpacity="0.2" strokeWidth="1.5" />
             </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/30 bg-surface/40 backdrop-blur-md overflow-hidden
                 transition-all duration-300 group-hover:border-primary/60 group-hover:shadow-lg group-hover:shadow-primary/20 group-hover:scale-105">
                 {iconSrc ? (

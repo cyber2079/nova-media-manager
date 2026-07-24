@@ -300,6 +300,86 @@ license 软链接检查:
 - 下载失败的跳过，下次启动重试
 - 不弹错误对话框阻塞用户，静默重试
 
+### 4.5 settingsStore 添加新字段（完整 checklist）
+
+> 2026-07-24 沉淀：每次加新设置项都要触碰 8 个位置，漏一个就丢数据或 UI 不生效。
+
+```
+① 类型声明        SettingsState 接口添加字段 + setter 签名（~第 96 行）
+② 初始默认值      create() 中从 saved 读取，取 || 默认值（~第 440 行）
+③ 持久化序列化    schedulePersist() 的 payload 对象加字段（~第 259 行）
+④ SQLite 恢复     init() 中 JSON.parse 分支补字段（~第 490 行）
+⑤ setter 实现     create() 返回值添加 setXxx(v) { set(...); persist(); }（~第 580 行）
+⑥ 重置默认值      DEFAULTS 对象加字段 + doResetTab 加 setter 调用（~第 42/136 行）
+⑦ UI 控件         SettingsDialog 对应 Tab 加控件 + props 传递
+⑧ i18n            至少 zh.json + en.json 加 label key
+```
+
+**容易遗漏的**：
+- 持久化序列化漏写 → 重启后丢失
+- SQLite 恢复漏写 → 首次启动正常，第二次启动被旧缓存覆盖为默认值
+- DEFAULTS 漏写 → "恢复默认"只恢复了一部分字段
+
+### 4.6 CSS group hover vs JS mouseenter/mouseleave
+
+> 2026-07-24 踩坑：hover 后按钮出现在父元素外部，JS `onMouseLeave` 刚到按钮就触发消失。
+
+| 方式 | 行为 | 适用场景 |
+|---|---|---|
+| JS `onMouseEnter` / `onMouseLeave` | 鼠标离开父元素边界立即触发 leave | 按钮在父元素**内部** |
+| CSS `group` / `group-hover:opacity-100` | 鼠标移到子元素上仍保持父元素 hover 状态 | 按钮在父元素**边界附近或外侧** |
+
+**正确写法**（可编辑标题为例）：
+
+```tsx
+// ❌ JS hover — 按钮在文字右侧，鼠标移过去就触发 onMouseLeave
+<div onMouseEnter={...} onMouseLeave={...}>
+  <h1>标题</h1>
+  <div className="absolute left-full">编辑按钮</div> {/* 点不到！ */}
+</div>
+
+// ✅ CSS group — 鼠标移到按钮上，父元素仍保持 hover
+<span className="relative inline-flex group pr-10">
+  <h1>标题</h1>
+  <div className="opacity-0 group-hover:opacity-100 absolute right-0 top-1/2 -translate-y-1/2">
+    <button>✎</button>
+  </div>
+</span>
+```
+
+### 4.7 Layout overflow 裁剪 hover 光晕
+
+> 2026-07-24：所有主题下，最左/最右图标 hover 时的 `box-shadow` / `drop-shadow` 被切 1-2px。
+
+**根因**：`Layout.tsx` 中 `<main>` 有 `overflow-hidden`，内部滚动容器有 `overflow-y-auto`（隐式含 `overflow-x: auto`）
+
+**修复**：
+- `<main>` 的 `overflow-hidden` → `overflow-visible`（圆角本身就能裁剪，不需要 overflow 辅助）
+- 内部滚动 div 加 `px-1`（4px 呼吸空间给光晕边沿）
+- 或用 `style={{ overflowY: "auto", overflowX: "clip" }}` 精确控制（Y 轴滚动，X 轴不裁剪且不产生横向滚动条）
+
+**症状定位**：SortBar 最左按钮、LayoutSwitch 最右按钮、页面操作按钮的 hover 光晕在边沿被裁
+
+### 4.8 EditableText 行内编辑模式
+
+> 2026-07-24：标题 hover 显示编辑按钮 → 点击变 input → Enter 保存 / Escape 取消 / 失焦保存。
+
+```tsx
+const [editing, setEditing] = useState(false);
+const [value, setValue] = useState(() => localStorage.getItem(KEY) || "");
+
+// 非编辑态：显示文本 + hover 按钮（CSS group）
+// 编辑态：input autoFocus，Enter/Escape/onBlur 触发 save
+const save = (val: string) => {
+  const trimmed = val.trim();
+  if (trimmed) { setValue(trimmed); localStorage.setItem(KEY, trimmed); }
+  else { setValue(""); localStorage.removeItem(KEY); }
+  setEditing(false);
+};
+```
+
+**关键**：默认值来自 i18n（多语言），自定义值存 localStorage（全局覆盖不区分语言）。恢复默认时删 localStorage key，回到 i18n 值。
+
 ## 五、部署 SOP
 
 ### 5.1 Landing Page
@@ -365,12 +445,15 @@ ls D:\nova-media-manager\public\themes\cyber%20girl\
 
 | 文件 | 职责 | 改它时要注意 |
 |---|---|---|
-| `src/index.css` | 全局样式 + 主题定义 + 动画 | 别破坏 light palette |
-| `src/stores/settingsStore.ts` | 所有设置项 + 持久化 | 新增字段要加 persist |
+| `src/index.css` | 全局样式 + 主题定义 + 动画 + @font-face + NeonIcon base | 别破坏 light palette；`.neon-icon` base 样式不能删 |
+| `src/stores/settingsStore.ts` | 所有设置项 + 持久化 + 每主题特效配置 | 新增字段按 4.5 checklist 8 步走，漏一步就丢数据 |
 | `src/stores/licenseStore.ts` | 许可证状态 | tier 结构不能乱改 |
-| `src/stores/themeStore.ts` | 当前选中主题 | ThemeName 联合类型保持一致 |
+| `src/stores/themeStore.ts` | 当前选中主题 + useAvailableThemes 会员门控 | ThemeName 联合类型保持一致 |
 | `src/i18n/locales/zh.json` | 中文翻译（主文件） | 所有 key 7 种语言都得有 |
-| `src/components/Layout.tsx` | 全局框架（header/main/footer） | 涉及主题渲染逻辑 |
-| `src/pages/Home.tsx` | 首页（Dashboard + 主题角色） | 三个主题分支都要测 |
+| `src/components/Layout.tsx` | 全局框架（header/main/footer） | 涉及主题渲染逻辑；勿加 overflow-hidden 到 main |
+| `src/pages/Home.tsx` | 首页（Dashboard + 主题角色） | 三个主题分支 + THEME_META 都要测 |
+| `src/hooks/useThemeTokens.ts` | Token 注入 + 每主题特效 CSS 覆盖 | useEffect 依赖要加新 settings 字段 |
+| `src/components/NeonIcon.tsx` | 主题霓虹图标渲染 | default 走 children fallback，非 default 走 inline SVG |
+| `src/components/neon-icon-data.json` | 霓虹图标 SVG 数据 | 单行 JSON，新增图标不能换行 |
 | `src-tauri/src/theme/` | .nvtp 加解密/打包/解包 | 改动影响所有已发布主题 |
 | `server/src/license.ts` | 激活/验证/解绑逻辑 | 改动影响所有已激活用户 |

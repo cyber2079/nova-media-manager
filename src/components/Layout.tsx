@@ -1,10 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Video, Image, Gamepad2, Home, Music, Maximize2, Minimize2, Search, Settings, X, LayoutGrid, Eye, EyeOff, Box, Camera } from "lucide-react";
+import { Video, Image, Gamepad2, Home, Music, Maximize2, Minimize2, Search, Settings, X, LayoutGrid, Eye, EyeOff, Camera, Play, Pause, SkipBack, SkipForward, Headphones } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
-import { lazy } from "react";
-const Nv3dViewer = lazy(() => import("@/webgl3d/canvas/Nv3dViewer"));
-import DevToolsMenu from "@/components/DevToolsMenu";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { cn } from "@/lib/utils";
 import { kv } from "@/lib/sqliteStore";
@@ -13,11 +10,13 @@ import { useTranslation } from "react-i18next";
 import { languages } from "@/i18n";
 import QuickLaunchBar from "@/components/QuickLaunchBar";
 import QuickHub from "@/components/QuickHub";
+import FileExplorer from "@/components/FileExplorer";
 import SettingsDialog from "@/components/SettingsDialog";
 import GlobalSearch from "@/components/GlobalSearch";
 import KeyboardHelp from "@/components/KeyboardHelp";
 import { useSettingsStore } from "@/stores/settingsStore";
-import { useAudioPlayerStore } from "@/stores/audioPlayerStore";
+import { useAudioPlayerStore, fmtTime } from "@/stores/audioPlayerStore";
+import { musicCoverSrc } from "@/lib/musicCoverFallback";
 import { useWidgetStore } from "@/stores/widgetStore";
 import MyComputerWidget from "@/components/widgets/MyComputerWidget";
 import SystemMonitorWidget from "@/components/widgets/SystemMonitorWidget";
@@ -59,7 +58,7 @@ const navItems = [
   { to: "/games", key: "games", icon: Gamepad2 },
 ];
 
-  const navSvgs: Record<string,{c:string,s:string}> = {home:{c:"neon-magenta",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},movies:{c:"neon-cyan",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/><polygon points="23 7 16 12 23 17 23 7"/></svg>'},images:{c:"neon-green",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'},music:{c:"neon-orange",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'},games:{c:"neon-purple",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>'}};
+  const navSvgs: Record<string,{c:string,s:string}> = {home:{c:"neon-magenta",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},movies:{c:"neon-cyan",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/><polygon points="23 7 16 12 23 17 23 7"/></svg>'},images:{c:"neon-green",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'},music:{c:"neon-orange",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>'},games:{c:"neon-purple",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>'}};
 
 export default function Layout() {
   const location = useLocation();
@@ -112,7 +111,8 @@ export default function Layout() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [nv3dOpen, setNv3dOpen] = useState(false);
+  const [explorerOpen, setExplorerOpen] = useState(false);
+  const [explorerPath, setExplorerPath] = useState("");
   const appRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { useLicenseStore.getState().init(); }, []);
@@ -541,7 +541,7 @@ export default function Layout() {
                   }
                 }}>
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center">
-                    {isDefault ? <item.icon className="h-5 w-5" /> : <NeonIcon name={(item.key === "home" ? "Home" : item.key === "movies" ? "Film" : item.key === "images" ? "Image" : item.key === "music" ? "Music" : item.key === "games" ? "Gamepad2" : "")} size={24} />}
+                    {isDefault ? <item.icon className="h-5 w-5" /> : <NeonIcon name={(item.key === "home" ? "Home" : item.key === "movies" ? "Film" : item.key === "images" ? "Image" : item.key === "music" ? "Headphones" : item.key === "games" ? "Gamepad2" : "")} size={24} />}
                   </div>
                   <span>{t(`nav.${item.key}`)}</span>
                   {isActive && <span className="nav-indicator" />}
@@ -560,13 +560,6 @@ export default function Layout() {
             <button onClick={() => setSettingsOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={t("settings.title")}>
               <NeonIcon name="Settings" size={16}><Settings className="h-4 w-4 text-gray-400" /></NeonIcon>
             </button>
-            {import.meta.env.DEV && (
-              <button onClick={() => setNv3dOpen(v => !v)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-purple-500/20 transition-all duration-300 active:scale-90" title="3D 预览">
-                <NeonIcon name="Box" size={16}><Box className={cn("h-4 w-4", nv3dOpen ? "text-purple-400" : "text-gray-400")} /></NeonIcon>
-              </button>
-            )}
-            {import.meta.env.DEV && <DevToolsMenu />}
-
           </div>
         </div>
       </header>
@@ -651,7 +644,10 @@ export default function Layout() {
             </button>
           )}
 
-          {/* Divider between Gauge and QuickLaunch */}
+          {/* Mini player — appears when a track is loaded */}
+          <FooterMiniPlayer />
+
+          {/* Divider between player and QuickLaunch */}
           <div className="w-px h-5 bg-white/[0.08] shrink-0" />
 
           {/* QuickLaunch apps */}
@@ -666,13 +662,13 @@ export default function Layout() {
             className="absolute left-1/2 bottom-14 w-full rounded-2xl"
             style={{
               transform: "translateX(-50%)",
-              maxWidth: "min(576px, calc(100vw - 2rem))",
+              maxWidth: "min(45vw, calc(100vw - 2rem))",
               maxHeight: "calc(100vh - 5rem)",
               overflowY: "auto",
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <QuickHub onClose={() => setStripOpen(false)} />
+            <QuickHub onClose={() => setStripOpen(false)} onOpenFolder={(path) => { setExplorerPath(path); setExplorerOpen(true); }} />
           </div>
         </div>
       )}
@@ -709,19 +705,65 @@ export default function Layout() {
       <PrivacyConsent />
       <UpdateChecker />
 
-      {nv3dOpen && (
-        <div className="fixed inset-0 z-[300] bg-black" onClick={e => e.target === e.currentTarget && setNv3dOpen(false)}>
-          <button onClick={() => setNv3dOpen(false)} className="absolute top-4 right-4 z-[310] flex h-9 w-9 items-center justify-center rounded-lg bg-black/50 hover:bg-red-500/30 transition-all active:scale-90" title="关闭 3D 预览">
-            <NeonIcon name="X" size={16}><X className="h-4 w-4 text-white" /></NeonIcon>
-          </button>
-          <Nv3dViewer />
-        </div>
-      )}
-
       <GlobalConfirmDialog />
       <ImportOverlay isOpen={isImportingAny} />
+      <FileExplorer open={explorerOpen} onClose={() => setExplorerOpen(false)} initialPath={explorerPath || undefined} />
     </div>
   );
 }
+
+// ═══════════════════════════════════════════════════════
+// FooterMiniPlayer — compact player in the bottom bar
+// Shows when a track is loaded in the audio player
+// ═══════════════════════════════════════════════════════
+function FooterMiniPlayer() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const track = useAudioPlayerStore((s) => s.track);
+  const isPlaying = useAudioPlayerStore((s) => s.isPlaying);
+  const isBackground = useAudioPlayerStore((s) => s.isBackground);
+  const doToggle = useAudioPlayerStore((s) => s.toggle);
+  const doPrev = useAudioPlayerStore((s) => s.prev);
+  const doNext = useAudioPlayerStore((s) => s.next);
+
+  // Show when track is loaded and full player is NOT visible
+  // Full player visible = on /music page AND not minimized (isBackground=false)
+  const fullPlayerVisible = location.pathname === "/music" && !isBackground;
+  if (!track || fullPlayerVisible) return null;
+
+  return (
+    <div className="flex items-center gap-2 shrink-0">
+      {/* Cover */}
+      <div className="w-7 h-7 rounded overflow-hidden bg-surface-lighter shrink-0 flex items-center justify-center relative">
+        <NeonIcon name="Headphones" size={12} />
+        {track.coverPath && (
+          <img src={musicCoverSrc(track.coverPath)} alt="" className="absolute inset-0 w-full h-full object-cover"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+        )}
+      </div>
+
+      {/* Name + time */}
+      <span className="text-[11px] text-gray-300 truncate max-w-[120px] hidden sm:inline">{track.name}</span>
+
+      {/* Controls */}
+      <button onClick={() => doPrev()} className="h-7 w-7 flex items-center justify-center rounded text-gray-400 hover:text-white hover:bg-white/5 transition-colors" title="上一首">
+        <SkipBack className="h-3.5 w-3.5" />
+      </button>
+      <button onClick={() => doToggle()} className="h-7 w-7 flex items-center justify-center rounded-full bg-primary/15 text-primary-light hover:bg-primary/25 transition-colors">
+        {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 ml-0.5" />}
+      </button>
+      <button onClick={() => doNext()} className="h-7 w-7 flex items-center justify-center rounded text-gray-400 hover:text-white hover:bg-white/5 transition-colors" title="下一首">
+        <SkipForward className="h-3.5 w-3.5" />
+      </button>
+
+      {/* Restore full player — navigate to /music where the player triggers */}
+      <button onClick={() => { useAudioPlayerStore.getState().setBackground(false); navigate("/music"); }}
+        className="h-7 w-7 flex items-center justify-center rounded text-gray-400 hover:text-primary-light hover:bg-white/5 transition-colors" title="恢复播放器">
+        <Maximize2 className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
 
 

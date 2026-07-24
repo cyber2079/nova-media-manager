@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
+import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useMusicStore } from "@/stores/musicStore";
 import { useAudioPlayerStore, fmtTime, getAudio } from "@/stores/audioPlayerStore";
@@ -7,7 +9,7 @@ import { getMusicCoverFallback, musicCoverSrc } from "@/lib/musicCoverFallback";
 import MusicCard from "@/components/MusicCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload, Music, Loader2, Pause, Play, SkipBack, SkipForward, Star, ListPlus, ListMusic, Trash2, X, ChevronLeft, Minimize2, Plus, Search, Volume2, VolumeX, Type, Tag, CheckSquare, Palette, Info } from "lucide-react";
+import { Upload, Music, Loader2, Pause, Play, SkipBack, SkipForward, Star, ListPlus, ListMusic, Trash2, X, ChevronLeft, Minimize2, Plus, Search, Volume2, VolumeX, ALargeSmall, Tag, CheckSquare, Palette, Info, Headphones, ImageIcon, RefreshCw, RotateCcw } from "lucide-react";
 import PlayModeControls from "@/components/PlayModeControls";
 import TagFilterBar from "@/components/TagFilterBar";
 import TagEditDialog from "@/components/TagEditDialog";
@@ -210,6 +212,20 @@ export default function MusicLibrary() {
     for (const id of batch.selected) { await updateTags(id, tags); }
     batch.clear();
   }, [batch, updateTags]);
+
+  // 首页点击跳转：路由 state 带 playId，库加载完自动开播
+  const location = useLocation();
+  const autoPlayedRef = useRef(false);
+  useEffect(() => {
+    const playId = (location.state as { playId?: string } | null)?.playId;
+    if (!playId || autoPlayedRef.current || music.length === 0) return;
+    const target = music.find((m) => m.id === playId);
+    if (target) {
+      autoPlayedRef.current = true;
+      play(target);
+      window.history.replaceState({}, ""); // 清掉 state，避免刷新重复触发
+    }
+  }, [music]);
 
   const handlePlay = useCallback(async (m: MusicType, forceRestart?: boolean) => {
     // In repeat-one mode: same track = restart from beginning, not toggle
@@ -522,8 +538,12 @@ export default function MusicLibrary() {
                           </div>
                         )}
                         {!isPlBatch && <span className="w-6 text-center text-[11px] text-gray-600 shrink-0">{idx + 1}</span>}
-                        <div className="w-9 h-9 rounded overflow-hidden bg-surface-lighter shrink-0">
-                          <img src={musicCoverSrc(m.coverPath)} alt="" className="w-full h-full object-cover object-top scale-125" onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
+                        <div className="w-9 h-9 rounded overflow-hidden bg-surface-lighter shrink-0 relative flex items-center justify-center">
+                          <NeonIcon name="Headphones" size={14}><Headphones className="h-3.5 w-3.5 text-primary-light" /></NeonIcon>
+                          {m.coverPath && (
+                            <img src={musicCoverSrc(m.coverPath)} alt="" className="absolute inset-0 w-full h-full object-cover object-top scale-125"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={cn("text-sm truncate", playing?.id === m.id ? "text-primary-light font-medium" : "text-gray-200")}>{m.name}</p>
@@ -596,9 +616,12 @@ export default function MusicLibrary() {
                         selected ? "bg-primary border-primary text-white" : "border-primary")}>
                         {selected && <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>}
                       </div>
-                      <div className="w-9 h-9 rounded overflow-hidden bg-surface-lighter shrink-0">
-                        <img src={musicCoverSrc(m.coverPath)} alt="" className="w-full h-full object-cover object-top scale-125"
-                          onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
+                      <div className="w-9 h-9 rounded overflow-hidden bg-surface-lighter shrink-0 relative flex items-center justify-center">
+                        <NeonIcon name="Headphones" size={14}><Headphones className="h-3.5 w-3.5 text-primary-light" /></NeonIcon>
+                        {m.coverPath && (
+                          <img src={musicCoverSrc(m.coverPath)} alt="" className="absolute inset-0 w-full h-full object-cover object-top scale-125"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-200 truncate">{m.name}</p>
@@ -650,9 +673,12 @@ export default function MusicLibrary() {
                       }}>
                       {batch.showCheckboxes && <BatchCheckbox inline checked={batch.selected.has(m.id)} onToggle={() => batch.toggle(m.id)} />}
                       {!batch.isBatchMode && <span className="w-6 text-center text-[11px] text-gray-600 shrink-0">{idx + 1}</span>}
-                      <div className="w-9 h-9 rounded overflow-hidden bg-surface-lighter shrink-0">
-                        <img src={musicCoverSrc(m.coverPath)} alt="" className="w-full h-full object-cover object-top scale-125"
-                          onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
+                      <div className="w-9 h-9 rounded overflow-hidden bg-surface-lighter shrink-0 relative flex items-center justify-center">
+                        <NeonIcon name="Headphones" size={14}><Headphones className="h-3.5 w-3.5 text-primary-light" /></NeonIcon>
+                        {m.coverPath && (
+                          <img src={musicCoverSrc(m.coverPath)} alt="" className="absolute inset-0 w-full h-full object-cover object-top scale-125"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={cn("text-sm truncate", playing?.id === m.id ? "text-primary-light font-medium" : "text-gray-200")}>{m.name}</p>
@@ -673,6 +699,18 @@ export default function MusicLibrary() {
                       </div>
                       <span className="text-[10px] text-gray-600 shrink-0">{m.duration}</span>
                       <div className="flex items-center gap-2 shrink-0">
+                        <button onClick={async (e) => { e.stopPropagation(); try { const { open } = await import("@tauri-apps/plugin-dialog"); const sel = await open({ multiple: false, filters: [{ name: "Images", extensions: ["jpg","jpeg","png","webp"] }] }); if (sel) { const { invoke } = await import("@tauri-apps/api/core"); await invoke("set_music_cover", { id: m.id, sourcePath: sel }); useMusicStore.getState().loadMusic(); } } catch {} }}
+                          className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title={t("movie.set_custom_cover")}>
+                          <NeonIcon name="ImageIcon" size={16}><ImageIcon className="h-4 w-4" /></NeonIcon>
+                        </button>
+                        <button onClick={async (e) => { e.stopPropagation(); try { const { invoke } = await import("@tauri-apps/api/core"); await invoke("regenerate_music_cover", { id: m.id }); useMusicStore.getState().loadMusic(); } catch {} }}
+                          className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title={t("movie.regen_cover")}>
+                          <NeonIcon name="RefreshCw" size={16}><RefreshCw className="h-4 w-4" /></NeonIcon>
+                        </button>
+                        <button onClick={async (e) => { e.stopPropagation(); try { const { invoke } = await import("@tauri-apps/api/core"); await invoke("clear_music_cover", { id: m.id }); useMusicStore.getState().loadMusic(); } catch {} }}
+                          className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-400/70 hover:bg-surface-lighter/50 transition-colors" title={t("movie.reset_cover")}>
+                          <NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-4 w-4" /></NeonIcon>
+                        </button>
                         <button onClick={(e) => { e.stopPropagation(); toggleFavorite(m.id, "music"); }}
                           className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-yellow-400 hover:bg-surface-lighter/50 transition-colors">
                           <NeonIcon name="Star" size={16}><Star className={cn("h-4 w-4", isFavorite(m.id) ? "fill-yellow-400 text-yellow-400" : "")} /></NeonIcon>
@@ -718,8 +756,8 @@ export default function MusicLibrary() {
     </DropZone>
     {batch.showCheckboxes && <BatchBar selected={Array.from(batch.selected)} selectAll={batch.selectAll} clear={batch.leaveBatchMode} invert={batch.invert} onDelete={handleBatchDelete} allTags={tagNames} onBatchTag={handleBatchTag} t={t} onAddToPlaylist={() => setBatchPlaylistOpen(true)} />}
 
-    {/* ── Full Player bar ── */}
-    {playing && !isBackground && (
+    {/* ── Full Player bar — portalled to body to avoid CSS transform clipping ── */}
+    {playing && !isBackground && createPortal(
       <>
       {/* Lyrics placed above the player (separate fixed container) */}
       <div className="fixed bottom-48 left-1/2 -translate-x-1/2 z-[80] min-w-[520px] max-w-2xl pointer-events-none">
@@ -732,23 +770,22 @@ export default function MusicLibrary() {
         className={`fixed bottom-16 left-1/2 -translate-x-1/2 z-[80] rounded-xl shadow-2xl min-w-[520px] max-w-2xl ${playerBgCustom && playerBgColor ? "border border-white/10" : "bg-surface-light/95 border-white/5"}`}
         style={{ padding: "12px 20px", ...(playerBgCustom && playerBgColor ? { background: playerBgColor } : {}) }}>
         {/* 2 columns: cover (left), 3 rows (right) */}
-        <div className="flex items-stretch gap-4">
-          {/* LEFT: cover column — 有封面显示封面；无封面显示 CD 动/静态图 */}
-          <div className="shrink-0 relative rounded overflow-hidden" style={{ width: 72 }}>
-            {playing.coverPath ? (
-              <img src={musicCoverSrc(playing.coverPath)} alt="" className="absolute inset-0 w-full h-full object-cover object-top scale-125"
-                onError={(e) => { (e.target as HTMLImageElement).src = "/cd%20run.gif"; }} />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <img src={isPlaying ? "/cd%20run.gif" : "/cd%20pause.png"} alt="" className="w-16 h-16 rounded-full object-cover shadow-lg" />
-              </div>
+        <div className="flex items-center gap-4">
+          {/* LEFT: cover column — 有封面显示封面；无封面显示脉动发光耳机 */}
+          <div className="shrink-0 relative flex items-center justify-center" style={{ width: 72, height: 72 }}>
+            <div className={isPlaying ? "animate-neon-breathe" : ""}>
+              <NeonIcon name="Headphones" size={40}><Headphones className="h-full w-full text-primary-light" /></NeonIcon>
+            </div>
+            {playing.coverPath && (
+              <img src={musicCoverSrc(playing.coverPath)} alt="" className="absolute inset-0 w-full h-full object-cover object-top scale-125 rounded"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
             )}
           </div>
 
           {/* RIGHT: 3 rows */}
           <div className="flex-1 min-w-0 flex flex-col gap-2.5">
-            {/* Row 1: track info + close */}
-            <div className="flex items-center justify-between">
+            {/* Row 1: track info */}
+            <div className="flex items-center justify-between gap-2">
               <div className="min-w-0 flex-1 flex items-center gap-2 truncate">
                 <span className="text-[13px] font-semibold text-white truncate">{playing.name}</span>
                 <span className="text-gray-600 shrink-0">·</span>
@@ -760,18 +797,18 @@ export default function MusicLibrary() {
                   </>
                 )}
               </div>
-              <div className="flex items-center gap-1 shrink-0 ml-2">
-                {/* 播放器背景色板 + 透明度 */}
+              {/* Action buttons — isolated from track name with fixed width */}
+              <div className="flex items-center gap-1 select-none">
                 <ColorPickerBtn color={playerBgColor} onChange={setPlayerBgColor} disabled={!playerBgCustom} />
-                <button onClick={() => setBackground(true)}
-                  className="text-gray-500 hover:text-primary-light transition-colors p-1"
+                <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setBackground(true); }}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors cursor-pointer"
                   title={t("music.mini_to_toolbar")}>
-                  <NeonIcon name="Minimize2" size={16}><Minimize2 className="h-3.5 w-3.5" /></NeonIcon>
+                  <NeonIcon name="Minimize2" size={16}><Minimize2 className="h-4 w-4" /></NeonIcon>
                 </button>
-                <button onClick={stop}
-                  className="text-gray-500 hover:text-red-400 transition-colors p-1"
+                <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); stop(); }}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-red-400 hover:bg-white/5 transition-colors cursor-pointer"
                   title={t("music.close")}>
-                  <NeonIcon name="X" size={16}><X className="h-3.5 w-3.5" /></NeonIcon>
+                  <NeonIcon name="X" size={16}><X className="h-4 w-4" /></NeonIcon>
                 </button>
               </div>
             </div>
@@ -806,7 +843,7 @@ export default function MusicLibrary() {
                   className={`h-7 w-7 transition-colors relative ${lyricFontSize === "off" ? "text-gray-600" : lyricFontSize === "large" ? "text-primary-light" : "text-gray-500 hover:text-primary-light"}`}
                   title={lyricFontSize === "off" ? t("music.lyric_off_title") : lyricFontSize === "large" ? t("music.lyric_large_title") : t("music.lyric_normal_title")}
                   onClick={() => setLyricFontSize(lyricFontSize === "normal" ? "large" : lyricFontSize === "large" ? "off" : "normal")}>
-                  <NeonIcon name="Type" size={16}><Type className={`h-3.5 w-3.5 ${lyricFontSize === "large" ? "stroke-[3]" : ""}`} /></NeonIcon>
+                  <NeonIcon name="ALargeSmall" size={16}><ALargeSmall className={`h-3.5 w-3.5 ${lyricFontSize === "large" ? "stroke-[3]" : ""}`} /></NeonIcon>
                   {lyricFontSize === "off" && (
                     <span className="absolute inset-0 flex items-center justify-center">
                       <span className="block w-[1.5px] h-4 bg-current rotate-45" />
@@ -822,7 +859,7 @@ export default function MusicLibrary() {
                 </Button>
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white" onClick={handleNext}><NeonIcon name="SkipForward" size={16}><SkipForward className="h-4 w-4" /></NeonIcon></Button>
               </div>
-              <div className="shrink-0 flex flex-col items-center" style={{ width: 132, marginLeft: -5 }}>
+              <div className="shrink-0 flex flex-col items-center" style={{ width: 132, marginLeft: -11 }}>
                 <VizBar mode={visualizerMode} />
                 <div className="flex gap-0.5 mt-0.5">
                   {(["bars", "dots", "blocks"] as const).map((m) => (
@@ -838,7 +875,8 @@ export default function MusicLibrary() {
             </div>
           </div>
         </div>
-      </>
+      </>,
+      document.body,
     )}
 
     {/* Playlist popover */}
@@ -995,10 +1033,10 @@ function ColorPickerBtn({ color, onChange, disabled }: { color: string; onChange
 
   return (
     <div ref={ref} className="relative shrink-0">
-      <button onClick={() => { if (!disabled) setOpen((v) => !v); }}
-        className={`p-1 transition-colors ${disabled ? "text-gray-700 cursor-not-allowed" : "text-gray-500 hover:text-primary-light"}`}
+      <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); if (!disabled) setOpen((v) => !v); }}
+        className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${disabled ? "text-gray-700 cursor-not-allowed" : "text-gray-500 hover:text-primary-light hover:bg-white/5"}`}
         title={disabled ? t("common.player_bg_disabled_hint") : t("common.player_bg_color")}>
-        <NeonIcon name="Palette" size={16}><Palette className="h-3.5 w-3.5" /></NeonIcon>
+        <NeonIcon name="Palette" size={16}><Palette className="h-4 w-4" /></NeonIcon>
       </button>
       {open && (
         <div className="absolute bottom-full right-0 mb-2 bg-surface-light border border-primary/30 rounded-xl p-4 shadow-2xl z-[90] flex flex-col gap-3 min-w-[180px]">

@@ -61,7 +61,9 @@ export const useThemePackStore = create<ThemePackState>((set, get) => ({
   refresh: async () => {
     try {
       const themes = await invoke<InstalledTheme[]>("list_installed_themes");
-      set({ installedThemes: themes });
+      // One-off migration: "Cyberpunk" → "Cyberpunk2079"
+      const migrated = themes.map(t => t.id === "cyberpunk" && t.name !== "Cyberpunk2079" ? { ...t, name: "Cyberpunk2079" } : t);
+      set({ installedThemes: migrated });
     } catch (err) {
       console.warn("[themePack] list failed:", err);
     }
@@ -118,7 +120,7 @@ export const useThemePackStore = create<ThemePackState>((set, get) => ({
       const resp = await fetch(`${SERVER_URL}/api/themes/list`);
       if (resp.ok) {
         const list = await resp.json();
-        set({ availableThemes: list });
+        set({ availableThemes: list.filter((t: { id: string }) => t.id !== "ice-girl" && t.id !== "cyber-girl") });
       }
     } catch (err) {
       console.warn("[themePack] fetchAvailable failed:", err);

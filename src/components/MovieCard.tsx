@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import SafeImage from "@/components/SafeImage";
 import { memo } from "react";
 import type { Movie } from "@/types/movie";
-import { Play, Trash2, Clock, Maximize, Loader2, Tag, Monitor, RefreshCw } from "lucide-react";
+import { Play, Trash2, Clock, Maximize, Loader2, Tag, Monitor, RefreshCw, ImageIcon } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
 import { cn } from "@/lib/utils";
 import { tagColor } from "@/lib/tagColor";
@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import FavoriteStar from "@/components/FavoriteStar";
 import { useSettingsStore, EXTERNAL_PLAYER_EXTS } from "@/stores/settingsStore";
 import { isPaid, useLicenseStore } from "@/stores/licenseStore";
+import { useMovieStore } from "@/stores/movieStore";
 
 interface MovieCardProps {
   movie: Movie;
@@ -36,7 +37,7 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
   // ── Horizontal banner layout ──
   if (horizontal) {
     return (
-      <div className="relative rounded-xl overflow-hidden bg-surface-lighter border border-primary/10 hover:border-primary/30 transition-all duration-300 cursor-pointer group"
+      <div className="relative rounded-xl overflow-hidden bg-surface-lighter shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
         onClick={() => { if (!isProcessing) onPlay(movie); }}>
         <div className="relative aspect-[2.4/1] overflow-hidden bg-surface-lighter">
           <FavoriteStar active={!!favorited} onToggle={onToggleFav || (() => {})} />
@@ -78,6 +79,9 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-primary-light" onClick={async (e) => { e.stopPropagation(); try { const { open } = await import("@tauri-apps/plugin-dialog"); const sel = await open({ multiple: false, filters: [{ name: "Images", extensions: ["jpg","jpeg","png","webp"] }] }); if (sel) { const { invoke } = await import("@tauri-apps/api/core"); await invoke("set_movie_cover", { id: movie.id, sourcePath: sel }); useMovieStore.getState().loadMovies(); } } catch {} }} title={t("movie.set_custom_cover")}>
+              <NeonIcon name="ImageIcon" size={16}><ImageIcon className="h-3.5 w-3.5" /></NeonIcon>
+            </Button>
             {onSetWallpaper && isPaid(useLicenseStore.getState().license.tier) && (
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); onSetWallpaper(movie.filePath); }} title={t("movie.set_wallpaper")}>
                 <NeonIcon name="Monitor" size={16}><Monitor className="h-3.5 w-3.5" /></NeonIcon>
@@ -213,6 +217,12 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
 
         {/* 操作按钮行 */}
         <div className="flex items-center gap-0.5">
+          <button
+            className={cn("flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors",
+              compact ? "h-6 w-6" : "h-8 w-8")}
+            onClick={async (e) => { e.stopPropagation(); try { const { open } = await import("@tauri-apps/plugin-dialog"); const sel = await open({ multiple: false, filters: [{ name: "Images", extensions: ["jpg","jpeg","png","webp"] }] }); if (sel) { const { invoke } = await import("@tauri-apps/api/core"); await invoke("set_movie_cover", { id: movie.id, sourcePath: sel }); useMovieStore.getState().loadMovies(); } } catch {} }} title={t("movie.set_custom_cover")}>
+            <NeonIcon name="ImageIcon" size={16}><ImageIcon className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} /></NeonIcon>
+          </button>
           {onSetWallpaper && (
             <button
               className={cn("flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors",

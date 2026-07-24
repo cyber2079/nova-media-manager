@@ -48,7 +48,7 @@ function applyThemeEffectOverrides(themeId: string, fx: PerThemeFx | undefined) 
   }
 
   el.textContent = css;
-  console.log("[useThemeTokens] fx overrides:", themeId, scanline);
+  if (import.meta.env.DEV) console.log("[useThemeTokens] fx overrides:", themeId, scanline);
 }
 
 const CACHE_KEY = "nv-theme-tokens-v2";
@@ -60,9 +60,11 @@ function buildUserOverrides(): string {
   // Single-color palette mode: send accent as override. Todos random: use theme.json defaults.
   if (s.paletteCustomized && s.paletteAccent && !s.paletteRandomEnabled) ov["colors"] = { primary: s.paletteAccent, primaryLight: s.paletteAccent };
   if (s.glassMasterEnabled) {
-    ov["glass"] = { header:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, footer:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, main:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, dialog:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, card:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, widget:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, quickhub:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur} };
+    const gz = { opacity: s.globalGlassOpacity, blur: s.globalGlassBlur };
+    ov["glass"] = { header: gz, footer: gz, main: gz, dialog: gz, card: gz, widget: gz, quickhub: gz };
   } else {
-    ov["glass"] = { header:{opacity:s.barOpacity,blur:s.barBlur}, footer:{opacity:s.barOpacity,blur:s.barBlur}, main:{opacity:s.mainOpacity,blur:s.mainBlur}, dialog:{opacity:s.dialogOpacity,blur:s.dialogBlur} };
+    const hz = { opacity: s.barOpacity, blur: s.barBlur };
+    ov["glass"] = { header: hz, footer: hz, main: { opacity: s.mainOpacity, blur: s.mainBlur }, dialog: { opacity: s.dialogOpacity, blur: s.dialogBlur } };
   }
   ov["global"] = { bgOverlayOpacity: s.bgOverlayOpacity };
   return JSON.stringify(ov);
@@ -155,7 +157,7 @@ function injectTokens(tokens: Record<string, string>) {
         let el = document.getElementById("nv-neon-icons") as HTMLStyleElement | null;
         if (!el) { el = document.createElement("style"); el.id = "nv-neon-icons"; document.head.appendChild(el); }
         el.textContent = cssText;
-        console.log("[useThemeTokens] neon-icons.css loaded, " + cssText.length + " bytes");
+        if (import.meta.env.DEV) console.log("[useThemeTokens] neon-icons.css loaded, " + cssText.length + " bytes");
       })
       .catch(e => console.warn("[useThemeTokens] neon-icons.css load failed:", e.message));
 
@@ -168,7 +170,7 @@ function injectTokens(tokens: Record<string, string>) {
         if (!el) { el = document.createElement("style"); el.id = "nv-theme-css"; document.head.appendChild(el); }
         // Strip @import since we loaded neon-icons.css separately
         el.textContent = cssText.replace(/@import\s+["'][^"']*neon-icons[^"']*["'];?/g, '');
-        console.log("[useThemeTokens] theme.css loaded, " + cssText.length + " bytes");
+        if (import.meta.env.DEV) console.log("[useThemeTokens] theme.css loaded, " + cssText.length + " bytes");
       })
       .catch(e => console.warn("[useThemeTokens] theme.css load failed:", e.message));
   }
@@ -205,7 +207,7 @@ export function useThemeTokens() {
         injectTokens(tokens);
         writeCache(theme, tokens);
 
-        console.log("[Nova Theme]", {
+        if (import.meta.env.DEV) console.log("[Nova Theme]", {
           __primary: tokens["__primary"],
           __diag: tokens["__diag"],
           __build: tokens["__build_ts"],

@@ -1,12 +1,13 @@
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
+import { useMusicStore } from "@/stores/musicStore";
+import { musicCoverSrc } from "@/lib/musicCoverFallback";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Music } from "@/types/music";
-import { Trash2, Tag, Clock } from "lucide-react";
+import { Trash2, Tag, Clock, Headphones, ImageIcon, RefreshCw, RotateCcw } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
 import { cn } from "@/lib/utils";
 import { tagColor } from "@/lib/tagColor";
-import { getMusicCoverFallback } from "@/lib/musicCoverFallback";
 import FavoriteStar from "@/components/FavoriteStar";
 
 interface MusicCardProps {
@@ -20,19 +21,23 @@ interface MusicCardProps {
 }
 
 export default memo(function MusicCard({ music, onDelete, onPlay, onEditTags, compact, favorited, onToggleFav }: MusicCardProps) {
+  const [fallback, setFallback] = useState(false);
+  useEffect(() => { setFallback(false); }, [music.id, music.coverPath]);
   return (
-    <Card className="group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] theme-enter-card cursor-pointer hover:shadow-xl hover:shadow-primary/10"
+    <Card className="group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] theme-enter-card cursor-pointer shadow-lg hover:shadow-xl hover:shadow-primary/10"
       onClick={() => onPlay?.(music)}
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-surface-lighter">
         <FavoriteStar active={!!favorited} onToggle={onToggleFav || (() => {})} />
         {music.coverPath ? (
-          <img src={music.coverPath} alt={music.name}
+          <img src={musicCoverSrc(music.coverPath)} alt={music.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-            onError={(e) => { (e.target as HTMLImageElement).src = getMusicCoverFallback(); }} />
-        ) : (
-          <img src={getMusicCoverFallback()} alt={music.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+            onError={(e) => { e.currentTarget.style.display = "none"; setFallback(true); }} />
+        ) : null}
+        {(!music.coverPath || fallback) && (
+          <div className="absolute inset-0 flex items-center justify-center text-primary-light">
+            <NeonIcon name="Headphones" size={compact ? 18 : 36}><Headphones className="h-full w-full" /></NeonIcon>
+          </div>
         )}
 
         {/* Duration badge */}
@@ -72,6 +77,18 @@ export default memo(function MusicCard({ music, onDelete, onPlay, onEditTags, co
               <NeonIcon name="Tag" size={16}><Tag className="h-3.5 w-3.5" /></NeonIcon>
             </Button>
           )}
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light shrink-0"
+            onClick={async (e) => { e.stopPropagation(); try { const { open } = await import("@tauri-apps/plugin-dialog"); const sel = await open({ multiple: false, filters: [{ name: "Images", extensions: ["jpg","jpeg","png","webp"] }] }); if (sel) { const { invoke } = await import("@tauri-apps/api/core"); await invoke("set_music_cover", { id: music.id, sourcePath: sel }); useMusicStore.getState().loadMusic(); } } catch(e) { console.error("[setMusicCover]", e); } }} title="Set custom cover">
+            <NeonIcon name="ImageIcon" size={16}><ImageIcon className="h-3.5 w-3.5" /></NeonIcon>
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light shrink-0"
+            onClick={async (e) => { e.stopPropagation(); try { const { invoke } = await import("@tauri-apps/api/core"); await invoke("regenerate_music_cover", { id: music.id }); useMusicStore.getState().loadMusic(); } catch(e) { console.error("[regenMusicCover]", e); } }} title="Regenerate cover">
+            <NeonIcon name="RefreshCw" size={16}><RefreshCw className="h-3.5 w-3.5" /></NeonIcon>
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-red-400/70 shrink-0"
+            onClick={async (e) => { e.stopPropagation(); try { const { invoke } = await import("@tauri-apps/api/core"); await invoke("clear_music_cover", { id: music.id }); useMusicStore.getState().loadMusic(); } catch(e) { console.error("[clearMusicCover]", e); } }} title="Reset cover to default">
+            <NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3.5 w-3.5" /></NeonIcon>
+          </Button>
           <div className="flex-1" />
           <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-red-400 shrink-0"
             onClick={(e) => { e.stopPropagation(); onDelete(music.id); }}>

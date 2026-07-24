@@ -36,6 +36,9 @@ interface WidgetState {
   calendar: WidgetConfig;
   countdown: CountdownConfig;
 
+  widgetCustomPos: Record<string, { x: number; y: number }>;
+  widgetLocked: Record<string, boolean>;
+
   init: () => Promise<void>;
   setEnabled: (id: string, on: boolean) => void;
   setPosition: (id: string, pos: WidgetPosition) => void;
@@ -44,6 +47,8 @@ interface WidgetState {
   setAppPath: (id: string, path: string) => void;
   setMyComputerMode: (mode: MyComputerMode) => void;
   setCountdown: (cfg: Partial<CountdownConfig>) => void;
+  setWidgetPos: (id: string, x: number, y: number) => void;
+  setWidgetLocked: (id: string, locked: boolean) => void;
 }
 
 const KEY = "app-widgets";
@@ -57,6 +62,8 @@ async function persist(state: WidgetState) {
     myComputer: state.myComputer, systemMonitor: state.systemMonitor,
     clock: state.clock, calendar: state.calendar,
     countdown: state.countdown,
+    widgetCustomPos: state.widgetCustomPos,
+    widgetLocked: state.widgetLocked,
   });
   localStorage.setItem(KEY, payload);
   await kv.set(KEY, payload).catch(() => {});
@@ -74,6 +81,8 @@ export const useWidgetStore = create<WidgetState>((set, get) => {
     systemMonitor: def("systemMonitor", { enabled: saved.systemMonitor?.enabled || false, position: saved.systemMonitor?.position || "bottom-right" }),
     clock: def("clock", { enabled: saved.clock?.enabled || false, position: saved.clock?.position || "top-right", label: "" }),
     calendar: def("calendar", { enabled: saved.calendar?.enabled || false, position: saved.calendar?.position || "top-left", label: "" }),
+    widgetCustomPos: (saved as any).widgetCustomPos || {},
+    widgetLocked: (saved as any).widgetLocked || {},
     countdown: {
       enabled: saved.countdown?.enabled ?? false,
       position: (saved.countdown?.position as WidgetPosition) || "center-right",
@@ -117,7 +126,10 @@ export const useWidgetStore = create<WidgetState>((set, get) => {
       set((s) => {
         const key = id as keyof Pick<WidgetState, "myComputer" | "systemMonitor" | "clock" | "calendar">;
         const next = { ...s[key], position: pos } as WidgetConfig;
-        const state = { ...s, [key]: next };
+        // Clear custom position so preset takes effect
+        const newCustomPos = { ...s.widgetCustomPos };
+        delete newCustomPos[id];
+        const state = { ...s, [key]: next, widgetCustomPos: newCustomPos };
         persist(state);
         return state;
       });
@@ -154,8 +166,28 @@ export const useWidgetStore = create<WidgetState>((set, get) => {
     setCountdown(cfg) {
       set((s) => {
         const next = { ...s.countdown, ...cfg };
-        const st = { ...s, countdown: next };
+        // If displayMode changed, clear custom position so widget re-centers
+        const newCustomPos = cfg.displayMode && cfg.displayMode !== s.countdown.displayMode
+          ? { ...s.widgetCustomPos, countdown: undefined as any }
+          : s.widgetCustomPos;
+        const st = { ...s, countdown: next, widgetCustomPos: newCustomPos };
         persist(st);
+        return st;
+      });
+    },
+
+    setWidgetPos(id, x, y) {
+      set((s) => {
+        const st = { ...s, widgetCustomPos: { ...s.widgetCustomPos, [id]: { x, y } } };
+        persist(st as any);
+        return st;
+      });
+    },
+
+    setWidgetLocked(id, locked) {
+      set((s) => {
+        const st = { ...s, widgetLocked: { ...s.widgetLocked, [id]: locked } };
+        persist(st as any);
         return st;
       });
     },

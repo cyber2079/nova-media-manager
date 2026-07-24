@@ -13,6 +13,7 @@ function fmtTime(h: number, m: number, s: number): string {
 export default function CountdownWidget({ config }: { config: CountdownConfig }) {
   const { t } = useTranslation();
   const setCountdown = useWidgetStore((s) => s.setCountdown);
+  const widgetRef = useRef<HTMLDivElement>(null);
   const isMini = config.displayMode === "mini";
 
   const [displaySec, setDisplaySec] = useState(config.hours * 3600 + config.minutes * 60 + config.seconds);
@@ -22,6 +23,16 @@ export default function CountdownWidget({ config }: { config: CountdownConfig })
   const [alerting, setAlerting] = useState(false);
   const [loopRemaining, setLoopRemaining] = useState(config.loopCount);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [panelAlign, setPanelAlign] = useState<"left" | "right">("left");
+
+  const openPanel = () => {
+    const el = widgetRef.current;
+    if (el) {
+      const r = el.getBoundingClientRect();
+      setPanelAlign(r.left < window.innerWidth / 2 ? "right" : "left");
+    }
+    setPanelOpen(true);
+  };
 
   const rafRef = useRef<number | null>(null);
   const startStampRef = useRef<number>(0);
@@ -70,14 +81,22 @@ export default function CountdownWidget({ config }: { config: CountdownConfig })
   useEffect(() => {
     if (!running) { if (rafRef.current) cancelAnimationFrame(rafRef.current); return; }
 
-    const tickRAF = () => {
+    // Throttle DOM updates to ~10fps — keeps the display smooth but
+    // leaves React enough idle time to process clicks on pause/reset.
+    let lastUpdate = 0;
+
+    const tickRAF = (stamp: number) => {
       const now = performance.now();
       const elapsedMs = now - startStampRef.current - pausedOffsetRef.current;
       const totalMs = totalSecRef.current * 1000;
       const remainFloat = Math.max(0, (totalMs - elapsedMs) / 1000);
 
-      setFloatRemain(remainFloat);
-      setDisplaySec(Math.floor(remainFloat));
+      // Only setState every 100ms — still shows every second change cleanly
+      if (stamp - lastUpdate >= 100) {
+        lastUpdate = stamp;
+        setFloatRemain(remainFloat);
+        setDisplaySec(Math.floor(remainFloat));
+      }
 
       if (remainFloat <= 0) { fireAlert(); return; }
 
@@ -140,7 +159,7 @@ export default function CountdownWidget({ config }: { config: CountdownConfig })
   const secs = displaySec % 60;
 
   return (
-    <DesktopWidget position={config.position}>
+    <DesktopWidget id="countdown" position={config.position}>
       {isMini ? (
         <div className="relative" style={{ width: 40, height: 40 }}>
           <svg className="absolute inset-0 pointer-events-none cw-ring" width="40" height="40" style={{ transform: "rotate(-90deg)" }}>
@@ -155,15 +174,16 @@ export default function CountdownWidget({ config }: { config: CountdownConfig })
           </button>
         </div>
       ) : (
-        <div className="bg-surface-light/95 backdrop-blur-md border border-primary/30 rounded-xl shadow-xl select-none"
-          style={{ padding: panelOpen ? "8px 12px 8px 12px" : "8px 12px 8px 12px" }}>
-          {!panelOpen ? (
-            <CompactDisplay t={t} running={running} remaining={fmtTime(config.hours, mins, secs)} progress={progress}
-              start={start} pause={pause} reset={reset} setPanel={() => setPanelOpen(true)} totalSecs={h*3600+m*60+s} />
-          ) : (
-            <SettingsPanel t={t} h={h} setH={setH} m={m} setM={setM} s={s} setS={setS}
-              loops={loops} setLoops={setLoops} glow={glow} setGlow={setGlow} voice={voice} setVoice={setVoice}
-              config={config} setCountdown={setCountdown} start={start} close={() => setPanelOpen(false)} />
+        <div ref={widgetRef} className="relative bg-surface-light/95 backdrop-blur-md border border-primary/30 rounded-xl shadow-xl select-none pointer-events-auto"
+          style={{ padding: "8px 12px" }}>
+          <CompactDisplay t={t} running={running} remaining={fmtTime(config.hours, mins, secs)} progress={progress}
+            start={start} pause={pause} reset={reset} setPanel={openPanel} totalSecs={h*3600+m*60+s} />
+          {panelOpen && (
+            <div className={`absolute top-0 ${panelAlign === "right" ? "left-full ml-2" : "right-full mr-2"} z-[52] bg-surface-light/95 backdrop-blur-md border border-primary/30 rounded-xl shadow-xl p-3`}>
+              <SettingsPanel t={t} h={h} setH={setH} m={m} setM={setM} s={s} setS={setS}
+                loops={loops} setLoops={setLoops} glow={glow} setGlow={setGlow} voice={voice} setVoice={setVoice}
+                config={config} setCountdown={setCountdown} start={start} close={() => setPanelOpen(false)} />
+            </div>
           )}
         </div>
       )}
@@ -174,23 +194,23 @@ export default function CountdownWidget({ config }: { config: CountdownConfig })
 // ── Compact display: timer + play/pause/reset + settings gear ──
 function CompactDisplay({ t, running, remaining, progress, start, pause, reset, setPanel, totalSecs }: any) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 pointer-events-auto">
       <div className="flex-1 text-center">
         <span className="text-sm font-mono tabular-nums cw-text">{remaining}</span>
         {running && (
-          <div className="w-full h-1 bg-surface-lighter rounded-full mt-1 overflow-hidden">
-            <div className="h-full rounded-full" style={{ width: `${progress * 100}%`, transition: "width 0.04s linear", background: "var(--color-primary-light)" }} />
+          <div className="w-full h-1 bg-surface-lighter rounded-full mt-1 overflow-hidden pointer-events-none">
+            <div className="h-full rounded-full" style={{ width: `${progress * 100}%`, transition: "width 0.1s linear", background: "var(--color-primary-light)" }} />
           </div>
         )}
       </div>
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-1.5">
         {!running ? (
-          <button onClick={start} disabled={totalSecs <= 0} className="disabled:opacity-30 p-1" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_start_title")}><NeonIcon name="Play" size={16} /></button>
+          <button onClick={start} disabled={totalSecs <= 0} className="disabled:opacity-30 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_start_title")}><NeonIcon name="Play" size={18} /></button>
         ) : (
-          <button onClick={pause} className="p-1" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_pause")}><NeonIcon name="Pause" size={16} /></button>
+          <button onClick={pause} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_pause")}><NeonIcon name="Pause" size={18} /></button>
         )}
-        <button onClick={reset} className="text-gray-400 hover:text-white p-1" title={t("widget.countdown_reset")}><NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3 w-3" /></NeonIcon></button>
-        <button onClick={setPanel} className="text-gray-400 hover:text-white p-1" title={t("widget.countdown_settings")}><NeonIcon name="Settings" size={16}><Settings className="h-3 w-3" /></NeonIcon></button>
+        <button onClick={reset} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10" title={t("widget.countdown_reset")}><NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-4 w-4" /></NeonIcon></button>
+        <button onClick={setPanel} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10" title={t("widget.countdown_settings")}><NeonIcon name="Settings" size={16}><Settings className="h-4 w-4" /></NeonIcon></button>
       </div>
     </div>
   );

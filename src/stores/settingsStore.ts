@@ -42,22 +42,40 @@ export function iconSizeScale(v: IconSize): number {
 }
 
 export type ImageWheelMode = "prevNext" | "zoom";
+export type SystemDialogStyle = "windows" | "theme";
 
-export const FONT_LIST: { value: string; label: string; i18nKey: string; css: string; google?: string }[] = [
-  { value: "inter", label: "Inter", i18nKey: "inter", css: '"Inter", system-ui, sans-serif' },
-  { value: "noto-sans-sc", label: "思源黑体", i18nKey: "fonts.source_han_sans", css: '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif', google: "Noto+Sans+SC:wght@400;500;600;700" },
-  { value: "noto-serif-sc", label: "思源宋体", i18nKey: "fonts.source_han_serif", css: '"Noto Serif SC", "STSong", "SimSun", serif', google: "Noto+Serif+SC:wght@400;600;700" },
+/** Font entry shared shape */
+export interface FontEntry { value: string; label: string; i18nKey: string; css: string; google?: string }
+
+/** Combined fonts — cover both CJK + Latin in one preset (choose one or none) */
+export const COMBINED_FONT_LIST: FontEntry[] = [
   { value: "lxgw", label: "霞鹜文楷", i18nKey: "fonts.lxgw_wenkai", css: '"LXGW WenKai", "楷体", "KaiTi", serif', google: "LXGW+WenKai:wght@400;700" },
-  { value: "jetbrains-mono", label: "JetBrains Mono", i18nKey: "jetbrains-mono", css: '"JetBrains Mono", "Fira Code", monospace', google: "JetBrains+Mono:wght@400;500;600;700" },
-  { value: "source-han-sans", label: "Source Han Sans", i18nKey: "source-han-sans", css: '"Source Han Sans SC", "Noto Sans SC", sans-serif' },
-  { value: "playfair", label: "Playfair Display", i18nKey: "playfair", css: '"Playfair Display", "Times New Roman", serif', google: "Playfair+Display:wght@400;600;700" },
-  { value: "dm-sans", label: "DM Sans", i18nKey: "dm-sans", css: '"DM Sans", system-ui, sans-serif', google: "DM+Sans:wght@400;500;600;700" },
-  { value: "space-grotesk", label: "Space Grotesk", i18nKey: "space-grotesk", css: '"Space Grotesk", system-ui, sans-serif', google: "Space+Grotesk:wght@400;500;600;700" },
-  { value: "maoken-glitch", label: "中文故障", i18nKey: "fonts.chinese_glitch", css: '"Maoken Glitch Sans", "PingFang SC", "Microsoft YaHei", sans-serif' },
   { value: "maoken-defectica", label: "赛博朋克", i18nKey: "fonts.cyberpunk", css: '"Defectica", "Maoken Glitch Sans", "PingFang SC", "Microsoft YaHei", sans-serif' },
   { value: "defectica", label: "英文破碎", i18nKey: "fonts.english_broken", css: '"Defectica", "PingFang SC", "Microsoft YaHei", sans-serif' },
   { value: "audiowide-mono", label: "蓝图等宽", i18nKey: "fonts.blueprint_mono", css: '"Audiowide Mono", "JetBrains Mono", "Fira Code", monospace' },
 ];
+
+/** CJK-only fonts — choose one (or "" for system default) */
+export const CJK_FONT_LIST: FontEntry[] = [
+  { value: "", label: "系统默认", i18nKey: "fonts.system_default", css: '"PingFang SC", "Microsoft YaHei", sans-serif' },
+  { value: "noto-sans-sc", label: "思源黑体", i18nKey: "fonts.source_han_sans", css: '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif', google: "Noto+Sans+SC:wght@400;500;600;700" },
+  { value: "noto-serif-sc", label: "思源宋体", i18nKey: "fonts.source_han_serif", css: '"Noto Serif SC", "STSong", "SimSun", serif', google: "Noto+Serif+SC:wght@400;600;700" },
+  { value: "source-han-sans", label: "Source Han Sans", i18nKey: "fonts.source_hansans", css: '"Source Han Sans SC", "Noto Sans SC", sans-serif' },
+  { value: "maoken-glitch", label: "中文故障", i18nKey: "fonts.chinese_glitch", css: '"Maoken Glitch Sans", "PingFang SC", "Microsoft YaHei", sans-serif' },
+];
+
+/** Latin-only fonts — choose one (or "" for system default) */
+export const EN_FONT_LIST: FontEntry[] = [
+  { value: "", label: "System Default", i18nKey: "fonts.system_default", css: "system-ui, sans-serif" },
+  { value: "inter", label: "Inter", i18nKey: "fonts.inter", css: '"Inter", system-ui, sans-serif' },
+  { value: "jetbrains-mono", label: "JetBrains Mono", i18nKey: "fonts.jetbrains_mono", css: '"JetBrains Mono", "Fira Code", monospace', google: "JetBrains+Mono:wght@400;500;600;700" },
+  { value: "playfair", label: "Playfair Display", i18nKey: "fonts.playfair", css: '"Playfair Display", "Times New Roman", serif', google: "Playfair+Display:wght@400;600;700" },
+  { value: "dm-sans", label: "DM Sans", i18nKey: "fonts.dm_sans", css: '"DM Sans", system-ui, sans-serif', google: "DM+Sans:wght@400;500;600;700" },
+  { value: "space-grotesk", label: "Space Grotesk", i18nKey: "fonts.space_grotesk", css: '"Space Grotesk", system-ui, sans-serif', google: "Space+Grotesk:wght@400;500;600;700" },
+];
+
+/** Legacy flat list — kept for backward compat (SettingsDialog scrollFade still references it) */
+export const FONT_LIST = [...COMBINED_FONT_LIST, ...CJK_FONT_LIST.filter(f => f.value !== ""), ...EN_FONT_LIST.filter(f => f.value !== "")];
 
 // ═══════════════ PER-THEME PALETTE DEFAULTS ═══════════════
 // Each theme pairs with a default accent color, saturation level, and dark/light.
@@ -133,6 +151,9 @@ export type SettingsState = {
   fontSize: FontSize;
   iconSize: IconSize;
   fontFamily: string;
+  fontFamilyCJK: string;
+  fontFamilyEN: string;
+  systemDialogStyle: SystemDialogStyle;
   visualizerMode: VisualizerMode;
   imageWheelMode: ImageWheelMode;
   barOpacity: number;
@@ -226,6 +247,9 @@ export type SettingsState = {
   setCgTextBgColor: (v: string) => void;
   setCgTextBgOpacity: (v: number) => void;
   setFontFamily: (v: string) => void;
+  setFontFamilyCJK: (v: string) => void;
+  setFontFamilyEN: (v: string) => void;
+  setSystemDialogStyle: (v: SystemDialogStyle) => void;
   setPaletteAccent: (v: string) => void;
   setPaletteSaturation: (v: number) => void;
   setPaletteRandomSeed: (seed: number) => void;
@@ -288,7 +312,7 @@ function schedulePersist() {
     lastVolume: s.lastVolume, previewOffset: s.previewOffset,
     lyricFontSize: s.lyricFontSize, lyricUseCustomColor: s.lyricUseCustomColor,
     lyricCurrentColor: s.lyricCurrentColor, lyricOtherColor: s.lyricOtherColor, lyricFillColor: s.lyricFillColor,
-    fontSize: s.fontSize, iconSize: s.iconSize, fontFamily: s.fontFamily,
+    fontSize: s.fontSize, iconSize: s.iconSize, fontFamily: s.fontFamily, fontFamilyCJK: s.fontFamilyCJK, fontFamilyEN: s.fontFamilyEN, systemDialogStyle: s.systemDialogStyle,
     visualizerMode: s.visualizerMode, imageWheelMode: s.imageWheelMode,
     barOpacity: s.barOpacity,
     barBlur: s.barBlur,
@@ -359,12 +383,6 @@ export function applyPalette() {
   root.removeAttribute("data-palette");
 }
 
-/** Re-apply the palette (called by legacy setters like setBarOpacity).
- *  Surface colours are now entirely CSS-driven via var(--color-primary). */
-export function applySurface() {
-  applyPalette();
-}
-
 /** Apply font primary/secondary colors as CSS custom properties */
 export function applyFontColors() {
   const { fontPrimaryColor: pc, fontSecondaryColor: sc, widgetTextColor: wc } = useSettingsStore.getState();
@@ -394,26 +412,63 @@ export function applyLyricColors() {
   }
 }
 
-/** Apply global font family + load Google Font if needed */
-export function applyFontFamily(v?: string) {
-  const family = v ?? useSettingsStore.getState().fontFamily ?? "system";
-  const entry = FONT_LIST.find((f) => f.value === family);
-  if (entry) {
-    // Set on body (not html) because body has font-family: var(--font-display) in CSS
-    document.body.style.fontFamily = entry.css;
-    if (entry.google) {
-      const id = "google-font-dynamic";
-      let link = document.getElementById(id) as HTMLLinkElement | null;
-      if (!link) {
-        link = document.createElement("link");
-        link.id = id;
-        link.rel = "stylesheet";
-        document.head.appendChild(link);
-      }
-      link.href = `https://fonts.googleapis.com/css2?family=${entry.google}&display=swap`;
-    }
+/** Apply global font family + load Google Fonts if needed.
+ *
+ *  Two modes (mutually exclusive):
+ *    Combined — fontFamily picks from COMBINED_FONT_LIST (covers CJK+Latin as one preset).
+ *    Split   — fontFamilyCJK / fontFamilyEN pick independently; empty = system default.
+ *
+ *  CSS stack order: Latin → CJK → generic fallback (browser prioritises Latin glyphs first). */
+export function applyFontFamily() {
+  const { fontFamily, fontFamilyCJK, fontFamilyEN } = useSettingsStore.getState();
+
+  let css: string;
+  let googleFonts: string[] = [];
+
+  if (fontFamily) {
+    // ── Combined mode ──
+    const entry = COMBINED_FONT_LIST.find(f => f.value === fontFamily)
+               ?? FONT_LIST.find(f => f.value === fontFamily);
+    css = entry?.css || "system-ui, sans-serif";
+    if (entry?.google) googleFonts.push(entry.google);
   } else {
-    document.body.style.removeProperty("font-family");
+    // ── Split mode ──
+    // CSS stack: EN-specific fonts → CJK fonts → system-ui → sans-serif
+    // system-ui on Chinese Windows resolves to CJK-capable fonts (Microsoft YaHei etc.),
+    // so CJK must come BEFORE system-ui, ELSE the browser renders Chinese glyphs from
+    // system-ui and never reaches the user's chosen CJK font.
+    const enEntry = EN_FONT_LIST.find(f => f.value === fontFamilyEN);
+    const cjkEntry = CJK_FONT_LIST.find(f => f.value === fontFamilyCJK);
+    const latin = enEntry?.css || "system-ui, sans-serif";
+    const cjk = cjkEntry?.css || "";
+    if (cjk) {
+      // Extract only the specific English fonts, strip system-ui / generic from EN stack
+      const enOnly = latin.split(", ").filter(f =>
+        !["system-ui", "sans-serif", "serif", "monospace"].includes(f)
+      ).join(", ");
+      css = [enOnly || "system-ui", cjk, "sans-serif"].filter(Boolean).join(", ");
+    } else {
+      css = latin;
+    }
+    if (enEntry?.google) googleFonts.push(enEntry.google);
+    if (cjkEntry?.google) googleFonts.push(cjkEntry.google);
+  }
+
+  document.body.style.fontFamily = css;
+
+  // ── Google Fonts dynamic <link> ──
+  const id = "google-font-dynamic";
+  let link = document.getElementById(id) as HTMLLinkElement | null;
+  if (googleFonts.length > 0) {
+    if (!link) {
+      link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      document.head.appendChild(link);
+    }
+    link.href = `https://fonts.googleapis.com/css2?${googleFonts.map(g => `family=${g}`).join("&")}&display=swap`;
+  } else if (link) {
+    link.remove();
   }
 }
 
@@ -462,7 +517,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     lyricFillColor: (saved as any).lyricFillColor || "#ffb6c1",
     fontSize: (saved as any).fontSize || "normal",
     iconSize: (saved as any).iconSize || "normal",
-    fontFamily: (saved as any).fontFamily || "inter",
+    fontFamily: (saved as any).fontFamily || "",
+    fontFamilyCJK: (saved as any).fontFamilyCJK || "",
+    fontFamilyEN: (saved as any).fontFamilyEN || "",
+    systemDialogStyle: (saved as any).systemDialogStyle || "windows",
     visualizerMode: (saved as any).visualizerMode || "bars",
     imageWheelMode: (saved as any).imageWheelMode || "prevNext",
     barOpacity: (saved as any).barOpacity ?? (saved as any).footerOpacity ?? 92,
@@ -540,6 +598,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             fontSize: s.fontSize ?? get().fontSize,
             iconSize: s.iconSize ?? get().iconSize,
             fontFamily: (s.fontFamily as string) ?? get().fontFamily,
+            fontFamilyCJK: (s.fontFamilyCJK as string) ?? get().fontFamilyCJK,
+            fontFamilyEN: (s.fontFamilyEN as string) ?? get().fontFamilyEN,
+            systemDialogStyle: (s.systemDialogStyle as SystemDialogStyle) ?? get().systemDialogStyle,
             visualizerMode: (s.visualizerMode as any) ?? get().visualizerMode,
             imageWheelMode: (s.imageWheelMode as any) ?? get().imageWheelMode,
             barOpacity: (s.barOpacity as number) ?? (s as any).footerOpacity ?? get().barOpacity,
@@ -571,12 +632,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             dashboardMode: (s.dashboardMode as any) ?? get().dashboardMode,
             contentMinimized: (s.contentMinimized as any) ?? get().contentMinimized,
             themeEffects: (s.themeEffects as any) ?? get().themeEffects});
-          applyPalette(); applySurface();
+          applyPalette();
           applyFontColors();
           applyLyricColors();
           applyScrollFade(); applyFontFamily();
         } catch {}
-      } else { applySurface(); applyFontColors(); applyLyricColors(); applyScrollFade(); applyFontFamily(); }
+      } else { applyPalette(); applyFontColors(); applyLyricColors(); applyScrollFade(); applyFontFamily(); }
     },
 
     setLanguage(lang) { set({ language: lang }); persist(); },
@@ -627,8 +688,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setMainBlur(v) { set({ mainBlur: v }); persist(); },
     setDialogOpacity(v) { set({ dialogOpacity: v }); persist(); },
     setDialogBlur(v) { set({ dialogBlur: v }); persist(); },
-    setSurfaceSaturation(v) { set({ surfaceSaturation: v }); persist(); applySurface(); },
-    setSurfaceOpacity(v) { set({ surfaceOpacity: v }); persist(); applySurface(); },
+    setSurfaceSaturation(v) { set({ surfaceSaturation: v }); persist(); applyPalette(); },
+    setSurfaceOpacity(v) { set({ surfaceOpacity: v }); persist(); applyPalette(); },
     setBgOverlayOpacity(v) { set({ bgOverlayOpacity: v }); persist(); },
     setFontPrimaryColor(v) { set({ fontPrimaryColor: v }); persist(); applyFontColors(); },
     setFontSecondaryColor(v) { set({ fontSecondaryColor: v }); persist(); applyFontColors(); },
@@ -641,7 +702,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setCgTextColor(v) { set({ cgTextColor: v }); persist(); },
     setCgTextBgColor(v) { set({ cgTextBgColor: v }); persist(); },
     setCgTextBgOpacity(v) { set({ cgTextBgOpacity: v }); persist(); },
-    setFontFamily(v) { set({ fontFamily: v }); persist(); applyFontFamily(v); },
+    setFontFamily(v) { set({ fontFamily: v }); persist(); applyFontFamily(); },
+    setFontFamilyCJK(v) { set({ fontFamilyCJK: v, fontFamily: "" }); persist(); applyFontFamily(); },
+    setFontFamilyEN(v) { set({ fontFamilyEN: v, fontFamily: "" }); persist(); applyFontFamily(); },
+    setSystemDialogStyle(v) { set({ systemDialogStyle: v }); persist(); },
     setPaletteAccent(v) { set({ paletteAccent: v, paletteCustomized: true, paletteRandomEnabled: false }); persist(); applyPalette(); },
     setPaletteSaturation(v) { set({ paletteSaturation: v, paletteCustomized: true, paletteRandomEnabled: false }); persist(); applyPalette(); },
     setPaletteRandomSeed(seed: number) { set({ paletteRandomSeed: seed, paletteRandomEnabled: true, paletteCustomized: true }); persist(); },

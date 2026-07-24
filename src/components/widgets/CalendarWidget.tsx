@@ -30,7 +30,7 @@ export default function CalendarWidget({ config }: { config: WidgetConfig }) {
   const cy = barBot - dayPct * barLen;
 
   return (
-    <DesktopWidget position={config.position}>
+    <DesktopWidget id="calendar" position={config.position}>
       <div className="flex flex-col items-center gap-1">
         {/* Year · Month — accent color like clock date text */}
         <span className="text-[10px] font-medium tracking-[0.1em]" style={{ color: "var(--font-widget)", filter: "brightness(1.2)" }}>

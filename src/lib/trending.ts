@@ -38,16 +38,21 @@ function readCache(tag: string): { at: number; data: TrendingData } | null {
   try { return JSON.parse(localStorage.getItem(KEY_PREFIX + (tag || "top")) || "null"); } catch { return null; }
 }
 
-export async function getTrending(tag = ""): Promise<TrendingData | null> {
-  const cached = readCache(tag);
+export async function getTrending(tag = "", lang = "zh"): Promise<TrendingData | null> {
+  const cacheKey = lang === "en" ? `${tag || "top"}:en` : tag;
+  const cached = readCache(cacheKey);
   if (cached && Date.now() - cached.at < TTL) return cached.data;
   try {
-    const url = `https://scm-think.cn/api/trending${tag ? `?tag=${tag}` : ""}`;
+    const params = new URLSearchParams();
+    if (tag) params.set("tag", tag);
+    if (lang === "en") params.set("lang", "en");
+    const qs = params.toString();
+    const url = `https://scm-think.cn/api/trending${qs ? `?${qs}` : ""}`;
     const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
     if (!resp.ok) throw new Error(`trending ${resp.status}`);
     const data = (await resp.json()) as TrendingData;
     if (!Array.isArray(data.games)) throw new Error("bad payload");
-    localStorage.setItem(KEY_PREFIX + (tag || "top"), JSON.stringify({ at: Date.now(), data }));
+    localStorage.setItem(KEY_PREFIX + cacheKey, JSON.stringify({ at: Date.now(), data }));
     return data;
   } catch {
     return cached?.data ?? null; // 离线/失败/榜单未就绪 → 过期缓存兜底

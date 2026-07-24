@@ -2,13 +2,12 @@ import { useThemeStore } from "@/stores/themeStore";
 import { themeUrl } from "@/lib/themeBase";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
-// Inline SVG music-note icon (lucide-react Music equivalent) for default theme
+// Inline SVG headphones icon — dim and unobtrusive, for onError edge cases only
 const DEFAULT_SVG = [
   "data:image/svg+xml,",
-  "%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234788f0' stroke-width='1.5'%3E",
-  "%3Cpath d='M9 18V5l12-2v13'/%3E",
-  "%3Ccircle cx='6' cy='18' r='3'/%3E",
-  "%3Ccircle cx='18' cy='16' r='3'/%3E",
+  "%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='1.5' opacity='0.4'%3E",
+  "%3Cpath d='M3 18v-6a9 9 0 0 1 18 0v6'/%3E",
+  "%3Cpath d='M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z'/%3E",
   "%3C/svg%3E",
 ].join("");
 

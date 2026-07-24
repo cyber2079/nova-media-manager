@@ -89,7 +89,19 @@ pub fn install_theme(data_dir: &Path, nvtp_data: &[u8]) -> Result<InstalledTheme
 /// List all installed themes from the registry.
 pub fn list_themes(data_dir: &Path) -> Vec<InstalledTheme> {
     let registry_path = data_dir.join("themes").join("registry.json");
-    let registry = load_registry(&registry_path);
+    let mut registry = load_registry(&registry_path);
+    // One-off migration: rename "Cyberpunk" → "Cyberpunk2079"
+    let mut changed = false;
+    for t in &mut registry.themes {
+        if t.id == "cyberpunk" && t.name == "Cyberpunk" {
+            t.name = "Cyberpunk2079".into();
+            changed = true;
+        }
+    }
+    if changed {
+        let _ = serde_json::to_string_pretty(&registry)
+            .map(|json| std::fs::write(&registry_path, json));
+    }
     registry.themes
 }
 

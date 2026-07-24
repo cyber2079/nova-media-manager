@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Bug, Wrench, Image, Terminal, ChevronDown, ChevronRight } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 const entries = [
   {
@@ -19,7 +20,8 @@ const entries = [
   },
 ];
 
-export default function DevToolsMenu() {
+export default function DevToolsMenu({ showText }: { showText?: boolean }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
@@ -35,12 +37,14 @@ export default function DevToolsMenu() {
   }, [open]);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative inline-flex">
       <button onClick={() => setOpen(!open)} className={cn(
-        "flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-300 active:scale-90",
-        open ? "bg-cyan-500/20 text-cyan-400" : "hover:bg-surface-lighter text-gray-400 hover:text-cyan-400",
-      )} title="3D 开发工具">
+        "flex items-center justify-center rounded-lg transition-all duration-300 active:scale-90 gap-1.5",
+        showText ? "px-3 py-2 h-auto w-auto" : "h-9 w-9",
+        open ? "bg-cyan-500/20 text-cyan-400" : showText ? "text-gray-300 hover:bg-white/5 border border-white/15" : "hover:bg-surface-lighter text-gray-400 hover:text-cyan-400",
+      )} title={t("settings.dev_3d_devtools")}>
         <NeonIcon name="Bug" size={16}><Bug className="h-4 w-4" /></NeonIcon>
+        {showText && <span className="text-xs font-medium">{t("settings.dev_3d_devtools")}</span>}
       </button>
 
       {open && (

@@ -30,9 +30,18 @@ D:\nova-media-manager\      ← GitHub 公库
 ├── src-tauri/src/          # Rust 后端
 │   ├── license/            # → D:\nova-proprietary\license\ (软链接)
 │   └── theme/              # .nvtp 加密/打包/解包
-├── public/themes/          # 主题资源（Syncthing，不在 Git）
+├── public/
+│   ├── themes/             # 主题资源（Syncthing，不在 Git）
+│   │   ├── ice girl/       # ice-girl 素材
+│   │   ├── cyber girl/     # cyber-girl 素材
+│   │   ├── cyberpunk/      # cyberpunk 素材（dev 模式下构建脚本复制到此处）
+│   │   └── cyber-grid/     # cyber-grid 素材（dev 模式下构建脚本复制到此处）
+│   └── fonts/              # 字体：小字体进 Git，大字体 .gitignore + Syncthing
 ├── server/                 # ECS 服务端（不在 Git）
 └── scripts/                # 构建/生成/打包脚本
+    ├── build-cyberpunk.mjs
+    ├── build-cyber-grid.mjs
+    └── ...
 
 D:\nova-proprietary\        ← GitHub 私有仓库
 ├── license/mod.rs          # 许可证验证（闭源）
@@ -40,8 +49,10 @@ D:\nova-proprietary\        ← GitHub 私有仓库
 └── themes/                 # 主题元数据 + 提示词（Git 版本控制）
     ├── manifest.schema.json
     ├── prompts.schema.json
-    ├── ice-girl/
-    └── cyber-girl/
+    ├── cyberpunk/           # 静态主题：theme.json + theme.css + manifest.json
+    ├── cyber-grid/          # 静态主题：蓝图 bento 风格
+    ├── ice-girl/            # dynamic 主题：manifest.json + prompts.json
+    └── cyber-girl/          # story 主题：manifest.json + prompts.json
 
 D:\nova-themes-assets\      ← Syncthing 同步 — AI 生成的素材
 ├── ice-girl/               # 图片/视频/图标
@@ -72,6 +83,9 @@ D:\nova-themes-assets\      ← Syncthing 同步 — AI 生成的素材
 10. **不要用 `isDefault` 门控功能** — 改用 `!(isIce || isCG)`。ice-girl/cyber-girl 是老主题，新 .nvtp 主题和 default 一样需要壁纸引擎
 11. **`setTheme` 带 `themeVersion` 自增计数器** — 同主题重复选择时确保 `useThemeTokens` 重新注入
 12. **主题 CSS 文件用 `fetch()`+`<style>.textContent` 注入** — 不用 `<link>` 标签，不用 `@import`
+13. **`.neon-icon` base 样式必须在 `index.css` 全局定义** — 不能只放在 per-theme neon-icons.css 里，否则无 neon-icons.css 的主题 NeonIcon 尺寸异常
+14. **字体源仓库不要整包复制到 `public/fonts/`** — 只取编译好的 .ttf/.otf；Rust 源码/Cargo.toml/glyph 源文件一律不进公库
+15. **Layout `<main>` 不要 `overflow-hidden`** — 改成 `overflow-visible`，否则最左/最右按钮 hover 光晕被裁剪
 
 ### 主题文件开发流程
 
@@ -81,21 +95,281 @@ D:\nova-themes-assets\      ← Syncthing 同步 — AI 生成的素材
 4. 打包：`node scripts/build-cyberpunk.mjs`（或新主题的对应脚本）
 5. 测试：应用 → 主题管理 → 安装本地 .nvtp
 
+### 新建静态主题完整流程（2026-07-24 沉淀，cyber-grid 为范例）
+
+> 本节涵盖从零创建 premium 静态主题的全过程，每一步都有踩坑记录。
+
+**Step 1: 创建主题源文件**（`D:\nova-proprietary\themes\{id}\`）
+
+| 文件 | 作用 | 注意事项 |
+|------|------|----------|
+| `manifest.json` | 元数据：id、name、`inherits: "default"`、`requiresLicense: "member"` | id 就是主题名，别用 com.nova 前缀（那是 legacy） |
+| `theme.json` | Token 覆盖：colors、glass、header、nav、card、button... | 只写与 default 不同的 Token；copy cyberpunk 的改配色最快 |
+| `theme.css` | 视觉效果：背景、动画、卡片、按钮覆盖 | 核心约束见下方 |
+
+**Step 2: 前端注册**
+
+| 文件 | 改什么 |
+|------|--------|
+| `src/pages/Home.tsx` | `THEME_META` 添加 `"cyber-grid": { type: "static" }` |
+| `src/lib/themeBase.ts` | `KNOWN_THEMES` 添加 `"cyber-grid": "/themes/cyber-grid"` |
+| `src/pages/Home.tsx` | static 分支用条件渲染体换主题专用首页组件（如 `BlueprintBentoGrid`） |
+
+**Step 3: 打包脚本**
+
+copy `scripts/build-cyberpunk.mjs` → 改名 → 改 `themeId` 和 `PROJ`/`ASSETS` 路径。若不需要 SFX/导航图标，删掉对应段落即可。
+
+**Step 4: 验证链路**
+
+```bash
+node scripts/build-cyber-grid.mjs   # → dist/cyber-grid.nvtp
+npm run typecheck                   # 门禁
+npm run tauri:dev                   # 启动 → 主题管理 → 安装本地 .nvtp
+```
+
+---
+
+### 主题 CSS 编写铁律（新补）
+
+1. **`html[data-theme="xxx"]` 选择器限定作用域**，参考 cyberpunk/theme.css 模式
+2. **`.neon-icon` / `.neon-icon svg` 基础样式必须在 `src/index.css` 全局定义**，不能只放在 per-theme neon-icons.css 里。否则没 neon-icons.css 的主题（ice-girl、cyber-girl、cyber-grid 等）NeonIcon SVG 会按 viewBox 原生大小（24px）而非 `size` prop 渲染
+3. **主题首页组件按 `themeType` 分流**：static 走 `HomeDashboard`（或专用组件），dynamic 走 typewriter+face，story 走 scene progression
+4. **首页组件必须功能对等** — 自建 BlueprintBentoGrid 时不能丢失 HomeDashboard 的任何数据源（dashboard_stats + Steam trending + Netease/TMDB recs + play history + 签到）
+5. **Bento grid 不用 `row-span-2`** — CSS Grid 自动放置在有跨行项时不可预测，改为每行严格 5 列填满
+6. **扫描线等 CSS 伪元素效果应写成 `var()` 驱动**，方便后续做每主题可配置特效
+
+### 每主题可配置特效
+
+- **适用场景**：扫描线、噪点、色差等纯 CSS 伪元素效果
+- **架构**：`settingsStore.themeEffects[themeId]` → `useThemeTokens` 注入 `<style id="nv-fx-overrides">` CSS 覆盖
+- **默认值**：`DEFAULT_SCANLINE`（settingsStore.ts）
+- **UI**：Appearance 选项卡 `isNonDefault` 时显示"主题特效"SectionGroup
+- **重置**：`resetThemeEffects(themeId)` 删除该主题配置 → 回退到 theme.css 硬编码默认值
+- **关键**：不碰 Rust/pipeline/tokens，纯前端注入。关闭扫描线用 `display:none !important`，开启用配置值重写 `repeating-linear-gradient`
+
+### 字体集成
+
+- 小字体（&lt; 200KB）：直接放 `public/fonts/`，Git 跟踪，`src/index.css` 加 `@font-face`，`settingsStore.ts` 的 `FONT_LIST` 注册
+- 大字体（MB 级）：`public/fonts/` + `.gitignore` + Syncthing 同步
+- 字体源仓库（如 cyberpunkfonts-main、warpnine-fonts-main）**不要整包放到 public/fonts/** — 只取编译好的 .ttf/.otf 文件
+
+### NeonIcon 适配
+
+- 新图标名先在 `src/components/neon-icon-data.json` 查是否存在，不存在则添加 SVG path 数据
+- 格式：`"Name": ["neon-color-name", "<path .../>..."]`
+- `neon-icon-data.json` 是单行 JSON，手写时注意不要引入换行
+- NeonIcon 在 default 主题下走 lucide-react children fallback，非 default 走内联 SVG
+- **2026-07-26 重要修正**：default 主题下 NeonIcon 也会用 `<span>` 包裹 children 并应用 `size` prop，不再裸返回 children 导致图标撑满容器。所有主题图标大小行为统一。
+
+### 外部组件接入（21st.dev）
+
+- 注册表 URL：`https://21st.dev/r/{user}/{component}` → Bearer token 认证
+- 注册表返回 JSON：`files[].content` + `css` 对象。**css 字段常不完整**（只含 @keyframes），核心样式需根据视觉描述手写
+- BentoItem 组件结构：四角 `<div className="corner top-left" />` × 4 + `<div className="content-wrapper">`
+
+### Layout overflow 裁剪问题
+
+- `src/components/Layout.tsx` 的 `<main>` 有 `overflow-hidden` 和内部 `overflow-y-auto`，会裁剪最左/最右图标 hover 光晕
+- **修复**：`<main>` 改 `overflow-visible`；滚动 div 加 `px-1`（4px 呼吸空间给光晕边缘）
+- 症状：SortBar 最左按钮、LayoutSwitch 最右按钮 hover 时 `box-shadow` / `drop-shadow` 被切 1-2px
+
+
 ### 主题相关文件
 
 | 文件 | 用途 |
 |------|------|
 | `src-tauri/src/theme/tokens.rs` | Token 合并 + 扁平化引擎 |
 | `src-tauri/src/theme/default_theme.json` | 内置全量 Token 基线 |
-| `src/hooks/useThemeTokens.ts` | 前端 Token 注入 + CSS 桥接 |
+| `src/hooks/useThemeTokens.ts` | 前端 Token 注入 + CSS 桥接 + 每主题特效 CSS 覆盖 |
 | `src/hooks/useThemeEffects.ts` | Legacy palette（仅 default 主题） |
 | `src/hooks/useThemeSfx.ts` | UI 音效播放引擎 |
-| `src/stores/themeStore.ts` | 主题选择状态 + themeVersion |
+| `src/stores/themeStore.ts` | 主题选择 + themeVersion + `useAvailableThemes()` 会员门控 |
 | `src/stores/themePackStore.ts` | .nvtp 安装/管理 |
-| `src/lib/themeBase.ts` | 素材 URL 构建（dev→public/, prod→nova://） |
+| `src/stores/settingsStore.ts` | Per 主题特效配置（`themeEffects`）+ 字体列表 |
+| `src/lib/themeBase.ts` | 素材 URL 构建（dev→public/, prod→nova://）；`KNOWN_THEMES` 注册新主题 |
+| `src/components/SettingsDialog.tsx` | 外观选项卡：调色板 + 主题特效（扫描线开关/颜色/粗细） |
+| `src/pages/Home.tsx` | `THEME_META` 映射主题类型；static 分支渲染专用首页组件 |
 | `scripts/build-cyberpunk.mjs` | cyberpunk 主题打包脚本 |
+| `scripts/build-cyber-grid.mjs` | cyber-grid 蓝图主题打包脚本 |
 | `D:\nova-proprietary\themes\{id}\theme.json` | 主题 Token 定义 |
 | `D:\nova-proprietary\themes\{id}\theme.css` | 主题视觉效果 CSS |
+| `D:\nova-proprietary\themes\{id}\manifest.json` | 主题元数据（id/name/inherits/requiresLicense） |
+
+## 音乐播放器架构（2026-07-26 沉淀）
+
+### 双层播放器模型
+
+| 层 | 位置 | 触发条件 |
+|----|------|---------|
+| **全屏播放器** | 音乐页底部（portaled 到 `document.body`，`fixed bottom-16`）| track 存在 + 在音乐页 + 未最小化 |
+| **底栏迷你播放器** | [Layout.tsx](src/components/Layout.tsx) Footer，左侧 | track 存在 + fullPlayer 不可见 |
+
+全屏播放器用 `createPortal` 渲染到 body，绕开 CSS `transform: translateZ(0)` 导致的 fixed 定位失效。
+
+### 交互流程
+
+- 音乐页点 `—` 最小化 → `setBackground(true)`，全屏消失，底栏迷你出现
+- 底栏迷你：封面缩略图 + 歌名 + ⏮ + ▶/⏸ + ⏭ + ⛶
+- 点 ⛶ → `setBackground(false)` + navigate("/music")，全屏恢复
+- 关闭按钮（✕）→ `stop()`，彻底关闭播放器
+- 点迷你播放器歌名/封面 → navigate("/music")
+
+### 铁律
+
+- **播放器按钮用 `onMouseDown` 不用 `onClick`** — 三个按钮（🎨/—/✕）必须等高等宽 `w-7 h-7`，用 `onMouseDown` + `e.stopPropagation()` 避免进度条/其他元素拦截
+- **歌词字体图标**：`ALargeSmall`（lucide Aa 图标），`NeonIcon` 不支持时自动 fallback children
+- **播放器示波器**：`marginLeft: -11`
+
+---
+
+## 桌面小组件系统（2026-07-26 沉淀）
+
+### DesktopWidget 接口
+
+```typescript
+<DesktopWidget id="myComputer" position={config.position}>
+  {/* 小组件内容 */}
+</DesktopWidget>
+```
+
+`id` 用作 store key，`position` 是预设位置字符串。
+
+### 定位模型
+
+- **预设**：CSS class（`bottom-20 right-5` 等 6 个位置）
+- **自定义**：用户拖拽后存 `widgetCustomPos[id]: {x, y}`，用 inline `left/top` px 定位
+- 切换显示模式或调用 `setPosition` 时自动清除自定义坐标
+
+### 锁定/解锁/拖拽
+
+| 状态 | 行为 |
+|------|------|
+| 锁定（默认）| Hover 显示 🔒 按钮，点在图标上方 20px |
+| 解锁 | 显示拖拽手柄（⋮⋮，在图标上方 22px）+ 🔓 锁定按钮 |
+| 拖拽 | 手柄上 `onPointerDown`，走 pointer capture，`onMove` 中直接操作 DOM style |
+| 松开 | `Math.round` + `clamp` 取整存盘 |
+
+### 拖拽约束（铁律）
+
+```
+HANDLE_H = 22  // 控制条悬出高度
+top ≥ HEADER_H(64) + HANDLE_H = 86px  // 保证手柄不进 header
+bottom ≤ windowH - FOOTER_H(48)
+left: 0 ≤ x ≤ windowW - widgetW
+```
+
+- `onMove` 中 `clientY ≤ 86` 直接 return
+- `onUp` 中鼠标在 header 区域松手：取 el 当前 `left/top` clamp 后存盘
+
+### 层级（铁律）
+
+| 层 | z-index |
+|----|---------|
+| 小组件根 div | 47 |
+| 控制条（absolute, top -22px）| content z-10 |
+| 内容包裹区 | content z-1 |
+| Header/Footer | 50 |
+| QuickHub | 55 |
+
+### 指针事件隔离（铁律）
+
+| 项目 | 规则 |
+|------|------|
+| 小组件外层容器 | `pointer-events-none`（允许隔空穿透） |
+| 小组件内按钮 | `pointer-events-auto`（仅按钮可点） |
+| 装饰 SVG | `pointer-events-none` |
+| NeonIcon (all) | `pointer-events-none` — 图标本身不拦截点击，穿透到父按钮 |
+| 锁定/解锁按钮 | `absolute top: -20px left-1/2`，不受内容尺寸影响 |
+| 控制条 | content z-10，高于内容区 z-1，stopPropagation 防止冒泡 |
+
+### 视觉铁律
+
+| 规则 | 原因 |
+|------|------|
+| **禁止 SVG `drop-shadow-lg`** | GPU 层边界变化导致小组件 hover 时偏移 1px |
+| 颜色仅用 CSS 变量 | `var(--font-primary)` 等，不硬编码 |
+| 迷你模式 40×40px | 纯图标 + 进度环 |
+| 展开面板用 `absolute top-0 left-full/right-full` | 弹到组件外侧，不挤空间 |
+
+### 倒计时小组件（专属规则）
+
+- 完整模式下按钮最小 32×32px，间距 `gap-1.5`
+- 所有按钮用 `onClick`，NeonIcon 已全局 `pointer-events-none`
+- 进度条 `pointer-events-none`
+- 设置面板：从组件侧边弹出（`panelAlign === "right" ? "left-full" : "right-full"`），检测屏幕中心自动选方向
+- 切换 mini↔full 自动清除自定义坐标
+
+### 倒计时警报警报音效（2026-07-26）
+
+三个主题各有专属循环音效，Web Audio API 合成，来源文件：[CountdownAlert.tsx](src/components/CountdownAlert.tsx)。
+
+| 主题 | 音色 | 旋律 |
+|------|------|------|
+| default | 正弦波柔和风铃 | C5→E5→G5→C6，渐强，3 秒循环 |
+| cyberpunk | 三角波轻快琶音 | C-E-G-C-G-E 上下行，1.7 秒循环 |
+| cyber-grid | 方波科技阶进 | B5→A5→G5→E5→C5 上下行扫描线质感，1.4 秒循环 |
+
+**铁律**：倒计时结束时循环播放，点"我知道了"停止。音量 0.05-0.08，比系统通知低。用户可控制开关和间隔。
+
+---
+
+## 自定义封面系统（2026-07-26 沉淀）
+
+### Rust 命令
+
+| 命令 | 用途 |
+|------|------|
+| `set_music_cover(id, sourcePath)` | 复制图片到 `music_covers/{id}.jpg`，更新 DB |
+| `set_movie_cover(id, sourcePath)` | 复制图片到 `covers/custom/{id}.jpg`，更新 DB |
+| `regenerate_music_cover(id)` | 重新提取嵌入封面 |
+| `clear_music_cover(id)` | 清空 cover_path → 回退默认图标 |
+| `clear_movie_cover(id)` | 同上 |
+| `get_known_folder_path(kind)` | 返回桌面/下载等系统文件夹实际路径 |
+
+### 前端
+
+- MovieCard/MusicCard 操作行有 🖼（设置封面）+ 🔄（重新生成）+ 🗘（恢复默认）三个按钮
+- 设置后直接调 `useMusicStore.getState().loadMusic()` 刷新
+- **关键**：`music.coverPath` 是本地绝对路径，前端显示必须经 `musicCoverSrc()` 转为 Tauri asset protocol URL。MusicCard 之前漏了这个导致卡片视图永远不显示封面。
+
+---
+
+## 其他新增子系统
+
+### 系统弹窗样式
+
+- 设置 → 外观 → 系统弹窗样式：`windows`（原生 explorer）/ `theme`（应用内 FileExplorer + 主题玻璃面板）
+- 全局 store 字段：`systemDialogStyle: "windows" | "theme"`
+- 影响：QuickHub 文件夹快捷方式、我的电脑、主题安装弹窗
+
+### 字体系统拆分
+
+- `FONT_LIST` 拆为 `COMBINED_FONT_LIST`（中英一体）、`CJK_FONT_LIST`（纯中文）、`EN_FONT_LIST`（纯英文）
+- `fontFamily`（组合）/ `fontFamilyCJK` + `fontFamilyEN`（分离）互斥
+- CJK 字体必须在 `system-ui` 前面，否则中文字形被 system-ui 吃掉
+
+### Steam 热榜多语言
+
+- 客户端传 `i18n.language === "zh" ? "zh" : "en"` 给服务端
+- 服务端按语言分缓存（`tag:lang`），每日定时同时刷中英两份
+- 服务端 Steam API 请求 `l=schinese` vs `l=english`
+
+### 搜索栏
+
+- 全局搜索弹窗 `[&>button]:hidden` 隐藏 Dialog 自带关闭按钮
+- 输入框 `py-1.5 pl-3 text-base`，左侧 12px 内边距
+- 弹窗宽度 `max-w-2xl`
+
+### 设置面板
+
+- 标签页顺序：通用 → 主题 → 外观 → 媒体 → 小组件 → 性能
+- 开发者工具标签页仅 `import.meta.env.DEV` 可见
+- 3D 预览 + 3D 开发工具已从 Header 移到设置 → 开发者工具
+
+### 开始菜单宽度
+
+- QuickHub 容器宽度从 `maxWidth: min(576px, ...)` 改为 `maxWidth: min(45vw, calc(100vw - 2rem))`
+
 
 ## 许可证系统
 
