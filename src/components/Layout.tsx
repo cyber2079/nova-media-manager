@@ -538,7 +538,7 @@ export default function Layout() {
                   }
                 }}>
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center">
-                    {isDefault ? <item.icon className="h-5 w-5" /> : <i className={ni[0] + " " + ni[1] + " lg pulse neon-pulse-anim"}></i>}
+                    {isDefault ? <item.icon className="h-5 w-5" /> : <i className={"ni " + ni[0] + " " + ni[1] + " lg"}></i>}
                   </div>
                   <span>{t(`nav.${item.key}`)}</span>
                 </NavLink>
