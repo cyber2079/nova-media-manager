@@ -2,6 +2,7 @@ import { useEffect, useCallback, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useQuickLaunchStore, type QuickLaunchItem } from "@/stores/quickLaunchStore";
 import { Play, Plus, Trash2, Pencil } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { useTranslation } from "react-i18next";
 import { useThemeStore } from "@/stores/themeStore";
 import { cn } from "@/lib/utils";
@@ -173,7 +174,7 @@ export default function QuickLaunchBar() {
               {icons[item.id] ? (
                 <img src={icons[item.id]} alt={item.name} className="w-6 h-6 object-contain" style={{ imageRendering: "auto" }} />
               ) : (
-                <Play className="h-4 w-4" />
+                <NeonIcon name="Play" size={16}><Play className="h-4 w-4" /></NeonIcon>
               )}
             </button>
             {/* Running indicator: short low-saturation underline beneath the icon */}
@@ -205,7 +206,7 @@ export default function QuickLaunchBar() {
           boxShadow: "none",
         }}
       >
-        <Plus className="h-4 w-4" strokeWidth={1.5} />
+        <NeonIcon name="Plus" size={16}><Plus className="h-4 w-4" strokeWidth={1.5} /></NeonIcon>
       </button>
 
       {/* Args input overlay when adding a program */}
@@ -242,12 +243,12 @@ export default function QuickLaunchBar() {
           <button
             onClick={handleEditArgs}
             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-white/5 transition-colors">
-            <Pencil className="h-3 w-3" />{t("quicklaunch.edit")}
+            <NeonIcon name="Pencil" size={16}><Pencil className="h-3 w-3" /></NeonIcon>{t("quicklaunch.edit")}
           </button>
           <button
             onClick={() => { remove(contextMenu.item.id); setContextMenu(null); }}
             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-400/10 transition-colors">
-            <Trash2 className="h-3 w-3" />{t("quicklaunch.remove")}
+            <NeonIcon name="Trash2" size={16}><Trash2 className="h-3 w-3" /></NeonIcon>{t("quicklaunch.remove")}
           </button>
         </div>,
         document.body,

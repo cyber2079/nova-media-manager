@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useLicenseStore } from "@/stores/licenseStore";
 import { useThemePackStore } from "@/stores/themePackStore";
 import { Sparkles, Loader2, CheckCircle, XCircle, Download } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 
 const STORAGE_KEY = "nova-onboarding-complete";
 
@@ -132,7 +133,7 @@ export default function OnboardingDialog() {
           <div className="p-8 text-center space-y-6">
             <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center"
               style={{ background: "color-mix(in srgb, var(--color-primary) 15%, transparent)" }}>
-              <Sparkles className="h-8 w-8 text-primary-light" />
+              <NeonIcon name="Sparkles" size={16}><Sparkles className="h-8 w-8 text-primary-light" /></NeonIcon>
             </div>
 
             <DialogTitle className="text-2xl font-bold">
@@ -183,7 +184,7 @@ export default function OnboardingDialog() {
 
             {error && (
               <div className="flex items-center gap-2 text-red-400 text-sm">
-                <XCircle className="h-4 w-4 shrink-0" />
+                <NeonIcon name="XCircle" size={16}><XCircle className="h-4 w-4 shrink-0" /></NeonIcon>
                 {error}
               </div>
             )}
@@ -200,7 +201,7 @@ export default function OnboardingDialog() {
                 disabled={loading}
                 className="flex-1 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:brightness-110 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
               >
-                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {loading && <NeonIcon name="Loader2" size={16}><Loader2 className="h-4 w-4 animate-spin" /></NeonIcon>}
                 {loading ? t("onboarding.verifying") : t("onboarding.confirm_activate")}
               </button>
             </div>
@@ -211,7 +212,7 @@ export default function OnboardingDialog() {
           <div className="p-8 text-center space-y-6">
             <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center"
               style={{ background: "color-mix(in srgb, var(--color-primary) 15%, transparent)" }}>
-              <Download className="h-8 w-8 text-primary-light animate-pulse" />
+              <NeonIcon name="Download" size={16}><Download className="h-8 w-8 text-primary-light animate-pulse" /></NeonIcon>
             </div>
 
             <DialogTitle className="text-xl font-bold">
@@ -241,7 +242,7 @@ export default function OnboardingDialog() {
 
         {phase === "done" && (
           <div className="p-8 flex flex-col items-center gap-4 py-12">
-            <CheckCircle className="h-14 w-14 text-green-400" />
+            <NeonIcon name="CheckCircle" size={16}><CheckCircle className="h-14 w-14 text-green-400" /></NeonIcon>
             <p className="text-green-400 font-bold text-lg">
               {t("onboarding.activated")}
             </p>

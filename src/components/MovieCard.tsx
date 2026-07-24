@@ -3,6 +3,7 @@ import SafeImage from "@/components/SafeImage";
 import { memo } from "react";
 import type { Movie } from "@/types/movie";
 import { Play, Trash2, Clock, Maximize, Loader2, Tag, Monitor, RefreshCw } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { cn } from "@/lib/utils";
 import { tagColor } from "@/lib/tagColor";
 import { useTranslation } from "react-i18next";
@@ -49,7 +50,7 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
         )}
         {isProcessing ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-gray-500">
-            <Loader2 className="h-8 w-8 animate-spin text-primary-light" />
+            <NeonIcon name="Loader2" size={16}><Loader2 className="h-8 w-8 animate-spin text-primary-light" /></NeonIcon>
             <span className="text-xs">{t("movie.processing")}</span>
           </div>
         ) : movie.coverPath ? (
@@ -59,13 +60,13 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             fallback={
               <div className="flex h-full items-center justify-center bg-gradient-to-br from-surface-lighter to-surface">
-                <Play className="h-12 w-12 text-gray-600" />
+                <NeonIcon name="Play" size={16}><Play className="h-12 w-12 text-gray-600" /></NeonIcon>
               </div>
             }
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-gradient-to-br from-surface-lighter to-surface">
-            <Play className="h-12 w-12 text-gray-600" />
+            <NeonIcon name="Play" size={16}><Play className="h-12 w-12 text-gray-600" /></NeonIcon>
           </div>
         )}
 
@@ -76,7 +77,7 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
               className="h-12 w-12 rounded-full bg-primary flex items-center justify-center opacity-0 transition-all group-hover:opacity-100"
               onClick={(e) => { e.stopPropagation(); onPlay(movie); }}
             >
-              <Play className="h-5 w-5 fill-white ml-0.5" />
+              <NeonIcon name="Play" size={16}><Play className="h-5 w-5 fill-white ml-0.5" /></NeonIcon>
             </button>
           </div>
         )}
@@ -130,13 +131,13 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
           <div className="flex items-center gap-3 text-xs text-gray-500 mb-2">
             {movie.resolution && movie.resolution !== "处理中..." && (
               <span className="flex items-center gap-1">
-                <Maximize className="h-3 w-3" />
+                <NeonIcon name="Maximize" size={16}><Maximize className="h-3 w-3" /></NeonIcon>
                 {movie.resolution}
               </span>
             )}
             {movie.durationSeconds > 0 && (
               <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
+                <NeonIcon name="Clock" size={16}><Clock className="h-3 w-3" /></NeonIcon>
                 {movie.duration}
               </span>
             )}
@@ -150,19 +151,19 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
               className={cn("flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors",
                 compact ? "h-6 w-6" : "h-8 w-8")}
               onClick={(e) => { e.stopPropagation(); onSetWallpaper(movie.filePath); }} title={t("movie.set_wallpaper")}>
-              <Monitor className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
+              <NeonIcon name="Monitor" size={16}><Monitor className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} /></NeonIcon>
             </button>
           )}
           {onEditTags && (
             <button className="h-8 w-8 flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors"
               onClick={(e) => { e.stopPropagation(); onEditTags(); }} title="Edit tags">
-              <Tag className="h-3.5 w-3.5" />
+              <NeonIcon name="Tag" size={16}><Tag className="h-3.5 w-3.5" /></NeonIcon>
             </button>
           )}
           {onRegenCover && !isProcessing && isPaid(useLicenseStore.getState().license.tier) && (
             <button className="h-8 w-8 flex items-center justify-center rounded-md text-gray-500 hover:text-primary-light hover:bg-white/5 transition-colors"
               onClick={(e) => { e.stopPropagation(); onRegenCover(); }} title={t("movie.regen_cover")}>
-              <RefreshCw className="h-3.5 w-3.5" />
+              <NeonIcon name="RefreshCw" size={16}><RefreshCw className="h-3.5 w-3.5" /></NeonIcon>
             </button>
           )}
           <div className="flex-1" />
@@ -170,7 +171,7 @@ export default memo(function MovieCard({ movie, onDelete, onPlay, onEditTags, on
             className="h-8 w-8 flex items-center justify-center rounded-md text-gray-500 hover:text-red-400 hover:bg-white/5 transition-colors"
             onClick={(e) => { e.stopPropagation(); onDelete(movie.id); }}
           >
-            <Trash2 className="h-4 w-4" />
+            <NeonIcon name="Trash2" size={16}><Trash2 className="h-4 w-4" /></NeonIcon>
           </button>
         </div>
       </CardContent>

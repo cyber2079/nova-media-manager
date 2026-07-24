@@ -2,6 +2,7 @@
 
 import { useMemo, useCallback, useState } from "react";
 import { ArrowDownUp, ArrowUpNarrowWide, ArrowDownWideNarrow, Clock, CalendarArrowUp, CalendarArrowDown } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { cn } from "@/lib/utils";
 
 export type SortKey = string;
@@ -44,24 +45,24 @@ export default function SortBar({ options, active, onChange, className }: SortBa
 /** 电影排序：默认 / 名称 / 日期 / 时长 */
 export function useMovieSortOptions(): SortOption[] {
   return useMemo(() => [
-    { key: "default",     icon: <ArrowDownUp className="h-3.5 w-3.5" />,              label: "默认" },
-    { key: "nameAsc",     icon: <ArrowUpNarrowWide className="h-3.5 w-3.5" />,        label: "名称 A→Z" },
-    { key: "nameDesc",    icon: <ArrowDownWideNarrow className="h-3.5 w-3.5" />,      label: "名称 Z→A" },
-    { key: "dateAsc",     icon: <CalendarArrowUp className="h-3.5 w-3.5" />,          label: "最早添加" },
-    { key: "dateDesc",    icon: <CalendarArrowDown className="h-3.5 w-3.5" />,        label: "最近添加" },
-    { key: "durationAsc", icon: <span className="flex items-center"><Clock className="h-3.5 w-3.5" /><span className="text-[7px] ml-0.5 -mt-1 font-bold">↑</span></span>, label: "时长最短" },
-    { key: "durationDesc",icon: <span className="flex items-center"><Clock className="h-3.5 w-3.5" /><span className="text-[7px] ml-0.5 -mt-1 font-bold">↓</span></span>, label: "时长最长" },
+    { key: "default",     icon: <NeonIcon name="ArrowDownUp" size={16}><ArrowDownUp className="h-3.5 w-3.5" /></NeonIcon>,              label: "默认" },
+    { key: "nameAsc",     icon: <NeonIcon name="ArrowUpNarrowWide" size={16}><ArrowUpNarrowWide className="h-3.5 w-3.5" /></NeonIcon>,        label: "名称 A→Z" },
+    { key: "nameDesc",    icon: <NeonIcon name="ArrowDownWideNarrow" size={16}><ArrowDownWideNarrow className="h-3.5 w-3.5" /></NeonIcon>,      label: "名称 Z→A" },
+    { key: "dateAsc",     icon: <NeonIcon name="CalendarArrowUp" size={16}><CalendarArrowUp className="h-3.5 w-3.5" /></NeonIcon>,          label: "最早添加" },
+    { key: "dateDesc",    icon: <NeonIcon name="CalendarArrowDown" size={16}><CalendarArrowDown className="h-3.5 w-3.5" /></NeonIcon>,        label: "最近添加" },
+    { key: "durationAsc", icon: <span className="flex items-center"><NeonIcon name="Clock" size={16}><Clock className="h-3.5 w-3.5" /></NeonIcon><span className="text-[7px] ml-0.5 -mt-1 font-bold">↑</span></span>, label: "时长最短" },
+    { key: "durationDesc",icon: <span className="flex items-center"><NeonIcon name="Clock" size={16}><Clock className="h-3.5 w-3.5" /></NeonIcon><span className="text-[7px] ml-0.5 -mt-1 font-bold">↓</span></span>, label: "时长最长" },
   ], []);
 }
 
 /** 通用排序：默认 / 名称 / 日期（音乐、图片、游戏） */
 export function useNameSortOptions(): SortOption[] {
   return useMemo(() => [
-    { key: "default",  icon: <ArrowDownUp className="h-3.5 w-3.5" />,              label: "默认" },
-    { key: "nameAsc",  icon: <ArrowUpNarrowWide className="h-3.5 w-3.5" />,        label: "名称 A→Z" },
-    { key: "nameDesc", icon: <ArrowDownWideNarrow className="h-3.5 w-3.5" />,      label: "名称 Z→A" },
-    { key: "dateAsc",  icon: <CalendarArrowUp className="h-3.5 w-3.5" />,          label: "最早添加" },
-    { key: "dateDesc", icon: <CalendarArrowDown className="h-3.5 w-3.5" />,        label: "最近添加" },
+    { key: "default",  icon: <NeonIcon name="ArrowDownUp" size={16}><ArrowDownUp className="h-3.5 w-3.5" /></NeonIcon>,              label: "默认" },
+    { key: "nameAsc",  icon: <NeonIcon name="ArrowUpNarrowWide" size={16}><ArrowUpNarrowWide className="h-3.5 w-3.5" /></NeonIcon>,        label: "名称 A→Z" },
+    { key: "nameDesc", icon: <NeonIcon name="ArrowDownWideNarrow" size={16}><ArrowDownWideNarrow className="h-3.5 w-3.5" /></NeonIcon>,      label: "名称 Z→A" },
+    { key: "dateAsc",  icon: <NeonIcon name="CalendarArrowUp" size={16}><CalendarArrowUp className="h-3.5 w-3.5" /></NeonIcon>,          label: "最早添加" },
+    { key: "dateDesc", icon: <NeonIcon name="CalendarArrowDown" size={16}><CalendarArrowDown className="h-3.5 w-3.5" /></NeonIcon>,        label: "最近添加" },
   ], []);
 }
 

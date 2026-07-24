@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { LayoutGrid, LayoutList, LayoutPanelTop, LayoutTemplate } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 
 export type LayoutMode = "card" | "small" | "list" | "banner";
 

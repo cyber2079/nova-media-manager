@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Shuffle, Repeat, Repeat1, ListMusic } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { usePlaylistStore } from "@/stores/playlistStore";
 import { cn } from "@/lib/utils";
 

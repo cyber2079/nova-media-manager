@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tag, X } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 
 interface TagEditDialogProps {
   open: boolean;
@@ -48,7 +49,7 @@ export default function TagEditDialog({ open, onClose, itemName, tags, allTags, 
           {localTags.map((tag) => (
             <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-primary/15 border border-primary/20 px-2.5 py-0.5 text-xs text-primary-light transition-all hover:scale-105 cursor-pointer"
               onClick={() => removeTag(tag)}>
-              {tag} <X className="h-3 w-3" />
+              {tag} <NeonIcon name="X" size={16}><X className="h-3 w-3" /></NeonIcon>
             </span>
           ))}
         </div>
@@ -70,7 +71,7 @@ export default function TagEditDialog({ open, onClose, itemName, tags, allTags, 
               </div>
             )}
           </div>
-          <Button onClick={() => addTag()} size="sm"><Tag className="h-4 w-4 mr-1" />{t("movie.add_tag")}</Button>
+          <Button onClick={() => addTag()} size="sm"><NeonIcon name="Tag" size={16}><Tag className="h-4 w-4 mr-1" /></NeonIcon>{t("movie.add_tag")}</Button>
         </div>
       </DialogContent>
     </Dialog>

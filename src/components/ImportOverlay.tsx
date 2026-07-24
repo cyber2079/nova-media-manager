@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 
 interface ImportOverlayProps {
   isOpen: boolean;
@@ -43,7 +44,7 @@ export function ImportOverlay({ isOpen, message }: ImportOverlayProps) {
       }}
     >
       <div className="flex flex-col items-center gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary-light" />
+        <NeonIcon name="Loader2" size={16}><Loader2 className="h-10 w-10 animate-spin text-primary-light" /></NeonIcon>
         <p className="text-sm text-gray-300">{message ?? t("mediaScan.importing")}</p>
       </div>
     </div>,

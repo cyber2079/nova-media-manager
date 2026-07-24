@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Music } from "@/types/music";
 import { Trash2, Tag, Clock } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { cn } from "@/lib/utils";
 import { tagColor } from "@/lib/tagColor";
 import { getMusicCoverFallback } from "@/lib/musicCoverFallback";
@@ -37,7 +38,7 @@ export default memo(function MusicCard({ music, onDelete, onPlay, onEditTags, co
         {/* Duration badge */}
         {music.duration && (
           <div className="absolute bottom-2 right-2 rounded bg-black/70 px-2 py-0.5 text-xs text-white flex items-center gap-1">
-            <Clock className="h-3 w-3" />{music.duration}
+            <NeonIcon name="Clock" size={16}><Clock className="h-3 w-3" /></NeonIcon>{music.duration}
           </div>
         )}
       </div>
@@ -68,13 +69,13 @@ export default memo(function MusicCard({ music, onDelete, onPlay, onEditTags, co
           {onEditTags && (
             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light shrink-0"
               onClick={(e) => { e.stopPropagation(); onEditTags(); }} title="Edit tags">
-              <Tag className="h-3.5 w-3.5" />
+              <NeonIcon name="Tag" size={16}><Tag className="h-3.5 w-3.5" /></NeonIcon>
             </Button>
           )}
           <div className="flex-1" />
           <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-red-400 shrink-0"
             onClick={(e) => { e.stopPropagation(); onDelete(music.id); }}>
-            <Trash2 className="h-4 w-4" />
+            <NeonIcon name="Trash2" size={16}><Trash2 className="h-4 w-4" /></NeonIcon>
           </Button>
         </div>
       </CardContent>

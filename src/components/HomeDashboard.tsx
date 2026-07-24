@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { Film, Music, Gamepad2, Image as ImageIcon, RotateCcw, Clock, Sunrise, Sun, Moon, Calendar } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { useTranslation } from "react-i18next";
 import { useChartColors } from "@/lib/useChartColors";
 import { usePlayHistoryStore } from "@/stores/playHistoryStore";
@@ -171,13 +172,13 @@ export default function HomeDashboard() {
       <div className="flex flex-wrap items-center gap-3">
         {persona && (
           <span className="flex items-center gap-1.5 rounded-full border border-primary/20 px-3 py-1.5 text-xs text-primary-light">
-            <Clock className="h-3.5 w-3.5" />
+            <NeonIcon name="Clock" size={16}><Clock className="h-3.5 w-3.5" /></NeonIcon>
             {persona}
           </span>
         )}
         {totalActiveDays > 0 && (
           <span className="flex items-center gap-1.5 rounded-full border border-primary/20 px-3 py-1.5 text-xs text-[#c8ddf0]">
-            <Calendar className="h-3.5 w-3.5 text-primary-light" />
+            <NeonIcon name="Calendar" size={16}><Calendar className="h-3.5 w-3.5 text-primary-light" /></NeonIcon>
             <span className="tabular-nums font-semibold text-white">{totalActiveDays}</span>
             <span className="text-[#8aa8c4]">{t("checkin.active_days_label")}</span>
           </span>
@@ -203,27 +204,27 @@ export default function HomeDashboard() {
               style={{ left: `${(6/24)*100}%`, width: `${(6/24)*100}%` }}>
               <div className="absolute inset-0"
                 style={{ background: "linear-gradient(180deg, rgba(251,191,36,0.08) 0%, rgba(253,186,116,0.04) 100%)" }} />
-              <Sunrise className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-7 w-7 text-amber-400/12" />
+              <NeonIcon name="Sunrise" size={16}><Sunrise className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-7 w-7 text-amber-400/12" /></NeonIcon>
             </div>
             {/* 正午 12:00-18:00 */}
             <div className="absolute inset-y-0 rounded-md overflow-hidden pointer-events-none"
               style={{ left: `${(12/24)*100}%`, width: `${(6/24)*100}%` }}>
               <div className="absolute inset-0"
                 style={{ background: "linear-gradient(180deg, rgba(250,204,21,0.10) 0%, rgba(251,146,60,0.05) 100%)" }} />
-              <Sun className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-8 text-yellow-400/10" />
+              <NeonIcon name="Sun" size={16}><Sun className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-8 text-yellow-400/10" /></NeonIcon>
             </div>
             {/* 夜晚 00:00-06:00 + 18:00-24:00（两段） */}
             <div className="absolute inset-y-0 rounded-md overflow-hidden pointer-events-none"
               style={{ left: 0, width: `${(6/24)*100}%` }}>
               <div className="absolute inset-0"
                 style={{ background: "linear-gradient(180deg, rgba(99,102,241,0.08) 0%, rgba(88,28,135,0.04) 100%)" }} />
-              <Moon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-indigo-400/10" />
+              <NeonIcon name="Moon" size={16}><Moon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-indigo-400/10" /></NeonIcon>
             </div>
             <div className="absolute inset-y-0 rounded-md overflow-hidden pointer-events-none"
               style={{ left: `${(18/24)*100}%`, width: `${(6/24)*100}%` }}>
               <div className="absolute inset-0"
                 style={{ background: "linear-gradient(180deg, rgba(99,102,241,0.08) 0%, rgba(88,28,135,0.04) 100%)" }} />
-              <Moon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-indigo-400/10" />
+              <NeonIcon name="Moon" size={16}><Moon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-indigo-400/10" /></NeonIcon>
             </div>
             {/* ── 24h 热力图竖条 ── */}
             {(() => {
@@ -321,7 +322,7 @@ export default function HomeDashboard() {
         {/* 最常播放（本地） */}
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
-            <Music className="h-3.5 w-3.5 text-primary-light" />
+            <NeonIcon name="Music" size={16}><Music className="h-3.5 w-3.5 text-primary-light" /></NeonIcon>
             <span className="text-[11px] text-[#9ab8d4]">{t("dashboard.top_played")}</span>
           </div>
           {stats && stats.topMusic.length > 0 ? (
@@ -344,7 +345,7 @@ export default function HomeDashboard() {
         {/* 最近观看（本地播放历史） */}
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
-            <Film className="h-3.5 w-3.5 text-primary-light" />
+            <NeonIcon name="Film" size={16}><Film className="h-3.5 w-3.5 text-primary-light" /></NeonIcon>
             <span className="text-[11px] text-[#9ab8d4]">{t("dashboard.recent_watched")}</span>
           </div>
           {recentWatched.length > 0 ? (
@@ -370,7 +371,7 @@ export default function HomeDashboard() {
         {/* 本周热歌（服务端推荐） */}
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
-            <Music className="h-3.5 w-3.5 text-primary-light/50" />
+            <NeonIcon name="Music" size={16}><Music className="h-3.5 w-3.5 text-primary-light/50" /></NeonIcon>
             <span className="text-[11px] text-[#9ab8d4]">{t("dashboard.trending_music")}</span>
             <span className="text-[9px] text-[#6a8aa8] ml-auto">{t("dashboard.netease")}</span>
           </div>
@@ -401,7 +402,7 @@ export default function HomeDashboard() {
         {/* 本周热映（服务端推荐） */}
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
-            <Film className="h-3.5 w-3.5 text-primary-light/50" />
+            <NeonIcon name="Film" size={16}><Film className="h-3.5 w-3.5 text-primary-light/50" /></NeonIcon>
             <span className="text-[11px] text-[#9ab8d4]">{t("dashboard.trending_movies")}</span>
             <span className="text-[9px] text-[#6a8aa8] ml-auto">{t("dashboard.tmdb")}</span>
           </div>
@@ -412,7 +413,7 @@ export default function HomeDashboard() {
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                  <Film className="h-3.5 w-3.5 shrink-0 text-primary-light/50" />
+                  <NeonIcon name="Film" size={16}><Film className="h-3.5 w-3.5 shrink-0 text-primary-light/50" /></NeonIcon>
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
                   {m.meta && <span className="text-[10px] text-[#8aa8c4] shrink-0 tabular-nums">{m.meta}</span>}
                 </a>
@@ -435,7 +436,7 @@ export default function HomeDashboard() {
       {stats && stats.revisit.length > 0 && (
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
-            <RotateCcw className="h-3.5 w-3.5 text-primary-light" />
+            <NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3.5 w-3.5 text-primary-light" /></NeonIcon>
             <span className="text-xs text-primary-light tracking-wide">{t("dashboard.revisit_title")}</span>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -443,7 +444,7 @@ export default function HomeDashboard() {
               <button key={`${r.itemType}-${r.id}`}
                 onClick={() => navigate(r.itemType === "movie" ? "/movies" : "/music", r.itemType === "movie" ? { state: { playId: r.id } } : undefined)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary/20 text-xs text-[#c8ddf0] hover:bg-primary/10 hover:text-white transition-colors">
-                {r.itemType === "movie" ? <Film className="h-3 w-3 text-primary-light" /> : <Music className="h-3 w-3 text-primary-light" />}
+                {r.itemType === "movie" ? <NeonIcon name="Film" size={16}><Film className="h-3 w-3 text-primary-light" /></NeonIcon> : <NeonIcon name="Music" size={16}><Music className="h-3 w-3 text-primary-light" /></NeonIcon>}
                 <span className="max-w-[160px] truncate">{r.name}</span>
                 {r.daysSince > 0 && <span className="text-[10px] text-[#8aa8c4]">{r.daysSince}{t("dashboard.days_ago")}</span>}
               </button>

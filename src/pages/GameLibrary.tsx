@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useFavoritesStore } from "@/stores/favoritesStore";
 import { tagColor } from "@/lib/tagColor";
 import { Upload, Gamepad2, Loader2, Star, Play, Monitor, Trash2, Tag, Search, X, CheckSquare } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import CountBadge from "@/components/CountBadge";
 import EmptyState from "@/components/EmptyState";
 import LayoutSwitch, { type LayoutMode } from "@/components/LayoutSwitch";
@@ -127,7 +128,7 @@ export default function GameLibrary() {
         <div className="flex-1" />
         <div className="relative w-64">
           <Input placeholder={t("game.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pr-7" />
-          {searchQuery && <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-0.5"><X className="h-3.5 w-3.5" /></button>}
+          {searchQuery && <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-0.5"><NeonIcon name="X" size={16}><X className="h-3.5 w-3.5" /></NeonIcon></button>}
         </div>
         {scanResult && (
           <span className="text-xs text-primary-light/80">
@@ -140,14 +141,14 @@ export default function GameLibrary() {
           className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center",
             "border-blue-500/30 text-blue-400 hover:bg-blue-500/10 disabled:opacity-50")}
           title={t("game.scan_steam")}>
-          {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gamepad2 className="h-4 w-4" />}
+          {isScanning ? <NeonIcon name="Loader2" size={16}><Loader2 className="h-4 w-4 animate-spin" /></NeonIcon> : <NeonIcon name="Gamepad2" size={16}><Gamepad2 className="h-4 w-4" /></NeonIcon>}
         </button>
-        <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
-        <Button onClick={handleAddGame} className="h-8 w-8 p-0" title={t("game.add")}><Upload className="h-4 w-4" /></Button>
+        <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><NeonIcon name="Star" size={16}><Star className="h-4 w-4" /></NeonIcon></button>
+        <Button onClick={handleAddGame} className="h-8 w-8 p-0" title={t("game.add")}><NeonIcon name="Upload" size={16}><Upload className="h-4 w-4" /></NeonIcon></Button>
         {!batch.showCheckboxes ? (
-          <Button variant="outline" onClick={batch.enterBatchMode} className="h-8 w-8 p-0" title={t("batch.enter")}><CheckSquare className="h-4 w-4" /></Button>
+          <Button variant="outline" onClick={batch.enterBatchMode} className="h-8 w-8 p-0" title={t("batch.enter")}><NeonIcon name="CheckSquare" size={16}><CheckSquare className="h-4 w-4" /></NeonIcon></Button>
         ) : (
-          <Button variant="outline" onClick={batch.leaveBatchMode} className="h-8 w-8 p-0" title={t("batch.exit")}><X className="h-4 w-4" /></Button>
+          <Button variant="outline" onClick={batch.leaveBatchMode} className="h-8 w-8 p-0" title={t("batch.exit")}><NeonIcon name="X" size={16}><X className="h-4 w-4" /></NeonIcon></Button>
         )}
         <LayoutSwitch mode={layoutMode} onChange={setLayoutMode} />
       </div>
@@ -163,7 +164,7 @@ export default function GameLibrary() {
               className="h-5 w-5 flex items-center justify-center rounded transition-colors text-primary-light/60 hover:text-primary-light hover:bg-primary-light/20"
               title={t("game.close")}
             >
-              <X className="h-3 w-3" />
+              <NeonIcon name="X" size={16}><X className="h-3 w-3" /></NeonIcon>
             </button>
           </div>
           {scanDiagnostic.map((line, i) => (
@@ -172,7 +173,7 @@ export default function GameLibrary() {
         </div>
       )}
 
-      {isLoading && <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary-light" /></div>}
+      {isLoading && <div className="flex items-center justify-center py-20"><NeonIcon name="Loader2" size={16}><Loader2 className="h-8 w-8 animate-spin text-primary-light" /></NeonIcon></div>}
       {filtered.length > 0 ? (
         <>
           {layoutMode === "banner" ? (
@@ -219,19 +220,19 @@ export default function GameLibrary() {
                   <div className="flex items-center gap-2 shrink-0">
                     <button onClick={(e) => { e.stopPropagation(); toggleFavorite(game.id, "game"); }}
                       className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-yellow-400 hover:bg-surface-lighter/50 transition-colors">
-                      <Star className={cn("h-4 w-4", getByType("game").includes(game.id) ? "fill-yellow-400 text-yellow-400" : "")} />
+                      <NeonIcon name="Star" size={16}><Star className={cn("h-4 w-4", getByType("game").includes(game.id) ? "fill-yellow-400 text-yellow-400" : "")} /></NeonIcon>
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setTagEditItem(game); }}
                       className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors">
-                      <Tag className="h-4 w-4" />
+                      <NeonIcon name="Tag" size={16}><Tag className="h-4 w-4" /></NeonIcon>
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); launchGame(game.id); }}
                       className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-surface-lighter/50 transition-colors">
-                      <Play className="h-4 w-4 ml-0.5" />
+                      <NeonIcon name="Play" size={16}><Play className="h-4 w-4 ml-0.5" /></NeonIcon>
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); confirm(t("game.confirm_delete"), () => deleteGame(game.id)); }}
                       className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-400 hover:bg-surface-lighter/50 transition-colors">
-                      <Trash2 className="h-4 w-4" />
+                      <NeonIcon name="Trash2" size={16}><Trash2 className="h-4 w-4" /></NeonIcon>
                     </button>
                   </div>
                 </div>
@@ -254,7 +255,7 @@ export default function GameLibrary() {
           <PaginationBar page={page} totalPages={totalPages} onPage={setPage} />
         </>
       ) : !isLoading && (
-        <EmptyState icon={<Gamepad2 className="h-16 w-16" />} title={t("game.no_games")} hint={t("game.no_games_hint")} />
+        <EmptyState icon={<NeonIcon name="Gamepad2" size={16}><Gamepad2 className="h-16 w-16" /></NeonIcon>} title={t("game.no_games")} hint={t("game.no_games_hint")} />
       )}
       {tagEditItem && (
         <TagEditDialog open={true} onClose={() => setTagEditItem(null)} itemName={tagEditItem.name} tags={tagEditItem.tags || []} allTags={tagNames} onSave={(ts) => updateTags(tagEditItem.id, ts)} t={t} />
@@ -334,7 +335,7 @@ function GameIcon({ path, coverPath, installed }: { path: string; coverPath?: st
       {src ? (
         <img src={src} alt="" className="w-full h-full object-contain" style={{ imageRendering: "auto" }} />
       ) : (
-        <Monitor className="h-5 w-5 text-gray-500" />
+        <NeonIcon name="Monitor" size={16}><Monitor className="h-5 w-5 text-gray-500" /></NeonIcon>
       )}
     </div>
   );

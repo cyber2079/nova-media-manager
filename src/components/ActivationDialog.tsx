@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useTranslation } from "react-i18next";
 import { useLicenseStore } from "@/stores/licenseStore";
 import { Key, Loader2, CheckCircle, XCircle } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 
 export default function ActivationDialog() {
   const { t } = useTranslation();
@@ -43,7 +44,7 @@ export default function ActivationDialog() {
     <Dialog open={activationOpen} onOpenChange={(o) => { if (!o) closeActivation(); }}>
       <DialogContent className="max-w-md p-6 rounded-2xl bg-surface-light/98 backdrop-blur-xl border border-primary/30">
         <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-          <Key className="h-5 w-5 text-primary-light" />
+          <NeonIcon name="Key" size={16}><Key className="h-5 w-5 text-primary-light" /></NeonIcon>
           {t("activation.title")}
         </DialogTitle>
 
@@ -65,7 +66,7 @@ export default function ActivationDialog() {
               />
               {error && (
                 <div className="flex items-center gap-2 text-red-400 text-sm">
-                  <XCircle className="h-4 w-4" />
+                  <NeonIcon name="XCircle" size={16}><XCircle className="h-4 w-4" /></NeonIcon>
                   {error}
                 </div>
               )}
@@ -74,7 +75,7 @@ export default function ActivationDialog() {
                 disabled={loading}
                 className="w-full py-2.5 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-colors text-sm font-medium flex items-center justify-center gap-2"
               >
-                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {loading && <NeonIcon name="Loader2" size={16}><Loader2 className="h-4 w-4 animate-spin" /></NeonIcon>}
                 {loading ? t("activation.verifying") : t("activation.activate")}
               </button>
               <p className="text-xs text-gray-500 text-center">
@@ -83,7 +84,7 @@ export default function ActivationDialog() {
             </>
           ) : (
             <div className="flex flex-col items-center gap-3 py-4">
-              <CheckCircle className="h-12 w-12 text-green-400" />
+              <NeonIcon name="CheckCircle" size={16}><CheckCircle className="h-12 w-12 text-green-400" /></NeonIcon>
               <p className="text-green-400 font-semibold">
                 {t("activation.success")}
               </p>

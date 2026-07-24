@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 
 interface BatchCheckboxProps {
   checked: boolean;
@@ -24,7 +25,7 @@ export default function BatchCheckbox({ checked, onToggle, show, inline }: Batch
       )}
       aria-label={checked ? "Deselect" : "Select"}
     >
-      {checked && <Check className="h-3 w-3" />}
+      {checked && <NeonIcon name="Check" size={16}><Check className="h-3 w-3" /></NeonIcon>}
     </button>
   );
 }

@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Game } from "@/types/game";
 import { Play, Trash2, Monitor, Tag, Download, Star } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { cn } from "@/lib/utils";
 import { tagColor } from "@/lib/tagColor";
 import { steamCdnFallbacks, steamLandscapeFallbacks, extractSteamAppId } from "@/lib/steamCdn";
@@ -112,13 +113,13 @@ export default memo(function GameCard({ game, onDelete, onLaunch, onEditTags, co
             {landscapeSrc ? (
               <img src={landscapeSrc} alt={game.name} className="h-full w-full object-cover" />
             ) : (
-              <Monitor className="h-12 w-12 text-gray-600" />
+              <NeonIcon name="Monitor" size={16}><Monitor className="h-12 w-12 text-gray-600" /></NeonIcon>
             )}
           </div>
           <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/40">
             <Button size="icon" className="h-12 w-12 rounded-full opacity-0 transition-all group-hover:opacity-100"
               onClick={(e) => { e.stopPropagation(); onLaunch(game); }}>
-              {uninstalled ? <Download className="h-5 w-5" /> : <Play className="h-5 w-5 fill-white" />}
+              {uninstalled ? <NeonIcon name="Download" size={16}><Download className="h-5 w-5" /></NeonIcon> : <NeonIcon name="Play" size={16}><Play className="h-5 w-5 fill-white" /></NeonIcon>}
             </Button>
           </div>
         </div>
@@ -142,18 +143,18 @@ export default memo(function GameCard({ game, onDelete, onLaunch, onEditTags, co
             {onToggleFav && (
               <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-yellow-400"
                 onClick={(e) => { e.stopPropagation(); onToggleFav(); }}>
-                <Star className={cn("h-4 w-4", favorited ? "fill-yellow-400 text-yellow-400" : "")} />
+                <NeonIcon name="Star" size={16}><Star className={cn("h-4 w-4", favorited ? "fill-yellow-400 text-yellow-400" : "")} /></NeonIcon>
               </Button>
             )}
             {onEditTags && (
               <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light"
                 onClick={(e) => { e.stopPropagation(); onEditTags(); }}>
-                <Tag className="h-3.5 w-3.5" />
+                <NeonIcon name="Tag" size={16}><Tag className="h-3.5 w-3.5" /></NeonIcon>
               </Button>
             )}
             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-red-400"
               onClick={(e) => { e.stopPropagation(); onDelete(game.id); }}>
-              <Trash2 className="h-4 w-4" />
+              <NeonIcon name="Trash2" size={16}><Trash2 className="h-4 w-4" /></NeonIcon>
             </Button>
           </div>
         </div>
@@ -173,14 +174,14 @@ export default memo(function GameCard({ game, onDelete, onLaunch, onEditTags, co
           {coverSrc ? (
             <img src={coverSrc} alt={game.name} className="h-full w-full object-cover" />
           ) : (
-            <Monitor className="h-16 w-16 text-gray-600" />
+            <NeonIcon name="Monitor" size={16}><Monitor className="h-16 w-16 text-gray-600" /></NeonIcon>
           )}
         </div>
 
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/40">
           <Button size="icon" className="h-12 w-12 rounded-full opacity-0 transition-all group-hover:opacity-100"
             onClick={(e) => { e.stopPropagation(); onLaunch(game); }}>
-            {uninstalled ? <Download className="h-5 w-5" /> : <Play className="h-5 w-5 fill-white" />}
+            {uninstalled ? <NeonIcon name="Download" size={16}><Download className="h-5 w-5" /></NeonIcon> : <NeonIcon name="Play" size={16}><Play className="h-5 w-5 fill-white" /></NeonIcon>}
           </Button>
         </div>
 
@@ -209,13 +210,13 @@ export default memo(function GameCard({ game, onDelete, onLaunch, onEditTags, co
           {onEditTags && (
             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-primary-light"
               onClick={(e) => { e.stopPropagation(); onEditTags(); }} title="Edit tags">
-              <Tag className="h-3.5 w-3.5" />
+              <NeonIcon name="Tag" size={16}><Tag className="h-3.5 w-3.5" /></NeonIcon>
             </Button>
           )}
           <div className="flex-1" />
           <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-red-400"
             onClick={(e) => { e.stopPropagation(); onDelete(game.id); }}>
-            <Trash2 className="h-4 w-4" />
+            <NeonIcon name="Trash2" size={16}><Trash2 className="h-4 w-4" /></NeonIcon>
           </Button>
         </div>
       </CardContent>

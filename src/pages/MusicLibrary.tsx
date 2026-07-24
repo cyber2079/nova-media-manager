@@ -30,6 +30,7 @@ import { usePagination } from "@/lib/usePagination";
 import { useToast } from "@/components/Toast";
 import { importMediaPaths, pickFolderAndImport, importSummaryText } from "@/lib/mediaScan";
 import { FolderOpen } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import CountBadge from "@/components/CountBadge";
 import { useAllTags } from "@/hooks/useAllTags";
 import { useConfirmStore } from "@/stores/confirmStore";
@@ -347,7 +348,7 @@ export default function MusicLibrary() {
         <div className="flex-1" />
         {showPlaylists ? (
           <Button variant="ghost" onClick={() => { setShowPlaylists(false); setSelectedPlaylist(null); setPlaylistContext(null); setPlBatch(new Set()); }} className="gap-1.5 text-sm">
-            <ChevronLeft className="h-4 w-4" />{t("music.hide_playlists")}
+            <NeonIcon name="ChevronLeft" size={16}><ChevronLeft className="h-4 w-4" /></NeonIcon>{t("music.hide_playlists")}
           </Button>
         ) : (
           <>
@@ -355,18 +356,18 @@ export default function MusicLibrary() {
               <Input placeholder={t("music.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pr-7" />
               {searchQuery && (
                 <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-0.5">
-                  <X className="h-3.5 w-3.5" />
+                  <NeonIcon name="X" size={16}><X className="h-3.5 w-3.5" /></NeonIcon>
                 </button>
               )}
             </div>
-            <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
-            <button onClick={() => { setShowPlaylists(true); setSelectedPlaylist(playlists[0]?.id ?? null); }} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", "border-primary text-gray-500 hover:border-primary-light/30 hover:text-primary-light")} title={t("music.show_playlists")}><ListMusic className="h-4 w-4" /></button>
-            <Button onClick={handleAdd} className="h-8 w-8 p-0" title={t("music.add")}><Upload className="h-4 w-4" /></Button>
-            <Button variant="outline" onClick={handleAddFolder} className="h-8 w-8 p-0" title={t("music.select_folder")}><FolderOpen className="h-4 w-4" /></Button>
+            <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><NeonIcon name="Star" size={16}><Star className="h-4 w-4" /></NeonIcon></button>
+            <button onClick={() => { setShowPlaylists(true); setSelectedPlaylist(playlists[0]?.id ?? null); }} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", "border-primary text-gray-500 hover:border-primary-light/30 hover:text-primary-light")} title={t("music.show_playlists")}><NeonIcon name="ListMusic" size={16}><ListMusic className="h-4 w-4" /></NeonIcon></button>
+            <Button onClick={handleAdd} className="h-8 w-8 p-0" title={t("music.add")}><NeonIcon name="Upload" size={16}><Upload className="h-4 w-4" /></NeonIcon></Button>
+            <Button variant="outline" onClick={handleAddFolder} className="h-8 w-8 p-0" title={t("music.select_folder")}><NeonIcon name="FolderOpen" size={16}><FolderOpen className="h-4 w-4" /></NeonIcon></Button>
             {!batch.showCheckboxes ? (
-              <Button variant="outline" onClick={batch.enterBatchMode} className="h-8 w-8 p-0" title={t("batch.enter")}><CheckSquare className="h-4 w-4" /></Button>
+              <Button variant="outline" onClick={batch.enterBatchMode} className="h-8 w-8 p-0" title={t("batch.enter")}><NeonIcon name="CheckSquare" size={16}><CheckSquare className="h-4 w-4" /></NeonIcon></Button>
             ) : (
-              <Button variant="outline" onClick={batch.leaveBatchMode} className="h-8 w-8 p-0" title={t("batch.exit")}><X className="h-4 w-4" /></Button>
+              <Button variant="outline" onClick={batch.leaveBatchMode} className="h-8 w-8 p-0" title={t("batch.exit")}><NeonIcon name="X" size={16}><X className="h-4 w-4" /></NeonIcon></Button>
             )}
             <LayoutSwitch mode={layoutMode} onChange={setLayoutMode} />
           </>
@@ -386,7 +387,7 @@ export default function MusicLibrary() {
           <div className="w-56 shrink-0 space-y-1">
             {playlists.length === 0 ? (
               <div className="text-center py-12">
-                <ListMusic className="h-10 w-10 text-gray-600 mx-auto mb-3" />
+                <NeonIcon name="ListMusic" size={16}><ListMusic className="h-10 w-10 text-gray-600 mx-auto mb-3" /></NeonIcon>
                 <p className="text-sm text-gray-500">{t("music.no_playlists")}</p>
                 <p className="text-xs text-gray-600 mt-1">{t("music.no_playlists_hint")}</p>
               </div>
@@ -428,7 +429,7 @@ export default function MusicLibrary() {
                     className="h-7 text-xs flex-1"
                   />
                   <button onClick={() => setRenamePlId(null)} className="text-gray-500 hover:text-white p-0.5">
-                    <X className="h-3 w-3" />
+                    <NeonIcon name="X" size={16}><X className="h-3 w-3" /></NeonIcon>
                   </button>
                 </div>
               )}
@@ -455,12 +456,12 @@ export default function MusicLibrary() {
                         }
                       }}
                         className="flex items-center gap-1 text-xs text-primary-light/70 hover:text-primary-light transition-colors px-2 py-1 rounded" title={t("music.play_all")}>
-                        <Play className="h-3 w-3" />{t("music.play_all")}
+                        <NeonIcon name="Play" size={16}><Play className="h-3 w-3" /></NeonIcon>{t("music.play_all")}
                       </button>
                     )}
                     <button onClick={() => { setShowAddSongs(true); setAddSongBatch(new Set()); setAddSongSearch(""); }}
                       className="flex items-center gap-1 text-xs text-green-400/70 hover:text-green-400 transition-colors px-2 py-1 rounded" title={t("music.add_songs")}>
-                      <Plus className="h-3 w-3" />{t("music.add_songs")}
+                      <NeonIcon name="Plus" size={16}><Plus className="h-3 w-3" /></NeonIcon>{t("music.add_songs")}
                     </button>
                     {playlistContext && (
                       <button onClick={() => setPlaylistContext(null)}
@@ -470,14 +471,14 @@ export default function MusicLibrary() {
                     )}
                     <button onClick={() => confirm(t("music.confirm_delete_playlist"), () => { remove(selectedPlData.id); setSelectedPlaylist(null); setPlaylistContext(null); })}
                       className="flex items-center gap-1 text-xs text-red-400/60 hover:text-red-400 transition-colors px-2 py-1 rounded" title={t("music.delete_playlist")}>
-                      <Trash2 className="h-3 w-3" />{t("music.delete_playlist")}
+                      <NeonIcon name="Trash2" size={16}><Trash2 className="h-3 w-3" /></NeonIcon>{t("music.delete_playlist")}
                     </button>
                   </div>
                 </div>
 
                 {selectedPlData.musicIds.length === 0 ? (
                   <div className="flex flex-col items-center justify-center text-sm text-gray-600 py-12">
-                    <Music className="h-10 w-10 mb-3 opacity-40" />
+                    <NeonIcon name="Music" size={16}><Music className="h-10 w-10 mb-3 opacity-40" /></NeonIcon>
                     <p>{t("music.empty_playlist")}</p>
                   </div>
                 ) : (<>
@@ -531,11 +532,11 @@ export default function MusicLibrary() {
                           <>
                             <button onClick={() => handlePlaylistPlay(m, selectedPlData.musicIds)}
                               className="h-7 w-7 flex items-center justify-center rounded-full text-gray-500 hover:text-white hover:bg-primary/20 transition-colors shrink-0 opacity-0 group-hover:opacity-100">
-                              {playing?.id === m.id && isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 ml-0.5" />}
+                              {playing?.id === m.id && isPlaying ? <NeonIcon name="Pause" size={16}><Pause className="h-3.5 w-3.5" /></NeonIcon> : <NeonIcon name="Play" size={16}><Play className="h-3.5 w-3.5 ml-0.5" /></NeonIcon>}
                             </button>
                             <button onClick={() => confirm(t("music.confirm_remove_song"), () => removeSong(selectedPlData.id, id))}
                               className="h-7 w-7 flex items-center justify-center rounded-full text-gray-600 hover:text-red-400 hover:bg-red-400/10 transition-colors shrink-0 opacity-0 group-hover:opacity-100" title={t("music.remove_from_playlist")}>
-                              <X className="h-3.5 w-3.5" />
+                              <NeonIcon name="X" size={16}><X className="h-3.5 w-3.5" /></NeonIcon>
                             </button>
                           </>
                         )}
@@ -561,12 +562,12 @@ export default function MusicLibrary() {
                 <h3 className="text-base font-semibold text-white">{t("music.add_songs_to", { name: selectedPlData.name })}</h3>
                 <p className="text-xs text-gray-500 mt-0.5">{t("music.songs_available", { n: songsToAdd.length })}</p>
               </div>
-              <button onClick={() => setShowAddSongs(false)} className="text-gray-500 hover:text-white"><X className="h-4 w-4" /></button>
+              <button onClick={() => setShowAddSongs(false)} className="text-gray-500 hover:text-white"><NeonIcon name="X" size={16}><X className="h-4 w-4" /></NeonIcon></button>
             </div>
             {/* Search */}
             <div className="px-5 py-3 border-b border-primary shrink-0">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
+                <NeonIcon name="Search" size={16}><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" /></NeonIcon>
                 <Input placeholder={t("music.search_songs")} value={addSongSearch} onChange={(e) => setAddSongSearch(e.target.value)} className="pl-9 h-8 text-xs" />
               </div>
             </div>
@@ -574,7 +575,7 @@ export default function MusicLibrary() {
             <div className="flex-1 overflow-y-auto px-5 py-3 space-y-1">
               {songsToAdd.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-gray-600">
-                  <Music className="h-8 w-8 mb-2 opacity-40" />
+                  <NeonIcon name="Music" size={16}><Music className="h-8 w-8 mb-2 opacity-40" /></NeonIcon>
                   <p className="text-sm">{t("music.no_songs_available")}</p>
                 </div>
               ) : (
@@ -633,7 +634,7 @@ export default function MusicLibrary() {
       {/* ── Music grid ── */}
       {!showPlaylists && (
         <>
-          {isLoading && music.length === 0 && <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary-light" /></div>}
+          {isLoading && music.length === 0 && <div className="flex items-center justify-center py-20"><NeonIcon name="Loader2" size={16}><Loader2 className="h-8 w-8 animate-spin text-primary-light" /></NeonIcon></div>}
           {filtered.length > 0 ? (
             <>
               {layoutMode === "list" ? (
@@ -672,19 +673,19 @@ export default function MusicLibrary() {
                       <div className="flex items-center gap-2 shrink-0">
                         <button onClick={(e) => { e.stopPropagation(); toggleFavorite(m.id, "music"); }}
                           className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-yellow-400 hover:bg-surface-lighter/50 transition-colors">
-                          <Star className={cn("h-4 w-4", isFavorite(m.id) ? "fill-yellow-400 text-yellow-400" : "")} />
+                          <NeonIcon name="Star" size={16}><Star className={cn("h-4 w-4", isFavorite(m.id) ? "fill-yellow-400 text-yellow-400" : "")} /></NeonIcon>
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); setTagEditItem(m); }}
                           className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors">
-                          <Tag className="h-4 w-4" />
+                          <NeonIcon name="Tag" size={16}><Tag className="h-4 w-4" /></NeonIcon>
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); handleGridPlay(m); }}
                           className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-surface-lighter/50 transition-colors">
-                          {playing?.id === m.id && isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+                          {playing?.id === m.id && isPlaying ? <NeonIcon name="Pause" size={16}><Pause className="h-4 w-4" /></NeonIcon> : <NeonIcon name="Play" size={16}><Play className="h-4 w-4 ml-0.5" /></NeonIcon>}
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); confirm(t("music.confirm_delete"), () => deleteMusic(m.id)); }}
                           className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-400 hover:bg-surface-lighter/50 transition-colors">
-                          <Trash2 className="h-4 w-4" />
+                          <NeonIcon name="Trash2" size={16}><Trash2 className="h-4 w-4" /></NeonIcon>
                         </button>
                       </div>
                     </div>
@@ -707,7 +708,7 @@ export default function MusicLibrary() {
               <PaginationBar page={page} totalPages={totalPages} onPage={setPage} />
             </>
           ) : !isLoading && (
-            <EmptyState icon={<Music className="h-16 w-16" />} title={t("music.no_music")} hint={t("music.no_music_hint")} />
+            <EmptyState icon={<NeonIcon name="Music" size={16}><Music className="h-16 w-16" /></NeonIcon>} title={t("music.no_music")} hint={t("music.no_music_hint")} />
           )}
           {tagEditItem && <TagEditDialog open={true} onClose={() => setTagEditItem(null)} itemName={tagEditItem.name} tags={tagEditItem.tags} allTags={tagNames} onSave={(ts) => updateTags(tagEditItem.id, ts)} t={t} />}
         </>
@@ -764,12 +765,12 @@ export default function MusicLibrary() {
                 <button onClick={() => setBackground(true)}
                   className="text-gray-500 hover:text-primary-light transition-colors p-1"
                   title={t("music.mini_to_toolbar")}>
-                  <Minimize2 className="h-3.5 w-3.5" />
+                  <NeonIcon name="Minimize2" size={16}><Minimize2 className="h-3.5 w-3.5" /></NeonIcon>
                 </button>
                 <button onClick={stop}
                   className="text-gray-500 hover:text-red-400 transition-colors p-1"
                   title={t("music.close")}>
-                  <X className="h-3.5 w-3.5" />
+                  <NeonIcon name="X" size={16}><X className="h-3.5 w-3.5" /></NeonIcon>
                 </button>
               </div>
             </div>
@@ -794,17 +795,17 @@ export default function MusicLibrary() {
               <div className="flex items-center gap-2 shrink-0">
                 <button onClick={() => setVolume(volume === 0 ? 1 : 0)}
                   className="text-gray-500 hover:text-white p-1">
-                  {volume === 0 ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                  {volume === 0 ? <NeonIcon name="VolumeX" size={16}><VolumeX className="h-3.5 w-3.5" /></NeonIcon> : <NeonIcon name="Volume2" size={16}><Volume2 className="h-3.5 w-3.5" /></NeonIcon>}
                 </button>
                 <input type="range" min="0" max="1" step="0.05" value={volume}
                   onChange={(e) => setVolume(parseFloat(e.target.value))}
                   className="w-16 h-1 accent-primary-light cursor-pointer" style={{ appearance: "auto" }} />
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500 hover:text-primary-light" title={t("music.add_to_playlist")} onClick={() => setPlaylistOpen(!playlistOpen)}><ListPlus className="h-3.5 w-3.5" /></Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500 hover:text-primary-light" title={t("music.add_to_playlist")} onClick={() => setPlaylistOpen(!playlistOpen)}><NeonIcon name="ListPlus" size={16}><ListPlus className="h-3.5 w-3.5" /></NeonIcon></Button>
                 <Button variant="ghost" size="icon"
                   className={`h-7 w-7 transition-colors relative ${lyricFontSize === "off" ? "text-gray-600" : lyricFontSize === "large" ? "text-primary-light" : "text-gray-500 hover:text-primary-light"}`}
                   title={lyricFontSize === "off" ? t("music.lyric_off_title") : lyricFontSize === "large" ? t("music.lyric_large_title") : t("music.lyric_normal_title")}
                   onClick={() => setLyricFontSize(lyricFontSize === "normal" ? "large" : lyricFontSize === "large" ? "off" : "normal")}>
-                  <Type className={`h-3.5 w-3.5 ${lyricFontSize === "large" ? "stroke-[3]" : ""}`} />
+                  <NeonIcon name="Type" size={16}><Type className={`h-3.5 w-3.5 ${lyricFontSize === "large" ? "stroke-[3]" : ""}`} /></NeonIcon>
                   {lyricFontSize === "off" && (
                     <span className="absolute inset-0 flex items-center justify-center">
                       <span className="block w-[1.5px] h-4 bg-current rotate-45" />
@@ -814,11 +815,11 @@ export default function MusicLibrary() {
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 <PlayModeControls />
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white" onClick={handlePrev}><SkipBack className="h-4 w-4" /></Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white" onClick={handlePrev}><NeonIcon name="SkipBack" size={16}><SkipBack className="h-4 w-4" /></NeonIcon></Button>
                 <Button variant="ghost" size="icon" className="h-10 w-10 text-white bg-primary/20 hover:bg-primary/30 rounded-full" onClick={toggle}>
-                  {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+                  {isPlaying ? <NeonIcon name="Pause" size={16}><Pause className="h-5 w-5" /></NeonIcon> : <NeonIcon name="Play" size={16}><Play className="h-5 w-5 ml-0.5" /></NeonIcon>}
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white" onClick={handleNext}><SkipForward className="h-4 w-4" /></Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white" onClick={handleNext}><NeonIcon name="SkipForward" size={16}><SkipForward className="h-4 w-4" /></NeonIcon></Button>
               </div>
               <div className="shrink-0 flex flex-col items-center" style={{ width: 132, marginLeft: -5 }}>
                 <VizBar mode={visualizerMode} />
@@ -860,7 +861,7 @@ export default function MusicLibrary() {
       <div className="fixed bottom-36 left-1/2 -translate-x-1/2 z-[90] bg-surface-light/98 backdrop-blur-md border border-primary rounded-xl px-4 py-3 shadow-2xl min-w-[260px]">
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs text-gray-400">{t("music.batch_add_to_playlist")} ({t("music.songs_count", { n: batch.selected.size })})</p>
-          <button onClick={() => setBatchPlaylistOpen(false)} className="text-gray-500 hover:text-white"><X className="h-3 w-3" /></button>
+          <button onClick={() => setBatchPlaylistOpen(false)} className="text-gray-500 hover:text-white"><NeonIcon name="X" size={16}><X className="h-3 w-3" /></NeonIcon></button>
         </div>
         {playlists.map((pl) => (
           <button key={pl.id} onClick={() => { addSongs(pl.id, Array.from(batch.selected)); setBatchPlaylistOpen(false); batch.clear(); }}
@@ -996,7 +997,7 @@ function ColorPickerBtn({ color, onChange, disabled }: { color: string; onChange
       <button onClick={() => { if (!disabled) setOpen((v) => !v); }}
         className={`p-1 transition-colors ${disabled ? "text-gray-700 cursor-not-allowed" : "text-gray-500 hover:text-primary-light"}`}
         title={disabled ? t("common.player_bg_disabled_hint") : t("common.player_bg_color")}>
-        <Palette className="h-3.5 w-3.5" />
+        <NeonIcon name="Palette" size={16}><Palette className="h-3.5 w-3.5" /></NeonIcon>
       </button>
       {open && (
         <div className="absolute bottom-full right-0 mb-2 bg-surface-light border border-primary/30 rounded-xl p-4 shadow-2xl z-[90] flex flex-col gap-3 min-w-[180px]">

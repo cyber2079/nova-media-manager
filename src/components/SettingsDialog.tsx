@@ -11,6 +11,7 @@ import ScrollFade from "@/components/ScrollFade";
 import ThemeManager from "@/components/ThemeManager";
 import BgVideoTuner from "@/components/BgVideoTuner";
 import { Palette, Monitor, SlidersHorizontal, Music, RotateCcw, Gauge, Sparkles, EyeOff, Eye, Copy, Check, Key, Crown, Cpu, Clock, Calendar, Timer, FolderOpen, ImageIcon, Shuffle, Home, LogOut } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { useLicenseStore } from "@/stores/licenseStore";
 import { ACCENT_OPTIONS } from "@/stores/settingsStore";
 import { useWidgetStore } from "@/stores/widgetStore";
@@ -241,7 +242,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
             <div className="border-t border-white/[0.06] pt-1 mt-1">
               <button onClick={() => setConfirmQuit(true)}
                 className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-200 text-left rounded-lg w-full text-red-400/70 hover:bg-red-400/8 hover:text-red-400">
-                <LogOut className="h-4 w-4 shrink-0" />
+                <NeonIcon name="LogOut" size={16}><LogOut className="h-4 w-4 shrink-0" /></NeonIcon>
                 <span>{t("settings.tab_quit")}</span>
               </button>
             </div>
@@ -267,7 +268,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
           "border-white/5")}>
           <Button variant="ghost" size="sm" onClick={onClose} className="flex-1">{t("settings.close")}</Button>
           <Button variant="ghost" size="sm" onClick={() => setConfirmReset("all")} className="gap-1.5 text-gray-400">
-            <RotateCcw className="h-3.5 w-3.5" />{t("settings.reset_defaults")}
+            <NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3.5 w-3.5" /></NeonIcon>{t("settings.reset_defaults")}
           </Button>
         </div>
       </DialogContent>
@@ -373,7 +374,7 @@ function AppearanceTab(props: any) {
               <button key={item.key} onClick={() => handleTheme(item.key)}
                 className={cn("flex flex-col items-center gap-1.5 px-2 py-3 rounded-lg text-xs border transition-all duration-200 cursor-pointer select-none",
                   theme === item.key ? "bg-primary/15 border-primary/40 text-primary-light font-semibold" : "border-transparent hover:bg-surface-lighter text-gray-400")}>
-                {item.image ? <img src={item.image} alt="" className="w-10 h-10 rounded-full object-cover" /> : item.key === "default" ? <Home className="h-5 w-5" /> : <span className="text-base">{item.emoji}</span>}
+                {item.image ? <img src={item.image} alt="" className="w-10 h-10 rounded-full object-cover" /> : item.key === "default" ? <NeonIcon name="Home" size={16}><Home className="h-5 w-5" /></NeonIcon> : <span className="text-base">{item.emoji}</span>}
                 <span>{item.labelKey ? t(item.labelKey) : item.label}</span>
               </button>
             ))}
@@ -402,7 +403,7 @@ function AppearanceTab(props: any) {
           </div>
           <SliderControl title={t("settings.palette_saturation")} value={paletteSaturation} onChange={setPaletteSaturation} min={0} max={100} />
           <button onClick={() => resetPaletteToTheme(theme)} className="text-xs text-gray-500 hover:text-primary-light transition-colors">
-            <RotateCcw className="h-3 w-3 inline mr-1" />{t("settings.palette_reset")}
+            <NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3 w-3 inline mr-1" /></NeonIcon>{t("settings.palette_reset")}
           </button>
         </SettingCard>
       </SectionGroup>
@@ -852,7 +853,7 @@ function LicenseSection({ t }: { t: any }) {
     <div>
       <div className="rounded-xl border border-white/5 p-4" style={{ background: "color-mix(in srgb, var(--color-primary) 4%, transparent)" }}>
         <div className="flex items-center gap-3 min-w-0 flex-wrap">
-          {tier === "free" ? <Key className="h-5 w-5 text-gray-500 shrink-0" /> : <Crown className="h-5 w-5 text-primary-light shrink-0" />}
+          {tier === "free" ? <NeonIcon name="Key" size={16}><Key className="h-5 w-5 text-gray-500 shrink-0" /></NeonIcon> : <NeonIcon name="Crown" size={16}><Crown className="h-5 w-5 text-primary-light shrink-0" /></NeonIcon>}
           <div className="shrink-0">
             <p className="text-sm font-medium text-white leading-tight">{tierLabel(tier)}</p>
             {tier !== "free" && <p className={cn("text-[10px] font-mono leading-tight", exp.expired ? "text-red-400" : "text-gray-500")}>{exp.text}</p>}
@@ -867,12 +868,12 @@ function LicenseSection({ t }: { t: any }) {
                 {showCode ? license.code : `${license.code!.slice(0, 4)}····-····-····-${license.code!.slice(-4)}`}
               </code>
               <button onClick={() => setShowCode(!showCode)} className="p-1 rounded hover:bg-white/10 transition-colors shrink-0" title={showCode ? t("license.hide_code") : t("license.show_code")}>
-                {showCode ? <Eye className="h-3.5 w-3.5 text-gray-500" /> : <EyeOff className="h-3.5 w-3.5 text-gray-500" />}
+                {showCode ? <NeonIcon name="Eye" size={16}><Eye className="h-3.5 w-3.5 text-gray-500" /></NeonIcon> : <NeonIcon name="EyeOff" size={16}><EyeOff className="h-3.5 w-3.5 text-gray-500" /></NeonIcon>}
               </button>
               {showCode && (
                 <button onClick={async () => { try { await navigator.clipboard.writeText(license.code!); setCodeCopied(true); setTimeout(() => setCodeCopied(false), 2000); } catch { const ta = document.createElement("textarea"); ta.value = license.code!; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); setCodeCopied(true); setTimeout(() => setCodeCopied(false), 2000); } }}
                   className="p-1 rounded hover:bg-white/10 transition-colors shrink-0" title={t("license.copy_code")}>
-                  {codeCopied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5 text-gray-500" />}
+                  {codeCopied ? <NeonIcon name="Check" size={16}><Check className="h-3.5 w-3.5 text-green-400" /></NeonIcon> : <NeonIcon name="Copy" size={16}><Copy className="h-3.5 w-3.5 text-gray-500" /></NeonIcon>}
                 </button>
               )}
             </>
@@ -1024,8 +1025,8 @@ function WallpaperSection({ t }: { t: any }) {
     <SettingCard>
       <div className="flex gap-2">
         <button onClick={() => setWallpaperConfig({ mode: "none" })} className={cn("flex-1 py-1.5 rounded-lg text-xs border transition-colors", wallpaper.mode === "none" ? "bg-primary/15 border-primary/40 text-primary-light" : "border-white/5 text-gray-400 hover:text-white")}>{t("settings.wallpaper_off")}</button>
-        <button onClick={pickFile} className={cn("flex-1 py-1.5 rounded-lg text-xs border transition-colors flex items-center justify-center gap-1", wallpaper.mode === "single" ? "bg-primary/15 border-primary/40 text-primary-light" : "border-white/5 text-gray-400 hover:text-white")}><ImageIcon className="h-3 w-3" /> {t("settings.wallpaper_single")}</button>
-        <button onClick={pickFolder} className={cn("flex-1 py-1.5 rounded-lg text-xs border transition-colors flex items-center justify-center gap-1", wallpaper.mode === "folder" ? "bg-primary/15 border-primary/40 text-primary-light" : "border-white/5 text-gray-400 hover:text-white")}><FolderOpen className="h-3 w-3" /> {t("settings.wallpaper_folder")}</button>
+        <button onClick={pickFile} className={cn("flex-1 py-1.5 rounded-lg text-xs border transition-colors flex items-center justify-center gap-1", wallpaper.mode === "single" ? "bg-primary/15 border-primary/40 text-primary-light" : "border-white/5 text-gray-400 hover:text-white")}><NeonIcon name="ImageIcon" size={16}><ImageIcon className="h-3 w-3" /></NeonIcon> {t("settings.wallpaper_single")}</button>
+        <button onClick={pickFolder} className={cn("flex-1 py-1.5 rounded-lg text-xs border transition-colors flex items-center justify-center gap-1", wallpaper.mode === "folder" ? "bg-primary/15 border-primary/40 text-primary-light" : "border-white/5 text-gray-400 hover:text-white")}><NeonIcon name="FolderOpen" size={16}><FolderOpen className="h-3 w-3" /></NeonIcon> {t("settings.wallpaper_folder")}</button>
       </div>
       {(wallpaper.mode !== "none" && wallpaper.path) ? <div className="text-[10px] text-gray-500 truncate font-mono bg-white/[0.02] px-2 py-1 rounded">{wallpaper.path}</div> : null}
       {wallpaper.mode === "folder" && (<>
@@ -1042,7 +1043,7 @@ function ResetButton({ tab, t, onReset }: { tab: string; t: (k: string, options?
   return (
     <div className="pt-2 border-t border-white/5">
       <Button variant="ghost" size="sm" onClick={onReset} className="gap-1.5 text-xs text-gray-400">
-        <RotateCcw className="h-3 w-3" />{t("settings.reset_tab", { tab: t(`settings.tab_${tab}`) })}
+        <NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3 w-3" /></NeonIcon>{t("settings.reset_tab", { tab: t(`settings.tab_${tab}`) })}
       </Button>
     </div>
   );
@@ -1131,7 +1132,7 @@ function ConfirmDialog({ message, confirmLabel, onConfirm, onCancel }: { message
 function NavigationStudioBtn({ t }: { t: any }) {
   return (
     <a href="/studio" className="px-3 py-2 rounded-lg border border-primary/30 text-xs text-primary-light hover:bg-primary/10 transition-colors flex items-center gap-1.5">
-      <Sparkles className="h-3.5 w-3.5" />{t("settings.theme_studio")}
+      <NeonIcon name="Sparkles" size={16}><Sparkles className="h-3.5 w-3.5" /></NeonIcon>{t("settings.theme_studio")}
     </a>
   );
 }
@@ -1142,7 +1143,7 @@ function BgTunerBtn() {
   return (
     <>
       <button onClick={() => setShow(true)} className="px-3 py-2 rounded-lg border border-primary/30 text-xs text-gray-300 hover:bg-primary/10 transition-colors flex items-center gap-1.5">
-        <SlidersHorizontal className="h-3.5 w-3.5" />{t("settings.bg_tuner")}
+        <NeonIcon name="SlidersHorizontal" size={16}><SlidersHorizontal className="h-3.5 w-3.5" /></NeonIcon>{t("settings.bg_tuner")}
       </button>
       {show && <BgVideoTuner visible={show} onToggle={() => setShow(false)} />}
     </>

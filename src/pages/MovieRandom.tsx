@@ -4,6 +4,7 @@ import { useMovieStore } from "@/stores/movieStore";
 import SafeImage from "@/components/SafeImage";
 import { Button } from "@/components/ui/button";
 import { Shuffle, Library, Swords } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { useTranslation } from "react-i18next";
 
 export default function MovieRandom() {
@@ -31,7 +32,7 @@ export default function MovieRandom() {
       <div className="flex flex-col items-center justify-center py-20 text-gray-500">
         <p className="text-lg">{t("movie.no_movies")}</p>
         <Button className="mt-4 gap-2" onClick={() => navigate("/movies")}>
-          <Library className="h-4 w-4" /> {t("home.enter_library")}
+          <NeonIcon name="Library" size={16}><Library className="h-4 w-4" /></NeonIcon> {t("home.enter_library")}
         </Button>
       </div>
     );
@@ -44,7 +45,7 @@ export default function MovieRandom() {
           {t("movie.discover")}
         </h1>
         <Button variant="outline" onClick={refresh} className="gap-2">
-          <Shuffle className="h-4 w-4" /> Random
+          <NeonIcon name="Shuffle" size={16}><Shuffle className="h-4 w-4" /></NeonIcon> Random
         </Button>
       </div>
 

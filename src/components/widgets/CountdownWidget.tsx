@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import DesktopWidget from "@/components/DesktopWidget";
 import { useWidgetStore, type CountdownConfig } from "@/stores/widgetStore";
 import { Play, Pause, RotateCcw, Settings, X } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { cn } from "@/lib/utils";
 function fmtTime(h: number, m: number, s: number): string {
   if (h > 0) return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
@@ -154,8 +155,8 @@ export default function CountdownWidget({ config }: { config: CountdownConfig })
           <button onClick={running ? pause : start} title={running ? t("widget.countdown_pause") : t("widget.countdown_start_title")}
             className="absolute inset-0 flex items-center justify-center rounded-full transition-all duration-200">
             {running
-              ? <Pause className="h-3 w-3" style={{ color: "var(--font-widget)" }} />
-              : <Play className="h-3 w-3 ml-0.5" style={{ color: "var(--font-widget)" }} />}
+              ? <NeonIcon name="Pause" size={16}><Pause className="h-3 w-3" style={{ color: "var(--font-widget)" }} /></NeonIcon>
+              : <NeonIcon name="Play" size={16}><Play className="h-3 w-3 ml-0.5" style={{ color: "var(--font-widget)" }} /></NeonIcon>}
           </button>
         </div>
       ) : (
@@ -189,12 +190,12 @@ function CompactDisplay({ t, running, remaining, progress, start, pause, reset, 
       </div>
       <div className="flex items-center gap-0.5">
         {!running ? (
-          <button onClick={start} disabled={totalSecs <= 0} className="disabled:opacity-30 p-1" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_start_title")}><Play className="h-3.5 w-3.5" /></button>
+          <button onClick={start} disabled={totalSecs <= 0} className="disabled:opacity-30 p-1" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_start_title")}><NeonIcon name="Play" size={16}><Play className="h-3.5 w-3.5" /></NeonIcon></button>
         ) : (
-          <button onClick={pause} className="p-1" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_pause")}><Pause className="h-3.5 w-3.5" /></button>
+          <button onClick={pause} className="p-1" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_pause")}><NeonIcon name="Pause" size={16}><Pause className="h-3.5 w-3.5" /></NeonIcon></button>
         )}
-        <button onClick={reset} className="text-gray-400 hover:text-white p-1" title={t("widget.countdown_reset")}><RotateCcw className="h-3 w-3" /></button>
-        <button onClick={setPanel} className="text-gray-400 hover:text-white p-1" title={t("widget.countdown_settings")}><Settings className="h-3 w-3" /></button>
+        <button onClick={reset} className="text-gray-400 hover:text-white p-1" title={t("widget.countdown_reset")}><NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3 w-3" /></NeonIcon></button>
+        <button onClick={setPanel} className="text-gray-400 hover:text-white p-1" title={t("widget.countdown_settings")}><NeonIcon name="Settings" size={16}><Settings className="h-3 w-3" /></NeonIcon></button>
       </div>
     </div>
   );
@@ -206,7 +207,7 @@ function SettingsPanel({ t, h, setH, m, setM, s, setS, loops, setLoops, glow, se
     <div className="space-y-2 min-w-[180px]">
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-400">{t("widget.countdown_title")}</span>
-        <button onClick={close} className="text-gray-400 hover:text-white p-0.5"><X className="h-3 w-3" /></button>
+        <button onClick={close} className="text-gray-400 hover:text-white p-0.5"><NeonIcon name="X" size={16}><X className="h-3 w-3" /></NeonIcon></button>
       </div>
       <div className="flex items-center gap-1 text-xs text-gray-300">
         <input type="number" min="0" max="23" value={h} onChange={(e) => setH(Number(e.target.value))}

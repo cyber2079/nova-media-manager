@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, Save, Play, Loader2 } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 interface SceneData {
   id: string; status: string; sceneType: string;
   promptKey: string; description: string; promptText: string;
@@ -61,7 +62,7 @@ export default function SceneEditor({ open, scene, prompts, globalStyle, onClose
       <div className="bg-[#111827] border border-white/10 rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold text-white">编辑: {scene.id}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white"><X className="h-5 w-5" /></button>
+          <button onClick={onClose} className="text-gray-400 hover:text-white"><NeonIcon name="X" size={16}><X className="h-5 w-5" /></NeonIcon></button>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-5">
@@ -114,13 +115,13 @@ export default function SceneEditor({ open, scene, prompts, globalStyle, onClose
 
         <div className="flex gap-2">
           <button onClick={handleGenOne} disabled={genLoading} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent/20 text-accent text-sm hover:bg-accent/30 disabled:opacity-50">
-            {genLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+            {genLoading ? <NeonIcon name="Loader2" size={16}><Loader2 className="h-3.5 w-3.5 animate-spin" /></NeonIcon> : <NeonIcon name="Play" size={16}><Play className="h-3.5 w-3.5" /></NeonIcon>}
             单独生成
           </button>
           <div className="flex-1" />
           <button onClick={onClose} className="px-4 py-2 rounded-lg border border-white/10 text-gray-400 text-sm hover:text-white">取消</button>
           <button onClick={handleSave} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/20 text-primary-light text-sm font-medium hover:bg-primary/30">
-            <Save className="h-3.5 w-3.5" />保存
+            <NeonIcon name="Save" size={16}><Save className="h-3.5 w-3.5" /></NeonIcon>保存
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Loader2, X } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 
 interface Props { open: boolean; onClose: () => void; onCreated: () => void; }
 
@@ -31,7 +32,7 @@ export default function NewProjectDialog({ open, onClose, onCreated }: Props) {
       <div className="bg-[#111827] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold text-white">创建新主题</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white"><X className="h-5 w-5" /></button>
+          <button onClick={onClose} className="text-gray-400 hover:text-white"><NeonIcon name="X" size={16}><X className="h-5 w-5" /></NeonIcon></button>
         </div>
         <div className="space-y-4">
           <div><label className="block text-xs text-gray-400 mb-1">项目 ID</label>
@@ -56,7 +57,7 @@ export default function NewProjectDialog({ open, onClose, onCreated }: Props) {
           <div className="flex gap-2 pt-2">
             <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-white/10 text-gray-400 text-sm hover:text-white">取消</button>
             <button onClick={create} disabled={loading} className="flex-1 py-2 rounded-lg bg-primary/20 text-primary-light text-sm font-medium hover:bg-primary/30 disabled:opacity-50 flex items-center justify-center gap-2">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}创建</button>
+              {loading ? <NeonIcon name="Loader2" size={16}><Loader2 className="h-4 w-4 animate-spin" /></NeonIcon> : null}创建</button>
           </div>
         </div>
       </div>

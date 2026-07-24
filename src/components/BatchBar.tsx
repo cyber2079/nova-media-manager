@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import { CheckSquare, ListPlus, Trash2, Tag, X, ArrowLeftRight } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import TagEditDialog from "@/components/TagEditDialog";
@@ -26,25 +27,25 @@ export default function BatchBar({ selected, selectAll, clear, invert, onDelete,
           <span className="text-sm text-white font-medium">{t("batch.selected_count", { n: selected.length })}</span>
           <div className="w-px h-5 bg-primary/30" />
           <button onClick={selectAll} className="flex items-center gap-1.5 text-xs text-primary-light hover:text-white transition-colors">
-            <CheckSquare className="h-3.5 w-3.5" />{t("batch.select_all")}
+            <NeonIcon name="CheckSquare" size={16}><CheckSquare className="h-3.5 w-3.5" /></NeonIcon>{t("batch.select_all")}
           </button>
           <button onClick={invert} className="flex items-center gap-1.5 text-xs text-primary-light hover:text-white transition-colors">
-            <ArrowLeftRight className="h-3.5 w-3.5" />{t("batch.invert")}
+            <NeonIcon name="ArrowLeftRight" size={16}><ArrowLeftRight className="h-3.5 w-3.5" /></NeonIcon>{t("batch.invert")}
           </button>
           {onAddToPlaylist && (
             <button onClick={onAddToPlaylist} className="flex items-center gap-1.5 text-xs text-primary-light hover:text-white transition-colors">
-              <ListPlus className="h-3.5 w-3.5" />{t("music.batch_add_to_playlist")}
+              <NeonIcon name="ListPlus" size={16}><ListPlus className="h-3.5 w-3.5" /></NeonIcon>{t("music.batch_add_to_playlist")}
             </button>
           )}
           <button onClick={() => setTagOpen(true)} className="flex items-center gap-1.5 text-xs text-primary-light hover:text-white transition-colors">
-            <Tag className="h-3.5 w-3.5" />{t("batch.batch_tags")}
+            <NeonIcon name="Tag" size={16}><Tag className="h-3.5 w-3.5" /></NeonIcon>{t("batch.batch_tags")}
           </button>
           <button onClick={onDelete} className="flex items-center gap-1.5 text-xs text-primary-light hover:text-red-400 transition-colors">
-            <Trash2 className="h-3.5 w-3.5" />{t("batch.batch_delete")}
+            <NeonIcon name="Trash2" size={16}><Trash2 className="h-3.5 w-3.5" /></NeonIcon>{t("batch.batch_delete")}
           </button>
           <div className="w-px h-5 bg-primary/30" />
           <button onClick={clear} className="flex items-center gap-1 text-xs text-primary-light hover:text-white transition-colors">
-            <X className="h-3.5 w-3.5" />{t("batch.cancel")}
+            <NeonIcon name="X" size={16}><X className="h-3.5 w-3.5" /></NeonIcon>{t("batch.cancel")}
           </button>
         </div>,
         document.body,

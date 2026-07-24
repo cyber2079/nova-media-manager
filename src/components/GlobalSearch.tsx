@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { setSearchJumpTarget } from "@/lib/searchJump";
 import { useTranslation } from "react-i18next";
 import { Film, Image, Music, Gamepad2, Search } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { cn } from "@/lib/utils";
 
 interface SearchResult {
@@ -104,7 +105,7 @@ export default function GlobalSearch({ open: externalOpen, onClose }: { open?: b
     <Dialog open={open} onOpenChange={(o) => { if (!o) setOpen(false); }}>
       <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden border-white/5" style={{ background: "color-mix(in srgb, var(--color-primary) 6%, rgba(8,12,20,0.94))" }}>
         <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
-          <Search className="h-4 w-4 text-gray-500 shrink-0" />
+          <NeonIcon name="Search" size={16}><Search className="h-4 w-4 text-gray-500 shrink-0" /></NeonIcon>
           <Input
             ref={inputRef}
             value={query}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, createContext, useContext } from "react";
 import { cn } from "@/lib/utils";
 import { Check, X, AlertTriangle, Info } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 
 type ToastType = "success" | "error" | "info";
 
@@ -58,12 +59,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               item.type === "info" && "bg-surface-light/95 border-primary text-white"
             )}
           >
-            {item.type === "success" && <Check className="h-4 w-4 text-green-400 shrink-0" />}
-            {item.type === "error" && <X className="h-4 w-4 text-red-400 shrink-0" />}
-            {item.type === "info" && <Info className="h-4 w-4 text-primary-light shrink-0" />}
+            {item.type === "success" && <NeonIcon name="Check" size={16}><Check className="h-4 w-4 text-green-400 shrink-0" /></NeonIcon>}
+            {item.type === "error" && <NeonIcon name="X" size={16}><X className="h-4 w-4 text-red-400 shrink-0" /></NeonIcon>}
+            {item.type === "info" && <NeonIcon name="Info" size={16}><Info className="h-4 w-4 text-primary-light shrink-0" /></NeonIcon>}
             <span className="flex-1">{item.message}</span>
             <button onClick={() => remove(item.id)} className="text-current opacity-50 hover:opacity-100 shrink-0">
-              <X className="h-3 w-3" />
+              <NeonIcon name="X" size={16}><X className="h-3 w-3" /></NeonIcon>
             </button>
           </div>
         ))}

@@ -32,6 +32,7 @@ import DropZone from "@/components/DropZone";
 import { useToast } from "@/components/Toast";
 import { importMediaPaths, pickFolderAndImport, importSummaryText } from "@/lib/mediaScan";
 import { FolderOpen } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import CountBadge from "@/components/CountBadge";
 import { useAllTags } from "@/hooks/useAllTags";
 import { useConfirmStore } from "@/stores/confirmStore";
@@ -234,16 +235,16 @@ export default function MovieLibrary() {
           <Input placeholder={t("movie.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pr-7" />
           {searchQuery && (
             <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-0.5">
-              <X className="h-3.5 w-3.5" />
+              <NeonIcon name="X" size={16}><X className="h-3.5 w-3.5" /></NeonIcon>
             </button>
           )}
         </div>
-        <Button onClick={handleAddMovies} className="h-8 w-8 p-0" title={t("movie.add")}><Upload className="h-4 w-4" /></Button>
-        <Button variant="outline" onClick={handleAddFolder} className="h-8 w-8 p-0" title={t("movie.add_folder")}><FolderOpen className="h-4 w-4" /></Button>
+        <Button onClick={handleAddMovies} className="h-8 w-8 p-0" title={t("movie.add")}><NeonIcon name="Upload" size={16}><Upload className="h-4 w-4" /></NeonIcon></Button>
+        <Button variant="outline" onClick={handleAddFolder} className="h-8 w-8 p-0" title={t("movie.add_folder")}><NeonIcon name="FolderOpen" size={16}><FolderOpen className="h-4 w-4" /></NeonIcon></Button>
         {!batch.showCheckboxes ? (
-          <Button variant="outline" onClick={batch.enterBatchMode} className="h-8 w-8 p-0" title={t("batch.enter")}><CheckSquare className="h-4 w-4" /></Button>
+          <Button variant="outline" onClick={batch.enterBatchMode} className="h-8 w-8 p-0" title={t("batch.enter")}><NeonIcon name="CheckSquare" size={16}><CheckSquare className="h-4 w-4" /></NeonIcon></Button>
         ) : (
-          <Button variant="outline" onClick={batch.leaveBatchMode} className="h-8 w-8 p-0" title={t("batch.exit")}><X className="h-4 w-4" /></Button>
+          <Button variant="outline" onClick={batch.leaveBatchMode} className="h-8 w-8 p-0" title={t("batch.exit")}><NeonIcon name="X" size={16}><X className="h-4 w-4" /></NeonIcon></Button>
         )}
         <LayoutSwitch mode={layoutMode} onChange={setLayoutMode} />
       </div>
@@ -254,7 +255,7 @@ export default function MovieLibrary() {
       <SortBar options={sortOptions} active={sortConfig} onChange={handleSort} />
 
       {isLoading && movies.length === 0 && (
-        <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary-light" /></div>
+        <div className="flex items-center justify-center py-20"><NeonIcon name="Loader2" size={16}><Loader2 className="h-8 w-8 animate-spin text-primary-light" /></NeonIcon></div>
       )}
 
       {filteredMovies.length > 0 ? (
@@ -267,7 +268,7 @@ export default function MovieLibrary() {
                   {batch.showCheckboxes && <BatchCheckbox inline checked={batch.selected.has(movie.id)} onToggle={() => batch.toggle(movie.id)} />}
                   <div className="w-10 h-14 rounded overflow-hidden bg-surface-lighter shrink-0">
                     <SafeImage src={movie.coverPath} alt={movie.name} className="w-full h-full object-cover"
-                      fallback={<div className="flex h-full items-center justify-center"><Play className="h-4 w-4 text-gray-600" /></div>} />
+                      fallback={<div className="flex h-full items-center justify-center"><NeonIcon name="Play" size={16}><Play className="h-4 w-4 text-gray-600" /></NeonIcon></div>} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-200 truncate">{movie.name}</p>
@@ -289,23 +290,23 @@ export default function MovieLibrary() {
                   <div className="flex items-center gap-2 shrink-0">
                     <button onClick={(e) => { e.stopPropagation(); handleSetWallpaper(movie.filePath); }}
                       className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title={t("movie.set_wallpaper")}>
-                      <Monitor className="h-4 w-4" />
+                      <NeonIcon name="Monitor" size={16}><Monitor className="h-4 w-4" /></NeonIcon>
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); toggleFavorite(movie.id, "movie"); }}
                       className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-yellow-400 hover:bg-surface-lighter/50 transition-colors">
-                      <Star className={cn("h-4 w-4", isFavorite(movie.id) ? "fill-yellow-400 text-yellow-400" : "")} />
+                      <NeonIcon name="Star" size={16}><Star className={cn("h-4 w-4", isFavorite(movie.id) ? "fill-yellow-400 text-yellow-400" : "")} /></NeonIcon>
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setTagEditItem(movie); }}
                       className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors">
-                      <Tag className="h-4 w-4" />
+                      <NeonIcon name="Tag" size={16}><Tag className="h-4 w-4" /></NeonIcon>
                   </button>
                   <button onClick={(e) => { e.stopPropagation(); handlePlayMovie(movie); }}
                     className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-surface-lighter/50 transition-colors">
-                    <Play className="h-4 w-4 ml-0.5" />
+                    <NeonIcon name="Play" size={16}><Play className="h-4 w-4 ml-0.5" /></NeonIcon>
                   </button>
                   <button onClick={(e) => { e.stopPropagation(); confirm(t("movie.confirm_delete"), () => deleteMovie(movie.id)); }}
                     className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-400 hover:bg-surface-lighter/50 transition-colors">
-                    <Trash2 className="h-4 w-4" />
+                    <NeonIcon name="Trash2" size={16}><Trash2 className="h-4 w-4" /></NeonIcon>
                   </button>
                 </div>
                 </div>
@@ -328,7 +329,7 @@ export default function MovieLibrary() {
           <PaginationBar page={page} totalPages={totalPages} onPage={setPage} />
         </>
       ) : (
-        <EmptyState icon={<Video className="h-16 w-16" />} title={t("movie.no_movies")} hint={t("movie.no_movies_hint")} />
+        <EmptyState icon={<NeonIcon name="Video" size={16}><Video className="h-16 w-16" /></NeonIcon>} title={t("movie.no_movies")} hint={t("movie.no_movies_hint")} />
       )}
 
       <Dialog open={!!playingMovie} onOpenChange={(open) => { if (!open) handleClosePlayer(); }}>

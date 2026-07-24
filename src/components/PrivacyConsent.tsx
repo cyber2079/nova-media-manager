@@ -7,6 +7,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Shield, FileText, ExternalLink } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 
 const CONSENT_KEY = "legal_consent_v1";
 const PRIVACY_URL = "https://scm-think.cn/privacy.html";
@@ -45,7 +46,7 @@ export default function PrivacyConsent() {
         {/* Header */}
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
-            <Shield className="h-5 w-5 text-primary-light" />
+            <NeonIcon name="Shield" size={16}><Shield className="h-5 w-5 text-primary-light" /></NeonIcon>
           </div>
           <h2 className="text-lg font-semibold text-white">
             {t("privacy.title")}
@@ -64,18 +65,18 @@ export default function PrivacyConsent() {
             onClick={() => openUrl(PRIVACY_URL)}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white/5 border border-white/10 text-primary-light text-sm font-medium hover:bg-white/10 transition-colors"
           >
-            <Shield className="h-4 w-4" />
+            <NeonIcon name="Shield" size={16}><Shield className="h-4 w-4" /></NeonIcon>
             <span>{t("privacy.view_policy")}</span>
-            <ExternalLink className="h-3 w-3 opacity-50" />
+            <NeonIcon name="ExternalLink" size={16}><ExternalLink className="h-3 w-3 opacity-50" /></NeonIcon>
           </button>
           <button
             type="button"
             onClick={() => openUrl(TERMS_URL)}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white/5 border border-white/10 text-primary-light text-sm font-medium hover:bg-white/10 transition-colors"
           >
-            <FileText className="h-4 w-4" />
+            <NeonIcon name="FileText" size={16}><FileText className="h-4 w-4" /></NeonIcon>
             <span>{t("privacy.view_terms")}</span>
-            <ExternalLink className="h-3 w-3 opacity-50" />
+            <NeonIcon name="ExternalLink" size={16}><ExternalLink className="h-3 w-3 opacity-50" /></NeonIcon>
           </button>
         </div>
 

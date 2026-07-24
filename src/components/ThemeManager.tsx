@@ -9,6 +9,7 @@ import { useThemePackStore, type InstalledTheme, type ThemePackInfo } from "@/st
 import { useLicenseStore, isPaid } from "@/stores/licenseStore";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Package, Download, Trash2, Loader2, FolderOpen } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 
 export default function ThemeManager() {
   const { t } = useTranslation();
@@ -86,21 +87,21 @@ export default function ThemeManager() {
   return (<>
     <button onClick={() => setOpen(true)}
       className="text-gray-400 hover:text-white flex items-center gap-1.5 text-xs font-medium transition-colors">
-      <Package className="h-3.5 w-3.5" />
+      <NeonIcon name="Package" size={16}><Package className="h-3.5 w-3.5" /></NeonIcon>
       {t("themeManager.trigger_button")}
     </button>
 
     <Dialog open={open} onOpenChange={(o) => { if (!o) setOpen(false); }}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto p-6 rounded-2xl bg-surface-light/98 backdrop-blur-xl border border-primary/30">
         <DialogTitle className="flex items-center gap-2 text-lg font-semibold mb-6">
-          <Package className="h-5 w-5 text-primary-light" />
+          <NeonIcon name="Package" size={16}><Package className="h-5 w-5 text-primary-light" /></NeonIcon>
           {t("themeManager.dialog_title")}
         </DialogTitle>
 
         {/* ── Status ── */}
         {status && (
           <div className={`mb-4 p-3 rounded-lg text-sm ${status === "error" ? "bg-red-500/10 text-red-400" : status === "ok" ? "bg-green-500/10 text-green-400" : "bg-primary/10 text-primary-light"}`}>
-            {status === "loading" && <Loader2 className="h-4 w-4 inline animate-spin mr-2" />}
+            {status === "loading" && <NeonIcon name="Loader2" size={16}><Loader2 className="h-4 w-4 inline animate-spin mr-2" /></NeonIcon>}
             {statusMsg}
           </div>
         )}
@@ -114,9 +115,9 @@ export default function ThemeManager() {
             disabled={installing}
             className="w-full px-4 py-3 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
             {installing ? (
-              <><Loader2 className="h-4 w-4 animate-spin" />{t("themeManager.installing")}</>
+              <><NeonIcon name="Loader2" size={16}><Loader2 className="h-4 w-4 animate-spin" /></NeonIcon>{t("themeManager.installing")}</>
             ) : (
-              <><FolderOpen className="h-4 w-4" />{t("themeManager.install")}</>
+              <><NeonIcon name="FolderOpen" size={16}><FolderOpen className="h-4 w-4" /></NeonIcon>{t("themeManager.install")}</>
             )}
           </button>
           {filePath && <p className="text-[11px] text-gray-500 mt-2 truncate font-mono">{filePath}</p>}
@@ -137,7 +138,7 @@ export default function ThemeManager() {
                 <p className="text-[11px] text-gray-500">{theme.id} · v{theme.version} · {theme.author}</p>
               </div>
               <button onClick={() => handleRemove(theme.id)} className="text-gray-400 hover:text-red-400 p-1.5 transition-colors">
-                <Trash2 className="h-4 w-4" />
+                <NeonIcon name="Trash2" size={16}><Trash2 className="h-4 w-4" /></NeonIcon>
               </button>
             </div>
           ))}
@@ -158,7 +159,7 @@ export default function ThemeManager() {
                   </div>
                   <button onClick={() => handleInstallFromServer(info)} disabled={loading}
                     className="px-3 py-1.5 rounded-lg bg-primary/15 text-primary-light hover:bg-primary/25 text-xs font-medium transition-colors disabled:opacity-50">
-                    <Download className="h-3.5 w-3.5 inline mr-1" />
+                    <NeonIcon name="Download" size={16}><Download className="h-3.5 w-3.5 inline mr-1" /></NeonIcon>
                     {t("themeManager.download")}
                   </button>
                 </div>

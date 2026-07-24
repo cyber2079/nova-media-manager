@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSettingsStore, type BgVideoLoopConfig } from "@/stores/settingsStore";
 import { SlidersHorizontal, X, RotateCcw } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { useTranslation } from "react-i18next";
 
 const DEFAULTS: BgVideoLoopConfig = {
@@ -29,15 +30,15 @@ export default function BgVideoTuner({ visible, onToggle }: { visible: boolean; 
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-primary-light" />
+          <NeonIcon name="SlidersHorizontal" size={16}><SlidersHorizontal className="h-4 w-4 text-primary-light" /></NeonIcon>
           <span className="text-sm font-semibold text-white">{t("bgTuner.title")}</span>
         </div>
         <div className="flex items-center gap-1">
           <button onClick={() => set(DEFAULTS)} className="text-gray-500 hover:text-white p-1" title={t("bgTuner.reset_default")}>
-            <RotateCcw className="h-3.5 w-3.5" />
+            <NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3.5 w-3.5" /></NeonIcon>
           </button>
           <button onClick={onToggle} className="text-gray-500 hover:text-white p-1">
-            <X className="h-4 w-4" />
+            <NeonIcon name="X" size={16}><X className="h-4 w-4" /></NeonIcon>
           </button>
         </div>
       </div>

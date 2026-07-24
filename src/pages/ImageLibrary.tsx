@@ -30,6 +30,7 @@ import { usePagination } from "@/lib/usePagination";
 import { useToast } from "@/components/Toast";
 import { importMediaPaths, pickFolderAndImport, importSummaryText } from "@/lib/mediaScan";
 import { FolderOpen } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import CountBadge from "@/components/CountBadge";
 import { useAllTags } from "@/hooks/useAllTags";
 import { useConfirmStore } from "@/stores/confirmStore";
@@ -65,7 +66,7 @@ function FullscreenHint({ onExit }: { onExit: () => void }) {
     >
       <button onClick={onExit}
         className="text-white/50 hover:text-white text-xs bg-black/50 rounded-full px-4 py-2">
-        <Minimize2 className="h-3.5 w-3.5 inline mr-1" />{t("image.exit_fullscreen")}
+        <NeonIcon name="Minimize2" size={16}><Minimize2 className="h-3.5 w-3.5 inline mr-1" /></NeonIcon>{t("image.exit_fullscreen")}
       </button>
     </div>
   );
@@ -156,21 +157,21 @@ function ImageViewer({ images, index, onClose, onIndex }: { images: string[]; in
   const toolbar = !fullscreen ? (
     <div className="absolute bottom-8 left-0 right-0 z-20 flex items-center justify-center">
       <div className="flex items-center gap-1 bg-black/80 rounded-xl px-3 py-2">
-        <button disabled={index <= 0} onClick={() => onIndex(index - 1)} className="text-white/70 hover:text-white disabled:opacity-30 p-1.5"><ChevronLeft className="h-5 w-5" /></button>
+        <button disabled={index <= 0} onClick={() => onIndex(index - 1)} className="text-white/70 hover:text-white disabled:opacity-30 p-1.5"><NeonIcon name="ChevronLeft" size={16}><ChevronLeft className="h-5 w-5" /></NeonIcon></button>
         <span className="text-xs text-white/60 tabular-nums w-14 text-center">{index + 1} / {images.length}</span>
-        <button disabled={index >= images.length - 1} onClick={() => onIndex(index + 1)} className="text-white/70 hover:text-white disabled:opacity-30 p-1.5"><ChevronRight className="h-5 w-5" /></button>
+        <button disabled={index >= images.length - 1} onClick={() => onIndex(index + 1)} className="text-white/70 hover:text-white disabled:opacity-30 p-1.5"><NeonIcon name="ChevronRight" size={16}><ChevronRight className="h-5 w-5" /></NeonIcon></button>
         <div className="w-px h-4 bg-white/20 mx-2" />
         <button onMouseDown={() => startZoom(-1)} onMouseUp={stopZoom} onMouseLeave={stopZoom}
           onClick={() => zoomAt(zoom - 0.25, window.innerWidth/2, window.innerHeight/2)}
-          className="text-white/70 hover:text-white p-1.5"><ZoomOut className="h-4 w-4" /></button>
+          className="text-white/70 hover:text-white p-1.5"><NeonIcon name="ZoomOut" size={16}><ZoomOut className="h-4 w-4" /></NeonIcon></button>
         <span className="text-xs text-white/60 w-10 text-center tabular-nums cursor-pointer" onClick={() => { setZoom(1); setPos({x:0,y:0}); }}>{Math.round(zoom * 100)}%</span>
         <button onMouseDown={() => startZoom(1)} onMouseUp={stopZoom} onMouseLeave={stopZoom}
           onClick={() => zoomAt(zoom + 0.25, window.innerWidth/2, window.innerHeight/2)}
-          className="text-white/70 hover:text-white p-1.5"><ZoomIn className="h-4 w-4" /></button>
-        <button onClick={() => { setZoom(1); setPos({x:0,y:0}); }} className="text-white/70 hover:text-white p-1.5" title="Ctrl+0"><RotateCcw className="h-3.5 w-3.5" /></button>
+          className="text-white/70 hover:text-white p-1.5"><NeonIcon name="ZoomIn" size={16}><ZoomIn className="h-4 w-4" /></NeonIcon></button>
+        <button onClick={() => { setZoom(1); setPos({x:0,y:0}); }} className="text-white/70 hover:text-white p-1.5" title="Ctrl+0"><NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3.5 w-3.5" /></NeonIcon></button>
         <div className="w-px h-4 bg-white/20 mx-2" />
-        <button onClick={() => setFullscreen(true)} className="text-white/70 hover:text-white p-1.5" title="F"><Maximize2 className="h-4 w-4" /></button>
-        <button onClick={onClose} className="text-white/70 hover:text-white p-1.5"><X className="h-4 w-4" /></button>
+        <button onClick={() => setFullscreen(true)} className="text-white/70 hover:text-white p-1.5" title="F"><NeonIcon name="Maximize2" size={16}><Maximize2 className="h-4 w-4" /></NeonIcon></button>
+        <button onClick={onClose} className="text-white/70 hover:text-white p-1.5"><NeonIcon name="X" size={16}><X className="h-4 w-4" /></NeonIcon></button>
       </div>
     </div>
   ) : null;
@@ -194,12 +195,12 @@ function ImageViewer({ images, index, onClose, onIndex }: { images: string[]; in
       {fullscreen && <FullscreenHint onExit={() => setFullscreen(false)} />}
       {!fullscreen && index > 0 && (
         <div className="absolute inset-y-0 left-0 w-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity z-30">
-          <button onClick={() => onIndex(index - 1)} className="text-white bg-black/40 hover:bg-black/60 p-2 rounded-full"><ChevronLeft className="h-6 w-6" /></button>
+          <button onClick={() => onIndex(index - 1)} className="text-white bg-black/40 hover:bg-black/60 p-2 rounded-full"><NeonIcon name="ChevronLeft" size={16}><ChevronLeft className="h-6 w-6" /></NeonIcon></button>
         </div>
       )}
       {!fullscreen && index < images.length - 1 && (
         <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity z-30">
-          <button onClick={() => onIndex(index + 1)} className="text-white bg-black/40 hover:bg-black/60 p-2 rounded-full"><ChevronRight className="h-6 w-6" /></button>
+          <button onClick={() => onIndex(index + 1)} className="text-white bg-black/40 hover:bg-black/60 p-2 rounded-full"><NeonIcon name="ChevronRight" size={16}><ChevronRight className="h-6 w-6" /></NeonIcon></button>
         </div>
       )}
     </div>,
@@ -334,21 +335,21 @@ export default function ImageLibrary() {
         <div className="flex-1" />
         <div className="relative w-64">
           <Input placeholder={t("image.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pr-7" />
-          {searchQuery && <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-0.5"><X className="h-3.5 w-3.5" /></button>}
+          {searchQuery && <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-0.5"><NeonIcon name="X" size={16}><X className="h-3.5 w-3.5" /></NeonIcon></button>}
         </div>
-        <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><Star className="h-4 w-4" /></button>
-        <Button onClick={handleAddImages} className="h-8 w-8 p-0" title={t("image.add")}><Upload className="h-4 w-4" /></Button>
-        <Button variant="outline" onClick={handleAddFolder} className="h-8 w-8 p-0" title={t("image.select_folder")}><FolderOpen className="h-4 w-4" /></Button>
+        <button onClick={() => setFavOnly((v) => !v)} className={cn("h-8 w-8 rounded-md border transition-colors flex items-center justify-center", favOnly ? "bg-yellow-400/20 border-yellow-400/50 text-yellow-400" : "border-primary text-gray-500 hover:border-yellow-400/30 hover:text-yellow-400")}><NeonIcon name="Star" size={16}><Star className="h-4 w-4" /></NeonIcon></button>
+        <Button onClick={handleAddImages} className="h-8 w-8 p-0" title={t("image.add")}><NeonIcon name="Upload" size={16}><Upload className="h-4 w-4" /></NeonIcon></Button>
+        <Button variant="outline" onClick={handleAddFolder} className="h-8 w-8 p-0" title={t("image.select_folder")}><NeonIcon name="FolderOpen" size={16}><FolderOpen className="h-4 w-4" /></NeonIcon></Button>
         {!batch.showCheckboxes ? (
-          <Button variant="outline" onClick={batch.enterBatchMode} className="h-8 w-8 p-0" title={t("batch.enter")}><CheckSquare className="h-4 w-4" /></Button>
+          <Button variant="outline" onClick={batch.enterBatchMode} className="h-8 w-8 p-0" title={t("batch.enter")}><NeonIcon name="CheckSquare" size={16}><CheckSquare className="h-4 w-4" /></NeonIcon></Button>
         ) : (
-          <Button variant="outline" onClick={batch.leaveBatchMode} className="h-8 w-8 p-0" title={t("batch.exit")}><X className="h-4 w-4" /></Button>
+          <Button variant="outline" onClick={batch.leaveBatchMode} className="h-8 w-8 p-0" title={t("batch.exit")}><NeonIcon name="X" size={16}><X className="h-4 w-4" /></NeonIcon></Button>
         )}
         <LayoutSwitch mode={layoutMode} onChange={setLayoutMode} />
       </div>
       <TagFilterBar tags={allTags} activeTags={activeTags} onToggle={(tag) => setActiveTags((p) => p.includes(tag) ? p.filter((t) => t !== tag) : [...p, tag])} onClear={() => setActiveTags([])} t={t} />
       <SortBar options={sortOptions} active={sortConfig} onChange={handleSort} className="mb-2" />
-      {isLoading && <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary-light" /></div>}
+      {isLoading && <div className="flex items-center justify-center py-20"><NeonIcon name="Loader2" size={16}><Loader2 className="h-8 w-8 animate-spin text-primary-light" /></NeonIcon></div>}
       {filtered.length > 0 ? (
         <>
           {layoutMode === "list" ? (
@@ -361,7 +362,7 @@ export default function ImageLibrary() {
                   )}
                   <div className="w-16 h-12 rounded overflow-hidden bg-surface-lighter shrink-0">
                     <SafeImage src={getThumbSrc(img.coverPath)} alt={img.name} className="w-full h-full object-cover"
-                      fallback={<div className="flex h-full items-center justify-center"><ImageIcon className="h-4 w-4 text-gray-600" /></div>} />
+                      fallback={<div className="flex h-full items-center justify-center"><NeonIcon name="ImageIcon" size={16}><ImageIcon className="h-4 w-4 text-gray-600" /></NeonIcon></div>} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-200 truncate">{img.name}</p>
@@ -376,12 +377,12 @@ export default function ImageLibrary() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <button onClick={(e) => { e.stopPropagation(); handleSetWallpaper(img.filePath); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title={t("image.set_wallpaper")}><Monitor className="h-4 w-4" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); handleSetWallpaper(img.filePath); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors" title={t("image.set_wallpaper")}><NeonIcon name="Monitor" size={16}><Monitor className="h-4 w-4" /></NeonIcon></button>
                     <button onClick={(e) => { e.stopPropagation(); toggleFavorite(img.id, "image"); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-yellow-400 hover:bg-surface-lighter/50 transition-colors">
-                      <Star className={cn("h-4 w-4", isFavorite(img.id) ? "fill-yellow-400 text-yellow-400" : "")} />
+                      <NeonIcon name="Star" size={16}><Star className={cn("h-4 w-4", isFavorite(img.id) ? "fill-yellow-400 text-yellow-400" : "")} /></NeonIcon>
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); setTagEditItem(img); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors"><Tag className="h-4 w-4" /></button>
-                    <button onClick={(e) => { e.stopPropagation(); confirm(t("image.confirm_delete"), () => deleteImage(img.id)); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-400 hover:bg-surface-lighter/50 transition-colors"><Trash2 className="h-4 w-4" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); setTagEditItem(img); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors"><NeonIcon name="Tag" size={16}><Tag className="h-4 w-4" /></NeonIcon></button>
+                    <button onClick={(e) => { e.stopPropagation(); confirm(t("image.confirm_delete"), () => deleteImage(img.id)); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-400 hover:bg-surface-lighter/50 transition-colors"><NeonIcon name="Trash2" size={16}><Trash2 className="h-4 w-4" /></NeonIcon></button>
                   </div>
                 </div>
               ))}
@@ -403,7 +404,7 @@ export default function ImageLibrary() {
           <PaginationBar page={page} totalPages={totalPages} onPage={setPage} />
         </>
       ) : !isLoading && (
-        <EmptyState icon={<Image className="h-16 w-16" />} title={t("image.no_images")} hint={t("image.no_images_hint")} />
+        <EmptyState icon={<NeonIcon name="Image" size={16}><Image className="h-16 w-16" /></NeonIcon>} title={t("image.no_images")} hint={t("image.no_images_hint")} />
       )}
           {tagEditItem && <TagEditDialog open={true} onClose={() => setTagEditItem(null)} itemName={tagEditItem.name} tags={tagEditItem.tags || []} allTags={tagNames} onSave={(ts) => updateTags(tagEditItem.id, ts)} t={t} />}
     </div>

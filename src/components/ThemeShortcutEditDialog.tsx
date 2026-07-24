@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FolderOpen, Image, RotateCcw, Trash2 } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import type { ThemeCharacter } from "@/stores/themeShortcutStore";
@@ -187,16 +188,16 @@ export default function ThemeShortcutEditDialog({
               {iconSrc ? (
                 <img src={iconSrc} alt="" className="h-full w-full object-cover" />
               ) : (
-                <Image className="h-6 w-6 text-gray-500" />
+                <NeonIcon name="Image" size={16}><Image className="h-6 w-6 text-gray-500" /></NeonIcon>
               )}
             </div>
             <div className="flex flex-col gap-1">
               <Button variant="outline" size="sm" onClick={handlePickIcon} className="gap-1">
-                <Image className="h-3.5 w-3.5" /> {t("shortcut.change_icon")}
+                <NeonIcon name="Image" size={16}><Image className="h-3.5 w-3.5" /></NeonIcon> {t("shortcut.change_icon")}
               </Button>
               {iconIsCustom && (
                 <Button variant="ghost" size="sm" onClick={handleClearIcon} className="gap-1 text-gray-400">
-                  <RotateCcw className="h-3.5 w-3.5" /> {t("shortcut.restore_default")}
+                  <NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3.5 w-3.5" /></NeonIcon> {t("shortcut.restore_default")}
                 </Button>
               )}
             </div>
@@ -225,11 +226,11 @@ export default function ThemeShortcutEditDialog({
                 className="flex-1 min-w-0 w-0 text-xs cursor-default overflow-hidden text-ellipsis whitespace-nowrap"
               />
               <Button variant="outline" size="sm" onClick={handlePickApp} className="gap-1 shrink-0">
-                <FolderOpen className="h-3.5 w-3.5" /> {t("shortcut.browse")}
+                <NeonIcon name="FolderOpen" size={16}><FolderOpen className="h-3.5 w-3.5" /></NeonIcon> {t("shortcut.browse")}
               </Button>
               {hasApp && (
                 <Button variant="ghost" size="icon" onClick={handleClearApp} className="shrink-0 text-gray-400">
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <NeonIcon name="Trash2" size={16}><Trash2 className="h-3.5 w-3.5" /></NeonIcon>
                 </Button>
               )}
             </div>
@@ -241,7 +242,7 @@ export default function ThemeShortcutEditDialog({
           {/* Actions */}
           <div className="flex justify-between pt-2 border-t border-primary">
             <Button variant="ghost" size="sm" onClick={handleReset} className="text-gray-400 gap-1">
-              <RotateCcw className="h-3.5 w-3.5" /> {t("shortcut.reset_default")}
+              <NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3.5 w-3.5" /></NeonIcon> {t("shortcut.reset_default")}
             </Button>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" onClick={onClose}>{t("shortcut.cancel")}</Button>

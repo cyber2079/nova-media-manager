@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Monitor } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { useTranslation } from "react-i18next";
 import DesktopWidget from "@/components/DesktopWidget";
 import FileExplorer from "@/components/FileExplorer";
@@ -91,7 +92,7 @@ export default function MyComputerWidget({ config }: { config: WidgetConfig }) {
                 {iconSrc ? (
                   <img src={iconSrc} alt="" className="h-9 w-9 object-contain" />
                 ) : (
-                  <Monitor className="h-6 w-6 text-primary-light" style={{ filter: "brightness(1.2)" }} />
+                  <NeonIcon name="Monitor" size={16}><Monitor className="h-6 w-6 text-primary-light" style={{ filter: "brightness(1.2)" }} /></NeonIcon>
                 )}
               </div>
             </div>

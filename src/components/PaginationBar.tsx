@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 
 interface PaginationBarProps {
   page: number;
@@ -28,7 +29,7 @@ export default memo(function PaginationBar({ page, totalPages, onPage }: Paginat
         disabled={page <= 1}
         className="h-8 w-8 flex items-center justify-center rounded-md text-gray-400 hover:text-white hover:bg-surface-lighter disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <NeonIcon name="ChevronLeft" size={16}><ChevronLeft className="h-4 w-4" /></NeonIcon>
       </button>
 
       {pages.map((p, i) =>
@@ -54,7 +55,7 @@ export default memo(function PaginationBar({ page, totalPages, onPage }: Paginat
         disabled={page >= totalPages}
         className="h-8 w-8 flex items-center justify-center rounded-md text-gray-400 hover:text-white hover:bg-surface-lighter disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
-        <ChevronRight className="h-4 w-4" />
+        <NeonIcon name="ChevronRight" size={16}><ChevronRight className="h-4 w-4" /></NeonIcon>
       </button>
     </div>
   );

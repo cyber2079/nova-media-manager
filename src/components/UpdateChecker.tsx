@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { Download, ExternalLink, Loader2, X } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { useGate } from "@/lib/useGate";
 
 const RELEASES_URL = "https://github.com/cyber2079/nova-media-manager/releases";
@@ -86,7 +87,7 @@ export default function UpdateChecker() {
           </p>
         </div>
         <button onClick={handleDismiss} className="text-gray-400 hover:text-white p-1">
-          <X className="h-4 w-4" />
+          <NeonIcon name="X" size={16}><X className="h-4 w-4" /></NeonIcon>
         </button>
       </div>
 
@@ -113,18 +114,18 @@ export default function UpdateChecker() {
       {/* Action */}
       {!downloading && canUpdate && (
         <button onClick={handleDownload} className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-sm font-medium">
-          <Download className="h-4 w-4" />{t("updateChecker.update_now")}
+          <NeonIcon name="Download" size={16}><Download className="h-4 w-4" /></NeonIcon>{t("updateChecker.update_now")}
         </button>
       )}
       {downloading && (
         <div className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary/50 text-white/50 text-sm font-medium">
-          <Loader2 className="h-4 w-4 animate-spin" />{t("updateChecker.downloading")}
+          <NeonIcon name="Loader2" size={16}><Loader2 className="h-4 w-4 animate-spin" /></NeonIcon>{t("updateChecker.downloading")}
         </div>
       )}
       {!canUpdate && (
         <a href={RELEASES_URL} target="_blank" rel="noopener noreferrer"
           className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary/15 text-primary-light hover:bg-primary/25 transition-colors text-sm font-medium">
-          <ExternalLink className="h-4 w-4" />{t("updateChecker.manual_download")}
+          <NeonIcon name="ExternalLink" size={16}><ExternalLink className="h-4 w-4" /></NeonIcon>{t("updateChecker.manual_download")}
         </a>
       )}
     </div>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Clipboard, FolderOpen, Info } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 
 interface ContextMenuProps {
   show: boolean;
@@ -69,16 +70,16 @@ export default function ContextMenu({ show, x, y, filePath, onClose }: ContextMe
       onClick={(e) => e.stopPropagation()}
     >
       <button onClick={handleCopy} className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-300 hover:bg-surface-lighter hover:text-white transition-colors text-left">
-        <Clipboard className="h-3.5 w-3.5" />
+        <NeonIcon name="Clipboard" size={16}><Clipboard className="h-3.5 w-3.5" /></NeonIcon>
         {copied ? t("music.copied") : t("music.copy_path")}
       </button>
       <button onClick={handleOpenFolder} className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-300 hover:bg-surface-lighter hover:text-white transition-colors text-left">
-        <FolderOpen className="h-3.5 w-3.5" />
+        <NeonIcon name="FolderOpen" size={16}><FolderOpen className="h-3.5 w-3.5" /></NeonIcon>
         {t("music.open_in_folder")}
       </button>
       <div className="h-px bg-surface-lighter my-1" />
       <button onClick={handleProperties} className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-300 hover:bg-surface-lighter hover:text-white transition-colors text-left">
-        <Info className="h-3.5 w-3.5" />
+        <NeonIcon name="Info" size={16}><Info className="h-3.5 w-3.5" /></NeonIcon>
         {t("music.properties")}
       </button>
     </div>

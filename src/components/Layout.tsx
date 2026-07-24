@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Film, Image, Gamepad2, Home, Music, Maximize2, Minimize2, Search, Settings, X, LayoutGrid, Gauge, Box, Camera } from "lucide-react";
+import NeonIcon from "@/components/NeonIcon";
 import { lazy } from "react";
 const Nv3dViewer = lazy(() => import("@/webgl3d/canvas/Nv3dViewer"));
 import DevToolsMenu from "@/components/DevToolsMenu";
@@ -549,17 +550,17 @@ export default function Layout() {
 
           <div className="flex items-center gap-0.5">
             <button onClick={toggleFullscreen} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={isFS ? t("fullscreen.exit") : t("fullscreen.enter")}>
-              {isFS ? <Minimize2 className="h-4 w-4 text-gray-400" /> : <Maximize2 className="h-4 w-4 text-gray-400" />}
+              {isFS ? <NeonIcon name="Minimize2" size={16}><Minimize2 className="h-4 w-4 text-gray-400" /></NeonIcon> : <NeonIcon name="Maximize2" size={16}><Maximize2 className="h-4 w-4 text-gray-400" /></NeonIcon>}
             </button>
             <button onClick={() => setSearchOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={`${t("search.placeholder")} (Ctrl+K)`}>
-              <Search className="h-4 w-4 text-gray-400" />
+              <NeonIcon name="Search" size={16}><Search className="h-4 w-4 text-gray-400" /></NeonIcon>
             </button>
             <button onClick={() => setSettingsOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-lighter transition-all duration-300 active:scale-90" title={t("settings.title")}>
-              <Settings className="h-4 w-4 text-gray-400" />
+              <NeonIcon name="Settings" size={16}><Settings className="h-4 w-4 text-gray-400" /></NeonIcon>
             </button>
             {import.meta.env.DEV && (
               <button onClick={() => setNv3dOpen(v => !v)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-purple-500/20 transition-all duration-300 active:scale-90" title="3D 预览">
-                <Box className={cn("h-4 w-4", nv3dOpen ? "text-purple-400" : "text-gray-400")} />
+                <NeonIcon name="Box" size={16}><Box className={cn("h-4 w-4", nv3dOpen ? "text-purple-400" : "text-gray-400")} /></NeonIcon>
               </button>
             )}
             {import.meta.env.DEV && <DevToolsMenu />}
@@ -610,7 +611,7 @@ export default function Layout() {
               )}
               title={t("settings.quick_hub")}
             >
-              <LayoutGrid className="h-4 w-4" />
+              <NeonIcon name="LayoutGrid" size={16}><LayoutGrid className="h-4 w-4" /></NeonIcon>
             </button>
           )}
 
@@ -623,7 +624,7 @@ export default function Layout() {
             className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
             title={t("settings.toggle_page")}
           >
-            <Gauge className="h-4 w-4" />
+            <NeonIcon name="Gauge" size={16}><Gauge className="h-4 w-4" /></NeonIcon>
           </button>
 
           {/* Pause/Play background video */}
@@ -644,7 +645,7 @@ export default function Layout() {
             <button onClick={captureScreenshot}
               className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
               title={t("settings.bg_video_capture")}>
-              <Camera className="h-4 w-4" />
+              <NeonIcon name="Camera" size={16}><Camera className="h-4 w-4" /></NeonIcon>
             </button>
           )}
 
@@ -709,7 +710,7 @@ export default function Layout() {
       {nv3dOpen && (
         <div className="fixed inset-0 z-[300] bg-black" onClick={e => e.target === e.currentTarget && setNv3dOpen(false)}>
           <button onClick={() => setNv3dOpen(false)} className="absolute top-4 right-4 z-[310] flex h-9 w-9 items-center justify-center rounded-lg bg-black/50 hover:bg-red-500/30 transition-all active:scale-90" title="关闭 3D 预览">
-            <X className="h-4 w-4 text-white" />
+            <NeonIcon name="X" size={16}><X className="h-4 w-4 text-white" /></NeonIcon>
           </button>
           <Nv3dViewer />
         </div>
