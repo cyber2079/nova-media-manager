@@ -143,14 +143,11 @@ export default function CountdownWidget({ config }: { config: CountdownConfig })
     <DesktopWidget position={config.position}>
       {isMini ? (
         <div className="relative" style={{ width: 40, height: 40 }}>
-          <svg className="absolute inset-0 pointer-events-none" width="40" height="40" style={{ transform: "rotate(-90deg)" }}>
-            <circle cx="20" cy="20" r="17" fill="none"
-              stroke="var(--color-surface-lighter)" strokeWidth="2" />
-            <circle cx="20" cy="20" r="17" fill="none"
-              stroke="var(--color-primary-light)" strokeWidth="2" strokeLinecap="round"
+          <svg className="absolute inset-0 pointer-events-none cw-ring" width="40" height="40" style={{ transform: "rotate(-90deg)" }}>
+            <circle className="cw-ring-bg" cx="20" cy="20" r="17" fill="none" strokeWidth="2" />
+            <circle className="cw-ring-fill" cx="20" cy="20" r="17" fill="none" strokeWidth="2" strokeLinecap="round"
               strokeDasharray={106.814}
-              strokeDashoffset={106.814 * (1 - progress * (running ? 1 : 0))}
-              style={{ filter: `drop-shadow(0 0 3px var(--color-primary-light))` }} />
+              strokeDashoffset={106.814 * (1 - progress * (running ? 1 : 0))} />
           </svg>
           <button onClick={running ? pause : start} title={running ? t("widget.countdown_pause") : t("widget.countdown_start_title")}
             className="absolute inset-0 flex items-center justify-center rounded-full transition-all duration-200">
