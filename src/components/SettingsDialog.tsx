@@ -456,24 +456,6 @@ function AppearanceTab(props: any) {
         </SettingCard>
       </SectionGroup>
 
-      {/* ═══ Sort Animation ═══ */}
-      {isNonDefault && (
-        <SectionGroup title={t("settings.sort_animation")}>
-          <SettingCard>
-            <select
-              className="w-full rounded-lg border border-white/5 bg-surface-light px-3 py-2 text-xs text-gray-300"
-              onChange={(e) => { document.documentElement.style.setProperty("--cg-sort-anim", e.target.value); localStorage.setItem("cg-sort-anim", e.target.value); }}
-              defaultValue={localStorage.getItem("cg-sort-anim") || "cg-sort-neon"}>
-              <option value="cg-sort-neon">Neon — 平滑渐入</option>
-              <option value="cg-sort-holo">Hologram — 全息投影</option>
-              <option value="cg-sort-glitch">Glitch — 色散抖动</option>
-              <option value="cg-sort-scan">Scanline — 扫描线</option>
-              <option value="cg-sort-terminal">Terminal — 终端滑入</option>
-            </select>
-          </SettingCard>
-        </SectionGroup>
-      )}
-
       {/* ═══ Layout ═══ */}
       <SectionGroup title={t("settings.look_display")}>
         <SettingCard>

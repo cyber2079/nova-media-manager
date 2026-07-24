@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useState, useMemo, useRef } from "react";
+import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import { useImageStore } from "@/stores/imageStore";
 import ImageCard from "@/components/ImageCard";
@@ -390,14 +391,14 @@ export default function ImageLibrary() {
           ) : layoutMode === "banner" ? (
             <div className={cn("flex flex-col gap-3", animating && "sort-shatter")}>
               {paginated.map((img) => (
-                <div key={img.id} className="relative group cursor-pointer" onClick={() => { if (!batch.showCheckboxes) openViewer(img); }}>
+                <motion.div layout key={img.id} className="relative group cursor-pointer" onClick={() => { if (!batch.showCheckboxes) openViewer(img); }}>
                   {batch.showCheckboxes && (
                     <div onClick={(e) => e.stopPropagation()} className="absolute top-2 right-2 z-10">
                       <BatchCheckbox checked={batch.selected.has(img.id)} onToggle={() => batch.toggle(img.id)} />
                     </div>
                   )}
                   <ImageCard image={img} onDelete={(id) => confirm(t("image.confirm_delete"), () => deleteImage(id))} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagEditItem(img)} horizontal favorited={isFavorite(img.id)} onToggleFav={() => toggleFavorite(img.id, "image")} />
-                </div>
+                </motion.div>
               ))}
             </div>
           ) : (

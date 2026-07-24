@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { useMovieStore } from "@/stores/movieStore";
 import { useSettingsStore, EXTERNAL_PLAYER_EXTS } from "@/stores/settingsStore";
@@ -315,11 +316,11 @@ export default function MovieLibrary() {
           ) : layoutMode === "banner" ? (
             <div className={cn("flex flex-col gap-3", animating && "sort-shatter")}>
               {paginated.map((movie) => (
-                <div key={movie.id} className="relative group"
+                <motion.div layout key={movie.id} className="relative group"
                   onClick={() => { if (batch.showCheckboxes) batch.toggle(movie.id); }}>
                   {batch.showCheckboxes && <BatchCheckbox checked={batch.selected.has(movie.id)} onToggle={() => batch.toggle(movie.id)} />}
                   <MovieCard movie={movie} onDelete={(id) => confirm(t("movie.confirm_delete"), () => deleteMovie(id))} onPlay={batch.showCheckboxes ? () => {} : handlePlayMovie} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagDialogMovie(movie)} onRegenCover={() => useMovieStore.getState().regenerateCover(movie.id).catch(() => {})} horizontal favorited={isFavorite(movie.id)} onToggleFav={() => toggleFavorite(movie.id, "movie")} />
-                </div>
+                </motion.div>
               ))}
             </div>
           ) : (
@@ -328,11 +329,11 @@ export default function MovieLibrary() {
               : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10",
               animating && "sort-shatter")}>
               {paginated.map((movie) => (
-                <div key={movie.id} className="relative group"
+                <motion.div layout key={movie.id} className="relative group"
                   onClick={() => { if (batch.showCheckboxes) batch.toggle(movie.id); }}>
                   {batch.showCheckboxes && <BatchCheckbox checked={batch.selected.has(movie.id)} onToggle={() => batch.toggle(movie.id)} />}
                   <MovieCard movie={movie} onDelete={(id) => confirm(t("movie.confirm_delete"), () => deleteMovie(id))} onPlay={batch.showCheckboxes ? () => {} : handlePlayMovie} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagDialogMovie(movie)} onRegenCover={() => useMovieStore.getState().regenerateCover(movie.id).catch(() => {})} compact={layoutMode === "small"} favorited={isFavorite(movie.id)} onToggleFav={() => toggleFavorite(movie.id, "movie")} />
-                </div>
+                </motion.div>
               ))}
             </div>
           )}

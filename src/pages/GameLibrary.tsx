@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useState, useMemo, useRef } from "react";
+import { motion } from "framer-motion";
 import { useGameStore, type ScanResultMsg } from "@/stores/gameStore";
 import { useTranslation } from "react-i18next";
 import GameCard from "@/components/GameCard";
@@ -179,7 +180,7 @@ export default function GameLibrary() {
           {layoutMode === "banner" ? (
             <div className={cn("flex flex-col gap-3", animating && "sort-shatter")}>
               {paginated.map((game) => (
-                <div key={game.id} className="relative group"
+                <motion.div layout key={game.id} className="relative group"
                   onContextMenu={(e: React.MouseEvent) => onContext(e, game.executablePath)}
                   onClick={() => { if (batch.showCheckboxes) { batch.toggle(game.id); return; } launchGame(game.id); }}>
                   {batch.showCheckboxes && <BatchCheckbox checked={batch.selected.has(game.id)} onToggle={() => batch.toggle(game.id)} />}
@@ -192,7 +193,7 @@ export default function GameLibrary() {
                     favorited={isFavorite(game.id)}
                     onToggleFav={() => toggleFavorite(game.id, "game")}
                   />
-                </div>
+                </motion.div>
               ))}
             </div>
           ) : layoutMode === "list" ? (
@@ -244,11 +245,11 @@ export default function GameLibrary() {
               : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10",
               animating && "sort-shatter")}>
               {paginated.map((game) => (
-                <div key={game.id} className="relative group" onContextMenu={(e: React.MouseEvent) => onContext(e, game.executablePath)}
+                <motion.div layout key={game.id} className="relative group" onContextMenu={(e: React.MouseEvent) => onContext(e, game.executablePath)}
                   onClick={() => { if (batch.showCheckboxes) batch.toggle(game.id); }}>
                   {batch.showCheckboxes && <BatchCheckbox checked={batch.selected.has(game.id)} onToggle={() => batch.toggle(game.id)} />}
                   <GameCard game={game} onDelete={(id) => confirm(t("game.confirm_delete"), () => deleteGame(id))} onLaunch={batch.showCheckboxes ? () => {} : (_g) => launchGame(_g.id)} onEditTags={() => setTagEditItem(game)} compact={layoutMode === "small"} favorited={isFavorite(game.id)} onToggleFav={() => toggleFavorite(game.id, "game")} />
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
