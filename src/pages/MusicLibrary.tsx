@@ -369,7 +369,7 @@ export default function MusicLibrary() {
             ) : (
               <Button variant="outline" onClick={batch.leaveBatchMode} className="h-8 w-8 p-0" title={t("batch.exit")}><NeonIcon name="X" size={16}><X className="h-4 w-4" /></NeonIcon></Button>
             )}
-            <LayoutSwitch mode={layoutMode} onChange={setLayoutMode} />
+            <LayoutSwitch mode={layoutMode} onChange={setLayoutMode} hideBanner />
           </>
         )}
       </div>

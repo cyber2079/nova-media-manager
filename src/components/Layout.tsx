@@ -621,7 +621,7 @@ export default function Layout() {
           <button
             onClick={() => {
               const pageKey = isHome ? "home" : location.pathname.replace("/", "") || "home";
-              useSettingsStore.getState().toggleContentMinimized(pageKey); sfx.play("pageTransition");
+              useSettingsStore.getState().toggleContentMinimized(pageKey); sfx.play("click");
             }}
             className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
             title={t("settings.toggle_page")}
