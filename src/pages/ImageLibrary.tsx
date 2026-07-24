@@ -356,7 +356,7 @@ export default function ImageLibrary() {
           {layoutMode === "list" ? (
             <div className={cn("flex flex-col gap-1")}>
               {paginated.map((img) => (
-                <div key={img.id} className="relative flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group"
+                <motion.div layout key={img.id} className="relative flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group"
                   onClick={() => { if (!batch.showCheckboxes) openViewer(img); }}>
                   {batch.showCheckboxes && (
                     <BatchCheckbox inline checked={batch.selected.has(img.id)} onToggle={() => batch.toggle(img.id)} />
@@ -385,7 +385,7 @@ export default function ImageLibrary() {
                     <button onClick={(e) => { e.stopPropagation(); setTagEditItem(img); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary-light hover:bg-surface-lighter/50 transition-colors"><NeonIcon name="Tag" size={16}><Tag className="h-4 w-4" /></NeonIcon></button>
                     <button onClick={(e) => { e.stopPropagation(); confirm(t("image.confirm_delete"), () => deleteImage(img.id)); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-400 hover:bg-surface-lighter/50 transition-colors"><NeonIcon name="Trash2" size={16}><Trash2 className="h-4 w-4" /></NeonIcon></button>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           ) : layoutMode === "banner" ? (

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { motion } from "framer-motion";
 import { useMusicStore } from "@/stores/musicStore";
 import { useAudioPlayerStore, fmtTime, getAudio } from "@/stores/audioPlayerStore";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -641,7 +642,7 @@ export default function MusicLibrary() {
               {layoutMode === "list" ? (
                 <div className={cn("flex flex-col gap-1")}>
                   {paginated.map((m, idx) => (
-                    <div key={m.id} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group border relative",
+                    <motion.div layout key={m.id} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group border relative",
                       playing?.id === m.id ? "bg-primary/10 border-primary/20" : "border-transparent")}
                       onClick={() => {
                         if (batch.showCheckboxes) { batch.toggle(m.id); return; }
@@ -689,7 +690,7 @@ export default function MusicLibrary() {
                           <NeonIcon name="Trash2" size={16}><Trash2 className="h-4 w-4" /></NeonIcon>
                         </button>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               ) : (
@@ -697,11 +698,11 @@ export default function MusicLibrary() {
                   ? "grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
                   : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10")}>
                   {paginated.map((m) => (
-                    <div key={m.id} className="relative group"
+                    <motion.div layout key={m.id} className="relative group"
                       onClick={() => { if (batch.showCheckboxes) batch.toggle(m.id); }}>
                       {batch.showCheckboxes && <BatchCheckbox checked={batch.selected.has(m.id)} onToggle={() => batch.toggle(m.id)} />}
                       <MusicCard music={m} onDelete={(id) => confirm(t("music.confirm_delete"), () => deleteMusic(id))} onPlay={batch.showCheckboxes ? () => {} : handleGridPlay} onEditTags={() => setTagEditItem(m)} compact={layoutMode === "small"} favorited={isFavorite(m.id)} onToggleFav={() => toggleFavorite(m.id, "music")} />
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               )}
