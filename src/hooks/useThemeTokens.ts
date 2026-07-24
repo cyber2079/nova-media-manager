@@ -42,6 +42,8 @@ const BRIDGE_COLORS: [string, string][] = [
   ["--nv-color-text",           "--font-primary"],
   ["--nv-color-textSecondary",  "--font-secondary"],
   ["--nv-color-textMuted",      "--font-widget"],
+  ["--nv-widget-text",          "--font-widget"],
+  ["--nv-widget-iconColor",     "--color-primary-light"],
   ["--nv-color-border",         "--color-border"],
   ["--nv-color-borderFocus",    "--color-border-focus"],
 ];
@@ -99,6 +101,8 @@ function injectTokens(tokens: Record<string, string>) {
       ["--nv-color-surface",     `color-mix(in srgb, ${hexes} 4%, ${baseBg})`],
       ["--nv-color-surfaceLight", `color-mix(in srgb, ${hexes} 6%, ${midBg})`],
       ["--nv-color-surfaceLighter",`color-mix(in srgb, ${hexes} 8%, ${liteBg})`],
+      ["--font-widget",          pLight],
+      ["--nv-widget-text",       pLight],
     ];
     for (const [k, v] of derived) root.style.setProperty(k, v, "important");
   }

@@ -176,7 +176,7 @@ function CompactDisplay({ t, running, remaining, progress, start, pause, reset, 
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 text-center">
-        <span className="text-sm font-mono tabular-nums" style={{ color: "var(--font-widget)" }}>{remaining}</span>
+        <span className="text-sm font-mono tabular-nums cw-text">{remaining}</span>
         {running && (
           <div className="w-full h-1 bg-surface-lighter rounded-full mt-1 overflow-hidden">
             <div className="h-full rounded-full" style={{ width: `${progress * 100}%`, transition: "width 0.04s linear", background: "var(--color-primary-light)" }} />
