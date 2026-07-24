@@ -575,8 +575,8 @@ export default function Layout() {
           .nvtp themes (like cyberpunk) use the same constrained layout as default. */}
       <main
         className={cn(
-          "mx-auto max-w-7xl px-6 overflow-hidden relative rounded-xl transition-opacity duration-300",
-          isHome && (isIce || isCG) && "!max-w-none !px-0 !overflow-visible !rounded-none pointer-events-none",
+          "mx-auto max-w-7xl px-6 overflow-visible relative rounded-xl transition-opacity duration-300",
+          isHome && (isIce || isCG) && "!max-w-none !px-0 !rounded-none pointer-events-none",
           pageMinimized && "!opacity-0 !pointer-events-none",
         )}
         style={(() => {
@@ -589,7 +589,7 @@ export default function Layout() {
           "relative z-[48]",
           isHome && (isIce || isCG)
             ? "overflow-visible [&>*]:pointer-events-auto"
-            : "h-full overflow-y-auto overscroll-contain px-0 pt-6 pb-6",
+            : "h-full overflow-y-auto overflow-x-visible px-1 pt-6 pb-6",
           perfReduceAnimations && "reduce-motion",
         )}>
           <Outlet />

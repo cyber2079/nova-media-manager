@@ -9,6 +9,7 @@ const KNOWN_THEMES: Record<string, string> = {
   "ice-girl": "/themes/ice%20girl",
   "cyber-girl": "/themes/cyber%20girl",
   cyberpunk: "/themes/cyberpunk",
+  "cyber-grid": "/themes/cyber-grid",
   default: "",
 };
 

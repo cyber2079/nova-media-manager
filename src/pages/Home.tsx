@@ -49,6 +49,7 @@ import { Image, Gamepad2, Clock, Music, Minimize2 } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
 import { useNavigate } from "react-router-dom";
 import HomeDashboard from "@/components/HomeDashboard";
+import BlueprintBentoGrid from "@/components/BlueprintBentoGrid";
 
 // Shared lazy-loaded convertFileSrc
 let _cs: ((p: string) => string) | null = null;
@@ -103,6 +104,7 @@ const THEME_META: Record<string, { type: ThemeType }> = {
   default:     { type: "static" },
   "ice-girl":  { type: "dynamic" },
   "cyber-girl":{ type: "story" },
+  "cyber-grid":{ type: "static" },
 };
 
 function getThemeMeta(theme: string) {
@@ -249,7 +251,9 @@ export default function Home() {
   return (
     <div className="space-y-8 animate-fade-in-up">
       {/* ── Static: Dashboard or compact strip ── */}
-      {themeType === "static" && <DashBoardOrStrip />}
+      {themeType === "static" && (
+        theme === "cyber-grid" ? <BlueprintBentoGrid /> : <DashBoardOrStrip />
+      )}
 
       {/* ── Dynamic: script-driven typewriter + skill icons ── */}
       {themeType === "dynamic" && dynamicQuotes.length > 0 && (

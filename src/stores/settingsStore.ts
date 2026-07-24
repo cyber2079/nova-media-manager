@@ -56,6 +56,7 @@ export const FONT_LIST: { value: string; label: string; i18nKey: string; css: st
   { value: "maoken-glitch", label: "中文故障", i18nKey: "fonts.chinese_glitch", css: '"Maoken Glitch Sans", "PingFang SC", "Microsoft YaHei", sans-serif' },
   { value: "maoken-defectica", label: "赛博朋克", i18nKey: "fonts.cyberpunk", css: '"Defectica", "Maoken Glitch Sans", "PingFang SC", "Microsoft YaHei", sans-serif' },
   { value: "defectica", label: "英文破碎", i18nKey: "fonts.english_broken", css: '"Defectica", "PingFang SC", "Microsoft YaHei", sans-serif' },
+  { value: "audiowide-mono", label: "蓝图等宽", i18nKey: "fonts.blueprint_mono", css: '"Audiowide Mono", "JetBrains Mono", "Fira Code", monospace' },
 ];
 
 // ═══════════════ PER-THEME PALETTE DEFAULTS ═══════════════
@@ -90,6 +91,25 @@ export const ACCENT_OPTIONS = [
 
 export const THEME_PALETTE_DEFAULTS: Record<string, PaletteConfig> = {
   default: { accent: "#4788f0", saturation: 50 },
+};
+
+// ── Per-theme effects (scanline, etc.) ──
+export interface ScanlineConfig {
+  enabled: boolean;
+  color: string;
+  opacity: number;     // 0–100 (CSS: /100)
+  thickness: number;   // px
+}
+
+export interface PerThemeFx {
+  scanline?: ScanlineConfig;
+}
+
+export const DEFAULT_SCANLINE: ScanlineConfig = {
+  enabled: true,
+  color: "#000000",
+  opacity: 3,
+  thickness: 2,
 };
 
 export type SettingsState = {
@@ -216,6 +236,11 @@ export type SettingsState = {
   hardwareAcceleration: boolean;
   setHardwareAcceleration: (v: boolean) => void;
 
+  // ── 每主题特效配置 ──
+  themeEffects: Record<string, PerThemeFx>;
+  setThemeEffects: (themeId: string, fx: PerThemeFx) => void;
+  resetThemeEffects: (themeId: string) => void;
+
   // ── 性能调优 ──
   perfPriority: "normal" | "above_normal" | "high";
   perfIdleReduce: boolean;    // 空闲时降载
@@ -273,6 +298,7 @@ function schedulePersist() {
     fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteCustomized: s.paletteCustomized, paletteRandomSeed: s.paletteRandomSeed, paletteRandomEnabled: s.paletteRandomEnabled, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
     perfPriority: s.perfPriority, perfIdleReduce: s.perfIdleReduce, perfReduceAnimations: s.perfReduceAnimations, cacheCleanupDays: s.cacheCleanupDays, cacheCleanupLastRun: s.cacheCleanupLastRun,
     dashboardMode: s.dashboardMode, contentMinimized: s.contentMinimized,
+    themeEffects: s.themeEffects,
   });
   localStorage.setItem(STORAGE_KEY, payload);
   if (_persistTimer) clearTimeout(_persistTimer);
@@ -481,6 +507,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     cacheCleanupLastRun: (saved as any).cacheCleanupLastRun || null,
     dashboardMode: (saved as any).dashboardMode || "full",
     contentMinimized: (saved as any).contentMinimized || {},
+    themeEffects: (saved as any).themeEffects || {},
 
     init: async () => {
       const raw = await kv.get(STORAGE_KEY);
@@ -542,7 +569,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized, paletteRandomSeed: (s.paletteRandomSeed as number) ?? get().paletteRandomSeed, paletteRandomEnabled: (s.paletteRandomEnabled as boolean) ?? get().paletteRandomEnabled, hardwareAcceleration: (s.hardwareAcceleration as boolean) ?? get().hardwareAcceleration, wallpaper: s.wallpaper ?? get().wallpaper,
             externalPlayer: s.externalPlayer ?? get().externalPlayer,
             dashboardMode: (s.dashboardMode as any) ?? get().dashboardMode,
-            contentMinimized: (s.contentMinimized as any) ?? get().contentMinimized});
+            contentMinimized: (s.contentMinimized as any) ?? get().contentMinimized,
+            themeEffects: (s.themeEffects as any) ?? get().themeEffects});
           applyPalette(); applySurface();
           applyFontColors();
           applyLyricColors();
@@ -624,5 +652,19 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       const def = THEME_PALETTE_DEFAULTS[theme] ?? THEME_PALETTE_DEFAULTS.default;
       set({ paletteAccent: def.accent, paletteSaturation: def.saturation, paletteCustomized: false });
       persist(); applyPalette();
-    }};
+    },
+
+    setThemeEffects(themeId, fx) {
+      set((s) => ({ themeEffects: { ...s.themeEffects, [themeId]: fx } }));
+      persist();
+    },
+    resetThemeEffects(themeId) {
+      set((s) => {
+        const copy = { ...s.themeEffects };
+        delete copy[themeId];
+        return { themeEffects: copy };
+      });
+      persist();
+    },
+  };
 });

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { useThemeStore, useAvailableThemes, type ThemeName } from "@/stores/themeStore";
 import { kv } from "@/lib/sqliteStore";
-import { useSettingsStore, applySurface, FONT_LIST, type BgVideoMode, type FontSize, type IconSize, type ImageWheelMode } from "@/stores/settingsStore";
+import { useSettingsStore, applySurface, FONT_LIST, type BgVideoMode, type FontSize, type IconSize, type ImageWheelMode, DEFAULT_SCANLINE } from "@/stores/settingsStore";
 import { languages } from "@/i18n";
 import { cn } from "@/lib/utils";
 import ScrollFade from "@/components/ScrollFade";
@@ -98,6 +98,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
     cyberBgmEnabled, setCyberBgmEnabled,
     cgTextSize, cgTextColor, setCgTextSize, setCgTextColor,
     paletteAccent, paletteSaturation, paletteRandomEnabled, paletteRandomSeed, setPaletteAccent, setPaletteSaturation, setPaletteRandomSeed, setPaletteRandomEnabled, resetPaletteToTheme,
+    themeEffects, setThemeEffects, resetThemeEffects,
     dashboardMode, setDashboardMode, hardwareAcceleration, setHardwareAcceleration,
     setWallpaperConfig, setExternalPlayer,
     perfPriority, setPerfPriority, perfIdleReduce, setPerfIdleReduce,
@@ -252,7 +253,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
           <div className="flex-1 overflow-y-auto px-6 py-5 relative">
             {activeTab === "general" && <GeneralTab t={t} language={language} handleLanguage={handleLanguage} languages={languages} autoStart={autoStart} autoLoading={autoLoading} handleAutoStart={handleAutoStart} startFullscreen={startFullscreen} setStartFullscreen={setStartFullscreen} resetTab={() => setConfirmReset("general")} />}
 
-            {activeTab === "appearance" && <AppearanceTab t={t} theme={theme} filteredThemeList={filteredThemeList} handleTheme={handleTheme} paletteAccent={paletteAccent} paletteSaturation={paletteSaturation} paletteRandomEnabled={paletteRandomEnabled} paletteRandomSeed={paletteRandomSeed} setPaletteAccent={setPaletteAccent} setPaletteSaturation={setPaletteSaturation} setPaletteRandomSeed={setPaletteRandomSeed} setPaletteRandomEnabled={setPaletteRandomEnabled} resetPaletteToTheme={resetPaletteToTheme} bgVideoMode={bgVideoMode} setBgVideoMode={setBgVideoMode} autoHideHeader={autoHideHeader} setAutoHideHeader={setAutoHideHeader} autoHideFooter={autoHideFooter} setAutoHideFooter={setAutoHideFooter} barOpacity={barOpacity} setBarOpacity={setBarOpacity} barBlur={barBlur} setBarBlur={setBarBlur} glassMasterEnabled={glassMasterEnabled} setGlassMasterEnabled={setGlassMasterEnabled} globalGlassOpacity={globalGlassOpacity} setGlobalGlassOpacity={setGlobalGlassOpacity} globalGlassBlur={globalGlassBlur} setGlobalGlassBlur={setGlobalGlassBlur} mainOpacity={mainOpacity} setMainOpacity={setMainOpacity} mainBlur={mainBlur} setMainBlur={setMainBlur} dialogOpacity={dialogOpacity} setDialogOpacity={setDialogOpacity} dialogBlur={dialogBlur} setDialogBlur={setDialogBlur} dashboardMode={dashboardMode} setDashboardMode={setDashboardMode} fontSize={fontSize} setFontSize={setFontSize} iconSize={iconSize} setIconSize={setIconSize} fontFamily={fontFamily} setFontFamily={setFontFamily} resetTab={() => setConfirmReset("appearance")} />}
+            {activeTab === "appearance" && <AppearanceTab t={t} theme={theme} filteredThemeList={filteredThemeList} handleTheme={handleTheme} paletteAccent={paletteAccent} paletteSaturation={paletteSaturation} paletteRandomEnabled={paletteRandomEnabled} paletteRandomSeed={paletteRandomSeed} setPaletteAccent={setPaletteAccent} setPaletteSaturation={setPaletteSaturation} setPaletteRandomSeed={setPaletteRandomSeed} setPaletteRandomEnabled={setPaletteRandomEnabled} resetPaletteToTheme={resetPaletteToTheme} themeEffects={themeEffects} setThemeEffects={setThemeEffects} resetThemeEffects={resetThemeEffects} bgVideoMode={bgVideoMode} setBgVideoMode={setBgVideoMode} autoHideHeader={autoHideHeader} setAutoHideHeader={setAutoHideHeader} autoHideFooter={autoHideFooter} setAutoHideFooter={setAutoHideFooter} barOpacity={barOpacity} setBarOpacity={setBarOpacity} barBlur={barBlur} setBarBlur={setBarBlur} glassMasterEnabled={glassMasterEnabled} setGlassMasterEnabled={setGlassMasterEnabled} globalGlassOpacity={globalGlassOpacity} setGlobalGlassOpacity={setGlobalGlassOpacity} globalGlassBlur={globalGlassBlur} setGlobalGlassBlur={setGlobalGlassBlur} mainOpacity={mainOpacity} setMainOpacity={setMainOpacity} mainBlur={mainBlur} setMainBlur={setMainBlur} dialogOpacity={dialogOpacity} setDialogOpacity={setDialogOpacity} dialogBlur={dialogBlur} setDialogBlur={setDialogBlur} dashboardMode={dashboardMode} setDashboardMode={setDashboardMode} fontSize={fontSize} setFontSize={setFontSize} iconSize={iconSize} setIconSize={setIconSize} fontFamily={fontFamily} setFontFamily={setFontFamily} resetTab={() => setConfirmReset("appearance")} />}
 
             {activeTab === "media" && <MediaTab t={t} previewOffset={previewOffset} setPreviewOffset={setPreviewOffset} lyricFontSize={lyricFontSize} setLyricFontSize={setLyricFontSize} lyricUseCustomColor={lyricUseCustomColor} setLyricUseCustomColor={setLyricUseCustomColor} lyricCurrentColor={lyricCurrentColor} setLyricCurrentColor={setLyricCurrentColor} lyricOtherColor={lyricOtherColor} setLyricOtherColor={setLyricOtherColor} lyricFillColor={lyricFillColor} setLyricFillColor={setLyricFillColor} playerBgMode={playerBgMode} playerBgColor={playerBgColor} setPlayerBgMode={setPlayerBgMode} setPlayerBgColor={setPlayerBgColor} cyberBgmEnabled={cyberBgmEnabled} setCyberBgmEnabled={setCyberBgmEnabled} imageWheelMode={imageWheelMode} setImageWheelMode={setImageWheelMode} resetTab={() => setConfirmReset("media")} />}
 
@@ -363,7 +364,7 @@ function GeneralTab({ t, language, handleLanguage, languages, autoStart, autoLoa
 // ═══════════════ APPEARANCE TAB ═══════════════
 
 function AppearanceTab(props: any) {
-  const { t, theme, filteredThemeList, handleTheme, paletteAccent, paletteSaturation, paletteRandomEnabled, paletteRandomSeed, setPaletteAccent, setPaletteSaturation, setPaletteRandomSeed, setPaletteRandomEnabled, resetPaletteToTheme, bgVideoMode, setBgVideoMode, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, barOpacity, setBarOpacity, barBlur, setBarBlur, glassMasterEnabled, setGlassMasterEnabled, globalGlassOpacity, setGlobalGlassOpacity, globalGlassBlur, setGlobalGlassBlur, mainOpacity, setMainOpacity, mainBlur, setMainBlur, dialogOpacity, setDialogOpacity, dialogBlur, setDialogBlur, dashboardMode, setDashboardMode, fontSize, setFontSize, iconSize, setIconSize, fontFamily, setFontFamily, resetTab } = props;
+  const { t, theme, filteredThemeList, handleTheme, paletteAccent, paletteSaturation, paletteRandomEnabled, paletteRandomSeed, setPaletteAccent, setPaletteSaturation, setPaletteRandomSeed, setPaletteRandomEnabled, resetPaletteToTheme, themeEffects, setThemeEffects, resetThemeEffects, bgVideoMode, setBgVideoMode, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, barOpacity, setBarOpacity, barBlur, setBarBlur, glassMasterEnabled, setGlassMasterEnabled, globalGlassOpacity, setGlobalGlassOpacity, globalGlassBlur, setGlobalGlassBlur, mainOpacity, setMainOpacity, mainBlur, setMainBlur, dialogOpacity, setDialogOpacity, dialogBlur, setDialogBlur, dashboardMode, setDashboardMode, fontSize, setFontSize, iconSize, setIconSize, fontFamily, setFontFamily, resetTab } = props;
   const isNonDefault = theme !== "default";
   return (
     <>
@@ -576,6 +577,64 @@ function AppearanceTab(props: any) {
             <NavigationStudioBtn t={t} />
             <BgTunerBtn />
           </div>
+        </SectionGroup>
+      )}
+
+      {/* ═══ Theme Effects ═══ */}
+      {isNonDefault && (
+        <SectionGroup title={t("settings.theme_effects")}>
+          <SettingCard>
+            {(() => {
+              const fx = themeEffects[theme]?.scanline ?? DEFAULT_SCANLINE;
+              return (
+                <>
+                  {/* Toggle */}
+                  <SettingRow label={t("settings.scanline_enabled")}>
+                    <Toggle active={fx.enabled} onToggle={() => setThemeEffects(theme, {
+                      ...themeEffects[theme],
+                      scanline: { ...fx, enabled: !fx.enabled },
+                    })} />
+                  </SettingRow>
+                  {fx.enabled && (
+                    <>
+                      <CardDivider />
+                      {/* Color */}
+                      <SettingRow label={t("settings.scanline_color")}>
+                        <input type="color" value={fx.color}
+                          onChange={(e) => setThemeEffects(theme, {
+                            ...themeEffects[theme],
+                            scanline: { ...fx, color: e.target.value },
+                          })}
+                          className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" />
+                      </SettingRow>
+                      <CardDivider />
+                      {/* Opacity slider */}
+                      <SliderControl title={t("settings.scanline_opacity")}
+                        value={fx.opacity} min={0} max={20} unit="%"
+                        onChange={(v) => setThemeEffects(theme, {
+                          ...themeEffects[theme],
+                          scanline: { ...fx, opacity: v },
+                        })} />
+                      <CardDivider />
+                      {/* Thickness slider */}
+                      <SliderControl title={t("settings.scanline_thickness")}
+                        value={fx.thickness} min={1} max={4} unit="px"
+                        onChange={(v) => setThemeEffects(theme, {
+                          ...themeEffects[theme],
+                          scanline: { ...fx, thickness: v },
+                        })} />
+                    </>
+                  )}
+                  {/* Reset button */}
+                  <button
+                    onClick={() => resetThemeEffects(theme)}
+                    className="text-xs text-gray-500 hover:text-primary-light transition-colors">
+                    <NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3 w-3 inline mr-1" /></NeonIcon>{t("settings.fx_reset")}
+                  </button>
+                </>
+              );
+            })()}
+          </SettingCard>
         </SectionGroup>
       )}
 

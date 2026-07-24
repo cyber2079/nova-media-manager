@@ -264,7 +264,7 @@ export default function MovieLibrary() {
           {layoutMode === "list" ? (
             <div className={cn("flex flex-col gap-1")}>
               {paginated.map((movie) => (
-                <div key={movie.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group"
+                <motion.div layout key={movie.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group"
                   onClick={() => { if (batch.showCheckboxes) { batch.toggle(movie.id); return; } handlePlayMovie(movie); }}>
                   {batch.showCheckboxes && <BatchCheckbox inline checked={batch.selected.has(movie.id)} onToggle={() => batch.toggle(movie.id)} />}
                   <div className="w-10 h-14 rounded overflow-hidden bg-surface-lighter shrink-0">
@@ -310,7 +310,7 @@ export default function MovieLibrary() {
                     <NeonIcon name="Trash2" size={16}><Trash2 className="h-4 w-4" /></NeonIcon>
                   </button>
                 </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           ) : layoutMode === "banner" ? (

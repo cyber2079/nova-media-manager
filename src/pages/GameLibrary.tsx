@@ -199,7 +199,7 @@ export default function GameLibrary() {
           ) : layoutMode === "list" ? (
             <div className={cn("flex flex-col gap-1")}>
               {paginated.map((game) => (
-                <div key={game.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group"
+                <motion.div layout key={game.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-lighter transition-colors cursor-pointer group"
                   onClick={() => { if (batch.showCheckboxes) { batch.toggle(game.id); return; } launchGame(game.id); }}
                   onContextMenu={(e: React.MouseEvent) => onContext(e, game.executablePath)}>
                   {batch.showCheckboxes && <BatchCheckbox inline checked={batch.selected.has(game.id)} onToggle={() => batch.toggle(game.id)} />}
@@ -236,7 +236,7 @@ export default function GameLibrary() {
                       <NeonIcon name="Trash2" size={16}><Trash2 className="h-4 w-4" /></NeonIcon>
                     </button>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           ) : (

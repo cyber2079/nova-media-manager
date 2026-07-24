@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useThemeStore } from "@/stores/themeStore";
 
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, X, Upload, Loader2, Star, Image, ImageIcon, Trash2, Tag, CheckSquare, Maximize2, Minimize2, Search, Monitor } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Minus, RotateCcw, X, Upload, Loader2, Star, Image, ImageIcon, Trash2, Tag, CheckSquare, Maximize2, Minimize2, Search, Monitor } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
 import LayoutSwitch, { type LayoutMode } from "@/components/LayoutSwitch";
@@ -164,11 +164,11 @@ function ImageViewer({ images, index, onClose, onIndex }: { images: string[]; in
         <div className="w-px h-4 bg-white/20 mx-2" />
         <button onMouseDown={() => startZoom(-1)} onMouseUp={stopZoom} onMouseLeave={stopZoom}
           onClick={() => zoomAt(zoom - 0.25, window.innerWidth/2, window.innerHeight/2)}
-          className="text-white/70 hover:text-white p-1.5"><NeonIcon name="ZoomOut" size={16}><ZoomOut className="h-4 w-4" /></NeonIcon></button>
+          className="text-white/70 hover:text-white p-1.5 w-8 h-8 flex items-center justify-center"><NeonIcon name="Minus" size={16}><Minus className="h-4 w-4" /></NeonIcon></button>
         <span className="text-xs text-white/60 w-10 text-center tabular-nums cursor-pointer" onClick={() => { setZoom(1); setPos({x:0,y:0}); }}>{Math.round(zoom * 100)}%</span>
         <button onMouseDown={() => startZoom(1)} onMouseUp={stopZoom} onMouseLeave={stopZoom}
           onClick={() => zoomAt(zoom + 0.25, window.innerWidth/2, window.innerHeight/2)}
-          className="text-white/70 hover:text-white p-1.5"><NeonIcon name="ZoomIn" size={16}><ZoomIn className="h-4 w-4" /></NeonIcon></button>
+          className="text-white/70 hover:text-white p-1.5 w-8 h-8 flex items-center justify-center"><NeonIcon name="Plus" size={16}><Plus className="h-4 w-4" /></NeonIcon></button>
         <button onClick={() => { setZoom(1); setPos({x:0,y:0}); }} className="text-white/70 hover:text-white p-1.5" title="Ctrl+0"><NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3.5 w-3.5" /></NeonIcon></button>
         <div className="w-px h-4 bg-white/20 mx-2" />
         <button onClick={() => setFullscreen(true)} className="text-white/70 hover:text-white p-1.5" title="F"><NeonIcon name="Maximize2" size={16}><Maximize2 className="h-4 w-4" /></NeonIcon></button>

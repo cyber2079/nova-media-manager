@@ -12,6 +12,15 @@ html:not([data-theme="ice-girl"]) .ice-bg-video { display: none !important; }
   src: url("/fonts/defectica.ttf") format("truetype");
   font-weight: 400; font-style: normal; font-display: swap;
 }
+@font-face {
+  font-family: "Audiowide Mono";
+  src: url("/fonts/audiowide-mono.ttf") format("truetype");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+
+/* ═══════════ NeonIcon base (always available — per-theme neon-icons.css only adds colors) ═══════════ */
+.neon-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.neon-icon svg { width: 100%; height: 100%; }
 
 /* ═══════════ Theme tokens ═══════════ */
 /*

@@ -9,9 +9,47 @@
 import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useThemeStore } from "@/stores/themeStore";
-import { useSettingsStore } from "@/stores/settingsStore";
+import { useSettingsStore, type PerThemeFx, DEFAULT_SCANLINE } from "@/stores/settingsStore";
 import { themeUrl } from "@/lib/themeBase";
 import { hexToHSL, hslToHex } from "@/lib/colorUtils";
+
+// ── Hex → rgba for scanline overrides ──
+function hexToRGBA(hex: string, alpha: number): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r},${g},${b},${(alpha / 100).toFixed(2)})`;
+}
+
+// ── Inject per-theme effect CSS overrides (scanline, etc.) ──
+function applyThemeEffectOverrides(themeId: string, fx: PerThemeFx | undefined) {
+  let el = document.getElementById("nv-fx-overrides") as HTMLStyleElement | null;
+  if (!el) {
+    el = document.createElement("style");
+    el.id = "nv-fx-overrides";
+    document.head.appendChild(el);
+  }
+
+  const scanline = fx?.scanline ?? { ...DEFAULT_SCANLINE };
+  const selector = `html[data-theme="${themeId}"] body::before`;
+  let css = "";
+
+  if (!scanline.enabled) {
+    css = `${selector} { display: none !important; }`;
+  } else {
+    const rgba = hexToRGBA(scanline.color, scanline.opacity);
+    const t = scanline.thickness;
+    const pitch = t * 2;
+    css = `${selector} {
+  display: block !important;
+  background: repeating-linear-gradient(0deg, transparent, transparent ${t}px, ${rgba} ${t}px, ${rgba} ${pitch}px) !important;
+}`;
+  }
+
+  el.textContent = css;
+  console.log("[useThemeTokens] fx overrides:", themeId, scanline);
+}
 
 const CACHE_KEY = "nv-theme-tokens-v2";
 
@@ -145,17 +183,15 @@ export function useThemeTokens() {
     barOpacity, barBlur, mainOpacity, mainBlur,
     dialogOpacity, dialogBlur, bgOverlayOpacity,
   } = useSettingsStore();
+  const themeEffects = useSettingsStore((s) => s.themeEffects);
 
   useEffect(() => {
-    // Default theme: useThemeEffects manages --color-* entirely. Don't interfere.
     if (theme === "default") return;
     let cancelled = false;
 
-    // Sync apply from cache (no flash on startup)
     const cached = readCache(theme);
     if (cached) injectTokens(cached);
 
-    // Async fetch fresh tokens from Rust, then update
     (async () => {
       try {
         const json = await invoke<string>("get_theme_css_json", {
@@ -169,7 +205,6 @@ export function useThemeTokens() {
         injectTokens(tokens);
         writeCache(theme, tokens);
 
-        // Diagnostic
         console.log("[Nova Theme]", {
           __primary: tokens["__primary"],
           __diag: tokens["__diag"],
@@ -189,4 +224,10 @@ export function useThemeTokens() {
     barOpacity, barBlur, mainOpacity, mainBlur,
     dialogOpacity, dialogBlur, bgOverlayOpacity,
   ]);
+
+  // ── Per-theme effect overrides (scanline, etc.) — separate effect, reacts to themeEffects ──
+  useEffect(() => {
+    if (theme === "default") return;
+    applyThemeEffectOverrides(theme, themeEffects[theme]);
+  }, [theme, themeEffects]);
 }
