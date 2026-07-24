@@ -106,6 +106,10 @@ function injectTokens(tokens: Record<string, string>) {
     ];
     for (const [k, v] of derived) root.style.setProperty(k, v, "important");
   }
+  // Restore persisted sort animation preference
+  const savedSortAnim = localStorage.getItem("cg-sort-anim");
+  if (savedSortAnim) root.style.setProperty("--cg-sort-anim", savedSortAnim);
+
   // Load neon-icons.css + theme.css as inline <style> tags
   const themeId = tokens["__themeId"];
   if (tokens["--nv-nav-home-icon"] && themeId) {
