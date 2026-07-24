@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
-import { Film, Music, Gamepad2, Image as ImageIcon, RotateCcw, Clock, Sunrise, Sun, Moon, Calendar } from "lucide-react";
+import { Video, Music, Gamepad2, Image as ImageIcon, RotateCcw, Clock, Sunrise, Sun, Moon, Calendar } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
 import { useTranslation } from "react-i18next";
 import { useChartColors } from "@/lib/useChartColors";
@@ -159,7 +159,7 @@ export default function HomeDashboard() {
 
   // 内容构成
   const composition = stats ? [
-    { key: "movies", label: t("nav.movies"), value: stats.library.movies, color: colors.primary, icon: Film },
+    { key: "movies", label: t("nav.movies"), value: stats.library.movies, color: colors.primary, icon: Video },
     { key: "music", label: t("nav.music"), value: stats.library.music, color: colors.accent, icon: Music },
     { key: "games", label: t("nav.games"), value: stats.library.games, color: colors.primaryDark, icon: Gamepad2 },
     { key: "images", label: t("nav.images"), value: stats.imagesCount, color: colors.primaryLight, icon: ImageIcon },
@@ -345,7 +345,7 @@ export default function HomeDashboard() {
         {/* 最近观看（本地播放历史） */}
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
-            <NeonIcon name="Film" size={16}><Film className="h-3.5 w-3.5 text-primary-light" /></NeonIcon>
+            <NeonIcon name="Video" size={16}><Video className="h-3.5 w-3.5 text-primary-light" /></NeonIcon>
             <span className="text-[11px] text-[#9ab8d4]">{t("dashboard.recent_watched")}</span>
           </div>
           {recentWatched.length > 0 ? (
@@ -402,7 +402,7 @@ export default function HomeDashboard() {
         {/* 本周热映（服务端推荐） */}
         <div className={panelClass} style={panelStyle}>
           <div className="flex items-center gap-2 mb-2">
-            <NeonIcon name="Film" size={16}><Film className="h-3.5 w-3.5 text-primary-light/50" /></NeonIcon>
+            <NeonIcon name="Video" size={16}><Video className="h-3.5 w-3.5 text-primary-light/50" /></NeonIcon>
             <span className="text-[11px] text-[#9ab8d4]">{t("dashboard.trending_movies")}</span>
             <span className="text-[9px] text-[#6a8aa8] ml-auto">{t("dashboard.tmdb")}</span>
           </div>
@@ -413,7 +413,7 @@ export default function HomeDashboard() {
                   className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg text-left hover:bg-surface-lighter/40 transition-colors opacity-0 animate-fade-in-up no-underline"
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards", minHeight: 28 }}>
                   <span className={`w-4 text-center text-xs font-bold tabular-nums ${i < 3 ? "text-primary-light" : "text-[#8aa8c4]"}`}>{i + 1}</span>
-                  <NeonIcon name="Film" size={16}><Film className="h-3.5 w-3.5 shrink-0 text-primary-light/50" /></NeonIcon>
+                  <NeonIcon name="Video" size={16}><Video className="h-3.5 w-3.5 shrink-0 text-primary-light/50" /></NeonIcon>
                   <span className="flex-1 text-xs text-[#c8ddf0] truncate">{m.title}</span>
                   {m.meta && <span className="text-[10px] text-[#8aa8c4] shrink-0 tabular-nums">{m.meta}</span>}
                 </a>
@@ -444,7 +444,7 @@ export default function HomeDashboard() {
               <button key={`${r.itemType}-${r.id}`}
                 onClick={() => navigate(r.itemType === "movie" ? "/movies" : "/music", r.itemType === "movie" ? { state: { playId: r.id } } : undefined)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary/20 text-xs text-[#c8ddf0] hover:bg-primary/10 hover:text-white transition-colors">
-                {r.itemType === "movie" ? <NeonIcon name="Film" size={16}><Film className="h-3 w-3 text-primary-light" /></NeonIcon> : <NeonIcon name="Music" size={16}><Music className="h-3 w-3 text-primary-light" /></NeonIcon>}
+                {r.itemType === "movie" ? <NeonIcon name="Video" size={16}><Video className="h-3 w-3 text-primary-light" /></NeonIcon> : <NeonIcon name="Music" size={16}><Music className="h-3 w-3 text-primary-light" /></NeonIcon>}
                 <span className="max-w-[160px] truncate">{r.name}</span>
                 {r.daysSince > 0 && <span className="text-[10px] text-[#8aa8c4]">{r.daysSince}{t("dashboard.days_ago")}</span>}
               </button>

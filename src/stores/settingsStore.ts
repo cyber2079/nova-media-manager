@@ -150,6 +150,9 @@ export type SettingsState = {
   paletteSaturation: number;  // 0-100
   /** Whether user has manually adjusted palette from theme default */
   paletteCustomized: boolean;
+  /** Random neon color per element (IconsNeon Todos mode) */
+  paletteRandomSeed: number;
+  paletteRandomEnabled: boolean;
 
   dashboardMode: "full" | "strip";
   contentMinimized: Record<string, boolean>;
@@ -205,6 +208,8 @@ export type SettingsState = {
   setFontFamily: (v: string) => void;
   setPaletteAccent: (v: string) => void;
   setPaletteSaturation: (v: number) => void;
+  setPaletteRandomSeed: (seed: number) => void;
+  setPaletteRandomEnabled: (on: boolean) => void;
   setWallpaperConfig: (cfg: Partial<WallpaperConfig>) => void;
   setExternalPlayer: (cfg: Partial<ExternalPlayerConfig>) => void;
   resetPaletteToTheme: (theme: ThemeName) => void;
@@ -265,7 +270,7 @@ function schedulePersist() {
     glassMasterEnabled: s.glassMasterEnabled, globalGlassOpacity: s.globalGlassOpacity, globalGlassBlur: s.globalGlassBlur,
     mainOpacity: s.mainOpacity, mainBlur: s.mainBlur, dialogOpacity: s.dialogOpacity, dialogBlur: s.dialogBlur,
     surfaceSaturation: s.surfaceSaturation, surfaceOpacity: s.surfaceOpacity, bgOverlayOpacity: s.bgOverlayOpacity,
-    fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteCustomized: s.paletteCustomized, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
+    fontPrimaryColor: s.fontPrimaryColor, fontSecondaryColor: s.fontSecondaryColor, widgetTextColor: s.widgetTextColor, scrollFadeOpacity: s.scrollFadeOpacity, playerBgColor: s.playerBgColor, playerBgMode: s.playerBgMode, cyberBgmEnabled: s.cyberBgmEnabled, cgTextSize: s.cgTextSize, cgTextColor: s.cgTextColor, cgTextBgColor: s.cgTextBgColor, cgTextBgOpacity: s.cgTextBgOpacity, paletteAccent: s.paletteAccent, paletteSaturation: s.paletteSaturation, paletteCustomized: s.paletteCustomized, paletteRandomSeed: s.paletteRandomSeed, paletteRandomEnabled: s.paletteRandomEnabled, hardwareAcceleration: s.hardwareAcceleration, wallpaper: s.wallpaper, externalPlayer: s.externalPlayer,
     perfPriority: s.perfPriority, perfIdleReduce: s.perfIdleReduce, perfReduceAnimations: s.perfReduceAnimations, cacheCleanupDays: s.cacheCleanupDays, cacheCleanupLastRun: s.cacheCleanupLastRun,
     dashboardMode: s.dashboardMode, contentMinimized: s.contentMinimized,
   });
@@ -467,6 +472,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     paletteAccent: (saved as any).paletteAccent || "#4788f0",
     paletteSaturation: (saved as any).paletteSaturation ?? ((saved as any).paletteVibrancy != null ? (saved as any).paletteVibrancy * 10 : 50),
     paletteCustomized: (saved as any).paletteCustomized || false,
+    paletteRandomSeed: (saved as any).paletteRandomSeed ?? 0,
+    paletteRandomEnabled: (saved as any).paletteRandomEnabled || false,
     hardwareAcceleration: (saved as any).hardwareAcceleration ?? true,
     perfPriority: (saved as any).perfPriority || "normal",
     perfIdleReduce: (saved as any).perfIdleReduce ?? true,
@@ -533,7 +540,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
             cgTextBgOpacity: (s.cgTextBgOpacity as number) ?? get().cgTextBgOpacity,
             paletteAccent: (s.paletteAccent as string) ?? get().paletteAccent,
             paletteSaturation: (s.paletteSaturation as number) ?? ((s as any).paletteVibrancy != null ? (s as any).paletteVibrancy * 10 : get().paletteSaturation),
-            paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized, hardwareAcceleration: (s.hardwareAcceleration as boolean) ?? get().hardwareAcceleration, wallpaper: s.wallpaper ?? get().wallpaper,
+            paletteCustomized: (s.paletteCustomized as boolean) ?? get().paletteCustomized, paletteRandomSeed: (s.paletteRandomSeed as number) ?? get().paletteRandomSeed, paletteRandomEnabled: (s.paletteRandomEnabled as boolean) ?? get().paletteRandomEnabled, hardwareAcceleration: (s.hardwareAcceleration as boolean) ?? get().hardwareAcceleration, wallpaper: s.wallpaper ?? get().wallpaper,
             externalPlayer: s.externalPlayer ?? get().externalPlayer,
             dashboardMode: (s.dashboardMode as any) ?? get().dashboardMode,
             contentMinimized: (s.contentMinimized as any) ?? get().contentMinimized});
@@ -609,7 +616,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setCgTextBgOpacity(v) { set({ cgTextBgOpacity: v }); persist(); },
     setFontFamily(v) { set({ fontFamily: v }); persist(); applyFontFamily(v); },
     setPaletteAccent(v) { set({ paletteAccent: v, paletteCustomized: true }); persist(); applyPalette(); },
-    setPaletteSaturation(v) { set({ paletteSaturation: v, paletteCustomized: true }); persist(); applyPalette(); },
+    setPaletteSaturation(v) { set({ paletteSaturation: v, paletteCustomized: true, paletteRandomEnabled: false }); persist(); applyPalette(); },
+    setPaletteRandomSeed(seed: number) { set({ paletteRandomSeed: seed, paletteRandomEnabled: true, paletteCustomized: true }); persist(); },
+    setPaletteRandomEnabled(on: boolean) { set({ paletteRandomEnabled: on }); if (!on) applyPalette(); persist(); },
     setWallpaperConfig(cfg) { set((s) => ({ wallpaper: { ...s.wallpaper, ...cfg } })); persist(); },
     setExternalPlayer(cfg) { set((s) => ({ externalPlayer: { ...s.externalPlayer, ...cfg } })); persist(); },
     resetPaletteToTheme(theme) {

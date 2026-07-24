@@ -478,6 +478,7 @@
     "palette_accent": "强调色",
     "palette_saturation": "饱和度",
     "palette_reset": "恢复主题默认",
+    "palette_rerandom": "重新随机",
     "look_font": "字体",
     "look_display": "显示",
     "surface_saturation": "辅助色饱和度",

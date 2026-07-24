@@ -45,7 +45,7 @@ import { useGameStore } from "@/stores/gameStore";
 import { useMusicStore } from "@/stores/musicStore";
 import { usePlayHistoryStore } from "@/stores/playHistoryStore";
 import { useSettingsStore } from "@/stores/settingsStore";
-import { Film, Image, Gamepad2, Clock, Music, Minimize2 } from "lucide-react";
+import { Image, Gamepad2, Clock, Music, Minimize2 } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
 import { useNavigate } from "react-router-dom";
 import HomeDashboard from "@/components/HomeDashboard";

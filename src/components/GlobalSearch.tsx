@@ -9,7 +9,7 @@ import { useSettingsStore } from "@/stores/settingsStore";
 import { useNavigate } from "react-router-dom";
 import { setSearchJumpTarget } from "@/lib/searchJump";
 import { useTranslation } from "react-i18next";
-import { Film, Image, Music, Gamepad2, Search } from "lucide-react";
+import { Video, Image, Music, Gamepad2, Search } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +18,7 @@ interface SearchResult {
 }
 
 const typeMeta = {
-  movie: { icon: Film, color: "#e06040", label: "movie.title" as const, path: "/movies", pageKey: "movies" },
+  movie: { icon: Video, color: "#e06040", label: "movie.title" as const, path: "/movies", pageKey: "movies" },
   image: { icon: Image, color: "#4488ff", label: "image.title" as const, path: "/images", pageKey: "images" },
   music: { icon: Music, color: "#5b8c5a", label: "music.title" as const, path: "/music", pageKey: "music" },
   game: { icon: Gamepad2, color: "#d4a84b", label: "game.title" as const, path: "/games", pageKey: "games" },

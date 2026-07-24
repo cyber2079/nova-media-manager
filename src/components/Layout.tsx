@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Film, Image, Gamepad2, Home, Music, Maximize2, Minimize2, Search, Settings, X, LayoutGrid, Gauge, Box, Camera } from "lucide-react";
+import { Video, Image, Gamepad2, Home, Music, Maximize2, Minimize2, Search, Settings, X, LayoutGrid, Gauge, Box, Camera } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
 import { lazy } from "react";
 const Nv3dViewer = lazy(() => import("@/webgl3d/canvas/Nv3dViewer"));
@@ -53,13 +53,13 @@ import { ThemeAssets, themeUrl } from "@/lib/themeBase";
 
 const navItems = [
   { to: "/", key: "home", icon: Home },
-  { to: "/movies", key: "movies", icon: Film },
+  { to: "/movies", key: "movies", icon: Video },
   { to: "/images", key: "images", icon: Image },
   { to: "/music", key: "music", icon: Music },
   { to: "/games", key: "games", icon: Gamepad2 },
 ];
 
-  const navSvgs: Record<string,{c:string,s:string}> = {home:{c:"neon-magenta",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},movies:{c:"neon-cyan",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>'},images:{c:"neon-green",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'},music:{c:"neon-orange",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'},games:{c:"neon-purple",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>'}};
+  const navSvgs: Record<string,{c:string,s:string}> = {home:{c:"neon-magenta",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},movies:{c:"neon-cyan",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/><polygon points="23 7 16 12 23 17 23 7"/></svg>'},images:{c:"neon-green",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'},music:{c:"neon-orange",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'},games:{c:"neon-purple",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>'}};
 
 export default function Layout() {
   const location = useLocation();

@@ -97,7 +97,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
     playerBgColor, playerBgMode, setPlayerBgColor, setPlayerBgMode,
     cyberBgmEnabled, setCyberBgmEnabled,
     cgTextSize, cgTextColor, setCgTextSize, setCgTextColor,
-    paletteAccent, paletteSaturation, setPaletteAccent, setPaletteSaturation, resetPaletteToTheme,
+    paletteAccent, paletteSaturation, paletteRandomEnabled, paletteRandomSeed, setPaletteAccent, setPaletteSaturation, setPaletteRandomSeed, setPaletteRandomEnabled, resetPaletteToTheme,
     dashboardMode, setDashboardMode, hardwareAcceleration, setHardwareAcceleration,
     setWallpaperConfig, setExternalPlayer,
     perfPriority, setPerfPriority, perfIdleReduce, setPerfIdleReduce,
@@ -252,7 +252,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
           <div className="flex-1 overflow-y-auto px-6 py-5 relative">
             {activeTab === "general" && <GeneralTab t={t} language={language} handleLanguage={handleLanguage} languages={languages} autoStart={autoStart} autoLoading={autoLoading} handleAutoStart={handleAutoStart} startFullscreen={startFullscreen} setStartFullscreen={setStartFullscreen} resetTab={() => setConfirmReset("general")} />}
 
-            {activeTab === "appearance" && <AppearanceTab t={t} theme={theme} filteredThemeList={filteredThemeList} handleTheme={handleTheme} paletteAccent={paletteAccent} paletteSaturation={paletteSaturation} setPaletteAccent={setPaletteAccent} setPaletteSaturation={setPaletteSaturation} resetPaletteToTheme={resetPaletteToTheme} bgVideoMode={bgVideoMode} setBgVideoMode={setBgVideoMode} autoHideHeader={autoHideHeader} setAutoHideHeader={setAutoHideHeader} autoHideFooter={autoHideFooter} setAutoHideFooter={setAutoHideFooter} barOpacity={barOpacity} setBarOpacity={setBarOpacity} barBlur={barBlur} setBarBlur={setBarBlur} glassMasterEnabled={glassMasterEnabled} setGlassMasterEnabled={setGlassMasterEnabled} globalGlassOpacity={globalGlassOpacity} setGlobalGlassOpacity={setGlobalGlassOpacity} globalGlassBlur={globalGlassBlur} setGlobalGlassBlur={setGlobalGlassBlur} mainOpacity={mainOpacity} setMainOpacity={setMainOpacity} mainBlur={mainBlur} setMainBlur={setMainBlur} dialogOpacity={dialogOpacity} setDialogOpacity={setDialogOpacity} dialogBlur={dialogBlur} setDialogBlur={setDialogBlur} dashboardMode={dashboardMode} setDashboardMode={setDashboardMode} fontSize={fontSize} setFontSize={setFontSize} iconSize={iconSize} setIconSize={setIconSize} fontFamily={fontFamily} setFontFamily={setFontFamily} resetTab={() => setConfirmReset("appearance")} />}
+            {activeTab === "appearance" && <AppearanceTab t={t} theme={theme} filteredThemeList={filteredThemeList} handleTheme={handleTheme} paletteAccent={paletteAccent} paletteSaturation={paletteSaturation} paletteRandomEnabled={paletteRandomEnabled} paletteRandomSeed={paletteRandomSeed} setPaletteAccent={setPaletteAccent} setPaletteSaturation={setPaletteSaturation} setPaletteRandomSeed={setPaletteRandomSeed} setPaletteRandomEnabled={setPaletteRandomEnabled} resetPaletteToTheme={resetPaletteToTheme} bgVideoMode={bgVideoMode} setBgVideoMode={setBgVideoMode} autoHideHeader={autoHideHeader} setAutoHideHeader={setAutoHideHeader} autoHideFooter={autoHideFooter} setAutoHideFooter={setAutoHideFooter} barOpacity={barOpacity} setBarOpacity={setBarOpacity} barBlur={barBlur} setBarBlur={setBarBlur} glassMasterEnabled={glassMasterEnabled} setGlassMasterEnabled={setGlassMasterEnabled} globalGlassOpacity={globalGlassOpacity} setGlobalGlassOpacity={setGlobalGlassOpacity} globalGlassBlur={globalGlassBlur} setGlobalGlassBlur={setGlobalGlassBlur} mainOpacity={mainOpacity} setMainOpacity={setMainOpacity} mainBlur={mainBlur} setMainBlur={setMainBlur} dialogOpacity={dialogOpacity} setDialogOpacity={setDialogOpacity} dialogBlur={dialogBlur} setDialogBlur={setDialogBlur} dashboardMode={dashboardMode} setDashboardMode={setDashboardMode} fontSize={fontSize} setFontSize={setFontSize} iconSize={iconSize} setIconSize={setIconSize} fontFamily={fontFamily} setFontFamily={setFontFamily} resetTab={() => setConfirmReset("appearance")} />}
 
             {activeTab === "media" && <MediaTab t={t} previewOffset={previewOffset} setPreviewOffset={setPreviewOffset} lyricFontSize={lyricFontSize} setLyricFontSize={setLyricFontSize} lyricUseCustomColor={lyricUseCustomColor} setLyricUseCustomColor={setLyricUseCustomColor} lyricCurrentColor={lyricCurrentColor} setLyricCurrentColor={setLyricCurrentColor} lyricOtherColor={lyricOtherColor} setLyricOtherColor={setLyricOtherColor} lyricFillColor={lyricFillColor} setLyricFillColor={setLyricFillColor} playerBgMode={playerBgMode} playerBgColor={playerBgColor} setPlayerBgMode={setPlayerBgMode} setPlayerBgColor={setPlayerBgColor} cyberBgmEnabled={cyberBgmEnabled} setCyberBgmEnabled={setCyberBgmEnabled} imageWheelMode={imageWheelMode} setImageWheelMode={setImageWheelMode} resetTab={() => setConfirmReset("media")} />}
 
@@ -363,7 +363,8 @@ function GeneralTab({ t, language, handleLanguage, languages, autoStart, autoLoa
 // ═══════════════ APPEARANCE TAB ═══════════════
 
 function AppearanceTab(props: any) {
-  const { t, theme, filteredThemeList, handleTheme, paletteAccent, paletteSaturation, setPaletteAccent, setPaletteSaturation, resetPaletteToTheme, bgVideoMode, setBgVideoMode, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, barOpacity, setBarOpacity, barBlur, setBarBlur, glassMasterEnabled, setGlassMasterEnabled, globalGlassOpacity, setGlobalGlassOpacity, globalGlassBlur, setGlobalGlassBlur, mainOpacity, setMainOpacity, mainBlur, setMainBlur, dialogOpacity, setDialogOpacity, dialogBlur, setDialogBlur, dashboardMode, setDashboardMode, fontSize, setFontSize, iconSize, setIconSize, fontFamily, setFontFamily, resetTab } = props;
+  const { t, theme, filteredThemeList, handleTheme, paletteAccent, paletteSaturation, paletteRandomEnabled, paletteRandomSeed, setPaletteAccent, setPaletteSaturation, setPaletteRandomSeed, setPaletteRandomEnabled, resetPaletteToTheme, bgVideoMode, setBgVideoMode, autoHideHeader, setAutoHideHeader, autoHideFooter, setAutoHideFooter, barOpacity, setBarOpacity, barBlur, setBarBlur, glassMasterEnabled, setGlassMasterEnabled, globalGlassOpacity, setGlobalGlassOpacity, globalGlassBlur, setGlobalGlassBlur, mainOpacity, setMainOpacity, mainBlur, setMainBlur, dialogOpacity, setDialogOpacity, dialogBlur, setDialogBlur, dashboardMode, setDashboardMode, fontSize, setFontSize, iconSize, setIconSize, fontFamily, setFontFamily, resetTab } = props;
+  const isNonDefault = theme !== "default";
   return (
     <>
       {/* ═══ Theme ═══ */}
@@ -385,24 +386,72 @@ function AppearanceTab(props: any) {
       {/* ═══ Palette ═══ */}
       <SectionGroup title={t("settings.palette_title")}>
         <SettingCard>
-          <div>
-            <p className="text-xs text-gray-400 mb-2">{t("settings.palette_accent")}</p>
-            <div className="grid grid-cols-9 gap-1.5">
-              {ACCENT_OPTIONS.map((a) => (
-                <button key={a.value} onClick={() => setPaletteAccent(a.value)}
-                  className={cn(
-                    "h-5 rounded transition-all duration-150",
-                    "ring-1 ring-white/10 hover:ring-white/30",
-                    paletteAccent === a.value
-                      ? "ring-2 ring-white shadow-lg scale-105"
-                      : "hover:scale-105"
-                  )}
-                  style={{ background: a.value }} title={t(a.i18nKey)} />
-              ))}
+          {isNonDefault ? (<>
+            {/* IconsNeon 7-color palette for cyberpunk/nvtp themes */}
+            <p className="text-xs text-gray-400 mb-2">IconsNeon</p>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { c: "Todos",  hex: "conic-gradient(#00f5ff,#ff00ff,#39ff14,#ff6600,#bf00ff,#ffff00,#ff0040)", glow: "0 0 8px rgba(0,245,255,0.5)" },
+                { c: "neon-cyan",    hex: "#00f5ff", glow: "0 0 8px #00f5ff" },
+                { c: "neon-magenta", hex: "#ff00ff", glow: "0 0 8px #ff00ff" },
+                { c: "neon-green",   hex: "#39ff14", glow: "0 0 8px #39ff14" },
+                { c: "neon-orange",  hex: "#ff6600", glow: "0 0 8px #ff6600" },
+                { c: "neon-purple",  hex: "#bf00ff", glow: "0 0 8px #bf00ff" },
+                { c: "neon-yellow",  hex: "#ffff00", glow: "0 0 8px #ffff00" },
+                { c: "neon-red",     hex: "#ff0040", glow: "0 0 8px #ff0040" },
+              ].map(({ c, hex, glow }) => {
+                const isActive = c === "Todos"
+                  ? paletteRandomEnabled
+                  : !paletteRandomEnabled && paletteAccent === hex;
+                return (
+                  <button key={c} onClick={() => {
+                    if (c === "Todos") {
+                      setPaletteRandomSeed(Date.now());
+                    } else {
+                      setPaletteAccent(hex);
+                    }
+                  }}
+                    className={cn(
+                      "flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg text-[10px] border transition-all duration-200",
+                      isActive ? "bg-white/10 border-white/30" : "border-transparent hover:bg-white/5"
+                    )}
+                    title={c}>
+                    <span className="w-5 h-5 rounded-full" style={{
+                      background: c === "Todos" ? hex : undefined,
+                      backgroundColor: c !== "Todos" ? hex : undefined,
+                      boxShadow: glow,
+                    }} />
+                    <span className="text-gray-400">{c === "Todos" ? "🎲" : ""} {c.replace("neon-", "").charAt(0).toUpperCase() + c.replace("neon-", "").slice(1, 4)}</span>
+                  </button>
+                );
+              })}
             </div>
-          </div>
-          <SliderControl title={t("settings.palette_saturation")} value={paletteSaturation} onChange={setPaletteSaturation} min={0} max={100} />
-          <button onClick={() => resetPaletteToTheme(theme)} className="text-xs text-gray-500 hover:text-primary-light transition-colors">
+            {paletteRandomEnabled && (
+              <button onClick={() => setPaletteRandomSeed(Date.now())} className="mt-2 text-xs text-gray-500 hover:text-yellow-400 transition-colors">
+                🎲 {t("settings.palette_rerandom")}
+              </button>
+            )}
+          </>) : (<>
+            {/* Default 18-color palette */}
+            <div>
+              <p className="text-xs text-gray-400 mb-2">{t("settings.palette_accent")}</p>
+              <div className="grid grid-cols-9 gap-1.5">
+                {ACCENT_OPTIONS.map((a) => (
+                  <button key={a.value} onClick={() => setPaletteAccent(a.value)}
+                    className={cn(
+                      "h-5 rounded transition-all duration-150",
+                      "ring-1 ring-white/10 hover:ring-white/30",
+                      paletteAccent === a.value
+                        ? "ring-2 ring-white shadow-lg scale-105"
+                        : "hover:scale-105"
+                    )}
+                    style={{ background: a.value }} title={t(a.i18nKey)} />
+                ))}
+              </div>
+            </div>
+            <SliderControl title={t("settings.palette_saturation")} value={paletteSaturation} onChange={setPaletteSaturation} min={0} max={100} />
+          </>)}
+          <button onClick={() => { resetPaletteToTheme(theme); if (isNonDefault) setPaletteRandomEnabled(false); }} className="text-xs text-gray-500 hover:text-primary-light transition-colors">
             <NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3 w-3 inline mr-1" /></NeonIcon>{t("settings.palette_reset")}
           </button>
         </SettingCard>
