@@ -1,0 +1,42 @@
+[project]
+name = "warpnine-fonts"
+version = "0.1.0"
+description = "Custom fonts combining Recursive and Noto Sans Mono CJK JP"
+requires-python = ">=3.10"
+dependencies = [
+    "brotli>=1.1.0",
+    "fonttools[unicode]>=4.60.1",
+    "pytest>=8.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8.4",
+    "pytest-cov>=4.1.0",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (may take >10s)",
+]

@@ -1,0 +1,22 @@
+build
+dist
+
+# Git submodules
+recursive/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# Rust
+target/
+
+# IDE
+.idea/
+
+# OS
+.DS_Store

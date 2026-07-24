@@ -527,7 +527,7 @@ export default function Layout() {
               const s = navSvgs[item.key];
               return (
                 <NavLink key={item.to} to={item.to} className={cn(
-                  "nav-item flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all duration-300 active:scale-95 relative",
+                  "nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 active:scale-95 relative",
                   isActive ? "nav-item-active font-semibold" : "text-[#b8d0e8] hover:text-primary-light ",
                 )}
                 onClick={() => {

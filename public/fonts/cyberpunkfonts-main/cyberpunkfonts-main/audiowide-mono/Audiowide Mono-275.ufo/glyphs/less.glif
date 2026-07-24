@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<glyph name="less" format="2">
+	<advance width="750"/>
+	<unicode hex="003C"/>
+	<note>
+		less
+  </note>
+	<outline>
+		<contour>
+			<point x="567" y="627" type="line"/>
+			<point x="381" y="627" type="line"/>
+			<point x="137" y="408" type="line" smooth="yes"/>
+			<point x="127" y="399"/>
+			<point x="121" y="386" type="qcurve" smooth="yes"/>
+			<point x="116" y="373"/>
+			<point x="116" y="360" type="qcurve" smooth="yes"/>
+			<point x="116" y="329"/>
+			<point x="138" y="311" type="qcurve" smooth="yes"/>
+			<point x="380" y="99" type="line"/>
+			<point x="567" y="99" type="line"/>
+			<point x="269" y="360" type="line"/>
+		</contour>
+	</outline>
+	<lib>
+		<dict>
+			<key>com.schriftgestaltung.Glyphs.lastChange</key>
+			<string>2019-12-14 06:31:49 +0000</string>
+		</dict>
+	</lib>
+</glyph>
