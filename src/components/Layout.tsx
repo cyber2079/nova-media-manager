@@ -621,7 +621,7 @@ export default function Layout() {
           <button
             onClick={() => {
               const pageKey = isHome ? "home" : location.pathname.replace("/", "") || "home";
-              useSettingsStore.getState().toggleContentMinimized(pageKey);
+              useSettingsStore.getState().toggleContentMinimized(pageKey); sfx.play("pageTransition");
             }}
             className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
             title={t("settings.toggle_page")}
@@ -631,7 +631,7 @@ export default function Layout() {
 
           {/* Pause/Play background video */}
           <button
-            onClick={() => useSettingsStore.getState().setVideoPaused(!videoPaused)}
+            onClick={() => { useSettingsStore.getState().setVideoPaused(!videoPaused); sfx.play("click"); }}
             className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
             title={videoPaused ? t("settings.bg_video_play") : t("settings.bg_video_pause")}
           >
@@ -644,7 +644,7 @@ export default function Layout() {
 
           {/* Capture current frame from background video */}
           {!(isIce || isCG) && (
-            <button onClick={captureScreenshot}
+            <button onClick={() => { captureScreenshot(); sfx.play("click"); }}
               className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
               title={t("settings.bg_video_capture")}>
               <NeonIcon name="Camera" size={16}><Camera className="h-4 w-4" /></NeonIcon>
