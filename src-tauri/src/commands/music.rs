@@ -26,6 +26,25 @@ fn format_duration(seconds: f64) -> String {
     format!("{}:{:02}", m, s)
 }
 
+/// Parse artist/album/title from filename when tags are missing.
+/// Supported formats: "Artist - Title.ext", "Artist - Album - Title.ext"
+fn parse_filename_meta(file_stem: &str) -> Option<(String, String, String)> {
+    let parts: Vec<&str> = file_stem.split(" - ").map(|s| s.trim()).collect();
+    match parts.len() {
+        2 => {
+            // "Artist - Title"
+            if !parts[0].is_empty() && !parts[1].is_empty() {
+                Some((parts[0].to_string(), String::new(), parts[1].to_string()))
+            } else { None }
+        }
+        3 => {
+            // "Artist - Album - Title"
+            Some((parts[0].to_string(), parts[1].to_string(), parts[2].to_string()))
+        }
+        _ => None,
+    }
+}
+
 fn probe_metadata(path: &str) -> Option<(String, String, String, i32)> {
     // Use ffprobe from ffmpeg-sidecar to get artist, album, title, duration
     let ffprobe_bin = crate::commands::ffmpeg_helper::ffprobe_path();
@@ -178,10 +197,20 @@ pub fn add_music(db: State<Database>, file_paths: Vec<String>) -> Result<Vec<Mus
         if !fp.exists() { continue; }
 
         let metadata = probe_metadata(path).unwrap_or_default();
-        let (artist, album, title, duration_secs) = metadata;
+        let (mut artist, mut album, mut title, duration_secs) = metadata;
+
+        // Fallback: parse from filename if tags are empty
+        let file_stem = fp.file_stem().and_then(|n| n.to_str()).unwrap_or("");
+        if artist.is_empty() || title.is_empty() {
+            if let Some((fa, fb, ft)) = parse_filename_meta(file_stem) {
+                if artist.is_empty() { artist = fa; }
+                if album.is_empty() { album = fb; }
+                if title.is_empty() { title = ft; }
+            }
+        }
 
         let name = if !title.is_empty() { title }
-            else { fp.file_stem().and_then(|n| n.to_str()).unwrap_or("unknown").to_string() };
+            else { file_stem.to_string() };
 
         let id = uuid::Uuid::new_v4().to_string();
         let add_time = chrono::Utc::now().to_rfc3339();

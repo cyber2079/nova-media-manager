@@ -6,7 +6,7 @@ import { getMusicCoverFallback, musicCoverSrc } from "@/lib/musicCoverFallback";
 import MusicCard from "@/components/MusicCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload, Music, Loader2, Pause, Play, SkipBack, SkipForward, Star, ListPlus, ListMusic, Trash2, X, ChevronLeft, Minimize2, Plus, Search, Volume2, VolumeX, Type, Tag, CheckSquare, Palette } from "lucide-react";
+import { Upload, Music, Loader2, Pause, Play, SkipBack, SkipForward, Star, ListPlus, ListMusic, Trash2, X, ChevronLeft, Minimize2, Plus, Search, Volume2, VolumeX, Type, Tag, CheckSquare, Palette, Info } from "lucide-react";
 import PlayModeControls from "@/components/PlayModeControls";
 import TagFilterBar from "@/components/TagFilterBar";
 import TagEditDialog from "@/components/TagEditDialog";
@@ -370,6 +370,7 @@ export default function MusicLibrary() {
               <Button variant="outline" onClick={batch.leaveBatchMode} className="h-8 w-8 p-0" title={t("batch.exit")}><NeonIcon name="X" size={16}><X className="h-4 w-4" /></NeonIcon></Button>
             )}
             <LayoutSwitch mode={layoutMode} onChange={setLayoutMode} hideBanner />
+            <NeonIcon name="Info" size={16}><Info className="h-4 w-4 text-gray-500 cursor-help" title={t("music.filename_hint")} /></NeonIcon>
           </>
         )}
       </div>
