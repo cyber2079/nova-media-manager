@@ -317,11 +317,9 @@ export function applyPalette() {
   root.style.setProperty("--color-primary-light", primaryLight, "important");
   root.style.setProperty("--color-primary-dark", primaryDark, "important");
 
-  // Clean any stale --nv-* values from token engine
-  for (const k of ["--nv-color-primary","--nv-color-primaryLight","--nv-color-primaryDark",
-    "--nv-color-accent","--nv-color-surface","--nv-color-surfaceLight","--nv-color-surfaceLighter"]) {
-    root.style.removeProperty(k);
-  }
+  // Wipe ALL --nv-* inline styles the token engine may have left
+  const css = root.style.cssText;
+  root.style.cssText = css.split(";").filter(s => !s.trim().startsWith("--nv-")).join(";");
 
   // ── Typography ──
   root.style.setProperty("--font-primary", text);

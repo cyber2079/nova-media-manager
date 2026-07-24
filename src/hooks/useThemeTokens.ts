@@ -135,6 +135,10 @@ function injectTokens(tokens: Record<string, string>) {
 function cleanupInline() {
   const root = document.documentElement;
   for (const [, colorKey] of BRIDGE_COLORS) root.style.removeProperty(colorKey);
+  // Wipe ALL --nv-* inline styles that the token engine wrote
+  const css = root.style.cssText;
+  const cleaned = css.split(";").filter(s => !s.trim().startsWith("--nv-")).join(";");
+  root.style.cssText = cleaned;
   document.getElementById("nv-theme-css")?.remove();
   document.getElementById("nv-neon-icons")?.remove();
 }
