@@ -58,7 +58,7 @@ const navItems = [
   { to: "/games", key: "games", icon: Gamepad2 },
 ];
 
-  const neonIcon: Record<string,[string,string]> = {home:["ni-home","neon-magenta"],movies:["ni-play","neon-cyan"],images:["ni-image","neon-green"],music:["ni-music","neon-orange"],games:["ni-gamepad","neon-purple"]};
+  const navSvgs: Record<string,{c:string,s:string}> = {home:{c:"neon-magenta",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},movies:{c:"neon-cyan",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>'},images:{c:"neon-green",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'},music:{c:"neon-orange",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'},games:{c:"neon-purple",s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>'}};
 
 export default function Layout() {
   const location = useLocation();
@@ -523,14 +523,15 @@ export default function Layout() {
           <nav className="flex items-center gap-1">
             {navItems.map((item) => {
               const isActive = item.to === "/" ? location.pathname === "/" : location.pathname.startsWith(item.to);
-              const ni = neonIcon[item.key] || ["ni-circle","neon-cyan"];
+              const s = navSvgs[item.key];
               return (
                 <NavLink key={item.to} to={item.to} className={cn(
                   "flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all duration-300 active:scale-95",
                   isActive ? "bg-primary/15 text-primary-light " : "text-[#b8d0e8] hover:bg-primary/10 hover:text-primary-light ",
                 )}
                 onClick={() => {
-                  // 导航切换时，确保目标页面是可见的
+                  setTimeout(()=>{const el=document.querySelector("header nav i");if(el){const cs=getComputedStyle(el);console.log("[NAV]",{display:cs.display,width:cs.width,height:cs.height,bg:cs.backgroundColor,mask:cs.maskImage.substring(0,50),color:cs.color});}},800);
+              // 导航切换时，确保目标页面是可见的
                   const key = item.to === "/" ? "home" : item.to.replace("/", "");
                   const s = useSettingsStore.getState();
                   if (s.contentMinimized[key]) {
@@ -538,7 +539,7 @@ export default function Layout() {
                   }
                 }}>
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center">
-                    {isDefault ? <item.icon className="h-5 w-5" /> : <i className={"ni " + ni[0] + " " + ni[1] + " lg"}></i>}
+                    {isDefault ? <item.icon className="h-5 w-5" /> : <span className={"neon-icon " + (s?.c||"neon-cyan") + " lg"} dangerouslySetInnerHTML={{__html: s?.s || ""}} />}
                   </div>
                   <span>{t(`nav.${item.key}`)}</span>
                 </NavLink>
