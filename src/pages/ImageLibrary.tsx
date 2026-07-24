@@ -387,6 +387,19 @@ export default function ImageLibrary() {
                 </div>
               ))}
             </div>
+          ) : layoutMode === "banner" ? (
+            <div className={cn("flex flex-col gap-3", animating && "sort-shatter")}>
+              {paginated.map((img) => (
+                <div key={img.id} className="relative group cursor-pointer" onClick={() => { if (!batch.showCheckboxes) openViewer(img); }}>
+                  {batch.showCheckboxes && (
+                    <div onClick={(e) => e.stopPropagation()} className="absolute top-2 right-2 z-10">
+                      <BatchCheckbox checked={batch.selected.has(img.id)} onToggle={() => batch.toggle(img.id)} />
+                    </div>
+                  )}
+                  <ImageCard image={img} onDelete={(id) => confirm(t("image.confirm_delete"), () => deleteImage(id))} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagEditItem(img)} horizontal favorited={isFavorite(img.id)} onToggleFav={() => toggleFavorite(img.id, "image")} />
+                </div>
+              ))}
+            </div>
           ) : (
             <div className={cn(layoutMode === "card" ? "grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" : "grid gap-3 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10", animating && "sort-shatter")}>
               {paginated.map((img) => (
@@ -396,7 +409,7 @@ export default function ImageLibrary() {
                       <BatchCheckbox checked={batch.selected.has(img.id)} onToggle={() => batch.toggle(img.id)} />
                     </div>
                   )}
-                  <ImageCard image={img} onDelete={(id) => confirm(t("image.confirm_delete"), () => deleteImage(id))} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagEditItem(img)} compact={layoutMode === "small"} horizontal={layoutMode === "banner"} favorited={isFavorite(img.id)} onToggleFav={() => toggleFavorite(img.id, "image")} />
+                  <ImageCard image={img} onDelete={(id) => confirm(t("image.confirm_delete"), () => deleteImage(id))} onSetWallpaper={handleSetWallpaper} onEditTags={() => setTagEditItem(img)} compact={layoutMode === "small"} favorited={isFavorite(img.id)} onToggleFav={() => toggleFavorite(img.id, "image")} />
                 </div>
               ))}
             </div>
