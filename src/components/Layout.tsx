@@ -527,12 +527,10 @@ export default function Layout() {
               const s = navSvgs[item.key];
               return (
                 <NavLink key={item.to} to={item.to} className={cn(
-                  "flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all duration-300 active:scale-95",
-                  isActive ? "bg-primary/3 text-primary-light font-semibold" : "text-[#b8d0e8] hover:text-primary-light ",
+                  "nav-item flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all duration-300 active:scale-95 relative",
+                  isActive ? "nav-item-active font-semibold" : "text-[#b8d0e8] hover:text-primary-light ",
                 )}
                 onClick={() => {
-                  setTimeout(()=>{const el=document.querySelector("header nav i");if(el){const cs=getComputedStyle(el);console.log("[NAV]",{display:cs.display,width:cs.width,height:cs.height,bg:cs.backgroundColor,mask:cs.maskImage.substring(0,50),color:cs.color});}},800);
-              // 导航切换时，确保目标页面是可见的
                   const key = item.to === "/" ? "home" : item.to.replace("/", "");
                   const s = useSettingsStore.getState();
                   if (s.contentMinimized[key]) {
@@ -543,6 +541,7 @@ export default function Layout() {
                     {isDefault ? <item.icon className="h-5 w-5" /> : <NeonIcon name={(item.key === "home" ? "Home" : item.key === "movies" ? "Film" : item.key === "images" ? "Image" : item.key === "music" ? "Music" : item.key === "games" ? "Gamepad2" : "")} size={24} />}
                   </div>
                   <span>{t(`nav.${item.key}`)}</span>
+                  {isActive && <span className="nav-indicator" />}
                 </NavLink>
               );
             })}
