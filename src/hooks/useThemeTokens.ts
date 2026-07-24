@@ -6,7 +6,7 @@
 //
 // For default theme: does nothing (useThemeEffects handles legacy palette).
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useThemeStore } from "@/stores/themeStore";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -132,17 +132,6 @@ function injectTokens(tokens: Record<string, string>) {
   }
 }
 
-function cleanupInline() {
-  const root = document.documentElement;
-  for (const [, colorKey] of BRIDGE_COLORS) root.style.removeProperty(colorKey);
-  // Wipe ALL --nv-* inline styles that the token engine wrote
-  const css = root.style.cssText;
-  const cleaned = css.split(";").filter(s => !s.trim().startsWith("--nv-")).join(";");
-  root.style.cssText = cleaned;
-  document.getElementById("nv-theme-css")?.remove();
-  document.getElementById("nv-neon-icons")?.remove();
-}
-
 export function useThemeTokens() {
   const theme = useThemeStore((s) => s.theme);
   const themeVersion = useThemeStore((s) => s.themeVersion);
@@ -153,14 +142,9 @@ export function useThemeTokens() {
     dialogOpacity, dialogBlur, bgOverlayOpacity,
   } = useSettingsStore();
 
-  const wasDefaultRef = useRef(theme === "default");
   useEffect(() => {
-    if (theme === "default") {
-      // Only do cleanup when we just switched TO default, not on palette changes
-      if (!wasDefaultRef.current) { cleanupInline(); wasDefaultRef.current = true; }
-      return;
-    }
-    wasDefaultRef.current = false;
+    // Default theme: useThemeEffects manages --color-* entirely. Don't interfere.
+    if (theme === "default") return;
     let cancelled = false;
 
     // Sync apply from cache (no flash on startup)

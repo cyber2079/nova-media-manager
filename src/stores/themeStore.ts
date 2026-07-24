@@ -69,6 +69,10 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set((s) => ({ theme: t, themeVersion: s.themeVersion + 1 }));
     persist(t);
     if (t === "default") {
+      // Clean all --nv-* inline styles left by the previous non-default theme
+      const root = document.documentElement;
+      const css = root.style.cssText;
+      root.style.cssText = css.split(";").filter(s => !s.trim().startsWith("--nv-")).join(";");
       applySurface();
       const { paletteCustomized, resetPaletteToTheme } = useSettingsStore.getState();
       if (!paletteCustomized) { resetPaletteToTheme("default"); persist(t); }
