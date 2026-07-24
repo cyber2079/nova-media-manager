@@ -6,7 +6,7 @@
 //
 // For default theme: does nothing (useThemeEffects handles legacy palette).
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useThemeStore } from "@/stores/themeStore";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -153,8 +153,14 @@ export function useThemeTokens() {
     dialogOpacity, dialogBlur, bgOverlayOpacity,
   } = useSettingsStore();
 
+  const wasDefaultRef = useRef(theme === "default");
   useEffect(() => {
-    if (theme === "default") { cleanupInline(); return; }
+    if (theme === "default") {
+      // Only do cleanup when we just switched TO default, not on palette changes
+      if (!wasDefaultRef.current) { cleanupInline(); wasDefaultRef.current = true; }
+      return;
+    }
+    wasDefaultRef.current = false;
     let cancelled = false;
 
     // Sync apply from cache (no flash on startup)
