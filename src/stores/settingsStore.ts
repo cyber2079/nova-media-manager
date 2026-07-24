@@ -312,15 +312,16 @@ export function applyPalette() {
   const primaryLight = hslToHex(h, newS, Math.min(94, l + 20));
   const primaryDark = hslToHex(h, Math.min(100, newS * 1.05), Math.max(6, l - 18));
 
-  root.style.setProperty("--color-primary", primary);
-  root.style.setProperty("--color-primary-light", primaryLight);
-  root.style.setProperty("--color-primary-dark", primaryDark);
+  // Use !important to beat any residual --nv-* vars left by the token engine
+  root.style.setProperty("--color-primary", primary, "important");
+  root.style.setProperty("--color-primary-light", primaryLight, "important");
+  root.style.setProperty("--color-primary-dark", primaryDark, "important");
 
-  // ── Surface: let CSS :root rules handle it (they use var(--color-primary)) ──
-  // Remove stale inline overrides so the cascade picks up the saturated primary
-  root.style.removeProperty("--color-surface");
-  root.style.removeProperty("--color-surface-light");
-  root.style.removeProperty("--color-surface-lighter");
+  // Clean any stale --nv-* values from token engine
+  for (const k of ["--nv-color-primary","--nv-color-primaryLight","--nv-color-primaryDark",
+    "--nv-color-accent","--nv-color-surface","--nv-color-surfaceLight","--nv-color-surfaceLighter"]) {
+    root.style.removeProperty(k);
+  }
 
   // ── Typography ──
   root.style.setProperty("--font-primary", text);
