@@ -31,7 +31,8 @@ export function useThemeEffects() {
     };
     apply();
     return useSettingsStore.subscribe((s, prev) => {
-      if (s.useCustomColor !== prev.useCustomColor || s.customColor !== prev.customColor) apply();
+      if (s.useCustomColor !== prev.useCustomColor || s.customColor !== prev.customColor
+        || s.paletteAccent !== prev.paletteAccent) apply();
     });
   }, [isDefault]);
 
