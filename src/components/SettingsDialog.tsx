@@ -1097,11 +1097,17 @@ function ResetButton({ tab, t, onReset }: { tab: string; t: (k: string, options?
   );
 }
 
+const WIDGET_ICON_MAP: Record<string, string> = { Monitor: "Monitor", Cpu: "Cpu", Clock: "Clock", Calendar: "Calendar", Timer: "Timer" };
+
 function WidgetCard({ icon: Icon, title, enabled, onToggle, children }: { icon: typeof Monitor; title: string; enabled: boolean; onToggle: () => void; children?: React.ReactNode }) {
+  const neonName = WIDGET_ICON_MAP[Icon.displayName || Icon.name || ""];
   return (
     <div className="rounded-lg border border-white/5 p-4 space-y-3 bg-white/[0.01]">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5"><Icon className="h-4 w-4 text-primary-light" /><span className="text-sm font-medium text-white">{title}</span></div>
+        <div className="flex items-center gap-2.5">
+          {neonName ? <NeonIcon name={neonName} size={16}><Icon className="h-4 w-4 text-primary-light" /></NeonIcon> : <Icon className="h-4 w-4 text-primary-light" />}
+          <span className="text-sm font-medium text-white">{title}</span>
+        </div>
         <Toggle active={enabled} onToggle={onToggle} />
       </div>
       {children}
