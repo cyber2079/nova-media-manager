@@ -18,7 +18,7 @@ export const useImageStore = create<ImageState>((set, get) => ({
   images: [],
   isLoading: false,
   isImporting: false,
-  sortConfig: "default",
+  sortConfig: "dateDesc",
 
   loadImages: async () => {
     set({ isLoading: true });

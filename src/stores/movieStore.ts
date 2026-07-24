@@ -32,7 +32,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   isImporting: false,
   searchQuery: "",
   activeTags: [],
-  sortConfig: "default",
+  sortConfig: "dateDesc",
   isGridLayout: true,
   _watchSeq: 0,
 

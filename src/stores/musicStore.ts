@@ -26,7 +26,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
   isImporting: false,
   activeTags: [],
   searchQuery: "",
-  sortConfig: "default",
+  sortConfig: "dateDesc",
 
   loadMusic: async () => {
     set({ isLoading: true });

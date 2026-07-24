@@ -28,7 +28,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   isScanning: false,
   scanResult: null,
   scanDiagnostic: [],
-  sortConfig: "default",
+  sortConfig: "dateDesc",
 
   loadGames: async () => {
     set({ isLoading: true });

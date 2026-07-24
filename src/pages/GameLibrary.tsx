@@ -82,7 +82,7 @@ export default function GameLibrary() {
     let r = activeTags.length ? games.filter((g) => activeTags.some((t) => g.tags?.includes(t))) : [...games];
     if (favOnly) { const ids = new Set(getByType("game")); r = r.filter((g) => ids.has(g.id)); }
     if (searchQuery) { const q = searchQuery.toLowerCase(); r = r.filter((g) => g.name.toLowerCase().includes(q)); }
-    if (sortConfig === "nameAsc" || sortConfig === "default") r.sort((a, b) => a.name.localeCompare(b.name));
+    if (sortConfig === "nameAsc") r.sort((a, b) => a.name.localeCompare(b.name));
     else if (sortConfig === "nameDesc") r.sort((a, b) => b.name.localeCompare(a.name));
     else if (sortConfig === "dateAsc") r.sort((a, b) => new Date(a.addTime).getTime() - new Date(b.addTime).getTime());
     else if (sortConfig === "dateDesc") r.sort((a, b) => new Date(b.addTime).getTime() - new Date(a.addTime).getTime());
