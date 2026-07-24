@@ -54,10 +54,10 @@ export default function NeonIcon({ name, size = 16, className = "", children }: 
     return mappedColor;
   }, [theme, name, paletteAccent, paletteCustomized, paletteRandom, paletteSeed, elementId]);
 
-  if (theme === "default") return children ?? null;
-
   const entry = (iconData as unknown as Record<string, [string, string]>)[name];
   if (!entry) return children ?? null;
+
+  if (theme === "default" && children) return children;
 
   const colorClass = finalColorClass || entry[0];
   const svgInner = entry[1];

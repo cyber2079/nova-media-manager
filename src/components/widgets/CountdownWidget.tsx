@@ -188,9 +188,9 @@ function CompactDisplay({ t, running, remaining, progress, start, pause, reset, 
       </div>
       <div className="flex items-center gap-0.5">
         {!running ? (
-          <button onClick={start} disabled={totalSecs <= 0} className="disabled:opacity-30 p-1" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_start_title")}><NeonIcon name="Play" size={16}><Play className="h-3.5 w-3.5" /></NeonIcon></button>
+          <button onClick={start} disabled={totalSecs <= 0} className="disabled:opacity-30 p-1" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_start_title")}><NeonIcon name="Play" size={16} /></button>
         ) : (
-          <button onClick={pause} className="p-1" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_pause")}><NeonIcon name="Pause" size={16}><Pause className="h-3.5 w-3.5" /></NeonIcon></button>
+          <button onClick={pause} className="p-1" style={{ color: "var(--color-primary-light)" }} title={t("widget.countdown_pause")}><NeonIcon name="Pause" size={16} /></button>
         )}
         <button onClick={reset} className="text-gray-400 hover:text-white p-1" title={t("widget.countdown_reset")}><NeonIcon name="RotateCcw" size={16}><RotateCcw className="h-3 w-3" /></NeonIcon></button>
         <button onClick={setPanel} className="text-gray-400 hover:text-white p-1" title={t("widget.countdown_settings")}><NeonIcon name="Settings" size={16}><Settings className="h-3 w-3" /></NeonIcon></button>
