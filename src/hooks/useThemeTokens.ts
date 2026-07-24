@@ -19,7 +19,8 @@ function buildUserOverrides(): string {
   const s = useSettingsStore.getState();
   const ov: Record<string, unknown> = {};
   // Palette override: if user customized palette, send their chosen accent as primary color
-  if (s.paletteCustomized && s.paletteAccent) ov["colors"] = { primary: s.paletteAccent, primaryLight: s.paletteAccent };
+  // Single-color palette mode: send accent as override. Todos random: use theme.json defaults.
+  if (s.paletteCustomized && s.paletteAccent && !s.paletteRandomEnabled) ov["colors"] = { primary: s.paletteAccent, primaryLight: s.paletteAccent };
   if (s.glassMasterEnabled) {
     ov["glass"] = { header:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, footer:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, main:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, dialog:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, card:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, widget:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, quickhub:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur} };
   } else {
