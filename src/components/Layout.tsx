@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Video, Image, Gamepad2, Home, Music, Maximize2, Minimize2, Search, Settings, X, LayoutGrid, Gauge, Box, Camera } from "lucide-react";
+import { Video, Image, Gamepad2, Home, Music, Maximize2, Minimize2, Search, Settings, X, LayoutGrid, Eye, EyeOff, Box, Camera } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
 import { lazy } from "react";
 const Nv3dViewer = lazy(() => import("@/webgl3d/canvas/Nv3dViewer"));
@@ -624,7 +624,7 @@ export default function Layout() {
             className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
             title={t("settings.toggle_page")}
           >
-            <NeonIcon name="Gauge" size={16}><Gauge className="h-4 w-4" /></NeonIcon>
+            {pageMinimized ? <NeonIcon name="EyeOff" size={16} /> : <NeonIcon name="Eye" size={16} />}
           </button>
 
           {/* Pause/Play background video */}
