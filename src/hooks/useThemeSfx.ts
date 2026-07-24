@@ -98,6 +98,12 @@ export function useThemeSfx(themeId: string) {
   }, [themeId]);
 
   useEffect(() => {
+    const handleNav = () => { playSfx(pathsRef.current.click); };
+    window.addEventListener("nv-page-transition", handleNav);
+    return () => window.removeEventListener("nv-page-transition", handleNav);
+  }, [themeId]);
+
+  useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (!enabledRef.current) return;
       const target = e.target as HTMLElement;

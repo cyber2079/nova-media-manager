@@ -257,6 +257,9 @@ export default function Layout() {
   const pageName = isHome ? "home" : location.pathname.replace("/", "");
   useAnalyticsPageView(pageName);
 
+  // Dispatch page transition event for SFX
+  useEffect(() => { window.dispatchEvent(new CustomEvent("nv-page-transition")); }, [location.pathname]);
+
   const [headerVisible, setHeaderVisible] = useState(true);
 
   // Mouse parallax + auto-hide header/footer — merged single RAF-throttled listener
@@ -527,7 +530,7 @@ export default function Layout() {
               const s = navSvgs[item.key];
               return (
                 <NavLink key={item.to} to={item.to} className={cn(
-                  "nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 active:scale-95 relative",
+                  "nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 relative",
                   isActive ? "nav-item-active font-semibold" : "text-[#b8d0e8] hover:text-primary-light ",
                 )}
                 onClick={() => {
