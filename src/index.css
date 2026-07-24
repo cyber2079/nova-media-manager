@@ -165,15 +165,11 @@ svg.lucide, [class*="lucide"] {
   transform-origin: center;
 }
 
-main[data-route="page"],
-main[data-route="home"] {
+main[data-route="page"], main[data-route="home"] {
   position: relative; z-index: 10;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--color-primary) 2%, rgba(8,12,20,0.94));
   border: 1px solid rgba(255,255,255,0.04);
 }
-:root main[data-route="page"],
-:root main[data-route="home"],
 [data-theme="default"] main[data-route="page"],
 [data-theme="default"] main[data-route="home"] {
   background: color-mix(in srgb, var(--color-primary) 6%, rgba(8,12,20,0.88));
