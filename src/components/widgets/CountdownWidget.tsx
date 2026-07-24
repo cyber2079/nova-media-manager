@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import DesktopWidget from "@/components/DesktopWidget";
 import { useWidgetStore, type CountdownConfig } from "@/stores/widgetStore";
-import { Play, Pause, RotateCcw, Settings, X } from "lucide-react";
+import { RotateCcw, Settings, X } from "lucide-react";
 import NeonIcon from "@/components/NeonIcon";
 import { cn } from "@/lib/utils";
 function fmtTime(h: number, m: number, s: number): string {
@@ -154,9 +154,7 @@ export default function CountdownWidget({ config }: { config: CountdownConfig })
           </svg>
           <button onClick={running ? pause : start} title={running ? t("widget.countdown_pause") : t("widget.countdown_start_title")}
             className="absolute inset-0 flex items-center justify-center rounded-full transition-all duration-200">
-            {running
-              ? <NeonIcon name="Pause" size={16}><Pause className="h-3 w-3" style={{ color: "var(--font-widget)" }} /></NeonIcon>
-              : <NeonIcon name="Play" size={16}><Play className="h-3 w-3 ml-0.5" style={{ color: "var(--font-widget)" }} /></NeonIcon>}
+            <NeonIcon name="Timer" size={18} className={running ? "neon-pulse-anim" : ""} />
           </button>
         </div>
       ) : (
