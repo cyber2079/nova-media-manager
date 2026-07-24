@@ -696,7 +696,7 @@ function WidgetsTab(props: any) {
     <>
       <SectionGroup title={t("settings.widgets_config")}>
         <div className="space-y-3">
-          <WidgetCard icon={Monitor} title={t("settings.my_computer")} enabled={myComputer.enabled} onToggle={() => setEnabled("myComputer", !myComputer.enabled)}>
+          <WidgetCard icon={Monitor} iconName="Monitor" title={t("settings.my_computer")} enabled={myComputer.enabled} onToggle={() => setEnabled("myComputer", !myComputer.enabled)}>
             {myComputer.enabled && <>
               <PositionSelect value={myComputer.position} onChange={(v: any) => setPosition("myComputer", v)} />
               <div className="flex items-center justify-between">
@@ -709,16 +709,16 @@ function WidgetsTab(props: any) {
               </div>
             </>}
           </WidgetCard>
-          <WidgetCard icon={Cpu} title={t("settings.system_monitor")} enabled={systemMonitor.enabled} onToggle={() => setEnabled("systemMonitor", !systemMonitor.enabled)}>
+          <WidgetCard icon={Cpu} iconName="Cpu" title={t("settings.system_monitor")} enabled={systemMonitor.enabled} onToggle={() => setEnabled("systemMonitor", !systemMonitor.enabled)}>
             {systemMonitor.enabled && <PositionSelect value={systemMonitor.position} onChange={(v: any) => setPosition("systemMonitor", v)} />}
           </WidgetCard>
-          <WidgetCard icon={Clock} title={t("settings.clock")} enabled={clock.enabled} onToggle={() => setEnabled("clock", !clock.enabled)}>
+          <WidgetCard icon={Clock} iconName="Clock" title={t("settings.clock")} enabled={clock.enabled} onToggle={() => setEnabled("clock", !clock.enabled)}>
             {clock.enabled && <PositionSelect value={clock.position} onChange={(v: any) => setPosition("clock", v)} />}
           </WidgetCard>
-          <WidgetCard icon={Calendar} title={t("settings.calendar")} enabled={calendar.enabled} onToggle={() => setEnabled("calendar", !calendar.enabled)}>
+          <WidgetCard icon={Calendar} iconName="Calendar" title={t("settings.calendar")} enabled={calendar.enabled} onToggle={() => setEnabled("calendar", !calendar.enabled)}>
             {calendar.enabled && <PositionSelect value={calendar.position} onChange={(v: any) => setPosition("calendar", v)} />}
           </WidgetCard>
-          <WidgetCard icon={Timer} title={t("widget.countdown")} enabled={countdown.enabled} onToggle={() => setCountdown({ enabled: !countdown.enabled })}>
+          <WidgetCard icon={Timer} iconName="Timer" title={t("widget.countdown")} enabled={countdown.enabled} onToggle={() => setCountdown({ enabled: !countdown.enabled })}>
             {countdown.enabled && <>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-400">{t("widget.countdown_display_mode")}</span>
@@ -1097,15 +1097,12 @@ function ResetButton({ tab, t, onReset }: { tab: string; t: (k: string, options?
   );
 }
 
-const WIDGET_ICON_MAP: Record<string, string> = { Monitor: "Monitor", Cpu: "Cpu", Clock: "Clock", Calendar: "Calendar", Timer: "Timer" };
-
-function WidgetCard({ icon: Icon, title, enabled, onToggle, children }: { icon: typeof Monitor; title: string; enabled: boolean; onToggle: () => void; children?: React.ReactNode }) {
-  const neonName = WIDGET_ICON_MAP[Icon.displayName || Icon.name || ""];
+function WidgetCard({ icon: Icon, iconName, title, enabled, onToggle, children }: { icon: typeof Monitor; iconName: string; title: string; enabled: boolean; onToggle: () => void; children?: React.ReactNode }) {
   return (
     <div className="rounded-lg border border-white/5 p-4 space-y-3 bg-white/[0.01]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          {neonName ? <NeonIcon name={neonName} size={16}><Icon className="h-4 w-4 text-primary-light" /></NeonIcon> : <Icon className="h-4 w-4 text-primary-light" />}
+          <NeonIcon name={iconName} size={16}><Icon className="h-4 w-4 text-primary-light" /></NeonIcon>
           <span className="text-sm font-medium text-white">{title}</span>
         </div>
         <Toggle active={enabled} onToggle={onToggle} />

@@ -72,36 +72,33 @@ function injectTokens(tokens: Record<string, string>) {
     if (val) root.style.setProperty(colorKey, val, "important");
   }
 
-  // Palette mode: if user customized palette, derive ALL dependent colors from chosen hex
+  // Palette: derive all surface/border/accent from chosen primary
   const s = useSettingsStore.getState();
-  if (s.paletteCustomized && s.paletteAccent && !s.paletteRandomEnabled) {
-    const hex = s.paletteAccent;
-    const [h, sat, lum] = hexToHSL(hex);
+  const hex = s.paletteCustomized && s.paletteAccent ? s.paletteAccent : "#ff00ff";
+  const hexes = s.paletteRandomEnabled
+    ? (() => { const colors = ["#00f5ff","#ff00ff","#39ff14","#ff6600","#bf00ff","#ffff00","#ff0040"]; return colors[Math.abs(s.paletteRandomSeed) % 7]; })()
+    : hex;
+  if (s.paletteCustomized) {
+    const [h, sat, lum] = hexToHSL(hexes);
     const pLight = hslToHex(h, Math.min(100, sat + 10), Math.min(94, lum + 20));
     const pDark  = hslToHex(h, Math.min(100, sat + 5), Math.max(6, lum - 18));
-    const baseBg  = "#080c14";
-    const midBg   = "#101520";
-    const liteBg  = "#1a1f2a";
-    // Compute surface colors using color-mix with the chosen hex
-    const surface    = `color-mix(in srgb, ${hex} 4%, ${baseBg})`;
-    const surfLight  = `color-mix(in srgb, ${hex} 6%, ${midBg})`;
-    const surfLighter= `color-mix(in srgb, ${hex} 8%, ${liteBg})`;
+    const baseBg = "#080c14", midBg = "#101520", liteBg = "#1a1f2a";
     const derived: [string,string][] = [
-      ["--color-primary",        hex],
+      ["--color-primary",        hexes],
       ["--color-primary-light",  pLight],
       ["--color-primary-dark",   pDark],
-      ["--color-accent",         hex],
-      ["--color-surface",        surface],
-      ["--color-surface-light",  surfLight],
-      ["--color-surface-lighter",surfLighter],
-      ["--color-border",         `color-mix(in srgb, ${hex} 18%, transparent)`],
-      ["--nv-color-primary",     hex],
+      ["--color-accent",         hexes],
+      ["--color-surface",        `color-mix(in srgb, ${hexes} 4%, ${baseBg})`],
+      ["--color-surface-light",  `color-mix(in srgb, ${hexes} 6%, ${midBg})`],
+      ["--color-surface-lighter",`color-mix(in srgb, ${hexes} 8%, ${liteBg})`],
+      ["--color-border",         `color-mix(in srgb, ${hexes} 18%, transparent)`],
+      ["--nv-color-primary",     hexes],
       ["--nv-color-primaryLight",pLight],
       ["--nv-color-primaryDark", pDark],
-      ["--nv-color-accent",      hex],
-      ["--nv-color-surface",     surface],
-      ["--nv-color-surfaceLight", surfLight],
-      ["--nv-color-surfaceLighter",surfLighter],
+      ["--nv-color-accent",      hexes],
+      ["--nv-color-surface",     `color-mix(in srgb, ${hexes} 4%, ${baseBg})`],
+      ["--nv-color-surfaceLight", `color-mix(in srgb, ${hexes} 6%, ${midBg})`],
+      ["--nv-color-surfaceLighter",`color-mix(in srgb, ${hexes} 8%, ${liteBg})`],
     ];
     for (const [k, v] of derived) root.style.setProperty(k, v, "important");
   }
