@@ -58,19 +58,8 @@ const navItems = [
   { to: "/games", key: "games", icon: Gamepad2 },
 ];
 
-  /**
-   * Build a theme nav icon URL from CSS var --nv-nav-{page}-icon.
-   * Returns "" when no theme icon configured (fallback to Lucide icon).
-   */
-  function navThemeIcon(theme: string, path: string): string {
-    const pageKey = path === "/" ? "home" : path.replace("/", "");
-    const iconFile = getComputedStyle(document.documentElement)
-      .getPropertyValue(`--nv-nav-${pageKey}-icon`)
-      .trim()
-      .replace(/^"(.*)"$/, "$1");
-    if (!iconFile) return "";
-    return themeUrl(theme, iconFile);
-  }
+  const neonIcon: Record<string,[string,string]> = {home:["ni-home","neon-magenta"],movies:["ni-play","neon-cyan"],images:["ni-image","neon-green"],music:["ni-music","neon-orange"],games:["ni-gamepad","neon-purple"]};
+
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -534,7 +523,7 @@ export default function Layout() {
           <nav className="flex items-center gap-1">
             {navItems.map((item) => {
               const isActive = item.to === "/" ? location.pathname === "/" : location.pathname.startsWith(item.to);
-              const charIcon = navThemeIcon(theme, item.to);
+              const ni = neonIcon[item.key] || ["ni-circle","neon-cyan"];
               return (
                 <NavLink key={item.to} to={item.to} className={cn(
                   "flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all duration-300 active:scale-95",
@@ -548,12 +537,8 @@ export default function Layout() {
                     s.toggleContentMinimized(key);
                   }
                 }}>
-                  <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center", isDefault ? "rounded-full overflow-hidden" : "rounded-lg")}>
-                    {charIcon ? (
-                      <img src={charIcon} alt="" className={cn(isDefault ? "h-full w-full object-cover" : "h-6 w-6 object-contain")} />
-                    ) : (
-                      <item.icon className="h-5 w-5" />
-                    )}
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center">
+                    {isDefault ? <item.icon className="h-5 w-5" /> : <i className={ni[0] + " " + ni[1] + " lg pulse neon-pulse-anim"}></i>}
                   </div>
                   <span>{t(`nav.${item.key}`)}</span>
                 </NavLink>
