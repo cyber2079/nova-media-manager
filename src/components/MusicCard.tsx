@@ -62,7 +62,7 @@ export default memo(function MusicCard({ music, onDelete, onPlay, onEditTags, co
         <h3 className={cn("truncate font-medium mb-1.5", compact ? "text-xs" : "text-sm")} title={music.name}>{music.name}</h3>
 
         {/* 信息行 */}
-        {!compact && <p className="text-xs text-gray-500 truncate mb-2">{music.artist}{music.album ? ` · ${music.album}` : ""}</p>}
+        {!compact && <p className="text-xs text-gray-500 truncate mb-2">{(music.artist || "Unknown Artist")}{music.album ? ` · ${music.album}` : ""}</p>}
 
         {/* 操作按钮行 */}
         <div className="flex items-center gap-1">
