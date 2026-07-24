@@ -417,8 +417,7 @@ function AppearanceTab(props: any) {
                     )}
                     title={c}>
                     <span className="w-5 h-5 rounded-full" style={{
-                      background: c === "Todos" ? hex : undefined,
-                      backgroundColor: c !== "Todos" ? hex : undefined,
+                      background: c === "Todos" ? hex : hex,
                       boxShadow: glow,
                     }} />
                     <span className="text-gray-400">{c === "Todos" ? "🎲" : ""} {c.replace("neon-", "").charAt(0).toUpperCase() + c.replace("neon-", "").slice(1, 4)}</span>

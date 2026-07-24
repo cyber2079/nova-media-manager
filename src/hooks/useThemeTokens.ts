@@ -17,7 +17,8 @@ const CACHE_KEY = "nv-theme-tokens-v2";
 function buildUserOverrides(): string {
   const s = useSettingsStore.getState();
   const ov: Record<string, unknown> = {};
-  // Colors are defined by theme.json — never override from user settings
+  // Palette override: if user customized palette, send their chosen accent as primary color
+  if (s.paletteCustomized && s.paletteAccent) ov["colors"] = { primary: s.paletteAccent, primaryLight: s.paletteAccent };
   if (s.glassMasterEnabled) {
     ov["glass"] = { header:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, footer:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, main:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, dialog:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, card:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, widget:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur}, quickhub:{opacity:s.globalGlassOpacity,blur:s.globalGlassBlur} };
   } else {
@@ -109,7 +110,7 @@ export function useThemeTokens() {
   const theme = useThemeStore((s) => s.theme);
   const themeVersion = useThemeStore((s) => s.themeVersion);
   const {
-    paletteAccent, paletteSaturation, paletteCustomized,
+    paletteAccent, paletteSaturation, paletteCustomized, paletteRandomSeed, paletteRandomEnabled,
     glassMasterEnabled, globalGlassOpacity, globalGlassBlur,
     barOpacity, barBlur, mainOpacity, mainBlur,
     dialogOpacity, dialogBlur, bgOverlayOpacity,
@@ -152,7 +153,7 @@ export function useThemeTokens() {
     return () => { cancelled = true; };
   }, [
     theme, themeVersion,
-    paletteAccent, paletteSaturation, paletteCustomized,
+    paletteAccent, paletteSaturation, paletteCustomized, paletteRandomSeed, paletteRandomEnabled,
     glassMasterEnabled, globalGlassOpacity, globalGlassBlur,
     barOpacity, barBlur, mainOpacity, mainBlur,
     dialogOpacity, dialogBlur, bgOverlayOpacity,
