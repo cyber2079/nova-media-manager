@@ -540,7 +540,7 @@ export default function Layout() {
                   }
                 }}>
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center">
-                    {isDefault ? <item.icon className="h-5 w-5" /> : <span className={"neon-icon " + (s?.c||"neon-cyan") + " lg"} dangerouslySetInnerHTML={{__html: s?.s || ""}} />}
+                    {isDefault ? <item.icon className="h-5 w-5" /> : <NeonIcon name={(item.key === "home" ? "Home" : item.key === "movies" ? "Film" : item.key === "images" ? "Image" : item.key === "music" ? "Music" : item.key === "games" ? "Gamepad2" : "")} size={24} />}
                   </div>
                   <span>{t(`nav.${item.key}`)}</span>
                 </NavLink>
